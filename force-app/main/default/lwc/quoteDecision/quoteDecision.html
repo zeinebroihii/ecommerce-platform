@@ -1,0 +1,110 @@
+<template>
+    <div class="qd-wrap">
+
+        <!-- Header -->
+        <div class="qd-header">
+            <h2 class="qd-title">Mes Devis</h2>
+            <p class="qd-sub">Consultez et r&#xe9;pondez &#xe0; vos devis TALCORE</p>
+        </div>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="qd-spinner">
+                <lightning-spinner size="medium" alternative-text="Chargement..."></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Empty -->
+        <template if:true={isEmpty}>
+            <div class="qd-empty">
+                <div class="qd-empty-icon">&#x1F4C4;</div>
+                <h3>Aucun devis pour le moment</h3>
+                <p>Votre gestionnaire de compte vous enverra un devis d&#xe8;s que possible.</p>
+            </div>
+        </template>
+
+        <!-- Quote cards -->
+        <template if:true={hasQuotes}>
+            <template for:each={quotes} for:item="q">
+                <div key={q.quoteId} class={q.cardClass}>
+
+                    <!-- Card header -->
+                    <div class="qd-card-top">
+                        <div class="qd-card-left">
+                            <span class={q.statusBadgeClass}>{q.statusLabel}</span>
+                            <h3 class="qd-name">{q.name}</h3>
+                            <p class="qd-opp">Opportunit&#xe9; : {q.opportunityName}</p>
+                        </div>
+                        <div class="qd-card-right">
+                            <span class="qd-amount">&#xa3;{q.formattedTotal}</span>
+                            <template if:true={q.expirationDate}>
+                                <span class="qd-deadline">
+                                    &#x23F0; Limite : {q.expirationDate}
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <template if:true={q.description}>
+                        <p class="qd-desc">{q.description}</p>
+                    </template>
+
+                    <!-- Action buttons (only when status = Presented / awaiting decision) -->
+                    <template if:true={q.canDecide}>
+                        <div class="qd-actions">
+                            <button class="qd-btn-accept" onclick={handleAccept} data-id={q.quoteId}>
+                                &#x2713; Accepter le devis
+                            </button>
+                            <button class="qd-btn-reject" onclick={handleRejectOpen} data-id={q.quoteId}>
+                                &#x2715; Refuser le devis
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Accepted banner -->
+                    <template if:true={q.isAccepted}>
+                        <div class="qd-accepted-banner">&#x2705; Devis accept&#xe9; &mdash; Votre contrat est en cours de pr&#xe9;paration.</div>
+                    </template>
+
+                    <!-- Rejected banner -->
+                    <template if:true={q.isRejected}>
+                        <div class="qd-rejected-banner">&#x274C; Devis refus&#xe9; &mdash; Notre &#xe9;quipe vous contactera pour les prochaines &#xe9;tapes.</div>
+                    </template>
+
+                </div>
+            </template>
+        </template>
+
+        <!-- Rejection modal -->
+        <template if:true={showRejectModal}>
+            <div class="qd-modal-backdrop" onclick={handleModalClose}>
+                <div class="qd-modal" onclick={stopProp}>
+                    <h3 class="qd-modal-title">Refuser le devis</h3>
+                    <p class="qd-modal-sub">Veuillez indiquer la raison de votre refus (optionnel)</p>
+                    <lightning-textarea
+                        label="Raison du refus"
+                        value={rejectReason}
+                        onchange={handleReasonChange}
+                        max-length="500"
+                        placeholder="Ex. : Prix trop &#xe9;lev&#xe9;, sp&#xe9;cifications ne correspondent pas...">
+                    </lightning-textarea>
+                    <div class="qd-modal-actions">
+                        <button class="qd-btn-ghost" onclick={handleModalClose}>Annuler</button>
+                        <button class="qd-btn-reject-confirm" onclick={handleRejectConfirm}
+                                disabled={isSubmitting}>
+                            <template if:true={isSubmitting}>Envoi...</template>
+                            <template if:false={isSubmitting}>Confirmer le refus</template>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Toast -->
+        <template if:true={toastMsg}>
+            <div class={toastClass}>{toastMsg}</div>
+        </template>
+
+    </div>
+</template>

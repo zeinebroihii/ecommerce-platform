@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <description>Fires when a Lead is created from the web portal. Gets the admin user, creates a follow-up Task, and sends an email notification.</description>
+    <label>Lead - Web Portal Notification</label>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+
+    <!-- ── Trigger: Lead created with LeadSource = Web ───────────────────── -->
+    <start>
+        <locationX>176</locationX>
+        <locationY>0</locationY>
+        <object>Lead</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>LeadSource</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Web</stringValue>
+            </value>
+        </filters>
+        <connector>
+            <targetReference>GetAdminUser</targetReference>
+        </connector>
+    </start>
+
+    <!-- ── 1. Find the first active internal (Standard) user ─────────────── -->
+    <recordLookups>
+        <name>GetAdminUser</name>
+        <label>Get Admin User</label>
+        <locationX>176</locationX>
+        <locationY>120</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>CreateFollowUpTask</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>UserType</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Standard</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>IsActive</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>User</object>
+        <outputReference>varAdminUser</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Email</queriedFields>
+    </recordLookups>
+
+    <!-- ── 2. Create a High-priority follow-up Task for the admin ────────── -->
+    <recordCreates>
+        <name>CreateFollowUpTask</name>
+        <label>Create Follow-Up Task</label>
+        <locationX>176</locationX>
+        <locationY>240</locationY>
+        <connector>
+            <targetReference>SendAdminEmail</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <elementReference>frmTaskSubject</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description</field>
+            <value>
+                <elementReference>frmTaskBody</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>frmTomorrow</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>varAdminUser.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhoId</field>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Not Started</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value>
+                <stringValue>High</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+    </recordCreates>
+
+    <!-- ── 3. Send email to admin ─────────────────────────────────────────── -->
+    <actionCalls>
+        <name>SendAdminEmail</name>
+        <label>Send Admin Notification Email</label>
+        <locationX>176</locationX>
+        <locationY>360</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>varAdminUser.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>frmEmailSubject</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <elementReference>frmEmailBody</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+
+    <!-- ── Variables ─────────────────────────────────────────────────────── -->
+    <variables>
+        <name>varAdminUser</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>User</objectType>
+    </variables>
+
+    <!-- ── Formulas ──────────────────────────────────────────────────────── -->
+    <formulas>
+        <name>frmTomorrow</name>
+        <dataType>Date</dataType>
+        <expression>TODAY() + 1</expression>
+    </formulas>
+
+    <formulas>
+        <name>frmTaskSubject</name>
+        <dataType>String</dataType>
+        <expression>"New Web Lead: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp; " | " &amp; {!$Record.Company}</expression>
+    </formulas>
+
+    <formulas>
+        <name>frmTaskBody</name>
+        <dataType>String</dataType>
+        <expression>"Name: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp;
+" | Email: " &amp; {!$Record.Email} &amp;
+" | Phone: " &amp; {!$Record.Phone} &amp;
+" | Company: " &amp; {!$Record.Company} &amp;
+" | Industry: " &amp; TEXT({!$Record.Industry}) &amp;
+" | Notes: " &amp; {!$Record.Description}</expression>
+    </formulas>
+
+    <formulas>
+        <name>frmEmailSubject</name>
+        <dataType>String</dataType>
+        <expression>"[TechStore] New Lead: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp; " from " &amp; {!$Record.Company}</expression>
+    </formulas>
+
+    <formulas>
+        <name>frmEmailBody</name>
+        <dataType>String</dataType>
+        <expression>"A new lead has been submitted via the portal." &amp;
+"\n\nName:     " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp;
+"\nEmail:    " &amp; {!$Record.Email} &amp;
+"\nPhone:    " &amp; {!$Record.Phone} &amp;
+"\nCompany:  " &amp; {!$Record.Company} &amp;
+"\nIndustry: " &amp; TEXT({!$Record.Industry}) &amp;
+"\nNotes:    " &amp; {!$Record.Description} &amp;
+"\n\nA follow-up task has been created due tomorrow. Please respond within 24 hours."</expression>
+    </formulas>
+
+</Flow>

@@ -1,0 +1,75 @@
+<template>
+    <div class="order-history-container">
+
+        <h2 class="page-title">My Orders</h2>
+
+        <!-- Loading -->
+        <template if:false={orders.data}>
+            <template if:false={orders.error}>
+                <lightning-spinner alternative-text="Loading orders..." size="medium"></lightning-spinner>
+            </template>
+        </template>
+
+        <!-- Error -->
+        <template if:true={orders.error}>
+            <div class="error-msg">Unable to load orders. Please refresh the page.</div>
+        </template>
+
+        <!-- No orders -->
+        <template if:true={hasNoOrders}>
+            <div class="empty-state">
+                <p>You have not placed any orders yet.</p>
+                <lightning-button label="Start Shopping" variant="brand" onclick={handleShop}></lightning-button>
+            </div>
+        </template>
+
+        <!-- Order list -->
+        <template if:true={orders.data}>
+            <template for:each={enrichedOrders} for:item="order">
+                <div key={order.Id} class="order-card">
+
+                    <!-- Order Header -->
+                    <div class="order-header">
+                        <div>
+                            <span class="order-number">Order #{order.OrderNumber}</span>
+                            <span class="order-date">{order.formattedDate}</span>
+                        </div>
+                        <div>
+                            <span class={order.statusClass}>{order.Status}</span>
+                            <span class="order-total">£{order.formattedTotal}</span>
+                        </div>
+                    </div>
+
+                    <!-- Status Timeline -->
+                    <div class="status-timeline">
+                        <template for:each={statusSteps} for:item="step">
+                            <div key={step.label} class={step.cssClass}>
+                                <div class="step-dot"></div>
+                                <div class="step-label">{step.label}</div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="order-items">
+                        <template for:each={order.OrderItems} for:item="item">
+                            <div key={item.Product2.Name} class="order-item-row">
+                                <span class="item-name">{item.Product2.Name}</span>
+                                <span class="item-family">{item.Product2.Family}</span>
+                                <span class="item-qty">Qty: {item.Quantity}</span>
+                                <span class="item-price">£{item.TotalPrice}</span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Delivery info -->
+                    <div class="delivery-info">
+                        <span>Delivering to: {order.Shipping_City__c}, {order.Shipping_Country__c}</span>
+                    </div>
+
+                </div>
+            </template>
+        </template>
+
+    </div>
+</template>

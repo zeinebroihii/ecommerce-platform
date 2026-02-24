@@ -1,0 +1,165 @@
+<template>
+    <div class="checkout-wrapper">
+
+        <!-- ── Spinner ───────────────────────────────────────────────────── -->
+        <template if:true={isLoading}>
+            <div class="spinner-wrap">
+                <lightning-spinner alternative-text="Placing order..." size="large"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- ── Order Confirmed ───────────────────────────────────────────── -->
+        <template if:true={isConfirmed}>
+            <div class="state-card confirmed-card">
+                <div class="state-icon">&#x2705;</div>
+                <h2>Order Placed!</h2>
+                <p>Your order is being processed. You&#39;ll receive a confirmation shortly.</p>
+                <p class="order-ref">Order ID: <strong>{orderId}</strong></p>
+                <div class="state-actions">
+                    <lightning-button
+                        label="View My Orders"
+                        variant="brand"
+                        onclick={handleViewOrders}>
+                    </lightning-button>
+                    <lightning-button
+                        label="Continue Shopping"
+                        onclick={handleBackToShop}>
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Error ─────────────────────────────────────────────────────── -->
+        <template if:true={isError}>
+            <div class="state-card error-card">
+                <div class="state-icon">&#x274C;</div>
+                <h2>Something went wrong</h2>
+                <p>{errorMessage}</p>
+                <div class="state-actions">
+                    <lightning-button
+                        label="Try Again"
+                        variant="brand"
+                        onclick={handleRetry}>
+                    </lightning-button>
+                    <lightning-button
+                        label="Back to Shop"
+                        onclick={handleBackToShop}>
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Checkout Form ─────────────────────────────────────────────── -->
+        <template if:true={isForm}>
+
+            <!-- Empty cart -->
+            <template if:false={hasCart}>
+                <div class="state-card">
+                    <div class="state-icon">&#x1F6D2;</div>
+                    <h2>Your cart is empty</h2>
+                    <p>Add some products before checking out.</p>
+                    <lightning-button
+                        label="Browse Products"
+                        variant="brand"
+                        onclick={handleBackToShop}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <!-- Cart has items -->
+            <template if:true={hasCart}>
+
+                <!-- Order Summary -->
+                <div class="section-card">
+                    <h3 class="section-title">&#x1F6CD; Order Summary</h3>
+                    <template for:each={cartItems} for:item="item">
+                        <div key={item.productId} class="cart-row">
+                            <span class="item-name">{item.productName}</span>
+                            <span class="item-qty">x{item.quantity}</span>
+                            <span class="item-price">&#xA3;{item.subtotal}</span>
+                        </div>
+                    </template>
+                    <div class="cart-total-row">
+                        <span class="total-label">Total</span>
+                        <span class="total-amount">&#xA3;{cartTotal}</span>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="section-card">
+                    <h3 class="section-title">&#x1F4CD; Delivery Details</h3>
+                    <div class="form-row">
+                        <lightning-input
+                            label="First Name"
+                            name="firstName"
+                            value={firstName}
+                            onchange={handleField}
+                            required>
+                        </lightning-input>
+                        <lightning-input
+                            label="Last Name"
+                            name="lastName"
+                            value={lastName}
+                            onchange={handleField}
+                            required>
+                        </lightning-input>
+                    </div>
+                    <lightning-input
+                        label="Street Address"
+                        name="street"
+                        value={street}
+                        onchange={handleField}
+                        required>
+                    </lightning-input>
+                    <div class="form-row">
+                        <lightning-input
+                            label="City"
+                            name="city"
+                            value={city}
+                            onchange={handleField}
+                            required>
+                        </lightning-input>
+                        <lightning-input
+                            label="County / State"
+                            name="state"
+                            value={state}
+                            onchange={handleField}>
+                        </lightning-input>
+                    </div>
+                    <div class="form-row">
+                        <lightning-input
+                            label="Postcode / ZIP"
+                            name="zip"
+                            value={zip}
+                            onchange={handleField}
+                            required>
+                        </lightning-input>
+                        <lightning-input
+                            label="Country"
+                            name="country"
+                            value={country}
+                            onchange={handleField}
+                            required>
+                        </lightning-input>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="checkout-actions">
+                    <lightning-button
+                        label="&#x2190; Back to Shop"
+                        onclick={handleBackToShop}>
+                    </lightning-button>
+                    <lightning-button
+                        label="Place Order"
+                        variant="brand"
+                        icon-name="utility:check"
+                        onclick={handlePlaceOrder}>
+                    </lightning-button>
+                </div>
+
+            </template>
+        </template>
+
+    </div>
+</template>

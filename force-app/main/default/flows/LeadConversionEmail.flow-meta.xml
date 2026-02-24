@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <description>Sends a welcome email to the Lead and an admin alert when a Lead is converted.</description>
+    <label>Lead Conversion Email</label>
+    <status>Active</status>
+    <processType>AutoLaunchedFlow</processType>
+
+    <!-- ── Trigger: Lead updated, IsConverted flips to true ── -->
+    <start>
+        <locationX>176</locationX>
+        <locationY>50</locationY>
+        <filterFormula>AND(ISCHANGED({!$Record.IsConverted}), {!$Record.IsConverted})</filterFormula>
+        <object>Lead</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+        <connector>
+            <targetReference>sendWelcomeEmail</targetReference>
+        </connector>
+    </start>
+
+    <!-- ── Apex Action: Send welcome email to lead + admin conversion alert ── -->
+    <actionCalls>
+        <name>sendWelcomeEmail</name>
+        <label>Send Welcome Email to Lead and Admin Alert</label>
+        <locationX>176</locationX>
+        <locationY>200</locationY>
+        <actionName>LeadConversionEmailAction</actionName>
+        <actionType>apex</actionType>
+        <inputParameters>
+            <name>leadId</name>
+            <value><elementReference>$Record.Id</elementReference></value>
+        </inputParameters>
+        <inputParameters>
+            <name>salutation</name>
+            <value><elementReference>$Record.Salutation</elementReference></value>
+        </inputParameters>
+        <inputParameters>
+            <name>firstName</name>
+            <value><elementReference>$Record.FirstName</elementReference></value>
+        </inputParameters>
+        <inputParameters>
+            <name>lastName</name>
+            <value><elementReference>$Record.LastName</elementReference></value>
+        </inputParameters>
+        <inputParameters>
+            <name>email</name>
+            <value><elementReference>$Record.Email</elementReference></value>
+        </inputParameters>
+        <inputParameters>
+            <name>company</name>
+            <value><elementReference>$Record.Company</elementReference></value>
+        </inputParameters>
+        <inputParameters>
+            <name>loginUrl</name>
+            <value><stringValue>https://orgfarm-36e06c1f3e-dev-ed.develop.my.site.com/shop/s/login</stringValue></value>
+        </inputParameters>
+    </actionCalls>
+
+</Flow>
