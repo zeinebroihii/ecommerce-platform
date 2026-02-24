@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>TALCORE Quote</label>
+    <pluralLabel>TALCORE Quotes</pluralLabel>
+    <nameField>
+        <label>Quote Number</label>
+        <type>AutoNumber</type>
+        <displayFormat>DEVIS-{0000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

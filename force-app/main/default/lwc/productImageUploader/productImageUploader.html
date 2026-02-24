@@ -1,0 +1,46 @@
+<template>
+    <lightning-card title="Product Image" icon-name="standard:product">
+        <div class="slds-p-around_medium">
+
+            <!-- Current image preview -->
+            <template if:true={currentImageUrl}>
+                <div class="preview-wrap">
+                    <img src={currentImageUrl} alt="Product Image" class="preview-img" />
+                    <p class="preview-label">Current image</p>
+                </div>
+            </template>
+
+            <template if:false={currentImageUrl}>
+                <div class="no-image">
+                    <span>&#128247;</span>
+                    <p>No image uploaded yet</p>
+                </div>
+            </template>
+
+            <!-- File upload -->
+            <div class="upload-wrap">
+                <lightning-file-upload
+                    label="Upload New Image"
+                    name="productImage"
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                    record-id={recordId}
+                    onuploadfinished={handleUploadFinished}
+                    multiple="false">
+                </lightning-file-upload>
+            </div>
+
+            <!-- Success message -->
+            <template if:true={uploadSuccess}>
+                <div class="success-msg">
+                    &#10003; Image uploaded and saved successfully!
+                </div>
+            </template>
+
+            <!-- Error message -->
+            <template if:true={uploadError}>
+                <div class="error-msg">{uploadError}</div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

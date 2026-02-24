@@ -1,0 +1,56 @@
+<template>
+    <div class="cart-container">
+
+        <div class="cart-header">
+            <h3>🛒 Your Cart</h3>
+            <span class="cart-count">{cartCount} item(s)</span>
+        </div>
+
+        <!-- Empty cart -->
+        <template if:true={isEmpty}>
+            <div class="empty-cart">
+                <p>Your cart is empty.</p>
+                <p>Browse products and click "Add to Cart".</p>
+            </div>
+        </template>
+
+        <!-- Cart items -->
+        <template if:false={isEmpty}>
+            <div class="cart-items">
+                <template for:each={cartItems} for:item="item">
+                    <div key={item.productId} class="cart-item">
+                        <div class="item-info">
+                            <span class="item-name">{item.productName}</span>
+                            <span class="item-price">£{item.unitPrice}</span>
+                        </div>
+                        <div class="item-controls">
+                            <button class="qty-btn" data-id={item.productId} onclick={decreaseQty}>−</button>
+                            <span class="qty">{item.quantity}</span>
+                            <button class="qty-btn" data-id={item.productId} onclick={increaseQty}>+</button>
+                            <button class="remove-btn" data-id={item.productId} onclick={removeItem}>✕</button>
+                        </div>
+                        <div class="item-subtotal">£{item.subtotal}</div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Total -->
+            <div class="cart-total">
+                <span>Total</span>
+                <span class="total-amount">£{cartTotal}</span>
+            </div>
+
+            <!-- Checkout button -->
+            <lightning-button
+                label="Proceed to Checkout"
+                variant="brand"
+                class="checkout-btn"
+                onclick={handleCheckout}>
+            </lightning-button>
+
+            <!-- Clear cart -->
+            <button class="clear-btn" onclick={clearCart}>Clear Cart</button>
+        </template>
+
+    </div>
+</template>

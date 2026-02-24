@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>Cart Channel</masterLabel>
+    <isExposed>true</isExposed>
+    <description>Message channel for cart events. productCatalog publishes when customer clicks Add to Cart. shoppingCart subscribes to update cart state.</description>
+
+    <lightningMessageFields>
+        <fieldName>productId</fieldName>
+        <description>Salesforce Product2 record ID</description>
+    </lightningMessageFields>
+
+    <lightningMessageFields>
+        <fieldName>productName</fieldName>
+        <description>Display name of the product</description>
+    </lightningMessageFields>
+
+    <lightningMessageFields>
+        <fieldName>unitPrice</fieldName>
+        <description>Unit price from the standard pricebook</description>
+    </lightningMessageFields>
+
+    <lightningMessageFields>
+        <fieldName>quantity</fieldName>
+        <description>Quantity being added (default 1)</description>
+    </lightningMessageFields>
+</LightningMessageChannel>

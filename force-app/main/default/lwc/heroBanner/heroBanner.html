@@ -1,0 +1,87 @@
+<template>
+    <div class="hero-wrap">
+
+        <!-- Left: content -->
+        <div class="hero-content">
+            <div class="hero-badge">&#x1F4E6; IT Products &amp; Enterprise Tech</div>
+
+            <h1 class="hero-title">
+                Next-Gen Tech,<br/>
+                <span class="hero-title-accent">One Click Away</span>
+            </h1>
+
+            <p class="hero-sub">
+                Premium hardware, software, and peripherals — sourced,
+                configured, and delivered to your door.
+            </p>
+
+            <div class="hero-actions">
+                <button class="btn-primary" onclick={handleShopNow}>
+                    Shop Now &#x2192;
+                </button>
+                <button class="btn-ghost" onclick={handleSupport}>
+                    Get Support
+                </button>
+            </div>
+
+            <!-- Trust stats -->
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-num">500<span class="stat-plus">+</span></span>
+                    <span class="stat-label">Products</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-num">24/7</span>
+                    <span class="stat-label">Support</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-num">100<span class="stat-plus">%</span></span>
+                    <span class="stat-label">Secure</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: visual -->
+        <div class="hero-visual">
+            <div class="glow-orb orb-1"></div>
+            <div class="glow-orb orb-2"></div>
+
+            <!-- Floating product cards -->
+            <div class="float-card card-top">
+                <span class="fc-icon">&#x1F4BB;</span>
+                <div class="fc-info">
+                    <span class="fc-name">Laptops &amp; Workstations</span>
+                    <span class="fc-sub">Starting from &#xA3;899</span>
+                </div>
+            </div>
+
+            <div class="float-card card-mid">
+                <span class="fc-icon">&#x1F5A5;&#xFE0F;</span>
+                <div class="fc-info">
+                    <span class="fc-name">Monitors &amp; Displays</span>
+                    <span class="fc-sub">4K · Ultra-wide · Curved</span>
+                </div>
+            </div>
+
+            <div class="float-card card-bot">
+                <div class="fc-confirm">
+                    <span class="fc-check">&#x2713;</span>
+                    <div class="fc-info">
+                        <span class="fc-name">Order Confirmed!</span>
+                        <span class="fc-sub">Dispatching in 24h</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Central device mockup -->
+            <div class="device-ring">
+                <div class="device-inner">
+                    <span class="device-icon">&#x1F5A5;&#xFE0F;</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</template>
