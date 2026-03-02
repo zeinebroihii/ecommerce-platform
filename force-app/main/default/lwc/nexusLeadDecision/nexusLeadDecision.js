@@ -1,4 +1,5 @@
 import { LightningElement, api, wire, track } from 'lwc';
+import { NavigationMixin }          from 'lightning/navigation';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { refreshApex }              from '@salesforce/apex';
 import { ShowToastEvent }           from 'lightning/platformShowToastEvent';
@@ -13,9 +14,10 @@ import STATUS_FIELD      from '@salesforce/schema/Lead.Status';
 
 const FIELDS = [AI_SCORE_FIELD, AI_REASON_FIELD, DECISION_FIELD, INTENT_FIELD, COMPANY_FIELD, STATUS_FIELD];
 
-export default class NexusLeadDecision extends LightningElement {
+export default class NexusLeadDecision extends NavigationMixin(LightningElement) {
     @api recordId;
-    @track isActing = false;
+    @track isActing     = false;
+    @track isRefreshing = false;
 
     _wiredResult;
 
@@ -79,6 +81,38 @@ export default class NexusLeadDecision extends LightningElement {
     }
 
     // ── Handlers ──────────────────────────────────────────────────────────────
+    async handleOpenAgent() {
+        const prompt = `Analyse ce lead et mets à jour ses champs : ${this.recordId}`;
+        let copied = false;
+        try {
+            await navigator.clipboard.writeText(prompt);
+            copied = true;
+        } catch(e) {
+            // clipboard blocked in this context — show prompt in toast instead
+        }
+        this[NavigationMixin.GenerateUrl]({
+            type: 'standard__webPage',
+            attributes: { url: '/AiCopilot/copilotStudio.app#/copilot/builder?copilotId=0Xxg5000000b81pCAA&versionId=0X9g5000000s8mzCAA' }
+        }).then(url => window.open(url, '_blank'));
+        this.dispatchEvent(new ShowToastEvent({
+            title: copied ? '✓ Prompt copié — collez dans l\'agent' : 'Nexus Lead Analyst',
+            message: copied
+                ? `Ctrl+V dans l'agent : "${prompt}"`
+                : `Copiez ce texte → ${prompt}`,
+            variant: 'info',
+            mode: 'sticky'
+        }));
+    }
+
+    async handleRefresh() {
+        this.isRefreshing = true;
+        try {
+            await refreshApex(this._wiredResult);
+        } finally {
+            this.isRefreshing = false;
+        }
+    }
+
     async handleApprove() {
         await this._decide('Approved');
     }

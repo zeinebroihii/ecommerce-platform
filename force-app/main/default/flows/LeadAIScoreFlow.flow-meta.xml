@@ -38,9 +38,5 @@
             <name>leadId</name>
             <value><elementReference>$Record.Id</elementReference></value>
         </inputParameters>
-        <inputParameters>
-            <name>einsteinJson</name>
-            <value><stringValue></stringValue></value>
-        </inputParameters>
     </actionCalls>
 </Flow>

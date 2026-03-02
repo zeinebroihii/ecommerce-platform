@@ -6,10 +6,13 @@
             <div class="nld-header-icon">
                 <lightning-icon icon-name="utility:einstein" size="small" variant="inverse"></lightning-icon>
             </div>
-            <div>
+            <div class="nld-header-text">
                 <h3 class="nld-title">Nexus AI — Décision Admin</h3>
                 <p class="nld-subtitle">Analyse intelligente du lead B2B</p>
             </div>
+            <button class="nld-btn-refresh" onclick={handleRefresh} disabled={isRefreshing} title="Rafraîchir l'analyse">
+                <lightning-icon icon-name="utility:refresh" size="x-small" variant="inverse"></lightning-icon>
+            </button>
         </div>
 
         <!-- ── Loading ── -->
@@ -50,6 +53,12 @@
                 <span class="nld-status-label">Statut :</span>
                 <span class={decisionBadgeClass}>{decisionLabel}</span>
             </div>
+
+            <!-- Agent deep-analysis button (always visible) -->
+            <button class="nld-btn-agent" onclick={handleOpenAgent}>
+                <lightning-icon icon-name="utility:einstein" size="x-small" variant="inverse"></lightning-icon>
+                &nbsp;Analyse approfondie — Nexus Lead Analyst
+            </button>
 
             <!-- Approve / Reject buttons (only if Pending) -->
             <template if:true={isPending}>
