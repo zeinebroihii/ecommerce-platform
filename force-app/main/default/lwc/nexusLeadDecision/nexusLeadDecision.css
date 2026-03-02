@@ -2,10 +2,14 @@
 .nld-wrap { background: #0f172a; border-radius: 1.5rem; padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; }
 
 /* ── Header ── */
-.nld-header { display: flex; align-items: center; gap: 0.875rem; }
+.nld-header      { display: flex; align-items: center; gap: 0.875rem; }
 .nld-header-icon { width: 2.5rem; height: 2.5rem; background: rgba(99,102,241,0.2); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nld-header-text { flex: 1; }
 .nld-title    { font-size: 1rem; font-weight: 900; color: #f1f5f9; margin: 0; letter-spacing: -0.01em; }
 .nld-subtitle { font-size: 0.75rem; color: #64748b; margin: 0.125rem 0 0; }
+.nld-btn-refresh { width: 2rem; height: 2rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; flex-shrink: 0; padding: 0; }
+.nld-btn-refresh:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+.nld-btn-refresh:disabled { opacity: 0.4; cursor: not-allowed; }
 .nld-loading  { color: #64748b; font-size: 0.875rem; text-align: center; padding: 1rem 0; }
 
 /* ── Score ring ── */
@@ -41,6 +45,10 @@
 .nld-badge-pending  { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
 .nld-badge-approved { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
 .nld-badge-rejected { background: rgba(244,63,94,0.15);  color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
+
+/* ── Agent deep-analysis button ── */
+.nld-btn-agent { width: 100%; padding: 0.75rem 1rem; background: rgba(99,102,241,0.1); color: #a5b4fc; border: 1.5px solid rgba(99,102,241,0.3); border-radius: 1rem; font-size: 0.875rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.nld-btn-agent:hover { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.55); color: #c7d2fe; }
 
 /* ── Action buttons ── */
 .nld-actions     { display: flex; gap: 0.75rem; }
