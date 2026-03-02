@@ -1,0 +1,46 @@
+<template>
+    <div class="ai-card">
+        <!-- Decorative glows -->
+        <div class="ai-glow ai-glow--bottom"></div>
+        <div class="ai-glow ai-glow--top"></div>
+
+        <!-- Header -->
+        <div class="ai-header">
+            <div class="ai-header-icon">
+                <lightning-icon icon-name="utility:einstein" size="small" class="ai-einstein-icon"></lightning-icon>
+            </div>
+            <div>
+                <div class="ai-title">Nexus AI Intelligence</div>
+                <div class="ai-subtitle">Predictive Engine Active</div>
+            </div>
+            <lightning-icon icon-name="utility:sparkles" size="x-small" class="ai-sparkle"></lightning-icon>
+        </div>
+
+        <!-- Insights list -->
+        <div class="ai-insights">
+            <template for:each={insights} for:item="insight">
+                <div key={insight.id} class="ai-insight">
+                    <div class="ai-insight-header">
+                        <lightning-icon icon-name={insight.iconName} size="x-small" class="ai-insight-icon"></lightning-icon>
+                        <span class={insight.labelClass}>{insight.category}</span>
+                    </div>
+                    <p class="ai-insight-text">
+                        {insight.text}
+                        <template if:true={insight.highlight}>
+                            <strong class={insight.highlightClass}> {insight.highlight}</strong>
+                        </template>
+                        {insight.textSuffix}
+                    </p>
+                </div>
+            </template>
+        </div>
+
+        <!-- Action button -->
+        <div class="ai-footer">
+            <button class={notifyBtnClass} onclick={handleNotify}>
+                <lightning-icon icon-name={notifyIcon} size="x-small" class="ai-btn-icon"></lightning-icon>
+                {notifyLabel}
+            </button>
+        </div>
+    </div>
+</template>

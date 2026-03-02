@@ -1,0 +1,35 @@
+<template>
+    <div class="nlc-card">
+
+        <!-- Top accent bar (color = score tier) -->
+        <div class={topBarClass}></div>
+
+        <!-- Header: avatar · name/company · status dot -->
+        <div class="nlc-header">
+            <div class="nlc-avatar">{initials}</div>
+            <div class="nlc-meta">
+                <h4 class="nlc-name">{leadName}</h4>
+                <p class="nlc-company">{company}</p>
+            </div>
+            <div class={dotClass}></div>
+        </div>
+
+        <!-- AI Score -->
+        <div class="nlc-score-section">
+            <div class="nlc-score-row">
+                <span class="nlc-score-label">AI Lead Score</span>
+                <span class={scoreValueClass}>{score}%</span>
+            </div>
+            <div class="nlc-track">
+                <div class={barClass} style={barStyle}></div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="nlc-actions">
+            <button class="nlc-btn-view"    onclick={handleView}>View</button>
+            <button class="nlc-btn-convert" onclick={handleConvert}>Convert</button>
+        </div>
+
+    </div>
+</template>

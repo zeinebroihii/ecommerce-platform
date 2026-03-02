@@ -1,0 +1,94 @@
+/* ── nexusActiveLeads KPI card ────────────────────────────── */
+
+.kpi-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    border: 1px solid rgba(99,102,241,.12);
+    overflow: hidden;
+    transition: box-shadow .3s, transform .3s;
+}
+
+.kpi-card:hover {
+    box-shadow: 0 16px 40px rgba(0,0,0,.12);
+    transform: translateY(-3px);
+}
+
+.kpi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .75rem;
+}
+
+/* Icon — primary (indigo) */
+.kpi-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: .625rem;
+    background: rgba(99,102,241,.10);
+    --lwc-colorTextIconDefault: #6366f1;
+    transition: background .3s;
+}
+
+.kpi-card:hover .kpi-icon {
+    background: #6366f1;
+    --lwc-colorTextIconDefault: #ffffff;
+}
+
+/* Trend pill */
+.kpi-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: .15rem;
+    padding: .15rem .5rem;
+    border-radius: 9999px;
+    font-size: .6rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.kpi-trend--up { background: rgba(16,185,129,.10); color: #10b981; }
+
+/* Value + label */
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -.04em;
+    line-height: 1.1;
+    margin-bottom: .25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.kpi-label {
+    font-size: .6rem;
+    font-weight: 900;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    position: relative;
+    z-index: 1;
+}
+
+/* Decorative blob */
+.kpi-blob {
+    position: absolute;
+    bottom: -1rem;
+    right: -1rem;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 9999px;
+    background: #6366f1;
+    opacity: .04;
+    transition: opacity .3s;
+}
+
+.kpi-card:hover .kpi-blob { opacity: .09; }

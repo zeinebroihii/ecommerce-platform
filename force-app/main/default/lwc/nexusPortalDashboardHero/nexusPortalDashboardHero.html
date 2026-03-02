@@ -1,0 +1,53 @@
+<template>
+    <section class="npdh-hero">
+        <!-- Decorative glows -->
+        <div class="npdh-glow-top"></div>
+        <div class="npdh-glow-bottom"></div>
+
+        <div class="npdh-inner">
+
+            <!-- Left column -->
+            <div class="npdh-left">
+                <div class="npdh-ai-tag">
+                    <lightning-icon icon-name="utility:sparkles" size="xx-small" class="npdh-tag-icon"></lightning-icon>
+                    <span>{aiTag}</span>
+                </div>
+
+                <h2 class="npdh-title">
+                    <span class="npdh-title-line1">{titleLine1}</span>
+                    <span class="npdh-title-highlight">{titleHighlight}</span>
+                </h2>
+
+                <p class="npdh-desc">{heroDescription}</p>
+
+                <div class="npdh-actions">
+                    <button class="npdh-btn-primary" onclick={handlePrimary}>{primaryBtnLabel}</button>
+                    <template if:true={showSecondary}>
+                        <button class="npdh-btn-secondary" onclick={handleSecondary}>{secondaryBtnLabel}</button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Right: 2×2 metric mini-cards -->
+            <div class="npdh-metrics">
+                <div class="npdh-metric-card">
+                    <div class="npdh-metric-value" style={metric1Style}>{metric1Value}</div>
+                    <div class="npdh-metric-label">{metric1Label}</div>
+                </div>
+                <div class="npdh-metric-card">
+                    <div class="npdh-metric-value" style={metric2Style}>{metric2Value}</div>
+                    <div class="npdh-metric-label">{metric2Label}</div>
+                </div>
+                <div class="npdh-metric-card">
+                    <div class="npdh-metric-value" style={metric3Style}>{metric3Value}</div>
+                    <div class="npdh-metric-label">{metric3Label}</div>
+                </div>
+                <div class="npdh-metric-card">
+                    <div class="npdh-metric-value" style={metric4Style}>{metric4Value}</div>
+                    <div class="npdh-metric-label">{metric4Label}</div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</template>

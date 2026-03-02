@@ -1,0 +1,30 @@
+<template>
+    <div class="pv-card">
+        <!-- Header -->
+        <div class="pv-header">
+            <div class="pv-header-left">
+                <lightning-icon icon-name="utility:chart" size="x-small" class="pv-header-icon"></lightning-icon>
+                <span class="pv-title">Pipeline Velocity</span>
+            </div>
+            <span class="pv-period">{period}</span>
+        </div>
+
+        <!-- Stages -->
+        <div class="pv-body">
+            <template for:each={stages} for:item="stage">
+                <div key={stage.label} class="pv-stage">
+                    <div class="pv-stage-meta">
+                        <div>
+                            <span class="pv-stage-label">{stage.label}</span>
+                            <span class="pv-stage-count">{stage.count} Deals</span>
+                        </div>
+                        <span class="pv-stage-amount">{stage.formattedAmount}</span>
+                    </div>
+                    <div class="pv-track">
+                        <div class="pv-bar" style={stage.barStyle}></div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

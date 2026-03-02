@@ -1,0 +1,44 @@
+<template>
+    <div class="npc-card">
+
+        <!-- Image area -->
+        <div class="npc-img-wrap">
+            <template if:true={hasImage}>
+                <img class="npc-img" src={imageUrl} alt={productName} />
+            </template>
+            <template if:false={hasImage}>
+                <div class="npc-img-placeholder">
+                    <lightning-icon icon-name="utility:product" size="large" class="npc-placeholder-icon"></lightning-icon>
+                </div>
+            </template>
+            <div class="npc-img-overlay"></div>
+            <span class={statusBadgeClass}>{status}</span>
+        </div>
+
+        <!-- Card body -->
+        <div class="npc-body">
+            <div class="npc-family">{family}</div>
+            <h4 class="npc-name">{productName}</h4>
+
+            <!-- Stock velocity -->
+            <div class="npc-stock-section">
+                <div class="npc-stock-row">
+                    <span class="npc-stock-label">Stock Velocity</span>
+                    <span class={stockCountClass}>{stock} / {capacity}</span>
+                </div>
+                <div class="npc-track">
+                    <div class={stockBarClass} style={barStyle}></div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="npc-footer">
+                <span class="npc-price">{formattedPrice}</span>
+                <button class="npc-refresh-btn" onclick={handleRefresh} title="Refresh stock">
+                    <lightning-icon icon-name="utility:refresh" size="x-small"></lightning-icon>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</template>

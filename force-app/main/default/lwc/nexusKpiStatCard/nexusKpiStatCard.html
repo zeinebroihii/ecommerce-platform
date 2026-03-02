@@ -1,0 +1,17 @@
+<template>
+    <div class={cardClass}>
+        <div class="kpi-header">
+            <div class={iconWrapClass}>
+                <lightning-icon icon-name={iconName} size="x-small"></lightning-icon>
+            </div>
+            <span class={trendClass}>
+                <template if:true={trendUp}>&#8599;</template>
+                <template if:false={trendUp}>&#8600;</template>
+                {trend}
+            </span>
+        </div>
+        <div class="kpi-value">{value}</div>
+        <div class="kpi-label">{label}</div>
+        <div class={blobClass}></div>
+    </div>
+</template>

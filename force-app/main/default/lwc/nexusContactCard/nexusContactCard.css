@@ -1,0 +1,151 @@
+/* ── nexusContactCard ───────────────────────────────────────── */
+
+.ncc-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 0 0 1px rgba(99,102,241,.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    transition: box-shadow .4s, transform .4s;
+}
+
+.ncc-card:hover {
+    box-shadow: 0 24px 56px rgba(0,0,0,.13), 0 0 0 1px rgba(99,102,241,.16);
+    transform: translateY(-6px);
+}
+
+/* ── Hover gradient bar ── */
+.ncc-hover-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 6px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    opacity: 0;
+    transition: opacity .4s;
+}
+.ncc-card:hover .ncc-hover-bar { opacity: 1; }
+
+/* ── Header ── */
+.ncc-header {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+/* Avatar */
+.ncc-avatar {
+    flex-shrink: 0;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.375rem;
+    font-weight: 900;
+    box-shadow: 0 8px 24px rgba(79,70,229,.28);
+    transition: transform .4s;
+}
+.ncc-card:hover .ncc-avatar { transform: scale(1.1); }
+
+.ncc-meta { flex: 1; min-width: 0; }
+
+.ncc-name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 900;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color .3s;
+}
+.ncc-card:hover .ncc-name { color: #4f46e5; }
+
+.ncc-title {
+    margin: 0.2rem 0 0;
+    font-size: 0.625rem;
+    font-weight: 900;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Info rows ── */
+.ncc-info { display: flex; flex-direction: column; gap: 0.875rem; }
+
+.ncc-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.ncc-info-icon {
+    flex-shrink: 0;
+    width: 2rem; height: 2rem;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    --lwc-colorTextIconDefault: #64748b;
+    transition: background .2s;
+}
+.ncc-info-row:hover .ncc-info-icon {
+    background: rgba(79,70,229,.08);
+    --lwc-colorTextIconDefault: #4f46e5;
+}
+
+.ncc-info-text {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Actions ── */
+.ncc-actions { display: flex; gap: 0.75rem; }
+
+.ncc-btn-profile,
+.ncc-btn-message {
+    flex: 1;
+    height: 2.75rem;
+    border: none;
+    border-radius: 0.875rem;
+    font-size: 0.625rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s, box-shadow .2s, transform .1s;
+}
+
+.ncc-btn-profile {
+    background: #ffffff;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+.ncc-btn-profile:hover { background: #f8fafc; }
+
+.ncc-btn-message {
+    background: #0f172a;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(15,23,42,.18);
+}
+.ncc-btn-message:hover {
+    background: #1e293b;
+    box-shadow: 0 6px 18px rgba(15,23,42,.28);
+    transform: translateY(-1px);
+}

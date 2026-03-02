@@ -1,0 +1,86 @@
+<template>
+    <div class="nob-wrap">
+
+        <!-- Header -->
+        <div class="nob-header">
+            <div class="nob-header-left">
+                <h3 class="nob-title">Order Management</h3>
+                <span class="nob-badge">{orderCountLabel}</span>
+            </div>
+            <div class="nob-header-right">
+                <!-- Status filter tabs -->
+                <div class="nob-filters">
+                    <template for:each={filterOptions} for:item="f">
+                        <button
+                            key={f.label}
+                            class={f.btnClass}
+                            data-filter={f.label}
+                            onclick={handleFilterClick}
+                        >{f.label}</button>
+                    </template>
+                </div>
+                <!-- Search -->
+                <input
+                    class="nob-search"
+                    type="text"
+                    placeholder="Search orders..."
+                    value={searchTerm}
+                    oninput={handleSearchInput}
+                />
+                <!-- New Order -->
+                <button class="nob-btn-new" onclick={handleNewOrder}>+ New Order</button>
+            </div>
+        </div>
+
+        <!-- Order list -->
+        <div class="nob-list">
+            <template if:true={hasOrders}>
+                <template for:each={filteredOrders} for:item="order">
+                    <c-nexus-order-row
+                        key={order.orderId}
+                        order-id={order.orderId}
+                        order-number={order.orderNumber}
+                        account={order.account}
+                        order-date={order.orderDate}
+                        formatted-total={order.formattedTotal}
+                        status={order.status}
+                        item-count={order.itemCount}
+                        ondetailsclick={handleDetailsClick}
+                        oninvoiceclick={handleInvoiceClick}
+                    ></c-nexus-order-row>
+                </template>
+            </template>
+            <template if:false={hasOrders}>
+                <p class="nob-empty">No orders found.</p>
+            </template>
+        </div>
+
+        <!-- Order Details Modal -->
+        <template if:true={showDetails}>
+            <c-nexus-order-details
+                order-id={selectedOrder.orderId}
+                order-number={selectedOrder.orderNumber}
+                account={selectedOrder.account}
+                order-date={selectedOrder.orderDate}
+                formatted-total={selectedOrder.formattedTotal}
+                status={selectedOrder.status}
+                item-count={selectedOrder.itemCount}
+                onclose={handleCloseDetails}
+            ></c-nexus-order-details>
+        </template>
+
+        <!-- Invoice Panel Modal -->
+        <template if:true={showInvoice}>
+            <c-nexus-invoice-panel
+                order-id={selectedOrder.orderId}
+                order-number={selectedOrder.orderNumber}
+                account={selectedOrder.account}
+                order-date={selectedOrder.orderDate}
+                formatted-total={selectedOrder.formattedTotal}
+                status={selectedOrder.status}
+                onclose={handleCloseInvoice}
+            ></c-nexus-invoice-panel>
+        </template>
+
+    </div>
+</template>

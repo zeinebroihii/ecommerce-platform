@@ -1,0 +1,106 @@
+<template>
+    <div class="nip-overlay">
+        <div class="nip-modal">
+
+            <!-- Invoice header band -->
+            <div class="nip-top">
+                <div>
+                    <div class="nip-logo">&#9889;</div>
+                    <h2 class="nip-title">Invoice</h2>
+                    <p class="nip-inv-number">INV-{invoiceRef}</p>
+                </div>
+                <div class="nip-company">
+                    <p class="nip-company-name">Nexus CRM Solutions</p>
+                    <p class="nip-company-line">123 Innovation Drive</p>
+                    <p class="nip-company-line">75001 Paris, France</p>
+                    <p class="nip-company-line">contact@nexus-crm.com</p>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="nip-body">
+
+                <!-- Bill To + Invoice Details -->
+                <div class="nip-meta">
+                    <div>
+                        <h4 class="nip-meta-label">Bill To</h4>
+                        <p class="nip-meta-account">{account}</p>
+                        <p class="nip-meta-addr">{shippingAddress}</p>
+                    </div>
+                    <div class="nip-meta-right">
+                        <h4 class="nip-meta-label">Invoice Details</h4>
+                        <div class="nip-detail-row">
+                            <span class="nip-detail-key">Date Issued</span>
+                            <span class="nip-detail-val">{orderDate}</span>
+                        </div>
+                        <div class="nip-detail-row">
+                            <span class="nip-detail-key">Order Number</span>
+                            <span class="nip-detail-val">{orderNumber}</span>
+                        </div>
+                        <div class="nip-detail-row">
+                            <span class="nip-detail-key">Status</span>
+                            <span class="nip-detail-val">{status}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line items table -->
+                <table class="nip-table">
+                    <thead>
+                        <tr class="nip-thead-row">
+                            <th class="nip-th nip-th--left">Description</th>
+                            <th class="nip-th nip-th--center">Qty</th>
+                            <th class="nip-th nip-th--right">Unit Price</th>
+                            <th class="nip-th nip-th--right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template if:true={hasLineItems}>
+                            <template for:each={lineItems} for:item="li">
+                                <tr key={li.productName} class="nip-tr">
+                                    <td class="nip-td">{li.productName}</td>
+                                    <td class="nip-td nip-td--center">{li.quantity}</td>
+                                    <td class="nip-td nip-td--right">{li.formattedUnitPrice}</td>
+                                    <td class="nip-td nip-td--right nip-td--bold">{li.formattedTotal}</td>
+                                </tr>
+                            </template>
+                        </template>
+                        <template if:false={hasLineItems}>
+                            <tr class="nip-tr">
+                                <td class="nip-td nip-td--empty" colspan="4">No line items found</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+
+                <!-- Totals -->
+                <div class="nip-totals-wrap">
+                    <div class="nip-totals">
+                        <div class="nip-total-row">
+                            <span class="nip-total-key">Subtotal</span>
+                            <span class="nip-total-val">{formattedTotal}</span>
+                        </div>
+                        <div class="nip-total-row">
+                            <span class="nip-total-key">Tax (20%)</span>
+                            <span class="nip-total-val">{formattedTax}</span>
+                        </div>
+                        <div class="nip-total-row nip-total-row--final">
+                            <span class="nip-total-key nip-total-key--final">Total Amount</span>
+                            <span class="nip-total-val nip-total-val--final">{formattedGrandTotal}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="nip-actions">
+                    <button class="nip-btn-dark" onclick={handleDownload} disabled={isGenerating}>
+                        <template if:false={isGenerating}>&#8593; Download PDF</template>
+                        <template if:true={isGenerating}>Generating...</template>
+                    </button>
+                    <button class="nip-btn-outline" onclick={handleClose}>Close</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</template>

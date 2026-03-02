@@ -1,0 +1,38 @@
+<template>
+    <div class="npco-column">
+
+        <!-- Column header -->
+        <div class="npco-header">
+            <div class="npco-header-left">
+                <div class={dotClass}></div>
+                <span class="npco-stage-name">{stageName}</span>
+            </div>
+            <span class="npco-count">{count}</span>
+        </div>
+
+        <!-- Cards body -->
+        <div class="npco-body">
+            <template if:true={hasOpportunities}>
+                <template for:each={_opps} for:item="opp">
+                    <div key={opp.oppId} class="npco-card-wrap">
+                        <c-nexus-pipeline-card
+                            opp-id={opp.oppId}
+                            opp-name={opp.name}
+                            account={opp.account}
+                            amount={opp.amount}
+                            close-date={opp.closeDate}
+                        ></c-nexus-pipeline-card>
+                    </div>
+                </template>
+            </template>
+
+            <template if:false={hasOpportunities}>
+                <div class="npco-empty">
+                    <lightning-icon icon-name="utility:layers" size="small" class="npco-empty-icon"></lightning-icon>
+                    <span class="npco-empty-label">No Active Deals</span>
+                </div>
+            </template>
+        </div>
+
+    </div>
+</template>

@@ -1,0 +1,50 @@
+<template>
+    <div class="ncp-overlay" onclick={handleOverlayClick}>
+        <div class="ncp-modal" onclick={stopPropagation}>
+
+            <!-- Gradient header band -->
+            <div class="ncp-header-band">
+                <button class="ncp-close" onclick={handleClose}>&#x2715;</button>
+                <!-- Avatar overlapping the band bottom -->
+                <div class="ncp-avatar-wrap">
+                    <div class="ncp-avatar-ring">
+                        <div class="ncp-avatar">{initials}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="ncp-body">
+                <div class="ncp-identity">
+                    <h2 class="ncp-name">{contactName}</h2>
+                    <p class="ncp-role">{title}&nbsp;&bull;&nbsp;{account}</p>
+                </div>
+
+                <div class="ncp-grid">
+                    <div class="ncp-field">
+                        <label class="ncp-label">Email Address</label>
+                        <p class="ncp-value">{email}</p>
+                    </div>
+                    <div class="ncp-field">
+                        <label class="ncp-label">Phone Number</label>
+                        <p class="ncp-value">{phoneDisplay}</p>
+                    </div>
+                    <div class="ncp-field">
+                        <label class="ncp-label">Department</label>
+                        <p class="ncp-value">{departmentDisplay}</p>
+                    </div>
+                    <div class="ncp-field">
+                        <label class="ncp-label">Account</label>
+                        <p class="ncp-value">{account}</p>
+                    </div>
+                </div>
+
+                <div class="ncp-actions">
+                    <button class="ncp-btn-edit"     onclick={handleEdit}>Edit Profile</button>
+                    <button class="ncp-btn-activity" onclick={handleActivity}>View Record</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</template>

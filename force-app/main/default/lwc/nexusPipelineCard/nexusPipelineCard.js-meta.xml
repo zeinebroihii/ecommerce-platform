@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage">
+            <property name="oppId"     type="String"  label="Opportunity ID"   description="Salesforce Opportunity record Id"/>
+            <property name="oppName"   type="String"  label="Opportunity Name" description="Name / title of the deal"/>
+            <property name="account"   type="String"  label="Account"          description="Account / company name"/>
+            <property name="amount"    type="Integer" label="Amount"           description="Deal amount (numeric)" default="0"/>
+            <property name="closeDate" type="String"  label="Close Date"       description="Expected close date (YYYY-MM-DD)"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

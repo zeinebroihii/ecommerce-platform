@@ -61,12 +61,6 @@
                 <identifier>force_detailPanel</identifier>
             </componentInstance>
         </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>productImageUploader</componentName>
-                <identifier>c_productImageUploader</identifier>
-            </componentInstance>
-        </itemInstances>
         <mode>Replace</mode>
         <name>detailTabContent</name>
         <type>Facet</type>

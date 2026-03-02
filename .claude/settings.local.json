@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sf data query:*)",
+      "Bash(sf project deploy start --source-dir force-app/main/default/classes/LeadManagementController.cls --source-dir force-app/main/default/classes/LeadConversionEmailAction.cls --wait 5)",
+      "Bash(cmd /c \"sf data query --query \"\"SELECT MasterLabel, IsConverted FROM LeadStatus\"\" 2>&1\")"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage,lightningCommunity__Default">
+            <property name="aiTag"            type="String"  label="AI Tag Label"          default="Nexus AI Intelligence"/>
+            <property name="titleLine1"       type="String"  label="Title Line 1"          default="VOTRE PORTAIL"/>
+            <property name="titleHighlight"   type="String"  label="Title Highlight Word"  default="INTELLIGENT"/>
+            <property name="heroDescription"  type="String"  label="Description"           default="Nexus AI a analysé votre compte."/>
+            <property name="primaryBtnLabel"  type="String"  label="Primary Button"        default="Voir les Insights"/>
+            <property name="secondaryBtnLabel" type="String" label="Secondary Button"      description="Leave empty to hide" default=""/>
+            <property name="metric1Value"     type="String"  label="Metric 1 Value"        default="98%"/>
+            <property name="metric1Label"     type="String"  label="Metric 1 Label"        default="Score Santé"/>
+            <property name="metric1Color"     type="String"  label="Metric 1 Color"        description="green | indigo | amber | red | blue | purple" default="green"/>
+            <property name="metric2Value"     type="String"  label="Metric 2 Value"        default="15%"/>
+            <property name="metric2Label"     type="String"  label="Metric 2 Label"        default="Économies AI"/>
+            <property name="metric2Color"     type="String"  label="Metric 2 Color"        description="green | indigo | amber | red | blue | purple" default="indigo"/>
+            <property name="metric3Value"     type="String"  label="Metric 3 Value"        default="+12%"/>
+            <property name="metric3Label"     type="String"  label="Metric 3 Label"        default="Usage Prévu"/>
+            <property name="metric3Color"     type="String"  label="Metric 3 Color"        description="green | indigo | amber | red | blue | purple" default="amber"/>
+            <property name="metric4Value"     type="String"  label="Metric 4 Value"        default="100%"/>
+            <property name="metric4Label"     type="String"  label="Metric 4 Label"        default="SLA Status"/>
+            <property name="metric4Color"     type="String"  label="Metric 4 Color"        description="green | indigo | amber | red | blue | purple" default="green"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

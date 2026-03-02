@@ -1,0 +1,39 @@
+<template>
+    <div class="ncc-card">
+
+        <!-- Hover gradient bar -->
+        <div class="ncc-hover-bar"></div>
+
+        <!-- Header: avatar + name/title -->
+        <div class="ncc-header">
+            <div class="ncc-avatar">{initials}</div>
+            <div class="ncc-meta">
+                <h4 class="ncc-name">{contactName}</h4>
+                <p class="ncc-title">{title}</p>
+            </div>
+        </div>
+
+        <!-- Info rows -->
+        <div class="ncc-info">
+            <div class="ncc-info-row">
+                <div class="ncc-info-icon">
+                    <lightning-icon icon-name="utility:company" size="x-small"></lightning-icon>
+                </div>
+                <span class="ncc-info-text">{account}</span>
+            </div>
+            <div class="ncc-info-row">
+                <div class="ncc-info-icon">
+                    <lightning-icon icon-name="utility:email" size="x-small"></lightning-icon>
+                </div>
+                <span class="ncc-info-text">{email}</span>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="ncc-actions">
+            <button class="ncc-btn-profile" onclick={handleProfile}>Profile</button>
+            <button class="ncc-btn-message" onclick={handleMessage}>Message</button>
+        </div>
+
+    </div>
+</template>

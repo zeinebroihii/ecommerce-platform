@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage,lightningCommunity__Default">
+            <property name="orderId"        type="String"  label="Order ID"       description="Salesforce Order record Id"/>
+            <property name="orderNumber"    type="String"  label="Order Number"   description="e.g. ORD-2024-001"  default="ORD-0000-000"/>
+            <property name="orderDate"      type="String"  label="Order Date"     description="Display date e.g. Aujourd'hui" default="Aujourd'hui"/>
+            <property name="formattedTotal" type="String"  label="Total"          description="Formatted total e.g. $4 500" default="$0"/>
+            <property name="status"         type="String"  label="Status"         description="Activated | Draft | Livré | En cours | Cancelled" default="Draft"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

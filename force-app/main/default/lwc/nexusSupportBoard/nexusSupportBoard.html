@@ -1,0 +1,51 @@
+<template>
+    <div class="nsb-wrap">
+
+        <!-- ── Header ── -->
+        <div class="nsb-header">
+            <div class="nsb-header-left">
+                <h3 class="nsb-title">Support &amp; Cases</h3>
+                <div class="nsb-ai-badge">
+                    <lightning-icon icon-name="utility:bot" size="x-small" class="nsb-ai-icon"></lightning-icon>
+                    <span class="nsb-ai-label">Nexus AI Monitoring</span>
+                </div>
+            </div>
+            <button class="nsb-filter-btn">Filter by Urgency</button>
+        </div>
+
+        <!-- ── Two-column layout ── -->
+        <div class="nsb-grid">
+
+            <!-- Cases list (left) -->
+            <div class="nsb-cases-col">
+                <template if:true={isEmpty}>
+                    <div class="nsb-empty">Aucun cas pour le moment.</div>
+                </template>
+                <template if:true={hasCases}>
+                    <template for:each={filteredCases} for:item="c">
+                        <c-nexus-case-card
+                            key={c.caseId}
+                            case-id={c.caseId}
+                            case-number={c.caseNumber}
+                            subject={c.subject}
+                            account={c.account}
+                            contact={c.contact}
+                            status={c.status}
+                            priority={c.priority}
+                            case-date={c.caseDate}
+                            needs-meeting={c.needsMeeting}
+                            onviewhistory={handleViewHistory}
+                            onschedulemeeting={handleScheduleMeeting}
+                        ></c-nexus-case-card>
+                    </template>
+                </template>
+            </div>
+
+            <!-- AI Insights panel (right) -->
+            <div class="nsb-insights-col">
+                <c-nexus-support-insights></c-nexus-support-insights>
+            </div>
+
+        </div>
+    </div>
+</template>

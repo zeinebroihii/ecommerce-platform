@@ -1,0 +1,117 @@
+<template>
+    <div class="npcart-wrap">
+
+        <!-- Header -->
+        <div class="npcart-header">
+            <h2 class="npcart-title">Mon Panier</h2>
+            <span class="npcart-badge">{itemCountLabel}</span>
+        </div>
+
+        <!-- Main grid -->
+        <div class="npcart-layout">
+
+            <!-- Items list -->
+            <div class="npcart-items">
+                <template if:true={hasItems}>
+                    <template for:each={cartItems} for:item="item">
+                        <c-nexus-portal-cart-item
+                            key={item.itemId}
+                            item-id={item.itemId}
+                            product-id={item.productId}
+                            product-name={item.name}
+                            product-description={item.description}
+                            image-url={item.imageUrl}
+                            unit-price={item.unitPrice}
+                            quantity={item.quantity}
+                            onremoveitem={handleRemoveItem}
+                            onupdateqty={handleUpdateQty}
+                        ></c-nexus-portal-cart-item>
+                    </template>
+                </template>
+                <template if:false={hasItems}>
+                    <div class="npcart-empty">
+                        <div class="npcart-empty-icon">
+                            <lightning-icon icon-name="utility:cart" size="large"></lightning-icon>
+                        </div>
+                        <h3 class="npcart-empty-title">Votre panier est vide.</h3>
+                        <button class="npcart-empty-btn" onclick={handleGoCatalog}>
+                            Parcourir le catalogue
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Summary (only when cart has items) -->
+            <template if:true={hasItems}>
+                <div class="npcart-summary-col">
+                    <c-nexus-portal-cart-summary
+                        subtotal={subtotal}
+                        item-count={itemCount}
+                        onplaceorder={handlePlaceOrder}
+                        onrequestquote={handleRequestQuote}
+                    ></c-nexus-portal-cart-summary>
+                </div>
+            </template>
+
+        </div>
+
+        <!-- ── Quote Generation Modal ── -->
+        <template if:true={showQuoteModal}>
+            <div class="npcart-overlay">
+                <div class="npcart-modal">
+
+                    <!-- Loading state -->
+                    <template if:true={isGeneratingQuote}>
+                        <div class="npcart-modal-loading">
+                            <div class="npcart-spinner">
+                                <div class="npcart-spinner-ring"></div>
+                            </div>
+                            <h3 class="npcart-modal-h">Salesforce Flow Active</h3>
+                            <p class="npcart-modal-sub">Generating Quote Object &amp; PDF...</p>
+                        </div>
+                    </template>
+
+                    <!-- Result state -->
+                    <template if:true={showQuoteResult}>
+                        <div class="npcart-modal-result">
+
+                            <!-- top row -->
+                            <div class="npcart-modal-top">
+                                <div class="npcart-modal-check">&#10003;</div>
+                                <button class="npcart-modal-close" onclick={handleCloseModal}>&#x2715;</button>
+                            </div>
+
+                            <h3 class="npcart-modal-h">Quote Generated</h3>
+                            <p class="npcart-modal-sub">A formal PDF has been emailed to your account.</p>
+
+                            <!-- Stats grid -->
+                            <div class="npcart-modal-stats">
+                                <div class="npcart-stat">
+                                    <div class="npcart-stat-label">Discount Applied</div>
+                                    <div class="npcart-stat-value npcart-stat--green">{quoteDiscountLabel}</div>
+                                </div>
+                                <div class="npcart-stat">
+                                    <div class="npcart-stat-label">Payment Terms</div>
+                                    <div class="npcart-stat-value">Net 30</div>
+                                </div>
+                            </div>
+
+                            <!-- AI prediction banner -->
+                            <div class="npcart-ai-banner">
+                                <div>
+                                    <span class="npcart-ai-tag">Agentforce Prediction</span>
+                                    <span class="npcart-ai-desc">Acceptance Probability</span>
+                                </div>
+                                <div class="npcart-ai-pct">{quoteProbability}%</div>
+                            </div>
+
+                            <button class="npcart-done-btn" onclick={handleCloseModal}>Done</button>
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

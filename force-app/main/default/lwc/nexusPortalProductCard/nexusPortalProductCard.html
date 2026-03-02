@@ -1,0 +1,56 @@
+<template>
+    <div class="nppc-card">
+
+        <!-- ── Image area ──────────────────────────────────────── -->
+        <div class="nppc-image-area">
+
+            <template if:true={hasImage}>
+                <img src={imageUrl} alt={productName} class="nppc-img" />
+            </template>
+            <template if:false={hasImage}>
+                <div class="nppc-img-placeholder">
+                    <lightning-icon icon-name="utility:package" size="large" class="nppc-pkg-icon"></lightning-icon>
+                </div>
+            </template>
+
+            <!-- Badges -->
+            <div class="nppc-badges">
+                <span class={stockBadgeClass}>{stockStatusLabel}</span>
+                <template if:true={isPremium}>
+                    <span class="nppc-premium-badge">PREMIUM</span>
+                </template>
+            </div>
+
+            <!-- Hover overlay -->
+            <div class="nppc-overlay">
+                <button class="nppc-overlay-btn" onclick={handleViewDetails}>
+                    DÉTAILS PRODUIT
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ── Body ────────────────────────────────────────────── -->
+        <div class="nppc-body">
+
+            <div class="nppc-family-row">
+                <div class="nppc-family-dot"></div>
+                <span class="nppc-family">{productFamily}</span>
+            </div>
+
+            <h4 class="nppc-name">{productName}</h4>
+            <p class="nppc-desc">{productDescription}</p>
+
+            <div class="nppc-footer">
+                <div class="nppc-price-block">
+                    <div class="nppc-price-label">Investissement</div>
+                    <div class="nppc-price">{formattedPrice}</div>
+                </div>
+                <button class="nppc-add-btn" onclick={handleAddToCart}>
+                    AJOUTER
+                </button>
+            </div>
+
+        </div>
+    </div>
+</template>

@@ -1,0 +1,86 @@
+<template>
+    <div class="nod-overlay">
+        <div class="nod-modal">
+
+            <!-- Header -->
+            <div class="nod-header">
+                <div class="nod-header-left">
+                    <div class="nod-icon">&#128722;</div>
+                    <div>
+                        <h2 class="nod-title">Order {orderNumber}</h2>
+                        <p class="nod-subtitle">{account} &bull; {orderDate}</p>
+                    </div>
+                </div>
+                <button class="nod-close" onclick={handleClose}>&#x2715;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="nod-body">
+
+                <!-- Stats grid -->
+                <div class="nod-stats">
+                    <div class="nod-stat">
+                        <p class="nod-stat-label">Status</p>
+                        <span class={statusBadgeClass}>{status}</span>
+                    </div>
+                    <div class="nod-stat">
+                        <p class="nod-stat-label">Total Amount</p>
+                        <p class="nod-stat-value">{formattedTotal}</p>
+                    </div>
+                    <div class="nod-stat">
+                        <p class="nod-stat-label">Items</p>
+                        <p class="nod-stat-value">{itemCountLabel}</p>
+                    </div>
+                    <div class="nod-stat">
+                        <p class="nod-stat-label">Ship To</p>
+                        <p class="nod-stat-value nod-stat-value--sm">{shippingAddress}</p>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <template if:true={hasLineItems}>
+                    <div class="nod-section">
+                        <h4 class="nod-section-title">Order Items</h4>
+                        <div class="nod-items-list">
+                            <template for:each={lineItems} for:item="li">
+                                <div key={li.productName} class="nod-item-row">
+                                    <div class="nod-item-family">{li.productFamily}</div>
+                                    <span class="nod-item-name">{li.productName}</span>
+                                    <span class="nod-item-qty">x{li.quantity}</span>
+                                    <span class="nod-item-unit">{li.formattedUnitPrice}</span>
+                                    <span class="nod-item-total">{li.formattedTotal}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Order Timeline -->
+                <div class="nod-section">
+                    <h4 class="nod-section-title">Order Timeline</h4>
+                    <div class="nod-timeline">
+                        <template for:each={timeline} for:item="step">
+                            <div key={step.label} class="nod-step">
+                                <div class={step.dotClass}>
+                                    <template if:true={step.done}>&#10003;</template>
+                                    <template if:false={step.done}><span class="nod-step-pending"></span></template>
+                                </div>
+                                <div>
+                                    <p class="nod-step-label">{step.label}</p>
+                                    <p class="nod-step-date">{step.date}</p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Footer actions -->
+                <div class="nod-footer">
+                    <button class="nod-btn-dark" onclick={handleTrack}>Track Shipment</button>
+                    <button class="nod-btn-outline" onclick={handleClose}>Close</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</template>

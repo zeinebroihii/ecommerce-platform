@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage">
+            <property name="caseId"      type="String"  label="Case ID"       description="Salesforce Case record Id"/>
+            <property name="caseNumber"  type="String"  label="Case Number"   description="Case number e.g. 001245"/>
+            <property name="subject"     type="String"  label="Subject"       description="Case subject / title"/>
+            <property name="account"     type="String"  label="Account"       description="Account name"/>
+            <property name="contact"     type="String"  label="Contact"       description="Contact full name"/>
+            <property name="status"      type="String"  label="Status"        description="Case status"/>
+            <property name="priority"    type="String"  label="Priority"      description="High | Medium | Low"/>
+            <property name="caseDate"    type="String"  label="Date"          description="Case creation date"/>
+            <property name="needsMeeting" type="Boolean" label="Needs Meeting" description="Show Schedule Meeting button" default="false"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>
