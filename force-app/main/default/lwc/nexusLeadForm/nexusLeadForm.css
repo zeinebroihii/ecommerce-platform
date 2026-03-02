@@ -1,0 +1,63 @@
+/* ── Outer ── */
+.nlf-wrap { max-width: 56rem; margin: 3rem auto; padding: 0 1.5rem; }
+
+/* ── Success state ── */
+.nlf-success       { max-width: 28rem; margin: 5rem auto; text-align: center; }
+.nlf-success-icon  { width: 6rem; height: 6rem; background: #059669; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; box-shadow: 0 20px 40px rgba(5,150,105,0.25); }
+.nlf-success-title { font-size: 1.875rem; font-weight: 900; color: #0f172a; margin: 0 0 1rem; }
+.nlf-success-body  { color: #64748b; font-size: 1rem; line-height: 1.75; }
+
+/* ── Card ── */
+.nlf-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 2.5rem; overflow: hidden; box-shadow: 0 25px 60px rgba(15,23,42,0.1); }
+
+/* ── Header ── */
+.nlf-header       { background: #0f172a; padding: 2.5rem; color: #fff; position: relative; overflow: hidden; }
+.nlf-step-pill    { display: inline-block; padding: 0.25rem 0.75rem; background: #4f46e5; border-radius: 9999px; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
+.nlf-header-title { font-size: 1.75rem; font-weight: 700; margin: 0 0 0.5rem; }
+.nlf-header-desc  { color: #94a3b8; margin: 0; font-size: 0.875rem; }
+.nlf-blob         { position: absolute; top: 0; right: 0; width: 16rem; height: 16rem; background: rgba(79,70,229,0.1); border-radius: 9999px; margin-right: -8rem; margin-top: -8rem; filter: blur(40px); pointer-events: none; }
+
+/* ── Body ── */
+.nlf-body { padding: 2.5rem; }
+
+/* ── Grid ── */
+.nlf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+@media (max-width: 640px) { .nlf-grid { grid-template-columns: 1fr; } }
+
+/* ── Field ── */
+.nlf-field      { display: flex; flex-direction: column; gap: 0.5rem; }
+.nlf-label      { font-size: 0.875rem; font-weight: 700; color: #334155; }
+.nlf-input-wrap { position: relative; }
+.nlf-icon       { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+.nlf-input, .nlf-select {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 3rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    background: #f8fafc;
+    font-size: 0.9375rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+.nlf-select { padding-left: 1rem; }
+.nlf-input:focus, .nlf-select:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.15); background: #fff; }
+
+/* ── Footer buttons ── */
+.nlf-footer-right { display: flex; justify-content: flex-end; }
+.nlf-footer-both  { display: flex; justify-content: space-between; align-items: center; }
+.nlf-btn-next, .nlf-btn-submit {
+    padding: 1rem 2rem;
+    background: #4f46e5;
+    color: #fff;
+    border: none;
+    border-radius: 1rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.nlf-btn-next:hover, .nlf-btn-submit:hover { background: #4338ca; }
+.nlf-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.nlf-btn-back { padding: 1rem 2rem; background: none; border: none; color: #475569; font-size: 0.9375rem; font-weight: 700; cursor: pointer; border-radius: 1rem; transition: background 0.2s; }
+.nlf-btn-back:hover { background: #f1f5f9; }

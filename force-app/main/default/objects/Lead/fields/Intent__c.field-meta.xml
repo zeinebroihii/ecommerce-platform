@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Intent__c</fullName>
+    <label>Intention d&apos;achat</label>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Bulk Purchase</fullName>
+                <default>false</default>
+                <label>Achat en gros (B2B)</label>
+            </value>
+            <value>
+                <fullName>Single Purchase</fullName>
+                <default>false</default>
+                <label>Achat unique</label>
+            </value>
+            <value>
+                <fullName>Partnership</fullName>
+                <default>false</default>
+                <label>Partenariat</label>
+            </value>
+            <value>
+                <fullName>Product Demo</fullName>
+                <default>false</default>
+                <label>Démonstration produit</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

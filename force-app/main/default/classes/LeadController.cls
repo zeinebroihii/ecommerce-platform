@@ -16,7 +16,9 @@ public without sharing class LeadController {
         String  city,
         String  state,
         String  zip,
-        String  description
+        String  description,
+        String  website,
+        String  intent
     ) {
         try {
             Lead l            = new Lead();
@@ -36,6 +38,8 @@ public without sharing class LeadController {
             l.Description     = description;
             l.LeadSource      = 'Web';
             l.Status          = 'Open - Not Contacted';
+            if (String.isNotBlank(website)) l.Website    = website;
+            if (String.isNotBlank(intent))  l.Intent__c  = intent;
 
             // Map employee band string → NumberOfEmployees integer
             if (String.isNotBlank(employees)) {
@@ -71,7 +75,7 @@ public without sharing class LeadController {
 
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(new List<String>{ toEmail });
-            mail.setSubject('Bienvenue chez TALCORE \u2014 Votre demande est re\u00e7ue');
+            mail.setSubject('Nexus Systems \u2014 Votre demande B2B est en cours de r\u00e9vision');
             mail.setHtmlBody(buildCustomerHtml(greeting, fullName));
             mail.setSaveAsActivity(false);
             Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
@@ -86,8 +90,8 @@ public without sharing class LeadController {
 
             // Header
             + '<div style="background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);padding:40px 32px;text-align:center;">'
-            + '<h1 style="color:#fff;font-size:28px;margin:0;letter-spacing:0.15em;">TALCORE</h1>'
-            + '<p style="color:#a5b4fc;margin:6px 0 0;font-size:13px;">Solutions IT &amp; Entreprise</p>'
+            + '<h1 style="color:#fff;font-size:28px;margin:0;letter-spacing:0.15em;">NEXUS SYSTEMS</h1>'
+            + '<p style="color:#a5b4fc;margin:6px 0 0;font-size:13px;">Solutions B2B &amp; B2C Intelligence</p>'
             + '</div>'
 
             // Body
@@ -95,12 +99,14 @@ public without sharing class LeadController {
             + '<p style="color:#0f172a;font-size:17px;font-weight:700;margin:0 0 16px;">'
             + greeting + ' ' + fullName + ',</p>'
             + '<p style="color:#334155;line-height:1.75;margin:0 0 14px;">'
-            + 'Merci de choisir <strong>TALCORE</strong> ! Nous sommes ravis de vous accueillir dans notre communaut\u00e9.</p>'
-            + '<p style="color:#334155;line-height:1.75;margin:0 0 14px;">'
-            + 'Vos informations ont \u00e9t\u00e9 re\u00e7ues et sont en cours de traitement.<br/>'
-            + 'Nous vous contacterons prochainement pour finaliser le processus de vente.</p>'
+            + 'Merci de choisir <strong>Nexus Systems</strong> ! Nous sommes ravis de vous accueillir.</p>'
+            + '<div style="background:#fef9c3;border-left:4px solid #eab308;border-radius:0 10px 10px 0;padding:14px 20px;margin:0 0 16px;">'
+            + '<strong style="color:#854d0e;">Demande en cours de r\u00e9vision</strong><br/>'
+            + '<span style="color:#713f12;font-size:13px;">Votre dossier est analys\u00e9 par notre \u00e9quipe. '
+            + 'Vous recevrez une r\u00e9ponse sous <strong>24\u201348\u00a0h</strong>.</span>'
+            + '</div>'
             + '<p style="color:#334155;line-height:1.75;margin:0 0 32px;">'
-            + 'En attendant, explorez notre site ou contactez-nous si vous avez besoin d\u2019assistance.</p>'
+            + 'En attendant, n\u2019h\u00e9sitez pas \u00e0 explorer notre catalogue ou \u00e0 nous contacter si vous avez des questions.</p>'
             + '<a href="#" style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);'
             + 'color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;'
             + 'font-weight:700;font-size:14px;letter-spacing:0.02em;">Explorer nos produits</a>'

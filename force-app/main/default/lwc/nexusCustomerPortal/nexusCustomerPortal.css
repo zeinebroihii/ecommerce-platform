@@ -1,0 +1,228 @@
+/* ── Outer layout ── */
+.ncp-wrap    { display: flex; gap: 3rem; padding: 2rem; min-height: 80vh; align-items: flex-start; }
+.ncp-sidebar { width: 16rem; flex-shrink: 0; display: flex; flex-direction: column; gap: 1.5rem; position: sticky; top: 1.5rem; }
+.ncp-main    { flex: 1; min-width: 0; }
+@media (max-width: 768px) { .ncp-wrap { flex-direction: column; } .ncp-sidebar { width: 100%; position: static; } }
+
+/* ── Sidebar nav ── */
+.ncp-nav-btn { display: flex; align-items: center; gap: 0.875rem; padding: 0.875rem 1.25rem; width: 100%; background: none; border: none; border-radius: 1rem; font-size: 0.875rem; font-weight: 700; color: #64748b; cursor: pointer; text-align: left; transition: background 0.15s; box-sizing: border-box; }
+.ncp-nav-btn:hover { background: #f1f5f9; }
+.ncp-nav-active { background: #4f46e5 !important; color: #fff; box-shadow: 0 8px 24px rgba(79,70,229,0.25); }
+.ncp-cart-badge { margin-left: auto; width: 1.25rem; height: 1.25rem; background: #f43f5e; color: #fff; font-size: 0.625rem; font-weight: 900; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ncp-sidebar-sep { height: 1px; background: #e2e8f0; }
+
+/* ── Premium support card ── */
+.ncp-premium-card  { padding: 1.5rem; background: #eef2ff; border: 1px solid #e0e7ff; border-radius: 2rem; }
+.ncp-premium-title { font-size: 0.875rem; font-weight: 900; color: #1e1b4b; margin: 0 0 0.5rem; }
+.ncp-premium-desc  { font-size: 0.75rem; color: #4338ca; line-height: 1.5; margin: 0 0 1rem; }
+.ncp-premium-btn   { width: 100%; padding: 0.625rem; background: #fff; color: #4f46e5; border: none; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 900; cursor: pointer; transition: background 0.15s, color 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.ncp-premium-btn:hover { background: #4f46e5; color: #fff; }
+
+/* ── Section wrapper ── */
+.ncp-section { display: flex; flex-direction: column; gap: 2rem; }
+.ncp-dash-section { gap: 1.75rem; }
+
+/* ── Page heading ── */
+.ncp-page-title { font-size: 2.25rem; font-weight: 900; color: #0f172a; letter-spacing: -0.04em; margin: 0; }
+.ncp-page-sub   { color: #64748b; margin: 0.25rem 0 0; font-size: 0.875rem; }
+
+/* ── AI Banner ── */
+.ncp-ai-banner { background: #0f172a; border-radius: 3rem; padding: 3rem; color: #fff; position: relative; overflow: hidden; box-shadow: 0 25px 60px rgba(15,23,42,0.2); }
+.ncp-ai-inner  { display: flex; align-items: center; gap: 3rem; position: relative; z-index: 1; }
+.ncp-ai-left   { flex: 1; min-width: 0; }
+.ncp-ai-badge  { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.875rem; background: rgba(79,70,229,0.2); border: 1px solid rgba(79,70,229,0.3); border-radius: 9999px; color: #a5b4fc; font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.5rem; }
+.ncp-ai-title  { font-size: 2.5rem; font-weight: 900; letter-spacing: -0.05em; line-height: 1; margin: 0 0 1rem; }
+.ncp-ai-accent { color: #818cf8; }
+.ncp-ai-desc   { color: #94a3b8; font-size: 1rem; line-height: 1.625; margin: 0 0 2rem; }
+.ncp-ai-cta    { padding: 1rem 2rem; background: #4f46e5; color: #fff; border: none; border-radius: 1rem; font-size: 0.9375rem; font-weight: 900; cursor: pointer; transition: background 0.2s; }
+.ncp-ai-cta:hover { background: #4338ca; }
+.ncp-ai-stats  { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; flex-shrink: 0; }
+.ncp-stat-mini { padding: 1.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem; }
+.ncp-stat-value { font-size: 1.5rem; font-weight: 900; color: #fff; }
+.ncp-stat-label { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-top: 0.25rem; }
+.ncp-ai-glow   { position: absolute; top: -4rem; right: -4rem; width: 20rem; height: 20rem; background: rgba(79,70,229,0.15); border-radius: 9999px; filter: blur(60px); pointer-events: none; }
+@media (max-width: 900px) { .ncp-ai-stats { display: none; } }
+
+/* ── Dashboard grid ── */
+.ncp-dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+@media (max-width: 900px) { .ncp-dash-grid { grid-template-columns: 1fr; } }
+
+/* ── Activity card ── */
+.ncp-activity-card     { background: #fff; border: 1px solid #e2e8f0; border-radius: 2.5rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.ncp-stock-alerts-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 2.5rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.ncp-card-header       { display: flex; align-items: center; gap: 0.75rem; padding: 1.5rem 2rem; border-bottom: 1px solid #f1f5f9; }
+.ncp-card-title        { font-size: 1.125rem; font-weight: 900; color: #0f172a; margin: 0; }
+.ncp-alert-icon-wrap   { width: 2.5rem; height: 2.5rem; background: #fff7ed; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ncp-activity-row      { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 2rem; border-top: 1px solid #f8fafc; }
+.ncp-activity-icon     { width: 3rem; height: 3rem; background: #f1f5f9; border-radius: 0.875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ncp-activity-info     { flex: 1; min-width: 0; }
+.ncp-activity-name     { font-weight: 700; color: #0f172a; font-size: 0.9375rem; }
+.ncp-activity-sub      { font-size: 0.75rem; color: #94a3b8; margin-top: 0.125rem; }
+.ncp-activity-right    { text-align: right; flex-shrink: 0; }
+.ncp-activity-price    { font-weight: 900; color: #0f172a; }
+.ncp-activity-status   { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; color: #059669; margin-top: 0.125rem; }
+.ncp-status-transit    { color: #2563eb; }
+
+/* ── Stock alerts ── */
+.ncp-alert-row     { padding: 1rem 2rem; border-top: 1px solid #f8fafc; }
+.ncp-alert-top     { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.625rem; }
+.ncp-alert-name    { font-size: 0.875rem; font-weight: 900; color: #0f172a; }
+.ncp-stock-track   { height: 0.375rem; background: #f1f5f9; border-radius: 9999px; overflow: hidden; }
+.ncp-stock-bar     { height: 100%; border-radius: 9999px; transition: width 0.4s ease; }
+.ncp-bar-rose      { background: #f43f5e; }
+.ncp-bar-amber     { background: #f59e0b; }
+.ncp-stock-badge   { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; padding: 0.25rem 0.5rem; border-radius: 0.5rem; }
+.ncp-badge-rose    { background: #fff1f2; color: #f43f5e; }
+.ncp-badge-amber   { background: #fffbeb; color: #d97706; }
+.ncp-no-alerts     { padding: 2rem; text-align: center; font-size: 0.875rem; color: #94a3b8; font-style: italic; }
+
+/* ── Catalogue ── */
+.ncp-catalog-header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; }
+.ncp-search-wrap    { position: relative; }
+.ncp-search-icon    { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+.ncp-search         { padding: 0.75rem 1.25rem 0.75rem 3rem; border: 1px solid #e2e8f0; border-radius: 1rem; outline: none; background: #fff; font-size: 0.875rem; width: 16rem; transition: box-shadow 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); box-sizing: border-box; }
+.ncp-search:focus   { box-shadow: 0 0 0 2px rgba(79,70,229,0.25); }
+.ncp-product-grid   { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 2rem; }
+.ncp-product-card   { background: #fff; border: 1px solid #e2e8f0; border-radius: 2.5rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: box-shadow 0.25s, transform 0.25s; }
+.ncp-product-card:hover { box-shadow: 0 20px 50px rgba(15,23,42,0.1); transform: translateY(-4px); }
+.ncp-product-img    { height: 14rem; background: #f8fafc; position: relative; overflow: hidden; }
+.ncp-product-photo  { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+.ncp-product-card:hover .ncp-product-photo { transform: scale(1.05); }
+.ncp-stock-pill     { position: absolute; top: 1rem; left: 1rem; font-size: 0.625rem; font-weight: 900; text-transform: uppercase; padding: 0.25rem 0.625rem; border-radius: 0.5rem; }
+.ncp-pill-rose      { background: #fef2f2; color: #f43f5e; }
+.ncp-pill-emerald   { background: #ecfdf5; color: #059669; }
+.ncp-product-body   { padding: 1.5rem; }
+.ncp-product-meta   { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; }
+.ncp-product-family { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #818cf8; margin-bottom: 0.25rem; }
+.ncp-product-name   { font-size: 1.125rem; font-weight: 900; color: #0f172a; }
+.ncp-product-desc   { font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem; line-height: 1.4; }
+.ncp-product-price  { font-size: 1.5rem; font-weight: 900; color: #4f46e5; white-space: nowrap; }
+.ncp-product-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid #f1f5f9; }
+.ncp-stock-lbl      { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; color: #94a3b8; }
+.ncp-stock-val      { font-size: 0.875rem; font-weight: 900; color: #0f172a; }
+.ncp-add-btn        { width: 3rem; height: 3rem; background: #0f172a; border: none; border-radius: 1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+.ncp-add-btn:hover  { background: #4f46e5; }
+
+/* ── Cart ── */
+.ncp-cart-layout  { display: grid; grid-template-columns: 1fr 20rem; gap: 2.5rem; align-items: start; }
+@media (max-width: 900px) { .ncp-cart-layout { grid-template-columns: 1fr; } }
+.ncp-cart-empty   { background: #fff; border: 1px solid #e2e8f0; border-radius: 2.5rem; padding: 5rem 2rem; text-align: center; }
+.ncp-empty-title  { font-size: 1.5rem; font-weight: 900; color: #0f172a; margin: 1rem 0 0.5rem; }
+.ncp-empty-sub    { color: #94a3b8; margin: 0 0 2rem; }
+.ncp-btn-catalog  { padding: 0.875rem 2rem; background: #4f46e5; color: #fff; border: none; border-radius: 1rem; font-size: 0.9375rem; font-weight: 900; cursor: pointer; transition: background 0.2s; }
+.ncp-btn-catalog:hover { background: #4338ca; }
+.ncp-cart-items   { display: flex; flex-direction: column; gap: 1rem; }
+.ncp-cart-row     { background: #fff; border: 1px solid #e2e8f0; border-radius: 1.5rem; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.25rem; }
+.ncp-cart-img     { width: 5rem; height: 5rem; border-radius: 1rem; overflow: hidden; flex-shrink: 0; }
+.ncp-cart-img img { width: 100%; height: 100%; object-fit: cover; }
+.ncp-cart-info    { flex: 1; min-width: 0; }
+.ncp-cart-family  { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; color: #818cf8; margin-bottom: 0.125rem; }
+.ncp-cart-name    { font-weight: 900; color: #0f172a; }
+.ncp-cart-right   { text-align: right; flex-shrink: 0; }
+.ncp-cart-price   { font-size: 1.125rem; font-weight: 900; color: #0f172a; }
+.ncp-remove-btn   { background: none; border: none; cursor: pointer; color: #f43f5e; padding: 0.25rem; margin-top: 0.375rem; display: block; margin-left: auto; }
+
+/* ── Cart summary ── */
+.ncp-summary-card  { background: #0f172a; border-radius: 2.5rem; padding: 2rem; color: #fff; }
+.ncp-summary-title { font-size: 1.125rem; font-weight: 900; margin: 0 0 1.5rem; }
+.ncp-summary-rows  { display: flex; flex-direction: column; gap: 0.875rem; margin-bottom: 1.5rem; }
+.ncp-summary-row   { display: flex; justify-content: space-between; color: #94a3b8; font-size: 0.875rem; }
+.ncp-summary-row span:last-child { color: #fff; font-weight: 700; }
+.ncp-summary-total { display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 900; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+.ncp-total-price   { color: #818cf8; }
+.ncp-checkout-btn  { width: 100%; padding: 1rem; background: #4f46e5; color: #fff; border: none; border-radius: 1rem; font-size: 0.9375rem; font-weight: 900; cursor: pointer; margin-top: 1.25rem; transition: background 0.2s; }
+.ncp-checkout-btn:hover { background: #4338ca; }
+
+/* ── Placeholders ── */
+.ncp-placeholder       { background: #fff; border: 1px solid #e2e8f0; border-radius: 2.5rem; padding: 5rem 2rem; text-align: center; }
+.ncp-placeholder-title { font-size: 1.5rem; font-weight: 900; color: #0f172a; margin: 1rem 0 0.5rem; }
+.ncp-placeholder-sub   { color: #94a3b8; margin: 0; }
+
+/* ── Profile ── */
+.ncp-profile-gap    { gap: 3rem; }
+.ncp-profile-top    { display: flex; gap: 2.5rem; align-items: flex-start; flex-wrap: wrap; }
+.ncp-avatar         { width: 8rem; height: 8rem; background: #f1f5f9; border-radius: 2rem; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; box-shadow: 0 10px 30px rgba(15,23,42,0.1); flex-shrink: 0; }
+.ncp-profile-info   { flex: 1; min-width: 0; }
+.ncp-profile-cards  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
+.ncp-mini-card      { background: #fff; border: 1px solid #e2e8f0; border-radius: 1.5rem; padding: 1.25rem; }
+.ncp-mini-card-tag  { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; }
+.ncp-tag-indigo     { color: #4f46e5; }
+.ncp-tag-emerald    { color: #059669; }
+.ncp-mini-card-label{ font-weight: 900; color: #0f172a; font-size: 0.9375rem; }
+.ncp-mini-card-sub  { font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem; }
+.ncp-link-btn       { background: none; border: none; color: #4f46e5; font-size: 0.75rem; font-weight: 900; cursor: pointer; padding: 0.375rem 0; margin-top: 0.5rem; display: block; }
+.ncp-active-badge   { display: inline-block; font-size: 0.625rem; font-weight: 900; padding: 0.25rem 0.5rem; background: #ecfdf5; color: #059669; border-radius: 0.5rem; margin-top: 0.5rem; }
+.ncp-profile-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+@media (max-width: 900px) { .ncp-profile-detail { grid-template-columns: 1fr; } }
+.ncp-info-card      { background: #fff; border: 1px solid #e2e8f0; border-radius: 2.5rem; padding: 2rem; }
+.ncp-info-title     { font-size: 1.125rem; font-weight: 900; color: #0f172a; margin: 0 0 1.5rem; }
+.ncp-info-row       { display: flex; align-items: center; gap: 0.875rem; padding: 0.875rem 1rem; background: #f8fafc; border-radius: 1rem; border: 1px solid #f1f5f9; font-size: 0.9375rem; font-weight: 700; color: #334155; margin-bottom: 0.75rem; }
+.ncp-prime-card     { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: #eef2ff; border: 1px solid #e0e7ff; border-radius: 1.5rem; margin-top: 1rem; }
+.ncp-prime-icon     { width: 2.5rem; height: 2.5rem; background: #fff; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); flex-shrink: 0; }
+.ncp-prime-name     { font-size: 0.875rem; font-weight: 900; color: #1e1b4b; }
+.ncp-prime-since    { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #4f46e5; margin-top: 0.125rem; }
+
+/* ── Cases header ── */
+.ncp-cases-header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; }
+.ncp-case-toggle  { display: flex; padding: 0.25rem; background: #f1f5f9; border-radius: 1rem; gap: 0.25rem; }
+.ncp-case-tab     { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.25rem; border: none; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 900; color: #64748b; background: none; cursor: pointer; transition: all 0.15s; }
+.ncp-case-active  { background: #fff; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+/* ── AI Chat ── */
+.ncp-chat-wrap       { background: #0f172a; border-radius: 3rem; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 25px 60px rgba(15,23,42,0.2); }
+.ncp-chat-header     { display: flex; align-items: center; gap: 1rem; padding: 1.5rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); background: linear-gradient(to right, rgba(79,70,229,0.2), transparent); }
+.ncp-chat-avatar     { width: 3rem; height: 3rem; background: #4f46e5; border-radius: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(79,70,229,0.3); flex-shrink: 0; }
+.ncp-chat-name       { font-weight: 900; color: #fff; font-size: 0.9375rem; }
+.ncp-chat-status     { display: flex; align-items: center; gap: 0.5rem; font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #34d399; margin-top: 0.125rem; }
+.ncp-online-dot      { width: 0.5rem; height: 0.5rem; background: #34d399; border-radius: 9999px; }
+.ncp-chat-messages   { height: 25rem; padding: 2rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; }
+.ncp-msg-bot         { display: flex; gap: 0.75rem; max-width: 80%; }
+.ncp-msg-user        { display: flex; flex-direction: row-reverse; gap: 0.75rem; max-width: 80%; align-self: flex-end; }
+.ncp-msg-avatar-bot  { width: 2.25rem; height: 2.25rem; background: #4f46e5; border-radius: 0.75rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.ncp-msg-avatar-user { width: 2.25rem; height: 2.25rem; background: #1e293b; border-radius: 0.75rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.ncp-msg-bubble-bot  { padding: 1rem 1.25rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); border-radius: 1.25rem; border-top-left-radius: 0.25rem; color: #cbd5e1; font-size: 0.875rem; line-height: 1.6; }
+.ncp-msg-bubble-user { padding: 1rem 1.25rem; background: #4f46e5; border-radius: 1.25rem; border-top-right-radius: 0.25rem; color: #fff; font-size: 0.875rem; line-height: 1.6; }
+.ncp-chat-footer     { padding: 1.5rem 2rem; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.05); }
+.ncp-chat-input-wrap { position: relative; }
+.ncp-chat-input      { width: 100%; padding: 1rem 4rem 1rem 1.25rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; color: #fff; font-size: 0.9375rem; outline: none; box-sizing: border-box; }
+.ncp-chat-input:focus { border-color: rgba(79,70,229,0.6); }
+.ncp-send-btn        { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); width: 2.5rem; height: 2.5rem; background: #4f46e5; border: none; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
+.ncp-send-btn:hover  { background: #4338ca; }
+.ncp-escalate-link   { margin-top: 1rem; text-align: center; }
+
+/* ── Expert form ── */
+.ncp-expert-layout { display: grid; grid-template-columns: 1fr 22rem; gap: 2rem; align-items: start; }
+@media (max-width: 900px) { .ncp-expert-layout { grid-template-columns: 1fr; } }
+.ncp-ticket-card    { background: #fff; border: 1px solid #e2e8f0; border-radius: 3rem; padding: 2.5rem; }
+.ncp-ticket-header  { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 2rem; }
+.ncp-ticket-icon    { width: 3.5rem; height: 3.5rem; background: #fff1f2; border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ncp-ticket-title   { font-size: 1.5rem; font-weight: 900; color: #0f172a; margin: 0; }
+.ncp-ticket-sub     { font-size: 0.875rem; color: #94a3b8; margin: 0.25rem 0 0; }
+.ncp-form-row-2     { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.ncp-field          { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+.ncp-label          { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; }
+.ncp-input          { padding: 0.875rem 1rem; border: 1px solid #e2e8f0; border-radius: 1rem; background: #f8fafc; font-size: 0.9375rem; outline: none; transition: box-shadow 0.2s; }
+.ncp-input:focus    { box-shadow: 0 0 0 2px rgba(79,70,229,0.2); border-color: #4f46e5; }
+.ncp-textarea       { padding: 0.875rem 1rem; border: 1px solid #e2e8f0; border-radius: 1rem; background: #f8fafc; font-size: 0.9375rem; outline: none; resize: none; width: 100%; box-sizing: border-box; transition: box-shadow 0.2s; }
+.ncp-textarea:focus { box-shadow: 0 0 0 2px rgba(79,70,229,0.2); border-color: #4f46e5; }
+.ncp-prio-group     { display: flex; gap: 0.375rem; }
+.ncp-prio           { flex: 1; padding: 0.625rem; border: none; border-radius: 0.75rem; background: #f1f5f9; font-size: 0.625rem; font-weight: 900; text-transform: uppercase; color: #64748b; cursor: pointer; transition: all 0.15s; }
+.ncp-prio:hover     { background: #e2e8f0; }
+.ncp-prio-active    { background: #0f172a; color: #fff; }
+.ncp-submit-btn     { width: 100%; padding: 1.125rem; background: #f43f5e; color: #fff; border: none; border-radius: 1rem; font-size: 0.9375rem; font-weight: 900; cursor: pointer; transition: background 0.2s; }
+.ncp-submit-btn:hover { background: #e11d48; }
+
+/* ── Expert aside ── */
+.ncp-expert-aside          { display: flex; flex-direction: column; gap: 1.5rem; }
+.ncp-escalate-card         { background: #0f172a; border-radius: 2.5rem; padding: 2rem; color: #fff; }
+.ncp-escalate-title        { font-size: 1.125rem; font-weight: 900; margin: 0 0 1.5rem; color: #fff; }
+.ncp-escalate-item         { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+.ncp-escalate-dot          { width: 2.25rem; height: 2.25rem; background: rgba(255,255,255,0.1); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ncp-escalate-item-title   { font-size: 0.875rem; font-weight: 900; color: #fff; margin-bottom: 0.25rem; }
+.ncp-escalate-item-desc    { font-size: 0.75rem; color: #64748b; line-height: 1.5; }
+.ncp-recent-tickets        { background: #fff; border: 1px solid #e2e8f0; border-radius: 2.5rem; padding: 1.75rem; }
+.ncp-section-sm-title      { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin: 0 0 1.25rem; }
+.ncp-ticket-row            { display: flex; justify-content: space-between; align-items: center; padding: 0.875rem 1rem; background: #f8fafc; border-radius: 1rem; border: 1px solid #f1f5f9; }
+.ncp-ticket-num            { font-size: 0.875rem; font-weight: 900; color: #0f172a; }
+.ncp-ticket-type           { font-size: 0.75rem; color: #94a3b8; }
+.ncp-resolved-badge        { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; padding: 0.25rem 0.5rem; background: #ecfdf5; color: #059669; border-radius: 0.5rem; }
