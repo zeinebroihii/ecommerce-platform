@@ -1,0 +1,77 @@
+<template>
+    <div class="nld-wrap">
+
+        <!-- ── Header ── -->
+        <div class="nld-header">
+            <div class="nld-header-icon">
+                <lightning-icon icon-name="utility:einstein" size="small" variant="inverse"></lightning-icon>
+            </div>
+            <div>
+                <h3 class="nld-title">Nexus AI — Décision Admin</h3>
+                <p class="nld-subtitle">Analyse intelligente du lead B2B</p>
+            </div>
+        </div>
+
+        <!-- ── Loading ── -->
+        <template if:true={isLoading}>
+            <div class="nld-loading">Chargement de l'analyse IA...</div>
+        </template>
+
+        <!-- ── Main content ── -->
+        <template if:false={isLoading}>
+
+            <!-- Score ring -->
+            <div class="nld-score-section">
+                <div class={scoreRingClass}>
+                    <span class="nld-score-num">{score}</span>
+                    <span class="nld-score-divider">/100</span>
+                </div>
+                <div class="nld-score-right">
+                    <div class={scoreLabelClass}>{scoreLabel}</div>
+                    <template if:true={hasIntent}>
+                        <div class="nld-intent-badge">{intent}</div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- AI Reason -->
+            <template if:true={hasReason}>
+                <div class="nld-reason-box">
+                    <div class="nld-reason-label">
+                        <lightning-icon icon-name="utility:sparkles" size="x-small" class="nld-sparkle"></lightning-icon>
+                        &nbsp;Analyse IA
+                    </div>
+                    <p class="nld-reason-text">{reason}</p>
+                </div>
+            </template>
+
+            <!-- Current decision status -->
+            <div class="nld-status-row">
+                <span class="nld-status-label">Statut :</span>
+                <span class={decisionBadgeClass}>{decisionLabel}</span>
+            </div>
+
+            <!-- Approve / Reject buttons (only if Pending) -->
+            <template if:true={isPending}>
+                <div class="nld-actions">
+                    <button class="nld-btn-approve" onclick={handleApprove} disabled={isActing}>
+                        <template if:false={isActing}>&#10003;&nbsp; Approuver ce lead</template>
+                        <template if:true={isActing}>Traitement...</template>
+                    </button>
+                    <button class="nld-btn-reject" onclick={handleReject} disabled={isActing}>
+                        &#10005;&nbsp; Rejeter
+                    </button>
+                </div>
+            </template>
+
+            <!-- Already decided -->
+            <template if:false={isPending}>
+                <div class="nld-decided-msg">
+                    <lightning-icon icon-name="utility:check" size="x-small" class="nld-decided-icon"></lightning-icon>
+                    &nbsp;Décision déjà enregistrée — statut : <strong>{leadStatus}</strong>
+                </div>
+            </template>
+
+        </template>
+    </div>
+</template>

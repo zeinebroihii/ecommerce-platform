@@ -1,0 +1,56 @@
+/* ── Outer wrapper ── */
+.nld-wrap { background: #0f172a; border-radius: 1.5rem; padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ── Header ── */
+.nld-header { display: flex; align-items: center; gap: 0.875rem; }
+.nld-header-icon { width: 2.5rem; height: 2.5rem; background: rgba(99,102,241,0.2); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nld-title    { font-size: 1rem; font-weight: 900; color: #f1f5f9; margin: 0; letter-spacing: -0.01em; }
+.nld-subtitle { font-size: 0.75rem; color: #64748b; margin: 0.125rem 0 0; }
+.nld-loading  { color: #64748b; font-size: 0.875rem; text-align: center; padding: 1rem 0; }
+
+/* ── Score ring ── */
+.nld-score-section { display: flex; align-items: center; gap: 1.25rem; }
+.nld-score-ring    { display: flex; align-items: baseline; gap: 0.25rem; padding: 0.875rem 1.25rem; border-radius: 1.25rem; border: 2px solid; flex-shrink: 0; }
+.nld-ring-green    { border-color: #10b981; background: rgba(16,185,129,0.08); }
+.nld-ring-amber    { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+.nld-ring-red      { border-color: #f43f5e; background: rgba(244,63,94,0.08); }
+.nld-ring-neutral  { border-color: #334155; background: rgba(51,65,85,0.3); }
+.nld-score-num     { font-size: 2rem; font-weight: 900; color: #f1f5f9; line-height: 1; }
+.nld-score-divider { font-size: 0.875rem; color: #64748b; }
+.nld-score-right   { display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* ── Score label ── */
+.nld-score-label  { font-size: 0.8125rem; font-weight: 700; line-height: 1.4; }
+.nld-label-green  { color: #34d399; }
+.nld-label-amber  { color: #fbbf24; }
+.nld-label-red    { color: #fb7185; }
+
+/* ── Intent badge ── */
+.nld-intent-badge { display: inline-block; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.2rem 0.625rem; border-radius: 9999px; }
+
+/* ── AI Reason box ── */
+.nld-reason-box   { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; padding: 1rem 1.125rem; }
+.nld-reason-label { display: flex; align-items: center; font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 0.5rem; }
+.nld-sparkle      { color: #818cf8; }
+.nld-reason-text  { font-size: 0.8125rem; color: #94a3b8; line-height: 1.65; margin: 0; }
+
+/* ── Status row ── */
+.nld-status-row    { display: flex; align-items: center; gap: 0.625rem; }
+.nld-status-label  { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+.nld-decision-badge { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.25rem 0.75rem; border-radius: 9999px; }
+.nld-badge-pending  { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.nld-badge-approved { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.nld-badge-rejected { background: rgba(244,63,94,0.15);  color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
+
+/* ── Action buttons ── */
+.nld-actions     { display: flex; gap: 0.75rem; }
+.nld-btn-approve { flex: 1; padding: 0.875rem; background: #10b981; color: #fff; border: none; border-radius: 1rem; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.nld-btn-approve:hover:not(:disabled) { background: #059669; }
+.nld-btn-approve:disabled { opacity: 0.6; cursor: not-allowed; }
+.nld-btn-reject  { padding: 0.875rem 1.25rem; background: rgba(244,63,94,0.1); color: #fb7185; border: 1.5px solid rgba(244,63,94,0.3); border-radius: 1rem; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.nld-btn-reject:hover:not(:disabled) { background: rgba(244,63,94,0.2); border-color: #f43f5e; }
+.nld-btn-reject:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Already decided message ── */
+.nld-decided-msg  { display: flex; align-items: center; font-size: 0.8125rem; color: #64748b; background: rgba(255,255,255,0.04); border-radius: 0.875rem; padding: 0.875rem 1rem; }
+.nld-decided-icon { color: #10b981; }

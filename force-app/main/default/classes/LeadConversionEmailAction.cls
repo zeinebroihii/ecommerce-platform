@@ -17,10 +17,12 @@ public class LeadConversionEmailAction {
         public String loginUrl;
     }
 
-    @InvocableMethod(label='Send Lead Conversion Welcome Email'
-                     description='Sends a branded TALCORE welcome email when a Lead is converted.')
+    @InvocableMethod(label='Send Lead Conversion Admin Alert'
+                     description='Sends an admin conversion alert when a Lead is converted. Customer welcome email is sent separately after portal user creation.')
     public static void sendConversionEmail(List<Request> requests) {
-        List<Messaging.SingleEmailMessage> userMails  = new List<Messaging.SingleEmailMessage>();
+        // NOTE: The customer welcome email (with set-password link) is intentionally
+        // NOT sent here. It is sent by LeadManagementController.createPortalUserForContact
+        // AFTER the portal user has been created — so the ForgotPassword link works.
         List<Messaging.SingleEmailMessage> adminMails = new List<Messaging.SingleEmailMessage>();
 
         String adminEmail = UserInfo.getUserEmail();
@@ -28,28 +30,17 @@ public class LeadConversionEmailAction {
         for (Request r : requests) {
             if (String.isBlank(r.email)) continue;
 
-            String greeting = (r.salutation == 'Mr.') ? 'Cher' : 'Ch\u00e8re';
-            String fullName  = (r.firstName + ' ' + r.lastName).trim();
-            String url       = String.isBlank(r.loginUrl)
-                               ? 'https://talexo.my.site.com/shop/s/login'
-                               : r.loginUrl;
-            String pwdUrl    = url.replace('/login', '/ForgotPassword');
-
-            // ── Welcome email to lead ──────────────────────────────────────────
-            Messaging.SingleEmailMessage userMail = new Messaging.SingleEmailMessage();
-            userMail.setToAddresses(new List<String>{ r.email });
-            userMail.setSubject('Bienvenue sur TALCORE \u2014 Votre espace est pr\u00eat !');
-            userMail.setHtmlBody(buildWelcomeHtml(greeting, fullName, r.email, url, pwdUrl));
-            userMail.setSaveAsActivity(false);
-            userMails.add(userMail);
+            String fullName = (r.firstName + ' ' + r.lastName).trim();
 
             // ── Admin conversion alert ────────────────────────────────────────
             if (String.isNotBlank(adminEmail)) {
                 String contactLink = '';
                 String oppLink     = '';
+                Id convertedContactId = null;
                 try {
                     Lead l = [SELECT ConvertedContactId, ConvertedOpportunityId
                               FROM   Lead WHERE Id = :r.leadId LIMIT 1];
+                    convertedContactId = l.ConvertedContactId;
                     if (l.ConvertedContactId     != null)
                         contactLink = '/lightning/r/Contact/'     + l.ConvertedContactId     + '/view';
                     if (l.ConvertedOpportunityId != null)
@@ -59,23 +50,23 @@ public class LeadConversionEmailAction {
                 Messaging.SingleEmailMessage adminMail = new Messaging.SingleEmailMessage();
                 adminMail.setToAddresses(new List<String>{ adminEmail });
                 adminMail.setSubject('TALCORE \u2014 Lead Converti : ' + fullName);
-                adminMail.setHtmlBody(buildAdminHtml(r.firstName, r.lastName, r.company, r.email, oppLink, contactLink));
+                adminMail.setHtmlBody(buildAdminHtml(
+                    r.firstName, r.lastName, r.company, r.email,
+                    oppLink, contactLink, convertedContactId
+                ));
                 adminMail.setSaveAsActivity(false);
                 adminMails.add(adminMail);
             }
         }
 
-        if (!userMails.isEmpty()) {
-            try { Messaging.sendEmail(userMails); }
-            catch (Exception e) { System.debug('LeadConversionEmailAction.userMail: ' + e.getMessage()); }
-        }
         if (!adminMails.isEmpty()) {
             try { Messaging.sendEmail(adminMails); }
             catch (Exception e) { System.debug('LeadConversionEmailAction.adminMail: ' + e.getMessage()); }
         }
     }
 
-    // ─── User welcome email ───────────────────────────────────────────────────
+    // ─── User welcome email (kept for reference — now sent via LeadManagementController.createPortalUserForContact) ─
+    @SuppressWarnings('PMD.UnusedPrivateMethod')
     private static String buildWelcomeHtml(String greeting, String fullName,
                                            String email, String url, String pwdUrl) {
         return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
@@ -152,7 +143,8 @@ public class LeadConversionEmailAction {
     // ─── Admin conversion alert email ─────────────────────────────────────────
     private static String buildAdminHtml(String firstName, String lastName,
                                          String company, String email,
-                                         String oppLink, String contactLink) {
+                                         String oppLink, String contactLink,
+                                         Id convertedContactId) {
         String fullName = (firstName + ' ' + lastName).trim();
         return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
             + '<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">'
@@ -196,8 +188,20 @@ public class LeadConversionEmailAction {
             + '<td style="padding:8px 0;color:#0f172a;font-weight:600;font-size:14px;">' + (String.isNotBlank(email) ? email : '\u2014') + '</td>'
             + '</tr></table></div>'
 
-            + '<p style="color:#475569;font-size:14px;margin:0 0 24px;line-height:1.7;">'
-            + 'Un email de bienvenue a \u00e9t\u00e9 envoy\u00e9 au client avec un lien pour d\u00e9finir son mot de passe.</p>'
+            // ── Next-step action box ──
+            + '<div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:12px;padding:20px 24px;margin:0 0 24px;">'
+            + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+            + '<span style="font-size:18px;">&#9888;&#65039;</span>'
+            + '<span style="font-size:13px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.06em;">'
+            + '\u00c9tape suivante \u2014 Activer le compte portail</span>'
+            + '</div>'
+            + '<p style="margin:0 0 14px;color:#78350f;font-size:14px;line-height:1.6;">'
+            + 'Le compte portail client <strong>' + fullName + '</strong> n\u2019a pas encore \u00e9t\u00e9 cr\u00e9\u00e9. '
+            + 'Rendez-vous dans le <strong>tableau de bord TALCORE</strong> et cliquez sur '
+            + '<strong>\u201cCr\u00e9er compte portail\u201d</strong> pour activer l\u2019acc\u00e8s et envoyer les identifiants au client.</p>'
+            + '<p style="margin:0;color:#92400e;font-size:13px;">'
+            + 'Email du client : <strong>' + (String.isNotBlank(email) ? email : '\u2014') + '</strong></p>'
+            + '</div>'
 
             // ── CTA buttons ──
             + '<div style="text-align:center;">'

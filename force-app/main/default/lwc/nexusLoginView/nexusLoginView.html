@@ -1,0 +1,149 @@
+<template>
+    <div class="slds-box slds-theme_default slds-p-around_none border-none bg-transparent">
+        <!-- ══ Hero Section ══ -->
+        <section class="nlv-hero">
+            <!-- layered background -->
+            <div class="nlv-hero-bg">
+                <div class="nlv-hero-img"></div>
+                <div class="nlv-hero-overlay"></div>
+                <div class="nlv-hero-radial"></div>
+            </div>
+
+            <!-- content -->
+            <div class="nlv-hero-content">
+
+                <!-- animated badge -->
+                <div class="nlv-badge">
+                    <span class="nlv-ping-wrap">
+                        <span class="nlv-ping-ring"></span>
+                        <span class="nlv-ping-dot"></span>
+                    </span>
+                    L&rsquo;&Eacute;lite du CRM Intelligent
+                </div>
+
+                <h1 class="nlv-title">
+                    NEXUS<br/>
+                    <span class="nlv-title-gradient">SYSTEMS</span>
+                </h1>
+
+                <p class="nlv-subtitle">
+                    L&rsquo;architecture ultime pour vos flux B2B &amp; B2C.<br/>
+                    Une exp&eacute;rience sans couture, propuls&eacute;e par l&rsquo;intelligence Nexus.
+                </p>
+
+                <div class="nlv-cta-row">
+                    <button class="nlv-cta-primary" onclick={handleStart}>
+                        Commencer l&rsquo;aventure &nbsp;&rarr;
+                    </button>
+                    <button class="nlv-cta-secondary" onclick={handleScrollProducts}>
+                        Voir les services &nbsp;&#x26A1;
+                    </button>
+                </div>
+            </div>
+
+            <!-- scroll indicator -->
+            <div class="nlv-scroll-hint">
+                <span class="nlv-scroll-label">Explorer</span>
+                <div class="nlv-scroll-track">
+                    <div class="nlv-scroll-thumb"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ Identifiez-vous Section ══ -->
+        <section class="login-select-section" data-id="login-section">
+            <div class="login-select-header">
+                <h2 class="login-select-title">Identifiez-vous</h2>
+                <p class="login-select-sub">Choisissez votre profil pour accéder à votre espace personnalisé</p>
+            </div>
+
+            <div class="login-select-grid">
+                <!-- B2B -->
+                <div class="login-card login-card-b2b">
+                    <div class="login-card-icon login-icon-indigo">
+                        <lightning-icon icon-name="utility:company" size="medium"></lightning-icon>
+                    </div>
+                    <h3 class="login-card-title">Entreprise (B2B)</h3>
+                    <p class="login-card-desc">
+                        Accédez aux tarifs de gros, gérez vos commandes complexes et suivez vos devis.
+                    </p>
+                    <div class="login-card-actions">
+                        <button class="login-btn login-btn-indigo" onclick={handleB2BLogin}>
+                            Se Connecter &rarr;
+                        </button>
+                        <button class="login-btn login-btn-outline" onclick={handleB2BRegister}>
+                            Enregistrer l&apos;entreprise
+                        </button>
+                    </div>
+                    <div class="login-card-blob login-blob-indigo"></div>
+                </div>
+
+                <!-- B2C -->
+                <div class="login-card login-card-b2c">
+                    <div class="login-card-icon login-icon-emerald">
+                        <lightning-icon icon-name="utility:user" size="medium"></lightning-icon>
+                    </div>
+                    <h3 class="login-card-title">Particulier (B2C)</h3>
+                    <p class="login-card-desc">
+                        Achat direct, suivi de commande instantané et activation immédiate de votre compte.
+                    </p>
+                    <div class="login-card-actions">
+                        <button class="login-btn login-btn-emerald" onclick={handleB2CLogin}>
+                            Se Connecter &rarr;
+                        </button>
+                        <button class="login-btn login-btn-outline" onclick={handleB2CRegister}>
+                            Créer un compte
+                        </button>
+                    </div>
+                    <div class="login-card-blob login-blob-emerald"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Catalogue Section -->
+        <section class="slds-m-around_xx-large" data-id="products-section">
+            <div class="slds-grid slds-grid_vertical-align-end slds-m-bottom_xx-large">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <div class="flex items-center gap-3 text-indigo-500 font-black uppercase tracking-[0.3em] text-[10px] mb-6">
+                        <div class="w-10 h-[2px] bg-indigo-500"></div>
+                        Solutions Technologiques
+                    </div>
+                    <h2 class="text-6xl font-black text-slate-900 tracking-tighter leading-none">
+                        CATALOGUE <br/>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">PRODUITS</span>
+                    </h2>
+                </div>
+            </div>
+
+            <div class="slds-grid slds-wrap slds-gutters">
+                <template for:each={products} for:item="product">
+                    <div key={product.productId} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-m-bottom_large">
+                        <div class="bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all overflow-hidden group">
+                            <div class="h-64 bg-slate-50 relative overflow-hidden">
+                                <img src={product.imageUrl} class="w-full h-full object-cover group-hover:scale-110 transition-all" alt={product.name} />
+                                <div class="absolute bottom-6 left-6">
+                                    <span class="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">
+                                        {product.family}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="p-10">
+                                <h4 class="text-2xl font-black text-slate-900 mb-2 leading-tight">{product.name}</h4>
+                                <p class="text-sm text-slate-500 font-medium mb-8 line-clamp-2">{product.description}</p>
+                                <div class="flex items-center justify-between pt-8 border-t border-slate-50">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Investissement</span>
+                                        <span class="text-3xl font-black text-slate-900">{product.unitPrice}</span>
+                                    </div>
+                                    <button class="p-5 bg-slate-950 text-white rounded-[1.5rem] hover:bg-indigo-600 transition-all shadow-2xl" onclick={handleAddToCart} data-id={product.productId}>
+                                        <lightning-icon icon-name="utility:cart" size="small" variant="inverse"></lightning-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+    </div>
+</template>

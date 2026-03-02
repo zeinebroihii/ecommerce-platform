@@ -1,0 +1,231 @@
+<template>
+    <div class="nav-outer">
+        <div class={splitCardClass}>
+
+            <!-- ══ LEFT — Brand Panel ══ -->
+            <div class="nav-brand-panel">
+                <div class="nav-brand-inner">
+                    <div class="nav-brand-pill">
+                        <lightning-icon icon-name="utility:zap" size="x-small" variant="inverse"></lightning-icon>
+                        &nbsp;Nexus AI Intelligence
+                    </div>
+                    <h1 class="nav-brand-title">
+                        NEXUS<br/>
+                        <span class="nav-brand-gradient">SYSTEMS</span>
+                    </h1>
+                    <p class="nav-brand-desc">
+                        L&rsquo;architecture ultime pour vos flux B2B &amp; B2C.<br/>
+                        Propuls&eacute; par l&rsquo;intelligence Nexus.
+                    </p>
+                    <div class="nav-brand-stats">
+                        <div class="nav-stat">
+                            <div class="nav-stat-val">98%</div>
+                            <div class="nav-stat-lbl">Satisfaction</div>
+                        </div>
+                        <div class="nav-stat">
+                            <div class="nav-stat-val">24/7</div>
+                            <div class="nav-stat-lbl">Support</div>
+                        </div>
+                        <div class="nav-stat">
+                            <div class="nav-stat-val">500+</div>
+                            <div class="nav-stat-lbl">Clients B2B</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ RIGHT — Form Panel ══ -->
+            <div class="nav-form-panel">
+
+                <!-- ── CHOOSE MODE (B2B / B2C) ── -->
+                <template if:true={isChoose}>
+                    <div class="nav-center nav-mb-lg">
+                        <h2 class="nav-h2">Identifiez-vous</h2>
+                        <p class="nav-subtext">Choisissez votre profil pour acc&eacute;der &agrave; votre espace.</p>
+                    </div>
+                    <div class="nav-choose-grid">
+                        <!-- B2B -->
+                        <div class="nav-choose-card nav-choose-b2b" onclick={handleChooseB2B}>
+                            <div class="nav-signup-icon nav-icon-indigo">
+                                <lightning-icon icon-name="utility:company" size="medium"></lightning-icon>
+                            </div>
+                            <h3 class="nav-signup-title">Entreprise (B2B)</h3>
+                            <p class="nav-signup-desc">Tarifs de gros, devis personnalis&eacute;s et gestion de flotte.</p>
+                            <div class="nav-choose-actions">
+                                <button class="nav-choose-btn nav-choose-btn-indigo" onclick={handleChooseB2B}>Se Connecter &rarr;</button>
+                                <button class="nav-choose-btn nav-choose-btn-outline" onclick={handleB2BSignup}>Enregistrer l&apos;entreprise</button>
+                            </div>
+                        </div>
+                        <!-- B2C -->
+                        <div class="nav-choose-card nav-choose-b2c" onclick={handleChooseB2C}>
+                            <div class="nav-signup-icon nav-icon-emerald">
+                                <lightning-icon icon-name="utility:user" size="medium"></lightning-icon>
+                            </div>
+                            <h3 class="nav-signup-title">Particulier (B2C)</h3>
+                            <p class="nav-signup-desc">Achat direct, suivi instantan&eacute; et activation imm&eacute;diate.</p>
+                            <div class="nav-choose-actions">
+                                <button class="nav-choose-btn nav-choose-btn-emerald" onclick={handleChooseB2C}>Se Connecter &rarr;</button>
+                                <button class="nav-choose-btn nav-choose-btn-outline" onclick={handleB2CSignup}>Cr&eacute;er un compte</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- ── LOGIN MODE ── -->
+                <template if:true={isLogin}>
+                    <div class="nav-center nav-mb-lg">
+                        <span class="nav-badge-pill">
+                            <lightning-icon icon-name="utility:lock" size="x-small"></lightning-icon>
+                            &nbsp;Acc&egrave;s S&eacute;curis&eacute;
+                        </span>
+                        <h2 class="nav-h2">Bon retour !</h2>
+                        <p class="nav-subtext">Connectez-vous &agrave; votre &eacute;cosyst&egrave;me Nexus.</p>
+                    </div>
+
+                    <form onsubmit={handleLogin} class="nav-form">
+                        <div class="nav-input-wrap">
+                            <lightning-icon icon-name="utility:email" size="x-small" class="nav-input-icon"></lightning-icon>
+                            <input class="nav-input" type="email" placeholder="Email professionnel" data-field="email" required />
+                        </div>
+                        <div class="nav-input-wrap">
+                            <lightning-icon icon-name="utility:lock" size="x-small" class="nav-input-icon"></lightning-icon>
+                            <input class="nav-input nav-input-padded" type={passwordType} placeholder="Mot de passe" data-field="password" required />
+                            <button type="button" class="nav-eye-btn" onclick={handleTogglePwd}>
+                                <lightning-icon icon-name={eyeIcon} size="x-small"></lightning-icon>
+                            </button>
+                        </div>
+                        <div class="nav-row-between">
+                            <label class="nav-remember">
+                                <input type="checkbox" /> Se souvenir de moi
+                            </label>
+                            <button type="button" class="nav-text-link" onclick={handleShowForgot}>
+                                Mot de passe oubli&eacute; ?
+                            </button>
+                        </div>
+                        <button type="submit" class="nav-btn-submit" disabled={isLoading}>
+                            <template if:false={isLoading}>Se Connecter &rarr;</template>
+                            <template if:true={isLoading}>Connexion&hellip;</template>
+                        </button>
+                    </form>
+
+                    <div class="nav-center nav-mt-md">
+                        <p class="nav-subtext">
+                            Nouveau chez Nexus ?&nbsp;
+                            <button class="nav-inline-link" onclick={handleShowSignup}>Cr&eacute;er un compte</button>
+                        </p>
+                    </div>
+                </template>
+
+                <!-- ── SIGNUP SELECT MODE ── -->
+                <template if:true={isSignupSelect}>
+                    <div class="nav-center nav-mb-lg">
+                        <button class="nav-back-btn" onclick={handleShowLogin}>
+                            <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
+                            &nbsp;Retour &agrave; la connexion
+                        </button>
+                        <h2 class="nav-h2">Choisissez votre profil</h2>
+                        <p class="nav-subtext">Une exp&eacute;rience sur mesure pour vos besoins.</p>
+                    </div>
+                    <div class="nav-signup-grid">
+                        <div class="nav-signup-card nav-signup-b2b" onclick={handleB2BSignup}>
+                            <div class="nav-signup-icon nav-icon-indigo">
+                                <lightning-icon icon-name="utility:company" size="medium"></lightning-icon>
+                            </div>
+                            <h3 class="nav-signup-title">Entreprise (B2B)</h3>
+                            <p class="nav-signup-desc">Tarifs de gros, gestion de flotte et devis personnalis&eacute;s.</p>
+                            <span class="nav-signup-cta nav-cta-indigo">S&rsquo;inscrire &rarr;</span>
+                        </div>
+                        <div class="nav-signup-card nav-signup-b2c" onclick={handleB2CSignup}>
+                            <div class="nav-signup-icon nav-icon-emerald">
+                                <lightning-icon icon-name="utility:user" size="medium"></lightning-icon>
+                            </div>
+                            <h3 class="nav-signup-title">Particulier (B2C)</h3>
+                            <p class="nav-signup-desc">Achat direct, suivi instantan&eacute; et acc&egrave;s exclusif Nexus.</p>
+                            <span class="nav-signup-cta nav-cta-emerald">S&rsquo;inscrire &rarr;</span>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- ── B2C SIGNUP MODE ── -->
+                <template if:true={isB2CSignup}>
+                    <div class="nav-b2c-wrap">
+                    <div class="nav-center nav-mb-lg">
+                        <button class="nav-back-btn" onclick={handleShowLogin}>
+                            <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
+                            &nbsp;Retour &agrave; la connexion
+                        </button>
+                        <span class="nav-badge-pill nav-badge-emerald">
+                            <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
+                            &nbsp;Particulier (B2C)
+                        </span>
+                        <h2 class="nav-h2">Cr&eacute;er un compte</h2>
+                        <p class="nav-subtext">Activation imm&eacute;diate &mdash; aucune validation requise.</p>
+                    </div>
+                    <form onsubmit={handleB2CSignupSubmit} class="nav-form">
+                        <div class="nav-name-row">
+                            <div class="nav-input-wrap">
+                                <lightning-icon icon-name="utility:user" size="x-small" class="nav-input-icon"></lightning-icon>
+                                <input class="nav-input" type="text" placeholder="Pr&eacute;nom" data-field="firstName" required />
+                            </div>
+                            <div class="nav-input-wrap">
+                                <input class="nav-input nav-input-no-icon" type="text" placeholder="Nom" data-field="lastName" required />
+                            </div>
+                        </div>
+                        <div class="nav-input-wrap">
+                            <lightning-icon icon-name="utility:email" size="x-small" class="nav-input-icon"></lightning-icon>
+                            <input class="nav-input" type="email" placeholder="Adresse email" data-field="email" required />
+                        </div>
+                        <div class="nav-input-wrap">
+                            <lightning-icon icon-name="utility:lock" size="x-small" class="nav-input-icon"></lightning-icon>
+                            <input class="nav-input nav-input-padded" type={passwordType} placeholder="Mot de passe" data-field="password" required />
+                            <button type="button" class="nav-eye-btn" onclick={handleTogglePwd}>
+                                <lightning-icon icon-name={eyeIcon} size="x-small"></lightning-icon>
+                            </button>
+                        </div>
+                        <div class="nav-input-wrap">
+                            <lightning-icon icon-name="utility:lock" size="x-small" class="nav-input-icon"></lightning-icon>
+                            <input class="nav-input" type="password" placeholder="Confirmer le mot de passe" data-field="confirmPassword" required />
+                        </div>
+                        <div class="nav-info-box">
+                            <lightning-icon icon-name="utility:check" size="x-small" class="nav-info-icon"></lightning-icon>
+                            <span>Votre compte sera activ&eacute; imm&eacute;diatement.</span>
+                        </div>
+                        <button type="submit" class="nav-btn-submit nav-btn-emerald" disabled={isLoading}>
+                            <template if:false={isLoading}>Cr&eacute;er mon compte &rarr;</template>
+                            <template if:true={isLoading}>Cr&eacute;ation en cours&hellip;</template>
+                        </button>
+                    </form>
+                    <div class="nav-center nav-mt-md">
+                        <p class="nav-subtext">D&eacute;j&agrave; un compte ?&nbsp;
+                            <button class="nav-inline-link" onclick={handleShowLogin}>Se connecter</button>
+                        </p>
+                    </div>
+                    </div>
+                </template>
+
+                <!-- ── FORGOT PASSWORD MODE ── -->
+                <template if:true={isForgotPwd}>
+                    <div class="nav-center nav-mb-lg">
+                        <button class="nav-back-btn" onclick={handleShowLogin}>
+                            <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
+                            &nbsp;Retour
+                        </button>
+                        <div class="nav-key-icon">
+                            <lightning-icon icon-name="utility:key" size="medium"></lightning-icon>
+                        </div>
+                        <h2 class="nav-h2">R&eacute;cup&eacute;ration</h2>
+                        <p class="nav-subtext">Saisissez votre email pour recevoir un lien de r&eacute;initialisation.</p>
+                    </div>
+                    <form onsubmit={handleForgotSubmit} class="nav-form">
+                        <div class="nav-input-wrap">
+                            <lightning-icon icon-name="utility:email" size="x-small" class="nav-input-icon"></lightning-icon>
+                            <input class="nav-input" type="email" placeholder="Email de r&eacute;cup&eacute;ration" required />
+                        </div>
+                        <button type="submit" class="nav-btn-submit">Envoyer le lien</button>
+                    </form>
+                </template>
+
+            </div>
+        </div>
+    </div>
+</template>

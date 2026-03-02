@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>59.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightningCommunity__Default">
+            <property name="homeUrl"   type="String" label="Home URL"    default="/NexusPortal/s/" />
+            <property name="portalUrl" type="String" label="Portal URL"  default="/NexusPortal/s/" />
+            <property name="loginUrl"  type="String" label="Login URL"   default="/NexusPortal/s/login" />
+            <property name="devisUrl"  type="String" label="Devis URL"   default="/NexusPortal/s/demande-devis" />
+            <property name="cartUrl"   type="String" label="Cart URL"    default="/NexusPortal/s/panier" />
+            <property name="cartCount" type="Integer" label="Cart count" default="0" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

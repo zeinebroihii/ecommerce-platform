@@ -1,0 +1,90 @@
+<template>
+    <header class="nn-header">
+        <div class="nn-inner">
+
+            <!-- ── Logo ──────────────────────────────────────────────────── -->
+            <div class="nn-logo" onclick={goHome}>
+                <div class="nn-logo-icon">
+                    <lightning-icon icon-name="utility:lightning_alt" size="x-small" class="nn-zap"></lightning-icon>
+                </div>
+                <span class="nn-logo-name">Nexus CRM</span>
+            </div>
+
+            <!-- ── Nav links ──────────────────────────────────────────────── -->
+            <nav class="nn-nav">
+                <button class="nn-link" onclick={goHome}>Home</button>
+                <template if:true={isAuthenticated}>
+                    <button class="nn-link" onclick={goPortal}>Portal</button>
+                </template>
+                <div class="nn-divider"></div>
+
+                <!-- Guest actions -->
+                <template if:false={isAuthenticated}>
+                    <button class="nn-link nn-link-bold" onclick={goDevis}>
+                        <lightning-icon icon-name="utility:file" size="x-small" class="nn-icon-sm"></lightning-icon>
+                        &nbsp;Demande de Devis
+                    </button>
+                    <button class="nn-btn-login" onclick={goLogin}>
+                        <lightning-icon icon-name="utility:login" size="x-small" class="nn-icon-sm"></lightning-icon>
+                        &nbsp;Login
+                    </button>
+                </template>
+
+                <!-- Authenticated actions -->
+                <template if:true={isAuthenticated}>
+                    <!-- Bell -->
+                    <button class="nn-icon-btn" aria-label="Notifications">
+                        <lightning-icon icon-name="utility:notification" size="x-small"></lightning-icon>
+                    </button>
+
+                    <!-- Cart -->
+                    <div class="nn-cart-wrap">
+                        <button class="nn-icon-btn" onclick={goCart} aria-label="Panier">
+                            <lightning-icon icon-name="utility:cart" size="x-small"></lightning-icon>
+                        </button>
+                        <template if:true={hasCartItems}>
+                            <span class="nn-cart-badge">{cartCount}</span>
+                        </template>
+                    </div>
+
+                    <!-- User chip -->
+                    <div class="nn-user-chip">
+                        <div class="nn-avatar">
+                            <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
+                        </div>
+                        <span class="nn-user-label">{userLabel}</span>
+                    </div>
+
+                    <!-- Logout -->
+                    <button class="nn-icon-btn nn-logout" onclick={handleLogout} aria-label="Se déconnecter">
+                        <lightning-icon icon-name="utility:logout" size="x-small"></lightning-icon>
+                    </button>
+                </template>
+            </nav>
+
+            <!-- ── Mobile hamburger ──────────────────────────────────────── -->
+            <button class="nn-hamburger" onclick={toggleMobile} aria-label="Menu">
+                <span class="nn-ham-line"></span>
+                <span class="nn-ham-line"></span>
+                <span class="nn-ham-line"></span>
+            </button>
+        </div>
+
+        <!-- ── Mobile drawer ──────────────────────────────────────────────── -->
+        <template if:true={mobileOpen}>
+            <div class="nn-mobile-drawer">
+                <button class="nn-mobile-link" onclick={goHome}>Home</button>
+                <template if:true={isAuthenticated}>
+                    <button class="nn-mobile-link" onclick={goPortal}>Portal</button>
+                </template>
+                <template if:false={isAuthenticated}>
+                    <button class="nn-mobile-link" onclick={goDevis}>Demande de Devis</button>
+                    <button class="nn-mobile-cta" onclick={goLogin}>Login</button>
+                </template>
+                <template if:true={isAuthenticated}>
+                    <button class="nn-mobile-link nn-mobile-logout" onclick={handleLogout}>Se d&eacute;connecter</button>
+                </template>
+            </div>
+        </template>
+    </header>
+</template>
