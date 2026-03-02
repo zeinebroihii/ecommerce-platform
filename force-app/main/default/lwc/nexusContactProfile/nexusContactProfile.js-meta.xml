@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage">
+            <property name="contactId"   type="String" label="Contact ID"   description="Salesforce Contact record Id"/>
+            <property name="contactName" type="String" label="Contact Name" description="Full name of the contact"/>
+            <property name="account"     type="String" label="Account"      description="Account / company name"/>
+            <property name="email"       type="String" label="Email"        description="Contact email address"/>
+            <property name="phone"       type="String" label="Phone"        description="Contact phone number"/>
+            <property name="title"       type="String" label="Title"        description="Job title"/>
+            <property name="department"  type="String" label="Department"   description="Department"/>
+            <property name="initials"    type="String" label="Initials"     description="1-2 character initials"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

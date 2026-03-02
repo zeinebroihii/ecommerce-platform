@@ -1,0 +1,36 @@
+<template>
+    <div class="to-card">
+        <!-- Header -->
+        <div class="to-header">
+            <div class="to-header-left">
+                <lightning-icon icon-name="utility:target" size="x-small" class="to-header-icon"></lightning-icon>
+                <span class="to-title">Top Opportunities</span>
+            </div>
+        </div>
+
+        <!-- Opportunities list -->
+        <div class="to-body">
+            <template if:true={hasOpportunities}>
+                <template for:each={opportunities} for:item="opp">
+                    <div key={opp.id} class="to-opp" onclick={handleOppClick} data-id={opp.id}>
+                        <div class="to-opp-top">
+                            <span class="to-opp-name">{opp.name}</span>
+                            <lightning-icon icon-name="utility:new_window" size="x-small" class="to-opp-arrow"></lightning-icon>
+                        </div>
+                        <div class="to-opp-bottom">
+                            <span class="to-opp-amount">{opp.formattedAmount}</span>
+                            <span class="to-opp-stage">{opp.stage}</span>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <template if:false={hasOpportunities}>
+                <div class="to-empty">
+                    <lightning-icon icon-name="utility:target" size="medium" class="to-empty-icon"></lightning-icon>
+                    <p class="to-empty-text">No open opportunities</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

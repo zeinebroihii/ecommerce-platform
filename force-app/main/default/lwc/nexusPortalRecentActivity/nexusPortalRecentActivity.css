@@ -1,0 +1,115 @@
+/* ── nexusPortalRecentActivity ────────────────────────────────────────── */
+
+:host { display: block; }
+
+.npra-card {
+    background: #ffffff;
+    border-radius: 2rem;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 24px rgba(15,23,42,.06);
+    overflow: hidden;
+}
+
+/* Header */
+.npra-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.75rem;
+    border-bottom: 1px solid #f8fafc;
+}
+.npra-title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -.02em;
+}
+.npra-view-all {
+    font-size: .75rem;
+    font-weight: 700;
+    color: #6366f1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color .2s;
+}
+.npra-view-all:hover { color: #4f46e5; }
+
+/* Activity list */
+.npra-list { display: flex; flex-direction: column; }
+
+.npra-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.75rem;
+    cursor: pointer;
+    transition: background .15s;
+    border-bottom: 1px solid #f8fafc;
+}
+.npra-row:last-child { border-bottom: none; }
+.npra-row:hover { background: #f8fafc; }
+
+/* Icon box */
+.npra-icon-box {
+    width: 2.75rem;
+    height: 2.75rem;
+    background: #f1f5f9;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    --sds-c-icon-color-foreground-default: #64748b;
+}
+
+/* Info */
+.npra-info { flex: 1; min-width: 0; }
+.npra-order-name {
+    font-size: .875rem;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.npra-order-date {
+    font-size: .75rem;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-top: .125rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Right */
+.npra-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .375rem;
+    flex-shrink: 0;
+}
+.npra-price {
+    font-size: .9375rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+/* Status badges */
+.npra-status {
+    font-size: .65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: .25rem .625rem;
+    border-radius: 9999px;
+    background: #f1f5f9;
+    color: #64748b;
+}
+.npra-status--green  { background: #d1fae5; color: #059669; }
+.npra-status--amber  { background: #fef3c7; color: #d97706; }
+.npra-status--red    { background: #fee2e2; color: #dc2626; }

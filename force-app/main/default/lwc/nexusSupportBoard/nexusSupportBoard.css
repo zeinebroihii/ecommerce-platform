@@ -1,0 +1,107 @@
+/* ── nexusSupportBoard ─────────────────────────────────────────── */
+
+.nsb-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(248,250,252,.4);
+    border-radius: 2rem;
+}
+
+/* ── Header ── */
+.nsb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.nsb-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nsb-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -.02em;
+}
+
+/* AI Monitoring badge */
+.nsb-ai-badge {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: #ef4444;
+    color: #ffffff;
+    padding: .375rem 1rem;
+    border-radius: 9999px;
+    box-shadow: 0 4px 12px rgba(239,68,68,.28);
+}
+.nsb-ai-icon { color: #ffffff; }
+.nsb-ai-label {
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    white-space: nowrap;
+}
+
+/* Filter button */
+.nsb-filter-btn {
+    height: 2.5rem;
+    padding: 0 1.5rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: .75rem;
+    font-size: .625rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #475569;
+    cursor: pointer;
+    transition: background .2s;
+}
+.nsb-filter-btn:hover { background: #f8fafc; }
+
+/* ── Two-column grid ── */
+.nsb-grid {
+    display: grid;
+    grid-template-columns: 1fr 22rem;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .nsb-grid { grid-template-columns: 1fr; }
+}
+
+/* Cases column */
+.nsb-cases-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    overflow-y: auto;
+    max-height: 40rem;
+}
+.nsb-cases-col::-webkit-scrollbar { width: 4px; }
+.nsb-cases-col::-webkit-scrollbar-track { background: transparent; }
+.nsb-cases-col::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+
+.nsb-empty {
+    padding: 4rem 2rem;
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: .875rem;
+}
+
+/* Insights column — sticky so it stays visible while scrolling cases */
+.nsb-insights-col {
+    position: sticky;
+    top: 1rem;
+}

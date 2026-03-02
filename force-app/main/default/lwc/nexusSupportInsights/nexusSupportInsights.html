@@ -1,0 +1,73 @@
+<template>
+    <div class="nsi-wrap">
+
+        <!-- Dark AI Summary card -->
+        <div class="nsi-ai-card">
+            <div class="nsi-ai-glow"></div>
+            <div class="nsi-ai-inner">
+                <div class="nsi-ai-header">
+                    <div class="nsi-ai-icon-wrap">
+                        <lightning-icon icon-name="utility:einstein" size="small" class="nsi-ai-icon"></lightning-icon>
+                    </div>
+                    <h4 class="nsi-ai-title">AI Support Summary</h4>
+                </div>
+
+                <!-- Health score -->
+                <div class="nsi-health">
+                    <div class="nsi-health-label">Global Support Health</div>
+                    <div class="nsi-health-row">
+                        <span class="nsi-health-score">94%</span>
+                        <span class="nsi-health-trend">&#x2191; 2% vs Last Week</span>
+                    </div>
+                </div>
+
+                <!-- Insight boxes -->
+                <div class="nsi-insights">
+                    <div class="nsi-insight-box">
+                        <div class="nsi-insight-lbl nsi-insight-lbl--warning">Urgent Action Required</div>
+                        <p class="nsi-insight-text">3 high-priority cases detected in TechFlow account. AI suggests consolidating into a single major incident.</p>
+                    </div>
+                    <div class="nsi-insight-box">
+                        <div class="nsi-insight-lbl nsi-insight-lbl--success">Proactive Resolution</div>
+                        <p class="nsi-insight-text">AI Agent has already drafted 5 responses for common inquiries today, saving 2.5 hours of manual work.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Communication Trends card -->
+        <div class="nsi-trends-card">
+            <h4 class="nsi-trends-title">Communication Trends</h4>
+            <div class="nsi-trends-list">
+                <div class="nsi-trend-row">
+                    <div class="nsi-trend-left">
+                        <div class="nsi-trend-icon nsi-trend-icon--red">
+                            <lightning-icon icon-name="utility:chat" size="x-small"></lightning-icon>
+                        </div>
+                        <span class="nsi-trend-label">Chat Volume</span>
+                    </div>
+                    <span class="nsi-trend-badge nsi-trend-badge--red">High</span>
+                </div>
+                <div class="nsi-trend-row">
+                    <div class="nsi-trend-left">
+                        <div class="nsi-trend-icon nsi-trend-icon--green">
+                            <lightning-icon icon-name="utility:email" size="x-small"></lightning-icon>
+                        </div>
+                        <span class="nsi-trend-label">Email Volume</span>
+                    </div>
+                    <span class="nsi-trend-badge nsi-trend-badge--green">Normal</span>
+                </div>
+                <div class="nsi-trend-row">
+                    <div class="nsi-trend-left">
+                        <div class="nsi-trend-icon nsi-trend-icon--amber">
+                            <lightning-icon icon-name="utility:clock" size="x-small"></lightning-icon>
+                        </div>
+                        <span class="nsi-trend-label">Meeting Requests</span>
+                    </div>
+                    <span class="nsi-trend-badge nsi-trend-badge--amber">Increasing</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</template>

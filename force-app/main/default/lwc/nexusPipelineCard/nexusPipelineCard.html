@@ -1,0 +1,26 @@
+<template>
+    <div class="npc-card">
+        <!-- Top: name + ⋯ button -->
+        <div class="npc-top">
+            <h4 class="npc-name">{oppName}</h4>
+            <button class="npc-more">&#x22EF;</button>
+        </div>
+
+        <!-- Account row -->
+        <div class="npc-account-row">
+            <div class="npc-icon-wrap">
+                <lightning-icon icon-name="utility:company" size="x-small"></lightning-icon>
+            </div>
+            <span class="npc-account">{account}</span>
+        </div>
+
+        <!-- Footer: amount + date chip -->
+        <div class="npc-footer">
+            <span class="npc-amount">{formattedAmount}</span>
+            <span class="npc-date">
+                <lightning-icon icon-name="utility:clock" size="x-small" class="npc-clock"></lightning-icon>
+                {closeDate}
+            </span>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,151 @@
+/* ── nexusOrderRow ─────────────────────────────────────────────── */
+
+.nor-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: #ffffff;
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 3px rgba(15,23,42,.06), 0 0 0 1px rgba(226,232,240,.5);
+    transition: box-shadow .25s, transform .25s;
+}
+.nor-card:hover {
+    box-shadow: 0 12px 32px rgba(15,23,42,.1);
+    transform: translateY(-1px);
+}
+
+/* Left */
+.nor-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+.nor-badge {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    background: #0f172a;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: .6rem;
+    letter-spacing: .04em;
+    flex-shrink: 0;
+    transition: background .2s;
+}
+.nor-card:hover .nor-badge { background: #6366f1; }
+
+.nor-account {
+    margin: 0;
+    font-size: .875rem;
+    font-weight: 900;
+    color: #0f172a;
+    transition: color .2s;
+}
+.nor-card:hover .nor-account { color: #6366f1; }
+.nor-date {
+    margin: .25rem 0 0;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #94a3b8;
+}
+
+/* Right */
+.nor-right {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+}
+.nor-label {
+    margin: 0 0 .25rem;
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #94a3b8;
+}
+.nor-amount-col,
+.nor-status-col,
+.nor-items-col { text-align: right; }
+
+.nor-amount {
+    margin: 0;
+    font-size: .875rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+.nor-items-value {
+    margin: 0;
+    font-size: .75rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+/* Status */
+.nor-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .4rem;
+}
+.nor-dot {
+    width: .5rem;
+    height: .5rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+}
+.nor-dot--green  { background: #10b981; }
+.nor-dot--blue   { background: #6366f1; }
+.nor-dot--amber  { background: #f59e0b; }
+
+.nor-status-text {
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+}
+.nor-status-text--green  { color: #10b981; }
+.nor-status-text--blue   { color: #6366f1; }
+.nor-status-text--amber  { color: #f59e0b; }
+
+/* Action buttons */
+.nor-actions { display: flex; gap: .5rem; }
+
+.nor-btn-outline {
+    height: 2.25rem;
+    padding: 0 1rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: .75rem;
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #475569;
+    cursor: pointer;
+    transition: background .2s;
+    white-space: nowrap;
+}
+.nor-btn-outline:hover { background: #f8fafc; }
+
+.nor-btn-dark {
+    height: 2.25rem;
+    padding: 0 1rem;
+    background: #0f172a;
+    border: none;
+    border-radius: .75rem;
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background .2s;
+    white-space: nowrap;
+}
+.nor-btn-dark:hover { background: #1e293b; }

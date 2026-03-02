@@ -1,0 +1,154 @@
+/* ── nexusContactProfile modal ──────────────────────────────── */
+
+/* Overlay */
+.ncp-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: rgba(15,23,42,.48);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* Modal card */
+.ncp-modal {
+    width: 100%;
+    max-width: 32rem;
+    background: #ffffff;
+    border-radius: 2rem;
+    box-shadow: 0 32px 80px rgba(0,0,0,.22);
+    overflow: hidden;
+    animation: ncp-in .28s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes ncp-in {
+    from { opacity: 0; transform: scale(.9) translateY(20px); }
+    to   { opacity: 1; transform: scale(1)  translateY(0);    }
+}
+
+/* Gradient header band */
+.ncp-header-band {
+    height: 8rem;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    position: relative;
+}
+
+/* Close × */
+.ncp-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    width: 2rem; height: 2rem;
+    border-radius: 9999px;
+    background: rgba(0,0,0,.2);
+    border: none;
+    color: #ffffff;
+    font-size: 1.125rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s;
+}
+.ncp-close:hover { background: rgba(0,0,0,.42); }
+
+/* Avatar ring — hangs off the header band bottom */
+.ncp-avatar-wrap {
+    position: absolute;
+    bottom: -3rem;
+    left: 2rem;
+}
+
+.ncp-avatar-ring {
+    width: 6rem; height: 6rem;
+    border-radius: 1.5rem;
+    background: #ffffff;
+    padding: 4px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.16);
+}
+
+.ncp-avatar {
+    width: 100%; height: 100%;
+    border-radius: 1.25rem;
+    background: #eef2ff;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: 900;
+}
+
+/* Body */
+.ncp-body { padding: 4rem 2rem 2rem; }
+
+.ncp-identity { margin-bottom: 1.5rem; }
+
+.ncp-name {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.ncp-role {
+    margin: 0.25rem 0 0;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #4f46e5;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Fields grid */
+.ncp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.ncp-field { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.ncp-label {
+    font-size: 0.5875rem;
+    font-weight: 900;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.ncp-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #334155;
+    margin: 0;
+    word-break: break-word;
+}
+
+/* Action buttons */
+.ncp-actions { display: flex; gap: 0.75rem; }
+
+.ncp-btn-edit,
+.ncp-btn-activity {
+    flex: 1;
+    height: 3rem;
+    border: none;
+    border-radius: 0.875rem;
+    font-size: 0.625rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s;
+}
+
+.ncp-btn-edit     { background: #4f46e5; color: #ffffff; }
+.ncp-btn-edit:hover { background: #4338ca; }
+
+.ncp-btn-activity { background: #ffffff; color: #475569; border: 1px solid #e2e8f0; }
+.ncp-btn-activity:hover { background: #f8fafc; }

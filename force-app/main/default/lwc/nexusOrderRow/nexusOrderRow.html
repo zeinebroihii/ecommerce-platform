@@ -1,0 +1,38 @@
+<template>
+    <div class="nor-card">
+        <!-- Left: badge + account + date -->
+        <div class="nor-left">
+            <div class="nor-badge">#{orderShort}</div>
+            <div>
+                <h4 class="nor-account">{account}</h4>
+                <p class="nor-date">{orderDate}</p>
+            </div>
+        </div>
+
+        <!-- Right: amount, status, actions -->
+        <div class="nor-right">
+            <div class="nor-amount-col">
+                <p class="nor-label">Total Amount</p>
+                <p class="nor-amount">{formattedTotal}</p>
+            </div>
+
+            <div class="nor-status-col">
+                <p class="nor-label">Status</p>
+                <div class="nor-status-row">
+                    <div class={statusDotClass}></div>
+                    <span class={statusTextClass}>{status}</span>
+                </div>
+            </div>
+
+            <div class="nor-items-col">
+                <p class="nor-label">Items</p>
+                <p class="nor-items-value">{itemCountLabel}</p>
+            </div>
+
+            <div class="nor-actions">
+                <button class="nor-btn-outline" onclick={handleDetails}>Details</button>
+                <button class="nor-btn-dark" onclick={handleInvoice}>Invoice</button>
+            </div>
+        </div>
+    </div>
+</template>

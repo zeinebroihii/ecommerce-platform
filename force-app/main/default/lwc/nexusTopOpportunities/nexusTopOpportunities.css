@@ -1,0 +1,137 @@
+/* ── nexusTopOpportunities ────────────────────────────────── */
+
+.to-card {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    border: 1px solid rgba(99,102,241,.12);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* ── Header ── */
+.to-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.to-header-left {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.to-header-icon {
+    --lwc-colorTextIconDefault: #ef4444;
+}
+
+.to-title {
+    font-size: .65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #0f172a;
+}
+
+/* ── Body ── */
+.to-body {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    overflow-y: auto;
+}
+
+/* ── Opportunity card ── */
+.to-opp {
+    padding: .875rem 1rem;
+    background: rgba(248,250,252,.5);
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+}
+
+.to-opp:hover {
+    border-color: rgba(99,102,241,.30);
+    background: #ffffff;
+}
+
+.to-opp-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+
+.to-opp-name {
+    font-size: .7rem;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.3;
+    transition: color .2s;
+}
+
+.to-opp:hover .to-opp-name { color: #6366f1; }
+
+.to-opp-arrow {
+    flex-shrink: 0;
+    --lwc-colorTextIconDefault: #cbd5e1;
+    transition: color .2s;
+}
+
+.to-opp:hover .to-opp-arrow {
+    --lwc-colorTextIconDefault: #6366f1;
+}
+
+.to-opp-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.to-opp-amount {
+    font-size: .7rem;
+    font-weight: 900;
+    color: #6366f1;
+}
+
+.to-opp-stage {
+    font-size: .55rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #94a3b8;
+}
+
+/* ── Empty state ── */
+.to-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    color: #cbd5e1;
+    padding: 2rem 0;
+}
+
+.to-empty-icon {
+    --lwc-colorTextIconDefault: #e2e8f0;
+}
+
+.to-empty-text {
+    font-size: .65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #cbd5e1;
+    margin: 0;
+}

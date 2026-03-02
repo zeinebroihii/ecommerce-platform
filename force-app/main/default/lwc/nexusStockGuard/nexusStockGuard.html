@@ -1,0 +1,70 @@
+<template>
+    <div class="nsg-wrap">
+
+        <!-- Dark AI Stock Guard card -->
+        <div class="nsg-ai-card">
+            <div class="nsg-ai-glow"></div>
+            <div class="nsg-ai-inner">
+
+                <div class="nsg-ai-header">
+                    <div class="nsg-ai-icon-wrap">
+                        <lightning-icon icon-name="utility:einstein" size="small" class="nsg-ai-icon"></lightning-icon>
+                    </div>
+                    <h4 class="nsg-ai-title">AI Stock Guard</h4>
+                </div>
+
+                <div class="nsg-insights">
+                    <div class="nsg-insight-box">
+                        <div class="nsg-insight-lbl nsg-insight-lbl--red">Critical Shortage</div>
+                        <p class="nsg-insight-text">Sensor X1 is below safety threshold. AI suggests immediate reorder of 150 units to prevent stockout.</p>
+                    </div>
+                    <div class="nsg-insight-box">
+                        <div class="nsg-insight-lbl nsg-insight-lbl--amber">Overstock Alert</div>
+                        <p class="nsg-insight-text">IoT Gateway Pro is occupying 40% of shelf space. Recommend a promotional bundle to clear inventory.</p>
+                    </div>
+                </div>
+
+                <button class="nsg-optimize-btn">Optimize Inventory</button>
+            </div>
+        </div>
+
+        <!-- Light Stock Trends card -->
+        <div class="nsg-trends-card">
+            <h4 class="nsg-trends-title">Stock Trends</h4>
+            <div class="nsg-trends-list">
+
+                <div class="nsg-trend">
+                    <div class="nsg-trend-header">
+                        <span class="nsg-trend-label">Inbound Flow</span>
+                        <span class="nsg-trend-value nsg-trend-value--emerald">+12%</span>
+                    </div>
+                    <div class="nsg-trend-track">
+                        <div class="nsg-trend-bar nsg-trend-bar--emerald" style="width:12%"></div>
+                    </div>
+                </div>
+
+                <div class="nsg-trend">
+                    <div class="nsg-trend-header">
+                        <span class="nsg-trend-label">Outbound Flow</span>
+                        <span class="nsg-trend-value nsg-trend-value--rose">-8%</span>
+                    </div>
+                    <div class="nsg-trend-track">
+                        <div class="nsg-trend-bar nsg-trend-bar--rose" style="width:8%"></div>
+                    </div>
+                </div>
+
+                <div class="nsg-trend">
+                    <div class="nsg-trend-header">
+                        <span class="nsg-trend-label">Storage Cap</span>
+                        <span class="nsg-trend-value nsg-trend-value--indigo">78%</span>
+                    </div>
+                    <div class="nsg-trend-track">
+                        <div class="nsg-trend-bar nsg-trend-bar--indigo" style="width:78%"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</template>

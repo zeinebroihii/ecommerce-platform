@@ -1,0 +1,106 @@
+/* ── nexusPipelineVelocity ────────────────────────────────── */
+
+.pv-card {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    border: 1px solid rgba(99,102,241,.12);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* ── Header ── */
+.pv-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.pv-header-left {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.pv-header-icon {
+    color: #6366f1;
+}
+
+.pv-title {
+    font-size: .65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #0f172a;
+}
+
+.pv-period {
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #94a3b8;
+}
+
+/* ── Body ── */
+.pv-body {
+    flex: 1;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+/* ── Stage row ── */
+.pv-stage {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+
+.pv-stage-meta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.pv-stage-label {
+    display: block;
+    font-size: .55rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #94a3b8;
+}
+
+.pv-stage-count {
+    display: block;
+    font-size: .7rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.pv-stage-amount {
+    font-size: .7rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+/* ── Progress track & bar ── */
+.pv-track {
+    height: .375rem;
+    background: #f1f5f9;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.pv-bar {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width .6s ease;
+}

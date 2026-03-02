@@ -1,0 +1,41 @@
+<template>
+    <div class="ncm-overlay" onclick={handleOverlayClick}>
+        <div class="ncm-modal" onclick={stopPropagation}>
+
+            <!-- Header -->
+            <div class="ncm-header">
+                <div class="ncm-header-avatar">{initials}</div>
+                <div class="ncm-header-meta">
+                    <h3 class="ncm-header-name">{contactName}</h3>
+                    <p class="ncm-header-status">Online</p>
+                </div>
+                <button class="ncm-close" onclick={handleClose}>&#x2715;</button>
+            </div>
+
+            <!-- Messages list -->
+            <div class="ncm-messages">
+                <template for:each={messages} for:item="msg">
+                    <div key={msg.id} class={msg.wrapClass}>
+                        <div class={msg.bubbleClass}>{msg.text}</div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Input area -->
+            <div class="ncm-input-area">
+                <input
+                    class="ncm-input"
+                    type="text"
+                    placeholder="Write a message..."
+                    value={newMessage}
+                    oninput={handleInput}
+                    onkeyup={handleKeyUp}
+                />
+                <button class="ncm-send" onclick={handleSend}>
+                    <lightning-icon icon-name="utility:send" size="x-small"></lightning-icon>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</template>

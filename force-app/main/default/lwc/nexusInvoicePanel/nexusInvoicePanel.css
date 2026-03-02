@@ -1,0 +1,219 @@
+/* ── nexusInvoicePanel ─────────────────────────────────────────── */
+
+.nip-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(15,23,42,.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+}
+.nip-modal {
+    width: 100%;
+    max-width: 54rem;
+    background: #ffffff;
+    border-radius: 1.75rem;
+    box-shadow: 0 25px 60px rgba(15,23,42,.25);
+    overflow: hidden;
+    margin: auto;
+}
+
+/* Top / Invoice header */
+.nip-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 3rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.nip-logo {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 1rem;
+    background: #0f172a;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 24px rgba(15,23,42,.2);
+}
+.nip-title {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 900;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: -.04em;
+}
+.nip-inv-number {
+    margin: .25rem 0 0;
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #94a3b8;
+}
+
+/* Company block */
+.nip-company { text-align: right; }
+.nip-company-name {
+    font-size: .875rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin: 0 0 .375rem;
+}
+.nip-company-line {
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #94a3b8;
+    line-height: 1.8;
+    margin: 0;
+}
+
+/* Body */
+.nip-body { padding: 3rem; }
+
+/* Meta (Bill To + Invoice Details) */
+.nip-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 2.5rem;
+}
+.nip-meta-label {
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #94a3b8;
+    margin: 0 0 .875rem;
+}
+.nip-meta-account {
+    font-size: .875rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin: 0 0 .375rem;
+}
+.nip-meta-addr {
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.8;
+}
+.nip-meta-right { text-align: right; }
+.nip-detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .5rem;
+}
+.nip-detail-key { color: #94a3b8; }
+.nip-detail-val { color: #0f172a; }
+
+/* Table */
+.nip-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2.5rem;
+}
+.nip-thead-row {
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #94a3b8;
+    border-bottom: 1px solid #f1f5f9;
+}
+.nip-th          { padding-bottom: 1rem; font-weight: 900; }
+.nip-th--left    { text-align: left; }
+.nip-th--center  { text-align: center; }
+.nip-th--right   { text-align: right; }
+.nip-tr          { border-bottom: 1px solid #f8fafc; }
+.nip-td {
+    padding: 1.25rem 0;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+.nip-td--center { text-align: center; }
+.nip-td--right  { text-align: right; }
+.nip-td--bold   { font-weight: 900; }
+.nip-td--empty  { text-align: center; color: #94a3b8; font-style: italic; }
+
+/* Totals */
+.nip-totals-wrap {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 2rem;
+    border-top: 1px solid #f1f5f9;
+    margin-bottom: 2.5rem;
+}
+.nip-totals { width: 18rem; }
+.nip-total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 1rem;
+}
+.nip-total-key { color: #94a3b8; }
+.nip-total-val { color: #0f172a; }
+.nip-total-row--final {
+    padding-top: 1rem;
+    border-top: 2px solid #0f172a;
+    margin-top: .5rem;
+    margin-bottom: 0;
+}
+.nip-total-key--final { font-size: .75rem; color: #0f172a; }
+.nip-total-val--final { font-size: 1.375rem; color: #6366f1; font-size: 1.25rem; }
+
+/* Action buttons */
+.nip-actions { display: flex; gap: .75rem; }
+.nip-btn-dark {
+    flex: 1;
+    height: 3rem;
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    border-radius: .875rem;
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    cursor: pointer;
+    transition: background .2s, opacity .2s;
+}
+.nip-btn-dark:hover:not([disabled]) { background: #1e293b; }
+.nip-btn-dark[disabled]             { opacity: .5; cursor: not-allowed; }
+.nip-btn-outline {
+    flex: 1;
+    height: 3rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: .875rem;
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #475569;
+    cursor: pointer;
+    transition: background .2s;
+}
+.nip-btn-outline:hover { background: #f8fafc; }

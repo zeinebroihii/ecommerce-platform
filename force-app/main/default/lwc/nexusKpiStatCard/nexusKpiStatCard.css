@@ -1,0 +1,104 @@
+/* ── nexusKpiStatCard ─────────────────────────────────────── */
+
+.kpi-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    border: 1px solid rgba(99,102,241,.12);
+    overflow: hidden;
+    transition: box-shadow .3s, transform .3s;
+    cursor: default;
+}
+
+.kpi-card:hover {
+    box-shadow: 0 16px 40px rgba(0,0,0,.12);
+    transform: translateY(-3px);
+}
+
+/* ── Header row (icon + trend pill) ── */
+.kpi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .75rem;
+}
+
+/* ── Icon wrapper ── */
+.kpi-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: .625rem;
+    transition: background .3s, color .3s;
+}
+
+.kpi-icon--primary  { background: rgba(99,102,241,.10); color: #6366f1; }
+.kpi-icon--success  { background: rgba(16,185,129,.10); color: #10b981; }
+.kpi-icon--danger   { background: rgba(239,68, 68,.10); color: #ef4444; }
+.kpi-icon--warning  { background: rgba(245,158, 11,.10); color: #f59e0b; }
+
+.kpi-card:hover .kpi-icon--primary  { background: #6366f1; color: #fff; }
+.kpi-card:hover .kpi-icon--success  { background: #10b981; color: #fff; }
+.kpi-card:hover .kpi-icon--danger   { background: #ef4444; color: #fff; }
+.kpi-card:hover .kpi-icon--warning  { background: #f59e0b; color: #fff; }
+
+/* ── Trend pill ── */
+.kpi-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: .15rem;
+    padding: .15rem .5rem;
+    border-radius: 9999px;
+    font-size: .6rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.kpi-trend--up   { background: rgba(16,185,129,.10); color: #10b981; }
+.kpi-trend--down { background: rgba(239,68, 68,.10); color: #ef4444; }
+
+/* ── Value + Label ── */
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -.04em;
+    line-height: 1.1;
+    margin-bottom: .25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.kpi-label {
+    font-size: .6rem;
+    font-weight: 900;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Background decorative blob ── */
+.kpi-blob {
+    position: absolute;
+    bottom: -1rem;
+    right: -1rem;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 9999px;
+    opacity: .04;
+    transition: opacity .3s;
+}
+
+.kpi-card:hover .kpi-blob { opacity: .09; }
+
+.kpi-blob--primary  { background: #6366f1; }
+.kpi-blob--success  { background: #10b981; }
+.kpi-blob--danger   { background: #ef4444; }
+.kpi-blob--warning  { background: #f59e0b; }

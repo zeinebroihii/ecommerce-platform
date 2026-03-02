@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage,lightningCommunity__Default">
+            <property name="cardTitle"       type="String"  label="Card Title"          default="Activités Récentes"/>
+            <property name="activity1Number" type="String"  label="Activity 1 Order #"  default="#ORD-2024-001"/>
+            <property name="activity1Date"   type="String"  label="Activity 1 Date"     default="Expédiée le 24 Février 2024"/>
+            <property name="activity1Price"  type="String"  label="Activity 1 Price"    default="$1,240.00"/>
+            <property name="activity1Status" type="String"  label="Activity 1 Status"   default="Livré"/>
+            <property name="activity2Number" type="String"  label="Activity 2 Order #"  default="#ORD-2024-002"/>
+            <property name="activity2Date"   type="String"  label="Activity 2 Date"     default="Expédiée le 22 Février 2024"/>
+            <property name="activity2Price"  type="String"  label="Activity 2 Price"    default="$3,200.00"/>
+            <property name="activity2Status" type="String"  label="Activity 2 Status"   default="Livré"/>
+            <property name="activity3Number" type="String"  label="Activity 3 Order #"  default="#ORD-2024-003"/>
+            <property name="activity3Date"   type="String"  label="Activity 3 Date"     default="En transit — Livraison le 27 Février"/>
+            <property name="activity3Price"  type="String"  label="Activity 3 Price"    default="$870.00"/>
+            <property name="activity3Status" type="String"  label="Activity 3 Status"   default="En transit"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

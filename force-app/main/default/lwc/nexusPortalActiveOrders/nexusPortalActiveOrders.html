@@ -1,0 +1,62 @@
+<template>
+    <div class="npao-card">
+
+        <!-- Header -->
+        <div class="npao-header">
+            <h3 class="npao-title">{cardTitle}</h3>
+            <div class="npao-live-badge">
+                <span class="npao-live-dot"></span>
+                <span>Live</span>
+            </div>
+        </div>
+
+        <!-- KPI stats row -->
+        <div class="npao-stats">
+
+            <!-- Commandes Actives -->
+            <div class="npao-stat">
+                <div class="npao-stat-icon npao-icon--indigo">
+                    <lightning-icon icon-name="utility:package" size="small" class="npao-icon-el"></lightning-icon>
+                </div>
+                <div class="npao-stat-body">
+                    <div class="npao-stat-value npao-value--indigo">{ordersCount}</div>
+                    <div class="npao-stat-label">{ordersLabel}</div>
+                </div>
+            </div>
+
+            <div class="npao-divider"></div>
+
+            <!-- Économies Réalisées -->
+            <div class="npao-stat">
+                <div class="npao-stat-icon npao-icon--emerald">
+                    <lightning-icon icon-name="utility:trending" size="small" class="npao-icon-el"></lightning-icon>
+                </div>
+                <div class="npao-stat-body">
+                    <div class="npao-stat-value npao-value--emerald">{savingsAmount}</div>
+                    <div class="npao-stat-label">{savingsLabel}</div>
+                </div>
+            </div>
+
+            <div class="npao-divider"></div>
+
+            <!-- Temps de Réponse -->
+            <div class="npao-stat">
+                <div class="npao-stat-icon npao-icon--amber">
+                    <lightning-icon icon-name="utility:clock" size="small" class="npao-icon-el"></lightning-icon>
+                </div>
+                <div class="npao-stat-body">
+                    <div class="npao-stat-value npao-value--amber">{responseTime}</div>
+                    <div class="npao-stat-label">{responseLabel}</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- View orders CTA -->
+        <button class="npao-cta" onclick={handleViewOrders}>
+            <lightning-icon icon-name="utility:list" size="xx-small" class="npao-cta-icon"></lightning-icon>
+            Voir toutes les commandes
+        </button>
+
+    </div>
+</template>

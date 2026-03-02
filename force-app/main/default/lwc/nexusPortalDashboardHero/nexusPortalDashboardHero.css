@@ -1,0 +1,174 @@
+/* ── nexusPortalDashboardHero ─────────────────────────────────────────── */
+
+:host { display: block; }
+
+.npdh-hero {
+    position: relative;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    border-radius: 2.5rem;
+    padding: 3.5rem;
+    overflow: hidden;
+}
+
+/* Glows */
+.npdh-glow-top {
+    position: absolute;
+    top: -5rem;
+    right: -3rem;
+    width: 26rem;
+    height: 26rem;
+    background: radial-gradient(circle, rgba(99,102,241,.28) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.npdh-glow-bottom {
+    position: absolute;
+    bottom: -6rem;
+    left: -3rem;
+    width: 20rem;
+    height: 20rem;
+    background: radial-gradient(circle, rgba(99,102,241,.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* 2-column grid */
+.npdh-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+/* ── Left column ─────────────────────────────────────────────────────── */
+.npdh-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* AI tag badge */
+.npdh-ai-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .375rem .875rem;
+    background: rgba(99,102,241,.2);
+    border: 1px solid rgba(99,102,241,.35);
+    border-radius: 9999px;
+    color: #a5b4fc;
+    font-size: .65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    width: fit-content;
+    --sds-c-icon-color-foreground-default: #a5b4fc;
+}
+
+/* Title */
+.npdh-title {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -.03em;
+}
+.npdh-title-line1 {
+    font-size: 2.75rem;
+    color: #ffffff;
+    text-transform: uppercase;
+}
+.npdh-title-highlight {
+    font-size: 2.75rem;
+    color: #818cf8;
+    text-transform: uppercase;
+}
+
+/* Description */
+.npdh-desc {
+    font-size: .9375rem;
+    color: #94a3b8;
+    line-height: 1.65;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Action buttons */
+.npdh-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.npdh-btn-primary {
+    padding: 0 2rem;
+    height: 3.25rem;
+    background: #6366f1;
+    color: #ffffff;
+    border: none;
+    border-radius: 1.25rem;
+    font-size: .875rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(99,102,241,.4);
+    transition: background .2s, box-shadow .2s;
+}
+.npdh-btn-primary:hover {
+    background: #4f46e5;
+    box-shadow: 0 12px 32px rgba(99,102,241,.5);
+}
+
+.npdh-btn-secondary {
+    padding: 0 2rem;
+    height: 3.25rem;
+    background: rgba(255,255,255,.08);
+    color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 1.25rem;
+    font-size: .875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+}
+.npdh-btn-secondary:hover { background: rgba(255,255,255,.14); }
+
+/* ── Right: 2×2 metric grid ──────────────────────────────────────────── */
+.npdh-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.npdh-metric-card {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(12px);
+    border-radius: 1.5rem;
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: .375rem;
+    transition: background .2s;
+}
+.npdh-metric-card:hover { background: rgba(255,255,255,.08); }
+
+.npdh-metric-value {
+    font-size: 2.25rem;
+    font-weight: 900;
+    letter-spacing: -.04em;
+    line-height: 1;
+}
+
+.npdh-metric-label {
+    font-size: .6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #64748b;
+}

@@ -1,0 +1,37 @@
+<template>
+    <div class="nsp-wrap">
+
+        <!-- ── Header ── -->
+        <div class="nsp-header">
+            <div class="nsp-header-left">
+                <h3 class="nsp-title">Sales Pipeline</h3>
+                <div class="nsp-ai-badge">
+                    <lightning-icon icon-name="utility:einstein" size="x-small" class="nsp-ai-icon"></lightning-icon>
+                    <span class="nsp-ai-label">AI Optimized Flow</span>
+                </div>
+            </div>
+            <div class="nsp-header-right">
+                <div class="nsp-avatars">
+                    <div class="nsp-av nsp-av-1"></div>
+                    <div class="nsp-av nsp-av-2"></div>
+                    <div class="nsp-av nsp-av-3"></div>
+                    <div class="nsp-av nsp-av-plus">+4</div>
+                </div>
+                <button class="nsp-filter-btn">Filter</button>
+            </div>
+        </div>
+
+        <!-- ── Kanban Board ── -->
+        <div class="nsp-board">
+            <template for:each={columns} for:item="col">
+                <c-nexus-pipeline-column
+                    key={col.key}
+                    stage-name={col.stageName}
+                    stage-color={col.stageColor}
+                    opportunities={col.opportunities}
+                ></c-nexus-pipeline-column>
+            </template>
+        </div>
+
+    </div>
+</template>

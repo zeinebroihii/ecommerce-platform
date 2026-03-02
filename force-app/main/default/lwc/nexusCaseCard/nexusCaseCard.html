@@ -1,0 +1,45 @@
+<template>
+    <div class="ncc-card">
+        <!-- Left accent bar -->
+        <div class={accentClass}></div>
+
+        <div class="ncc-body">
+            <!-- Top row: number + subject + badges -->
+            <div class="ncc-top">
+                <div class="ncc-top-left">
+                    <div class="ncc-num-badge">#{caseNumber}</div>
+                    <div class="ncc-info">
+                        <h4 class="ncc-subject">{subject}</h4>
+                        <p class="ncc-meta">{account} &bull; {contact}</p>
+                    </div>
+                </div>
+                <div class="ncc-top-right">
+                    <span class={priorityClass}>{priority} Priority</span>
+                    <template if:true={needsMeeting}>
+                        <span class="ncc-meeting-badge">
+                            <lightning-icon icon-name="utility:clock" size="x-small" class="ncc-clock-icon"></lightning-icon>
+                            Meeting Needed
+                        </span>
+                    </template>
+                </div>
+            </div>
+
+            <!-- AI Analysis box -->
+            <div class="ncc-ai-box">
+                <div class="ncc-ai-header">
+                    <lightning-icon icon-name="utility:einstein" size="x-small" class="ncc-ai-icon"></lightning-icon>
+                    <span class="ncc-ai-label">Nexus AI Analysis</span>
+                </div>
+                <p class="ncc-ai-text">{aiAnalysis}</p>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="ncc-actions">
+                <button class="ncc-btn-outline" onclick={handleViewHistory}>View History</button>
+                <template if:true={needsMeeting}>
+                    <button class="ncc-btn-primary" onclick={handleSchedule}>Schedule Meeting</button>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>
