@@ -1,0 +1,114 @@
+<template>
+    <div class="npl-wrap">
+
+        <!-- Header -->
+        <div class="npl-header">
+            <div>
+                <h2 class="npl-title">User Precision Locator</h2>
+                <p class="npl-subtitle">High-resolution spatial analysis for individual accounts</p>
+            </div>
+        </div>
+
+        <!-- No record context -->
+        <template if:true={noRecord}>
+            <div class="npl-state-msg">Open a Lead record to view its location.</div>
+        </template>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="npl-state-msg">
+                <lightning-icon icon-name="utility:spinner" size="small" class="npl-spinner"></lightning-icon>
+                &nbsp;Chargement des données...
+            </div>
+        </template>
+
+        <!-- Error -->
+        <template if:true={hasError}>
+            <div class="npl-state-msg npl-state-error">{errorMessage}</div>
+        </template>
+
+        <!-- No data -->
+        <template if:true={isEmpty}>
+            <div class="npl-state-msg">Aucun lead avec données de localisation trouvé.</div>
+        </template>
+
+        <!-- Grid (only when data is ready) -->
+        <template if:true={hasLead}>
+            <div class="npl-grid">
+
+                <!-- Map column -->
+                <div class="npl-map-col">
+                    <lightning-map
+                        map-markers={mapMarkers}
+                        zoom-level="12"
+                        show-footer="false"
+                        style="height:440px;display:block;">
+                    </lightning-map>
+                    <div class="npl-overlay">
+                        <div class="npl-overlay-icon">
+                            <lightning-icon icon-name="utility:location" size="x-small" variant="inverse"></lightning-icon>
+                        </div>
+                        <div>
+                            <div class="npl-overlay-location">{selectedUser.locationLine}</div>
+                            <div class="npl-overlay-postal">Postal: {selectedUser.postalCode}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile card -->
+                <div class="npl-profile-card">
+
+                    <!-- Avatar + identity -->
+                    <div class="npl-avatar-wrap">
+                        <div class="npl-avatar">{selectedUser.initials}</div>
+                        <div class="npl-name">{selectedUser.name}</div>
+                        <div class="npl-company">{selectedUser.company}</div>
+                    </div>
+
+                    <!-- Spatial metadata -->
+                    <div class="npl-meta-box">
+                        <div class="npl-meta-header">
+                            <lightning-icon icon-name="utility:info" size="x-small" class="npl-meta-icon"></lightning-icon>
+                            &nbsp;Location Data
+                        </div>
+                        <div class="npl-meta-row">
+                            <span class="npl-meta-key">City</span>
+                            <span class="npl-meta-val">{selectedUser.city}</span>
+                        </div>
+                        <div class="npl-meta-row">
+                            <span class="npl-meta-key">State / Region</span>
+                            <span class="npl-meta-val">{selectedUser.state}</span>
+                        </div>
+                        <div class="npl-meta-row">
+                            <span class="npl-meta-key">Country</span>
+                            <span class="npl-meta-val">{selectedUser.country}</span>
+                        </div>
+                        <div class="npl-meta-row">
+                            <span class="npl-meta-key">Postal Code</span>
+                            <span class="npl-meta-val">{selectedUser.postalCode}</span>
+                        </div>
+                        <div class="npl-meta-row">
+                            <span class="npl-meta-key">AI Score</span>
+                            <span class="npl-meta-val">{selectedUser.aiScore}</span>
+                        </div>
+                        <div class="npl-meta-row">
+                            <span class="npl-meta-key">Intent</span>
+                            <span class="npl-meta-val">{selectedUser.intent}</span>
+                        </div>
+                    </div>
+
+                    <!-- Google Maps link -->
+                    <a class="npl-gmaps-btn"
+                       href={googleMapsUrl}
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        <lightning-icon icon-name="utility:map" size="x-small" variant="inverse"></lightning-icon>
+                        &nbsp;Open in Google Maps
+                    </a>
+
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

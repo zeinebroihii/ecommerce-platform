@@ -55,29 +55,20 @@
             </div>
 
             <!-- Agent deep-analysis button (always visible) -->
-            <button class="nld-btn-agent" onclick={handleOpenAgent}>
+            <a class="nld-btn-agent"
+               href="https://orgfarm-56b3b63a30-dev-ed.develop.lightning.force.com/AiCopilot/copilotStudio.app#/copilot/builder?copilotId=0Xxg5000000b81pCAA&versionId=0X9g5000000s8mzCAA"
+               target="_blank"
+               rel="noopener noreferrer"
+               onclick={handleCopyPrompt}>
                 <lightning-icon icon-name="utility:einstein" size="x-small" variant="inverse"></lightning-icon>
                 &nbsp;Analyse approfondie — Nexus Lead Analyst
-            </button>
+            </a>
 
-            <!-- Approve / Reject buttons (only if Pending) -->
-            <template if:true={isPending}>
-                <div class="nld-actions">
-                    <button class="nld-btn-approve" onclick={handleApprove} disabled={isActing}>
-                        <template if:false={isActing}>&#10003;&nbsp; Approuver ce lead</template>
-                        <template if:true={isActing}>Traitement...</template>
-                    </button>
-                    <button class="nld-btn-reject" onclick={handleReject} disabled={isActing}>
-                        &#10005;&nbsp; Rejeter
-                    </button>
-                </div>
-            </template>
-
-            <!-- Already decided -->
+            <!-- Decision status message -->
             <template if:false={isPending}>
                 <div class="nld-decided-msg">
                     <lightning-icon icon-name="utility:check" size="x-small" class="nld-decided-icon"></lightning-icon>
-                    &nbsp;Décision déjà enregistrée — statut : <strong>{leadStatus}</strong>
+                    &nbsp;Décision enregistrée — statut : <strong>{leadStatus}</strong>
                 </div>
             </template>
 

@@ -146,6 +146,71 @@ public without sharing class LeadManagementController {
         return result;
     }
 
+    // ── Leads with location data for map components ───────────────────────────
+    @AuraEnabled(cacheable=true)
+    public static List<LeadDetail> getLeadLocations() {
+        List<LeadDetail> result = new List<LeadDetail>();
+        for (Lead l : [
+            SELECT Id, FirstName, LastName, Company, City, State, Country,
+                   PostalCode, AIScore__c, Intent__c, AdminDecision__c, Status
+            FROM   Lead
+            WHERE  IsConverted = false
+            AND    Company != null
+            AND    (City != null OR Country != null)
+            ORDER BY CreatedDate DESC
+            LIMIT  200
+        ]) {
+            LeadDetail d    = new LeadDetail();
+            d.leadId        = l.Id;
+            d.firstName     = l.FirstName;
+            d.lastName      = l.LastName;
+            d.name          = ((l.FirstName != null ? l.FirstName + ' ' : '')
+                              + (l.LastName  != null ? l.LastName  : '')).trim();
+            d.company       = l.Company;
+            d.city          = l.City;
+            d.state         = l.State;
+            d.country       = l.Country;
+            d.postalCode    = l.PostalCode;
+            d.aiScore       = l.AIScore__c != null ? l.AIScore__c.intValue() : null;
+            d.intent        = l.Intent__c;
+            d.adminDecision = l.AdminDecision__c;
+            d.status        = l.Status;
+            d.initials      = initials(l.FirstName, l.LastName);
+            result.add(d);
+        }
+        return result;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static LeadDetail getLeadLocationById(String leadId) {
+        for (Lead l : [
+            SELECT Id, FirstName, LastName, Company, City, State, Country,
+                   PostalCode, AIScore__c, Intent__c, AdminDecision__c, Status
+            FROM   Lead
+            WHERE  Id = :leadId
+            LIMIT  1
+        ]) {
+            LeadDetail d    = new LeadDetail();
+            d.leadId        = l.Id;
+            d.firstName     = l.FirstName;
+            d.lastName      = l.LastName;
+            d.name          = ((l.FirstName != null ? l.FirstName + ' ' : '')
+                              + (l.LastName  != null ? l.LastName  : '')).trim();
+            d.company       = l.Company;
+            d.city          = l.City;
+            d.state         = l.State;
+            d.country       = l.Country;
+            d.postalCode    = l.PostalCode;
+            d.aiScore       = l.AIScore__c != null ? l.AIScore__c.intValue() : null;
+            d.intent        = l.Intent__c;
+            d.adminDecision = l.AdminDecision__c;
+            d.status        = l.Status;
+            d.initials      = initials(l.FirstName, l.LastName);
+            return d;
+        }
+        return null;
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<LeadDetail> getLeadsToConvert() {
         List<LeadDetail> result = new List<LeadDetail>();
@@ -278,7 +343,7 @@ public without sharing class LeadManagementController {
         try {
             Lead l = [SELECT Id FROM Lead WHERE Id = :leadId LIMIT 1];
             l.AdminDecision__c = decision;
-            l.Status = (decision == 'Approved') ? 'Working' : 'Closed - Not Converted';
+            l.Status = (decision == 'Approved') ? 'Closed - Converted' : 'Closed - Not Converted';
             update l;
         } catch (Exception e) {
             throw new AuraHandledException('Erreur lors de la décision : ' + e.getMessage());
@@ -601,6 +666,171 @@ public without sharing class LeadManagementController {
         return u.Username;
     }
 
+    // ── Provision portal user for a CONVERTED lead + send real credentials ────
+    // Called by admin after convertLeadFull. Uses System.setPassword so the
+    // temp password in the welcome email is the actual login password.
+    @AuraEnabled
+    public static String provisionPortalUser(String leadId) {
+        // 1. Load converted lead
+        Lead l;
+        try {
+            l = [SELECT Id, FirstName, LastName, Email, Company, IsConverted,
+                        ConvertedContactId, ConvertedAccountId
+                 FROM Lead WHERE Id = :leadId LIMIT 1];
+        } catch (Exception ex) {
+            throw new AuraHandledException('Lead introuvable.');
+        }
+        if (!l.IsConverted || l.ConvertedContactId == null) {
+            throw new AuraHandledException('Le lead doit être converti avant de créer un compte portail.');
+        }
+        if (String.isBlank(l.Email)) {
+            throw new AuraHandledException('Ce lead n\'a pas d\'adresse email.');
+        }
+
+        // 2. Idempotency — skip user creation if portal user already exists, but still send email
+        List<User> existing = [SELECT Id, Username FROM User
+                               WHERE ContactId = :l.ConvertedContactId AND IsActive = true LIMIT 1];
+        if (!existing.isEmpty()) {
+            // User already provisioned — resend credentials email
+            Contact cx = [SELECT Id, FirstName, Email FROM Contact WHERE Id = :l.ConvertedContactId LIMIT 1];
+            String siteBaseX = Site.getBaseUrl();
+            String baseUrlX  = String.isNotBlank(siteBaseX)
+                ? siteBaseX
+                : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/NexusPortal';
+            String changePwdUrlX = baseUrlX + '/s/changer-mot-de-passe';
+            String loginUrlX     = baseUrlX + '/s/login?startUrl='
+                + EncodingUtil.urlEncode(changePwdUrlX, 'UTF-8');
+            String newPwd = generateTempPassword();
+            try { System.setPassword(existing[0].Id, newPwd); } catch (Exception ignored) {}
+            String companyX = l.Company != null ? l.Company : '';
+            String fnX = cx.FirstName != null ? cx.FirstName : '';
+            sendProvisionedWelcomeEmail(cx.Id, cx.Email, fnX, companyX, newPwd, loginUrlX);
+            return existing[0].Username;
+        }
+
+        // 3. Load contact
+        Contact c = [SELECT Id, FirstName, LastName, Email, AccountId
+                     FROM Contact WHERE Id = :l.ConvertedContactId LIMIT 1];
+
+        // 4. Community profile
+        List<Profile> profiles = [
+            SELECT Id FROM Profile
+            WHERE Name IN (
+                'Customer Community Plus Login User',
+                'Customer Community Plus User',
+                'Customer Community User',
+                'Customer Community Login User'
+            )
+            LIMIT 1
+        ];
+        if (profiles.isEmpty()) {
+            throw new AuraHandledException(
+                'Aucun profil communauté trouvé. Vérifiez la configuration Experience Cloud.'
+            );
+        }
+
+        // 5. Alias + nickname
+        String fn      = c.FirstName != null ? c.FirstName : '';
+        String ln      = c.LastName  != null ? c.LastName  : 'User';
+        String alias   = (fn.left(1) + ln.left(7)).left(8);
+        String rawNick = (fn + ln).replaceAll('[^a-zA-Z0-9]', '');
+        String nick    = String.isBlank(rawNick)
+            ? 'user' + String.valueOf(Math.abs(c.Id.hashCode())).left(6)
+            : rawNick.left(40);
+
+        // 6. Build User
+        User u = new User(
+            ProfileId         = profiles[0].Id,
+            ContactId         = c.Id,
+            Username          = c.Email,
+            Email             = c.Email,
+            FirstName         = fn,
+            LastName          = ln,
+            Alias             = alias,
+            CommunityNickname = nick,
+            TimeZoneSidKey    = 'Europe/Paris',
+            LocaleSidKey      = 'fr_FR',
+            EmailEncodingKey  = 'UTF-8',
+            LanguageLocaleKey = 'fr',
+            IsActive          = true
+        );
+
+        // 7. Ensure account owner has a role (Salesforce portal prerequisite)
+        if (c.AccountId != null) {
+            Account acc   = [SELECT OwnerId FROM Account WHERE Id = :c.AccountId LIMIT 1];
+            User    owner = [SELECT Id, UserRoleId FROM User WHERE Id = :acc.OwnerId LIMIT 1];
+            if (owner.UserRoleId == null) {
+                List<UserRole> roles = [SELECT Id FROM UserRole LIMIT 1];
+                Id roleId;
+                if (roles.isEmpty()) {
+                    UserRole r = new UserRole(Name = 'Nexus Admin', DeveloperName = 'Nexus_Admin');
+                    insert r;
+                    roleId = r.Id;
+                } else {
+                    roleId = roles[0].Id;
+                }
+                owner.UserRoleId = roleId;
+                update owner;
+            }
+        }
+
+        // 8. Insert portal user
+        try {
+            insert u;
+        } catch (DmlException e) {
+            String msg = e.getMessage();
+            if (msg.contains('DUPLICATE_USERNAME')) {
+                u.Username = c.Email + '.nexus';
+                try { insert u; } catch (DmlException e2) {
+                    throw new AuraHandledException('Erreur création compte : ' + e2.getMessage());
+                }
+            } else {
+                throw new AuraHandledException('Erreur création compte : ' + msg);
+            }
+        }
+
+        // 9. Generate temp password and SET it (not just reset-email)
+        String tempPwd = generateTempPassword();
+        try {
+            System.setPassword(u.Id, tempPwd);
+        } catch (Exception e) {
+            throw new AuraHandledException(
+                'Compte créé mais impossible de définir le mot de passe : ' + e.getMessage()
+            );
+        }
+
+        // 10. Build login URL → redirects to change-password page after login
+        String siteBase     = Site.getBaseUrl();
+        String baseUrl      = String.isNotBlank(siteBase)
+            ? siteBase
+            : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/NexusPortal';
+        String changePwdUrl = baseUrl + '/s/changer-mot-de-passe';
+        String loginUrl     = baseUrl + '/s/login?startUrl='
+            + EncodingUtil.urlEncode(changePwdUrl, 'UTF-8');
+
+        // 11. Send branded welcome email with actual credentials
+        String company = l.Company != null ? l.Company : '';
+        sendProvisionedWelcomeEmail(c.Id, c.Email, fn, company, tempPwd, loginUrl);
+
+        return u.Username;
+    }
+
+    // ── Branded welcome email that includes the actual temp password ───────────
+    private static void sendProvisionedWelcomeEmail(
+        Id contactId, String email, String firstName, String company, String tempPwd, String loginUrl
+    ) {
+        try {
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+            mail.setTargetObjectId(contactId);   // links email to Contact record + uses contact's email
+            mail.setSubject('Nexus \u2014 Vos identifiants de connexion');
+            mail.setHtmlBody(buildWelcomeEmailHtml(firstName, email, company, tempPwd, loginUrl));
+            mail.setSaveAsActivity(true);        // logs as Activity on the Contact record
+            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur envoi email de bienvenue : ' + e.getMessage());
+        }
+    }
+
     // ── Branded welcome email sent after portal user creation ─────────────────
     private static void sendPortalWelcomeEmail(
         String email, String firstName, String lastName, String salutation
@@ -712,5 +942,200 @@ public without sharing class LeadManagementController {
         String a = String.isNotBlank(first) ? first.substring(0,1).toUpperCase() : '';
         String b = String.isNotBlank(last)  ? last.substring(0,1).toUpperCase()  : '';
         return (a + b).trim().left(2);
+    }
+
+    // ── Send rejection email to lead ──────────────────────────────────────────
+    @AuraEnabled
+    public static void sendLeadRejectionEmail(String leadId) {
+        Lead l = [SELECT Id, FirstName, LastName, Email, Company, IsConverted FROM Lead WHERE Id = :leadId LIMIT 1];
+        if (l.Email == null) throw new AuraHandledException('Ce lead n\'a pas d\'adresse email.');
+
+        String firstName = l.FirstName != null ? l.FirstName : 'Cher client';
+        String company   = l.Company   != null ? l.Company   : '';
+
+        String html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>'
+        + '<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">'
+        + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:48px 20px;">'
+        + '<tr><td align="center">'
+        + '<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(15,23,42,0.08);">'
+        + '<tr><td style="height:4px;background:linear-gradient(90deg,#dc2626,#f59e0b);"></td></tr>'
+
+        // ── Header (dark — unchanged)
+        + '<tr><td style="background:linear-gradient(160deg,#0f172a 0%,#1e293b 100%);padding:52px 48px 44px;text-align:center;">'
+        + '<div style="display:inline-block;background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.3);border-radius:12px;padding:10px 24px;margin-bottom:24px;">'
+        + '<span style="font-size:20px;font-weight:900;color:#fff;letter-spacing:4px;">NEXUS</span>'
+        + '</div>'
+        + '<div style="font-size:11px;color:#f87171;letter-spacing:3px;font-weight:500;margin-bottom:28px;">INTELLIGENCE PLATFORM</div>'
+        + '<div style="width:64px;height:64px;background:linear-gradient(135deg,#7f1d1d,#dc2626);border-radius:50%;margin:0 auto 20px;font-size:28px;line-height:64px;text-align:center;color:#fff;">&#10005;</div>'
+        + '<h1 style="margin:0;font-size:26px;font-weight:700;color:#f9fafb;">Demande non retenue</h1>'
+        + '<p style="margin:12px 0 0;font-size:15px;color:#94a3b8;">Bonjour <strong style="color:#fca5a5;">' + firstName + '</strong>,</p>'
+        + '</td></tr>'
+
+        // ── Body (light)
+        + '<tr><td style="background:#ffffff;padding:44px 48px;">'
+        + '<p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.75;">'
+        + 'Nous vous remercions de l\'int&eacute;r&ecirc;t que vous portez &agrave; la plateforme <strong style="color:#0f172a;">Nexus</strong>. '
+        + 'Apr&egrave;s examen attentif de votre dossier, nous ne sommes pas en mesure de donner une suite favorable &agrave; votre demande d\'acc&egrave;s &agrave; ce stade.'
+        + '</p>'
+        + '<div style="background:#fff5f5;border:1px solid #fecaca;border-radius:16px;padding:24px 28px;margin-bottom:32px;">'
+        + '<div style="font-size:10px;color:#dc2626;letter-spacing:3px;font-weight:700;margin-bottom:12px;">&#9888; STATUT DE VOTRE DEMANDE</div>'
+        + '<div style="font-size:15px;color:#dc2626;font-weight:600;">Demande refus&eacute;e</div>'
+        + '<div style="margin-top:8px;font-size:13px;color:#6b7280;">Cette d&eacute;cision a &eacute;t&eacute; prise par notre &eacute;quipe d\'analyse suite &agrave; l\'&eacute;valuation de votre profil.</div>'
+        + '</div>'
+        + '<p style="margin:0 0 32px;font-size:14px;color:#475569;line-height:1.75;border-left:3px solid #fca5a5;padding-left:16px;">'
+        + 'Si vous estimez que cette d&eacute;cision est incorrecte ou souhaitez obtenir des pr&eacute;cisions, '
+        + 'n\'h&eacute;sitez pas &agrave; contacter directement notre &eacute;quipe. Nous restons disponibles pour &eacute;tudier votre situation.'
+        + '</p>'
+        + '</td></tr>'
+
+        // ── Footer (dark — unchanged)
+        + '<tr><td style="background:#0a0d14;padding:28px 48px;text-align:center;border-top:1px solid #1f2937;">'
+        + '<div style="font-size:13px;font-weight:800;color:#f87171;letter-spacing:3px;margin-bottom:6px;">NEXUS</div>'
+        + (String.isNotBlank(company)
+            ? '<div style="font-size:12px;color:#4b5563;">' + company + ' &middot; Plateforme B2B Intelligence</div>'
+            : '<div style="font-size:12px;color:#4b5563;">Plateforme B2B Intelligence</div>')
+        + '<div style="margin-top:16px;font-size:11px;color:#374151;">Ce message est confidentiel et destin&eacute; uniquement &agrave; son destinataire.</div>'
+        + '</td></tr>'
+        + '</table></td></tr></table></body></html>';
+
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setTargetObjectId(l.Id);
+        mail.setSubject('Nexus — Décision concernant votre demande d\'accès');
+        mail.setHtmlBody(html);
+        mail.setSaveAsActivity(!l.IsConverted);
+        try {
+            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur envoi email : ' + e.getMessage());
+        }
+    }
+
+    // ── Send welcome email to approved lead ───────────────────────────────────
+    @AuraEnabled
+    public static void sendLeadWelcomeEmail(String leadId) {
+        Lead l = [SELECT Id, FirstName, LastName, Email, Company, IsConverted FROM Lead WHERE Id = :leadId LIMIT 1];
+        if (l.Email == null) throw new AuraHandledException('Ce lead n\'a pas d\'adresse email.');
+
+        String password = generateTempPassword();
+        String siteBase = Site.getBaseUrl();
+        String loginUrl = String.isNotBlank(siteBase)
+            ? siteBase + '/s/login'
+            : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/shop/s/login';
+        String firstName = l.FirstName != null ? l.FirstName : 'Cher client';
+        String company   = l.Company   != null ? l.Company   : '';
+
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setTargetObjectId(l.Id);
+        mail.setSubject('Bienvenue sur Nexus — Vos accès sont prêts');
+        mail.setHtmlBody(buildWelcomeEmailHtml(firstName, l.Email, company, password, loginUrl));
+        mail.setSaveAsActivity(!l.IsConverted);
+        try {
+            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur envoi email : ' + e.getMessage());
+        }
+    }
+
+    private static String generateTempPassword() {
+        String upper   = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+        String lower   = 'abcdefghjkmnpqrstuvwxyz';
+        String digits  = '23456789';
+        String special = '!@#$';
+        String all     = upper + lower + digits + special;
+        // Guarantee at least one of each character class
+        Integer ui = Math.mod(Math.abs(Crypto.getRandomInteger()), upper.length());
+        Integer li = Math.mod(Math.abs(Crypto.getRandomInteger()), lower.length());
+        Integer di = Math.mod(Math.abs(Crypto.getRandomInteger()), digits.length());
+        Integer si = Math.mod(Math.abs(Crypto.getRandomInteger()), special.length());
+        String pwd = upper.substring(ui, ui+1) + lower.substring(li, li+1)
+                   + digits.substring(di, di+1) + special.substring(si, si+1);
+        for (Integer i = 0; i < 8; i++) {
+            Integer idx = Math.mod(Math.abs(Crypto.getRandomInteger()), all.length());
+            pwd += all.substring(idx, idx+1);
+        }
+        return pwd;
+    }
+
+    private static String buildWelcomeEmailHtml(
+        String firstName, String email, String company, String password, String loginUrl
+    ) {
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>'
+        + '<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">'
+        + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:48px 20px;">'
+        + '<tr><td align="center">'
+        + '<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(15,23,42,0.08);">'
+
+        // ── Top accent line
+        + '<tr><td style="height:4px;background:linear-gradient(90deg,#1d4ed8,#7c3aed,#0ea5e9);"></td></tr>'
+
+        // ── Header (dark — unchanged)
+        + '<tr><td style="background:linear-gradient(160deg,#0f172a 0%,#1e293b 100%);padding:52px 48px 44px;text-align:center;">'
+        + '<div style="display:inline-block;background:rgba(29,78,216,0.15);border:1px solid rgba(29,78,216,0.3);border-radius:12px;padding:10px 24px;margin-bottom:24px;">'
+        + '<span style="font-size:20px;font-weight:900;color:#fff;letter-spacing:4px;">NEXUS</span>'
+        + '</div>'
+        + '<div style="font-size:11px;color:#60a5fa;letter-spacing:3px;font-weight:500;margin-bottom:28px;">INTELLIGENCE PLATFORM</div>'
+        + '<div style="width:64px;height:64px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:50%;margin:0 auto 20px;font-size:28px;line-height:64px;text-align:center;color:#fff;">&#10003;</div>'
+        + '<h1 style="margin:0;font-size:26px;font-weight:700;color:#f9fafb;">Acc&egrave;s approuv&eacute; !</h1>'
+        + '<p style="margin:12px 0 0;font-size:15px;color:#94a3b8;">Bienvenue sur la plateforme Nexus, <strong style="color:#60a5fa;">' + firstName + '</strong></p>'
+        + '</td></tr>'
+
+        // ── Body (light)
+        + '<tr><td style="background:#ffffff;padding:44px 48px;">'
+
+        // Welcome text
+        + '<p style="margin:0 0 32px;font-size:15px;color:#475569;line-height:1.75;">'
+        + 'Votre demande d\'acc&egrave;s &agrave; la plateforme <strong style="color:#0f172a;">Nexus</strong> a &eacute;t&eacute; examin&eacute;e et <strong style="color:#16a34a;">approuv&eacute;e</strong>. '
+        + 'Vous pouvez d&egrave;s maintenant vous connecter en utilisant les identifiants ci-dessous.'
+        + '</p>'
+
+        // ── Credentials box
+        + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:32px;margin-bottom:36px;">'
+        + '<div style="font-size:10px;color:#3b82f6;letter-spacing:3px;font-weight:700;margin-bottom:24px;">&#128274; IDENTIFIANTS DE CONNEXION</div>'
+
+        // Email row
+        + '<div style="margin-bottom:24px;">'
+        + '<div style="font-size:11px;color:#94a3b8;letter-spacing:1px;margin-bottom:6px;">ADRESSE EMAIL</div>'
+        + '<div style="font-size:15px;color:#0f172a;font-family:\'Courier New\',monospace;background:#ffffff;padding:12px 16px;border-radius:8px;border:1px solid #e2e8f0;">' + email + '</div>'
+        + '</div>'
+
+        // Password row
+        + '<div style="border-top:1px solid #e2e8f0;padding-top:24px;">'
+        + '<div style="font-size:11px;color:#94a3b8;letter-spacing:1px;margin-bottom:6px;">MOT DE PASSE TEMPORAIRE</div>'
+        + '<div style="font-size:22px;color:#4f46e5;font-family:\'Courier New\',monospace;letter-spacing:4px;font-weight:700;background:#eef2ff;padding:14px 16px;border-radius:8px;border:1px solid #c7d2fe;text-align:center;">' + password + '</div>'
+        + '<div style="margin-top:12px;font-size:12px;color:#d97706;">'
+        + '&#9888; Changez ce mot de passe d&egrave;s votre premi&egrave;re connexion.'
+        + '</div>'
+        + '</div>'
+        + '</div>'
+
+        // ── CTA button
+        + '<div style="text-align:center;margin-bottom:36px;">'
+        + '<a href="' + loginUrl + '" style="display:inline-block;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;text-decoration:none;font-size:16px;font-weight:700;padding:18px 48px;border-radius:12px;letter-spacing:0.5px;box-shadow:0 8px 24px rgba(29,78,216,0.25);">'
+        + 'Acc&eacute;der &agrave; la plateforme &rarr;'
+        + '</a>'
+        + '</div>'
+
+        // ── Info note
+        + '<div style="background:#eff6ff;border-left:3px solid #3b82f6;padding:16px 20px;border-radius:0 8px 8px 0;">'
+        + '<p style="margin:0;font-size:13px;color:#475569;line-height:1.7;">'
+        + 'Ce message a &eacute;t&eacute; g&eacute;n&eacute;r&eacute; automatiquement suite &agrave; l\'approbation de votre dossier.<br>'
+        + 'Pour toute question, contactez directement votre responsable de compte.'
+        + '</p>'
+        + '</div>'
+        + '</td></tr>'
+
+        // ── Footer (dark — unchanged)
+        + '<tr><td style="background:#0a0d14;padding:28px 48px;text-align:center;border-top:1px solid #1f2937;">'
+        + '<div style="font-size:13px;font-weight:800;color:#3b82f6;letter-spacing:3px;margin-bottom:6px;">NEXUS</div>'
+        + (String.isNotBlank(company)
+            ? '<div style="font-size:12px;color:#4b5563;">' + company + ' &middot; Plateforme B2B Intelligence</div>'
+            : '<div style="font-size:12px;color:#4b5563;">Plateforme B2B Intelligence</div>')
+        + '<div style="margin-top:16px;font-size:11px;color:#374151;">Ce message est confidentiel et destin&eacute; uniquement &agrave; son destinataire.</div>'
+        + '</td></tr>'
+
+        + '</table>'
+        + '</td></tr>'
+        + '</table>'
+        + '</body></html>';
     }
 }

@@ -1,0 +1,114 @@
+<template>
+    <div class="ngm-wrap">
+
+        <!-- Header -->
+        <div class="ngm-header">
+            <div>
+                <h2 class="ngm-title">Global Intelligence Map</h2>
+                <p class="ngm-subtitle">Real-time B2B distribution &amp; market presence</p>
+            </div>
+            <template if:true={hasLeads}>
+                <div class="ngm-badge-wrap">
+                    <span class="ngm-dot"></span>
+                    <span class="ngm-badge-text">{nodeCount} Active Nodes</span>
+                </div>
+            </template>
+        </div>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="ngm-state-msg">
+                <lightning-icon icon-name="utility:spinner" size="small" class="ngm-spinner"></lightning-icon>
+                &nbsp;Chargement des données...
+            </div>
+        </template>
+
+        <!-- Error -->
+        <template if:true={hasError}>
+            <div class="ngm-state-msg ngm-state-error">{errorMessage}</div>
+        </template>
+
+        <!-- No location data -->
+        <template if:true={isEmpty}>
+            <div class="ngm-state-msg">Aucun lead avec données de localisation trouvé.</div>
+        </template>
+
+        <!-- Grid (only when data is ready) -->
+        <template if:true={hasLeads}>
+            <div class="ngm-grid">
+
+                <!-- Map column -->
+                <div class="ngm-map-col">
+                    <lightning-map
+                        map-markers={mapMarkers}
+                        zoom-level={mapZoom}
+                        center={mapCenter}
+                        show-footer="false"
+                        style="height:480px;display:block;">
+                    </lightning-map>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="ngm-sidebar">
+
+                    <!-- B2B Directory -->
+                    <div class="ngm-dir-card">
+                        <div class="ngm-dir-header">
+                            <lightning-icon icon-name="utility:groups" size="x-small" class="ngm-dir-icon"></lightning-icon>
+                            &nbsp;B2B Directory
+                        </div>
+                        <div class="ngm-dir-list">
+                            <template for:each={locations} for:item="user">
+                                <div key={user.leadId}
+                                     data-id={user.leadId}
+                                     class={user.cardClass}
+                                     onclick={handleSelectUser}>
+                                    <div class="ngm-user-inner">
+                                        <div class="ngm-avatar">{user.initials}</div>
+                                        <div class="ngm-user-info">
+                                            <div class="ngm-user-name">{user.name}</div>
+                                            <div class="ngm-user-company">{user.company}</div>
+                                        </div>
+                                    </div>
+                                    <lightning-icon icon-name="utility:chevronright" size="x-small" class={user.chevronClass}></lightning-icon>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Detail card when user selected -->
+                    <template if:true={selectedUser}>
+                        <div class="ngm-detail-card">
+                            <div class="ngm-detail-header">
+                                <div class="ngm-detail-icon">
+                                    <lightning-icon icon-name="utility:location" size="x-small" variant="inverse"></lightning-icon>
+                                </div>
+                                <span class="ngm-detail-label">Verified Location</span>
+                            </div>
+                            <div class="ngm-detail-grid">
+                                <div class="ngm-detail-item">
+                                    <div class="ngm-detail-key">Country</div>
+                                    <div class="ngm-detail-val">{selectedUser.country}</div>
+                                </div>
+                                <div class="ngm-detail-item">
+                                    <div class="ngm-detail-key">State / Region</div>
+                                    <div class="ngm-detail-val">{selectedUser.state}</div>
+                                </div>
+                            </div>
+                            <div class="ngm-detail-item ngm-detail-postal">
+                                <div class="ngm-detail-key">City</div>
+                                <div class="ngm-detail-val">{selectedUser.city}</div>
+                            </div>
+                            <div class="ngm-detail-item ngm-detail-postal">
+                                <div class="ngm-detail-key">Postal Code</div>
+                                <div class="ngm-detail-val ngm-mono">{selectedUser.postalCode}</div>
+                            </div>
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

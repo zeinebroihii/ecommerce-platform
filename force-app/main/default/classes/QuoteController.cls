@@ -117,6 +117,33 @@ public without sharing class QuoteController {
         }
     }
 
+    // ── Portal: customer requests a new quote ────────────────────────────────
+    @AuraEnabled
+    public static void requestQuote(String companyName, String email, String qty, String message) {
+        List<User> admins = [
+            SELECT Email FROM User
+            WHERE Profile.Name = 'System Administrator' AND IsActive = true
+            LIMIT 1
+        ];
+        if (admins.isEmpty()) return;
+
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setToAddresses(new List<String>{ admins[0].Email });
+        mail.setSubject('Nexus \u2014 Nouvelle Demande de Devis : ' + companyName);
+        mail.setPlainTextBody(
+            'Bonjour,\n\n' +
+            'Une nouvelle demande de devis a \u00e9t\u00e9 soumise via le portail client Nexus.\n\n' +
+            'Soci\u00e9t\u00e9 : ' + companyName + '\n' +
+            'Email de contact : ' + email + '\n' +
+            'Quantit\u00e9 souhait\u00e9e : ' + qty + '\n' +
+            (String.isNotBlank(message) ? 'Message : ' + message + '\n' : '') +
+            '\nVeuillez traiter cette demande dans les meilleurs d\u00e9lais.\n\n' +
+            'Cordialement,\nNexus Platform'
+        );
+        mail.setSaveAsActivity(false);
+        Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    }
+
     // ── Admin: send quote by email to customer ────────────────────────────────
     @AuraEnabled
     public static void sendQuoteToCustomer(Id quoteId, String recipientEmail,

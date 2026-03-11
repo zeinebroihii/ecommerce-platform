@@ -1,0 +1,58 @@
+/* ─── Design Tokens ──────────────────────────────────────────────────── */
+:host {
+    --accent-primary:  #6366f1;
+    --nexus-200:       #e2e8f0;
+    --nexus-900:       #0f172a;
+    display: block;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────── */
+.nc-card {
+    background-color: #ffffff;
+    border-radius:    1.5rem;           /* rounded-3xl */
+    border:           1px solid var(--nexus-200);
+    box-shadow:       0 1px 2px rgba(0, 0, 0, 0.05);
+    overflow:         hidden;
+    transition:       all 0.5s ease;
+}
+
+/* ─── Hoverable ──────────────────────────────────────────────────────── */
+.nc-card--hoverable {
+    cursor: pointer;
+}
+.nc-card--hoverable:hover {
+    box-shadow:  0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform:   translateY(-0.25rem);
+    border-color: rgba(99, 102, 241, 0.20);
+}
+
+/* ─── Padding variants ───────────────────────────────────────────────── */
+.nc-card--pad-none { padding: 0; }
+.nc-card--pad-sm   { padding: 1rem; }
+.nc-card--pad-md   { padding: 1.5rem; }
+.nc-card--pad-lg   { padding: 2rem; }
+.nc-card--pad-xl   { padding: 3rem; }
+
+/* ─── Title ──────────────────────────────────────────────────────────── */
+.nc-card__title {
+    display:       flex;
+    align-items:   center;
+    gap:           0.5rem;
+    font-size:     0.875rem;
+    font-weight:   900;
+    color:         var(--nexus-900);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin:        0 0 1.5rem 0;
+    font-family:   inherit;
+    transition:    color 0.5s ease;
+}
+
+.nc-card__title-dot {
+    display:          inline-block;
+    width:            0.375rem;
+    height:           0.375rem;
+    border-radius:    9999px;
+    background-color: var(--accent-primary);
+    flex-shrink:      0;
+}

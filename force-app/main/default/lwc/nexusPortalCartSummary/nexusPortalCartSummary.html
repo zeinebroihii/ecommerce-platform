@@ -1,36 +1,68 @@
 <template>
+
+    <!-- ── Summary card ───────────────────────────────────────────── -->
     <div class="npcs-card">
-        <h4 class="npcs-title">R&eacute;capitulatif</h4>
+
+        <!-- "• SUMMARY" header -->
+        <div class="npcs-header">
+            <span class="npcs-dot"></span>
+            <span class="npcs-header-label">Summary</span>
+        </div>
 
         <!-- Rows -->
         <div class="npcs-rows">
             <div class="npcs-row">
-                <span class="npcs-key">Sous-total</span>
+                <span class="npcs-key">Subtotal</span>
                 <span class="npcs-val">{formattedSubtotal}</span>
             </div>
             <div class="npcs-row">
-                <span class="npcs-key">Livraison</span>
-                <span class="npcs-val npcs-val--green">Gratuit</span>
+                <span class="npcs-key">Shipping</span>
+                <template if:true={isFreeShipping}>
+                    <span class="npcs-val npcs-val--green">Free</span>
+                </template>
+                <template if:false={isFreeShipping}>
+                    <span class="npcs-val">$45.00</span>
+                </template>
             </div>
-            <div class="npcs-divider"></div>
-            <div class="npcs-total-row">
-                <div>
-                    <span class="npcs-total-label">Total &agrave; payer</span>
-                    <span class="npcs-total-sub">TVA incluse</span>
-                </div>
-                <span class="npcs-total-amount">{formattedSubtotal}</span>
+        </div>
+
+        <!-- Total block -->
+        <div class="npcs-divider"></div>
+        <div class="npcs-total-block">
+            <div class="npcs-total-left">
+                <span class="npcs-total-label">Total to pay</span>
+                <span class="npcs-total-sub">VAT Included</span>
             </div>
+            <span class="npcs-total-amount">{formattedTotal}</span>
         </div>
 
         <!-- Actions -->
         <div class="npcs-actions">
             <button class="npcs-btn-order" onclick={handlePlaceOrder}>
-                Passer la commande
+                Place Order
             </button>
-            <div class="npcs-sep"></div>
             <button class="npcs-btn-quote" onclick={handleRequestQuote}>
                 Request Formal Quote
             </button>
         </div>
+
+        <!-- Secure SSL badge -->
+        <div class="npcs-secure">
+            <lightning-icon icon-name="utility:shield" size="x-small"></lightning-icon>
+            <span>Secure SSL Payment</span>
+        </div>
+
     </div>
+
+    <!-- ── Express Delivery card ───────────────────────────────────── -->
+    <div class="npcs-delivery-card">
+        <div class="npcs-delivery-icon">
+            <lightning-icon icon-name="utility:truck" size="small"></lightning-icon>
+        </div>
+        <div>
+            <div class="npcs-delivery-title">Express Delivery</div>
+            <p class="npcs-delivery-sub">Order in the next 2h for same-day shipping.</p>
+        </div>
+    </div>
+
 </template>

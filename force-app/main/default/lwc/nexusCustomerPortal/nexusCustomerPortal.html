@@ -1,30 +1,105 @@
 <template>
     <div class="ncp-wrap">
 
-        <!-- ══ Sidebar ══════════════════════════════════════════════════════════ -->
+        <!-- ══ Sidebar ═══════════════════════════════════════════════════════════ -->
         <aside class="ncp-sidebar">
-            <nav>
-                <template for:each={navTabs} for:item="tab">
-                    <button key={tab.id} class={tab.cls} onclick={handleTabChange} data-id={tab.id}>
-                        <lightning-icon icon-name={tab.icon} size="small" variant={tab.iconVariant}></lightning-icon>
-                        <span>{tab.label}</span>
-                        <template if:true={tab.hasBadge}>
-                            <span class="ncp-cart-badge">{tab.badge}</span>
-                        </template>
-                    </button>
-                </template>
-            </nav>
 
-            <div class="ncp-sidebar-sep"></div>
-
-            <div class="ncp-premium-card">
-                <h4 class="ncp-premium-title">Support Premium</h4>
-                <p class="ncp-premium-desc">Besoin d'aide pour une commande complexe ?</p>
-                <button class="ncp-premium-btn" onclick={handleCaseExpert}>Contacter un expert</button>
+            <!-- Brand / Logo -->
+            <div class="ncp-brand-header">
+                <c-nexus-logo variant="emerald" size="lg" subtitle="Customer Portal"></c-nexus-logo>
             </div>
+
+            <!-- Scrollable nav area -->
+            <div class="ncp-nav-scroll">
+
+                <!-- ── Main Menu ── -->
+                <div class="ncp-nav-section">
+                    <p class="ncp-nav-section-label">Main Menu</p>
+                    <template for:each={mainNavTabs} for:item="tab">
+                        <button key={tab.id} class={tab.cls} onclick={handleTabChange} data-id={tab.id}>
+                            <div class="ncp-nav-left">
+                                <lightning-icon icon-name={tab.icon} size="small" variant={tab.iconVariant}></lightning-icon>
+                                <span>{tab.label}</span>
+                            </div>
+                            <template if:true={tab.hasBadge}>
+                                <span class="ncp-cart-badge">{tab.badge}</span>
+                            </template>
+                            <template if:false={tab.hasBadge}>
+                                <span class={tab.chevronCls}>&#8250;</span>
+                            </template>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- ── Advanced Tools ── -->
+                <div class="ncp-nav-section">
+                    <p class="ncp-nav-section-label">Advanced Tools</p>
+                    <template for:each={toolsNavTabs} for:item="tab">
+                        <button key={tab.id} class={tab.cls} onclick={handleTabChange} data-id={tab.id}>
+                            <div class="ncp-nav-left">
+                                <lightning-icon icon-name={tab.icon} size="small" variant={tab.iconVariant}></lightning-icon>
+                                <span>{tab.label}</span>
+                            </div>
+                            <span class={tab.chevronCls}>&#8250;</span>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- ── Account & Support ── -->
+                <div class="ncp-nav-section">
+                    <p class="ncp-nav-section-label">Account &amp; Support</p>
+                    <template for:each={accountNavTabs} for:item="tab">
+                        <button key={tab.id} class={tab.cls} onclick={handleTabChange} data-id={tab.id}>
+                            <div class="ncp-nav-left">
+                                <lightning-icon icon-name={tab.icon} size="small" variant={tab.iconVariant}></lightning-icon>
+                                <span>{tab.label}</span>
+                            </div>
+                            <span class={tab.chevronCls}>&#8250;</span>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- ── Premium Support Card (indigo) ── -->
+                <div class="ncp-premium-section">
+                    <div class="ncp-premium-card-indigo">
+                        <div class="ncp-premium-inner">
+                            <div class="ncp-premium-sparkle-icon">
+                                <lightning-icon icon-name="utility:sparkles" size="x-small" variant="inverse"></lightning-icon>
+                            </div>
+                            <h4 class="ncp-premium-title-white">Premium Support</h4>
+                            <p class="ncp-premium-desc-light">Need help with a complex enterprise order?</p>
+                            <button class="ncp-premium-cta" onclick={handleCasesTab}>Contact an expert</button>
+                        </div>
+                        <div class="ncp-premium-glow-orb"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer / User Profile -->
+            <div class="ncp-user-footer">
+                <div class="ncp-user-row">
+                    <div class="ncp-user-avatar-wrap">
+                        <img src="https://picsum.photos/seed/user/100/100" class="ncp-user-avatar" alt="User" />
+                        <div class="ncp-user-online-dot"></div>
+                    </div>
+                    <div class="ncp-user-info">
+                        <h5 class="ncp-user-name">Marco Ross</h5>
+                        <p class="ncp-user-role">Enterprise Admin</p>
+                    </div>
+                    <button class="ncp-settings-btn" onclick={handleSettingsTab}>
+                        <lightning-icon icon-name="utility:settings" size="x-small"></lightning-icon>
+                    </button>
+                </div>
+                <button class="ncp-logout-new-btn">
+                    <lightning-icon icon-name="utility:logout" size="x-small"></lightning-icon>
+                    <span>Logout System</span>
+                </button>
+            </div>
+
         </aside>
 
-        <!-- ══ Main content ══════════════════════════════════════════════════════ -->
+        <!-- ══ Main content ═══════════════════════════════════════════════════════ -->
         <main class="ncp-main">
 
             <!-- ─ Dashboard ──────────────────────────────────────────────────── -->
@@ -32,389 +107,973 @@
                 <div class="ncp-section ncp-dash-section">
 
                     <!-- AI Hero Banner -->
-                    <c-nexus-portal-dashboard-hero
-                        ai-tag="Nexus AI Intelligence"
-                        title-line1="VOTRE PORTAIL"
-                        title-highlight="INTELLIGENT"
-                        hero-description="Nexus AI a analysé votre compte. Découvrez vos prévisions de consommation et vos recommandations personnalisées."
-                        primary-btn-label="Voir les Insights"
-                        metric1-value="98%"  metric1-label="Score Santé"    metric1-color="green"
-                        metric2-value="15%"  metric2-label="Économies AI"   metric2-color="indigo"
-                        metric3-value="+12%" metric3-label="Usage Prévu"    metric3-color="amber"
-                        metric4-value="100%" metric4-label="SLA Status"     metric4-color="green"
-                        onprimaryaction={handleGoToCatalog}
-                    ></c-nexus-portal-dashboard-hero>
+                    <section class="ncp-ai-banner">
+                        <div class="ncp-ai-inner">
+                            <div class="ncp-ai-left">
+                                <div class="ncp-ai-badge">
+                                    <lightning-icon icon-name="utility:sparkles" size="x-small"></lightning-icon>
+                                    <span>Nexus AI Intelligence</span>
+                                </div>
+                                <h2 class="ncp-ai-title">VOTRE PORTAIL <span class="ncp-ai-accent">INTELLIGENT</span></h2>
+                                <p class="ncp-ai-desc">Nexus AI a analysé votre compte. Découvrez vos prévisions de consommation et vos recommandations personnalisées.</p>
+                                <div class="ncp-ai-btns">
+                                    <button class="ncp-ai-cta" onclick={handleGoToInsights}>Voir les Insights</button>
+                                    <button class="ncp-ai-cta-secondary" onclick={handleGoToTimeline}>Timeline 360°</button>
+                                </div>
+                            </div>
+                            <div class="ncp-ai-stats">
+                                <div class="ncp-stat-mini">
+                                    <div class="ncp-stat-value ncp-stat-emerald">98%</div>
+                                    <div class="ncp-stat-label">Score Santé</div>
+                                </div>
+                                <div class="ncp-stat-mini">
+                                    <div class="ncp-stat-value ncp-stat-indigo">15%</div>
+                                    <div class="ncp-stat-label">Économies AI</div>
+                                </div>
+                                <div class="ncp-stat-mini">
+                                    <div class="ncp-stat-value ncp-stat-amber">+12%</div>
+                                    <div class="ncp-stat-label">Usage Prévu</div>
+                                </div>
+                                <div class="ncp-stat-mini">
+                                    <div class="ncp-stat-value ncp-stat-emerald">100%</div>
+                                    <div class="ncp-stat-label">SLA Status</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ncp-ai-glow"></div>
+                        <div class="ncp-ai-gradient"></div>
+                    </section>
 
-                    <!-- Activity + KPI grid -->
-                    <div class="ncp-dash-grid">
-
-                        <!-- Recent Activity -->
-                        <c-nexus-portal-recent-activity
-                            onviewall={handleGoToOrders}
-                        ></c-nexus-portal-recent-activity>
-
-                        <!-- Active Orders KPI -->
-                        <c-nexus-portal-active-orders
-                            onvieworders={handleGoToOrders}
-                        ></c-nexus-portal-active-orders>
-
+                    <!-- KPI Grid -->
+                    <div class="ncp-kpi-grid">
+                        <div class="ncp-kpi-card">
+                            <div class="ncp-kpi-icon ncp-kpi-icon-indigo">
+                                <lightning-icon icon-name="utility:package" size="small"></lightning-icon>
+                            </div>
+                            <div class="ncp-kpi-value">12</div>
+                            <div class="ncp-kpi-label">Commandes Actives</div>
+                        </div>
+                        <div class="ncp-kpi-card">
+                            <div class="ncp-kpi-icon ncp-kpi-icon-emerald">
+                                <lightning-icon icon-name="utility:trending_up" size="small"></lightning-icon>
+                            </div>
+                            <div class="ncp-kpi-value">2 450 $</div>
+                            <div class="ncp-kpi-label">Économies Totales</div>
+                        </div>
+                        <div class="ncp-kpi-card">
+                            <div class="ncp-kpi-icon ncp-kpi-icon-amber">
+                                <lightning-icon icon-name="utility:clock" size="small"></lightning-icon>
+                            </div>
+                            <div class="ncp-kpi-value">1.2h</div>
+                            <div class="ncp-kpi-label">Temps de Réponse</div>
+                        </div>
+                        <div class="ncp-kpi-card">
+                            <div class="ncp-kpi-icon ncp-kpi-icon-indigo">
+                                <lightning-icon icon-name="utility:connected_apps" size="small"></lightning-icon>
+                            </div>
+                            <div class="ncp-kpi-value">Actif</div>
+                            <div class="ncp-kpi-label">Scanner d'Actifs</div>
+                        </div>
                     </div>
+
+                    <!-- AI Recommendations -->
+                    <section class="ncp-reco-section">
+                        <div class="ncp-reco-header">
+                            <div class="ncp-reco-title-wrap">
+                                <div class="ncp-reco-icon">
+                                    <lightning-icon icon-name="utility:sparkles" size="small" variant="inverse"></lightning-icon>
+                                </div>
+                                <h3 class="ncp-page-title">Recommandations AI</h3>
+                            </div>
+                            <span class="ncp-reco-badge">Basé sur votre historique</span>
+                        </div>
+                        <div class="ncp-reco-grid">
+                            <div class="ncp-reco-card">
+                                <div class="ncp-reco-img">
+                                    <img src="https://picsum.photos/seed/core/400/300" alt="Nexus Core X-1" class="ncp-reco-photo" />
+                                    <span class="ncp-reco-cat-badge">Hardware</span>
+                                </div>
+                                <div class="ncp-reco-body">
+                                    <h4 class="ncp-reco-name">Nexus Core X-1</h4>
+                                    <p class="ncp-reco-reason">Complète votre installation actuelle</p>
+                                    <div class="ncp-reco-footer">
+                                        <span class="ncp-reco-price">1 200 $</span>
+                                        <button class="ncp-reco-btn"
+                                            onclick={handleViewOffer}
+                                            data-id="OFF-01"
+                                            data-name="Nexus Core X-1"
+                                            data-category="Hardware"
+                                            data-price="1 200 $"
+                                            data-image="https://picsum.photos/seed/core/800/600"
+                                            data-reason="Complète votre installation actuelle">Voir l'offre</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ncp-reco-card">
+                                <div class="ncp-reco-img">
+                                    <img src="https://picsum.photos/seed/service/400/300" alt="Maintenance Pro" class="ncp-reco-photo" />
+                                    <span class="ncp-reco-cat-badge">Service</span>
+                                </div>
+                                <div class="ncp-reco-body">
+                                    <h4 class="ncp-reco-name">Maintenance Pro</h4>
+                                    <p class="ncp-reco-reason">Recommandé pour vos 12 actifs</p>
+                                    <div class="ncp-reco-footer">
+                                        <span class="ncp-reco-price">450 $/an</span>
+                                        <button class="ncp-reco-btn"
+                                            onclick={handleViewOffer}
+                                            data-id="OFF-02"
+                                            data-name="Maintenance Pro"
+                                            data-category="Service"
+                                            data-price="450 $/an"
+                                            data-image="https://picsum.photos/seed/service/800/600"
+                                            data-reason="Recommandé pour vos 12 actifs">Voir l'offre</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ncp-reco-card">
+                                <div class="ncp-reco-img">
+                                    <img src="https://picsum.photos/seed/iot/400/300" alt="Sensor Pack v2" class="ncp-reco-photo" />
+                                    <span class="ncp-reco-cat-badge">IoT</span>
+                                </div>
+                                <div class="ncp-reco-body">
+                                    <h4 class="ncp-reco-name">Sensor Pack v2</h4>
+                                    <p class="ncp-reco-reason">Nouveau produit compatible</p>
+                                    <div class="ncp-reco-footer">
+                                        <span class="ncp-reco-price">800 $</span>
+                                        <button class="ncp-reco-btn"
+                                            onclick={handleViewOffer}
+                                            data-id="OFF-03"
+                                            data-name="Sensor Pack v2"
+                                            data-category="IoT"
+                                            data-price="800 $"
+                                            data-image="https://picsum.photos/seed/iot/800/600"
+                                            data-reason="Nouveau produit compatible avec votre écosystème">Voir l'offre</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Recent Activity -->
+                    <div class="ncp-activity-card">
+                        <div class="ncp-card-header">
+                            <h3 class="ncp-card-title">Activité Récente</h3>
+                            <button class="ncp-view-all-btn" onclick={handleViewAllActivity}>Tout voir</button>
+                        </div>
+                        <div class="ncp-activity-list">
+                            <div class="ncp-activity-row ncp-activity-row-clickable">
+                                <div class="ncp-activity-icon"><lightning-icon icon-name="utility:product" size="small"></lightning-icon></div>
+                                <div class="ncp-activity-info">
+                                    <div class="ncp-activity-name">Commande Nexus Industrial Sensor X1</div>
+                                    <div class="ncp-activity-sub">Il y a 2 heures · TechFlow Inc</div>
+                                </div>
+                                <span class="ncp-status-pill ncp-pill-success">Livré</span>
+                                <span class="ncp-row-chevron">&#8250;</span>
+                            </div>
+                            <div class="ncp-activity-row ncp-activity-row-clickable">
+                                <div class="ncp-activity-icon"><lightning-icon icon-name="utility:file" size="small"></lightning-icon></div>
+                                <div class="ncp-activity-info">
+                                    <div class="ncp-activity-name">Mise à jour Devis QT-2024</div>
+                                    <div class="ncp-activity-sub">Il y a 5 heures · Global Logistics</div>
+                                </div>
+                                <span class="ncp-status-pill ncp-pill-primary">En transit</span>
+                                <span class="ncp-row-chevron">&#8250;</span>
+                            </div>
+                            <div class="ncp-activity-row ncp-activity-row-clickable">
+                                <div class="ncp-activity-icon"><lightning-icon icon-name="utility:chat" size="small"></lightning-icon></div>
+                                <div class="ncp-activity-info">
+                                    <div class="ncp-activity-name">Nouveau message support</div>
+                                    <div class="ncp-activity-sub">Hier · Nexus Support</div>
+                                </div>
+                                <span class="ncp-status-pill ncp-pill-primary">Répondu</span>
+                                <span class="ncp-row-chevron">&#8250;</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+
+                <!-- Engagement drawers (Activity History + Offer Detail) -->
+                <c-nexus-engagement-system onaddtocart={handleEngagementAddToCart}></c-nexus-engagement-system>
+
             </template>
 
             <!-- ─ Catalogue ────────────────────────────────────────────────── -->
             <template if:true={isCatalog}>
-                <div class="ncp-section">
-                    <div class="ncp-catalog-header">
-                        <div>
-                            <h3 class="ncp-page-title">Catalogue Produits</h3>
-                            <p class="ncp-page-sub">Solutions technologiques certifiées Nexus pour votre entreprise.</p>
+                <div class="ncp-section ncat-section">
+
+                    <!-- Hero Banner -->
+                    <div class="ncat-hero">
+                        <div class="ncat-hero-bg">
+                            <img src="https://picsum.photos/seed/industrial-tech/1920/1080" class="ncat-hero-bg-img" alt="" />
+                            <div class="ncat-hero-bg-overlay"></div>
                         </div>
-                        <div class="ncp-search-wrap">
-                            <lightning-icon icon-name="utility:search" size="x-small" class="ncp-search-icon"></lightning-icon>
-                            <input class="ncp-search" type="text" placeholder="Rechercher un produit..." onchange={handleCatalogSearch} />
+                        <div class="ncat-hero-content">
+                            <div class="ncat-hero-badge">
+                                <lightning-icon icon-name="utility:sparkles" size="x-small"></lightning-icon>
+                                <span>Nexus Ecosystem 2024</span>
+                            </div>
+                            <h1 class="ncat-hero-title">The Future <br /><span class="ncat-hero-accent">of Industry.</span></h1>
+                            <p class="ncat-hero-desc">Explore our curated selection of high-performance hardware and software solutions designed to elevate your industrial intelligence.</p>
+                            <div class="ncat-hero-btns">
+                                <button class="ncat-hero-btn-primary">New Arrivals</button>
+                                <button class="ncat-hero-btn-outline">View All Specs</button>
+                            </div>
+                        </div>
+                        <div class="ncat-hero-stats">
+                            <div class="ncat-hero-stat">
+                                <div class="ncat-hero-stat-icon ncat-stat-icon-indigo">
+                                    <lightning-icon icon-name="utility:zap" size="small"></lightning-icon>
+                                </div>
+                                <div>
+                                    <div class="ncat-hero-stat-value">99.9%</div>
+                                    <div class="ncat-hero-stat-label">Uptime Guaranteed</div>
+                                </div>
+                            </div>
+                            <div class="ncat-hero-stat">
+                                <div class="ncat-hero-stat-icon ncat-stat-icon-emerald">
+                                    <lightning-icon icon-name="utility:shield" size="small"></lightning-icon>
+                                </div>
+                                <div>
+                                    <div class="ncat-hero-stat-value">ISO 27001</div>
+                                    <div class="ncat-hero-stat-label">Security Certified</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="ncp-product-grid">
-                        <template for:each={catalogProducts} for:item="product">
-                            <div key={product.productId} class="ncp-product-card">
-                                <div class="ncp-product-img">
-                                    <img src={product.imageUrl} alt={product.name} class="ncp-product-photo" />
-                                    <template if:true={product.showStockBadge}>
-                                        <span class={product.badgeClass}>{product.stockLabel}</span>
+                    <!-- Filter Bar -->
+                    <div class="ncat-filters">
+                        <div class="ncat-filter-row">
+                            <div class="ncat-filter-group">
+                                <span class="ncat-filter-label">Family</span>
+                                <div class="ncat-filter-chips">
+                                    <template for:each={catalogFamilies} for:item="fam">
+                                        <button key={fam.id} class={fam.cls} onclick={handleCatalogFamilyFilter} data-id={fam.id}>{fam.label}</button>
                                     </template>
                                 </div>
-                                <div class="ncp-product-body">
-                                    <div class="ncp-product-meta">
-                                        <div>
-                                            <div class="ncp-product-family">{product.family}</div>
-                                            <h4 class="ncp-product-name">{product.name}</h4>
-                                            <p class="ncp-product-desc">{product.description}</p>
-                                        </div>
-                                        <div class="ncp-product-price">{product.unitPrice} $</div>
+                            </div>
+                            <div class="ncat-filter-group">
+                                <span class="ncat-filter-label">Finish</span>
+                                <div class="ncat-filter-chips">
+                                    <template for:each={catalogColors} for:item="col">
+                                        <button key={col.id} class={col.cls} onclick={handleCatalogColorFilter} data-id={col.id}>{col.label}</button>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="ncat-search-wrap">
+                                <lightning-icon icon-name="utility:search" size="x-small" class="ncat-search-icon"></lightning-icon>
+                                <input class="ncat-search" type="text" placeholder="Search products..." oninput={handleCatalogSearch} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Grid -->
+                    <div class="ncat-grid">
+                        <template for:each={filteredCatalogProducts} for:item="product">
+                            <div key={product.id} class="ncat-card">
+                                <!-- Image area -->
+                                <div class="ncat-card-img-wrap">
+                                    <img src={product.displayImage} alt={product.name} class="ncat-card-img" />
+                                    <div class="ncat-card-hover-overlay"></div>
+                                    <!-- Top-left badges -->
+                                    <div class="ncat-card-badges">
+                                        <template if:true={product.isNew}>
+                                            <span class="ncat-badge ncat-badge-new">New</span>
+                                        </template>
+                                        <template if:true={product.isPopular}>
+                                            <span class="ncat-badge ncat-badge-popular">Popular</span>
+                                        </template>
                                     </div>
-                                    <div class="ncp-product-footer">
-                                        <div>
-                                            <div class="ncp-stock-lbl">Stock</div>
-                                            <div class="ncp-stock-val">{product.stockLabel}</div>
+                                    <!-- Favorite button (top-right) -->
+                                    <button class={product.favBtnCls} onclick={handleToggleFavorite} data-id={product.id}>
+                                        <lightning-icon icon-name="utility:heart" size="x-small"></lightning-icon>
+                                    </button>
+                                    <!-- Detail button (bottom-right) -->
+                                    <button class="ncat-detail-btn" onclick={handleOpenProductDetail} data-id={product.id}>
+                                        <lightning-icon icon-name="utility:chevronright" size="small" variant="inverse"></lightning-icon>
+                                    </button>
+                                </div>
+                                <!-- Body -->
+                                <div class="ncat-card-body">
+                                    <div class="ncat-card-meta-row">
+                                        <span class="ncat-card-family">{product.family}</span>
+                                        <div class="ncat-card-rating">
+                                            <span class="ncat-star">&#9733;</span>
+                                            <span class="ncat-rating-val">{product.rating}</span>
                                         </div>
-                                        <button class="ncp-add-btn" onclick={handleAddToCart} data-id={product.productId}>
-                                            <lightning-icon icon-name="utility:cart" size="small" variant="inverse"></lightning-icon>
+                                    </div>
+                                    <h3 class="ncat-card-name">{product.name}</h3>
+                                    <p class="ncat-card-desc">{product.description}</p>
+                                    <div class="ncat-card-footer">
+                                        <div>
+                                            <div class="ncat-price-label">Price</div>
+                                            <div class="ncat-price">{product.priceDisplay}</div>
+                                        </div>
+                                        <button class="ncat-add-cart-btn" onclick={handleAddToCartFromCatalog} data-id={product.id}>
+                                            Add to Cart
                                         </button>
                                     </div>
+                                    <button class="ncat-quote-btn" onclick={handleOpenQuoteForm} data-id={product.id}>
+                                        Request Quote
+                                    </button>
                                 </div>
                             </div>
                         </template>
                     </div>
+
+                </div>
+            </template>
+
+            <!-- ─ Favoris ──────────────────────────────────────────────────── -->
+            <template if:true={isFavorites}>
+                <div class="ncp-section ncp-fullbleed">
+                    <c-nexus-favorites-system></c-nexus-favorites-system>
                 </div>
             </template>
 
             <!-- ─ Panier ───────────────────────────────────────────────────── -->
             <template if:true={isCart}>
                 <div class="ncp-section">
-                    <h3 class="ncp-page-title">Mon Panier</h3>
-                    <div class="ncp-cart-layout">
-
-                        <!-- Items list -->
-                        <div class="ncp-cart-items">
-                            <template if:true={isCartEmpty}>
-                                <div class="ncp-cart-empty">
-                                    <lightning-icon icon-name="utility:cart" size="large"></lightning-icon>
-                                    <h3 class="ncp-empty-title">Votre panier est vide</h3>
-                                    <p class="ncp-empty-sub">Découvrez nos produits et commencez vos achats.</p>
-                                    <button class="ncp-btn-catalog" onclick={handleGoToCatalog}>Voir le catalogue</button>
-                                </div>
-                            </template>
-                            <template if:true={hasCartItems}>
-                                <template for:each={cartItems} for:item="item">
-                                    <div key={item.idx} class="ncp-cart-row">
-                                        <div class="ncp-cart-img">
-                                            <img src={item.imageUrl} alt={item.name} />
-                                        </div>
-                                        <div class="ncp-cart-info">
-                                            <div class="ncp-cart-family">{item.family}</div>
-                                            <div class="ncp-cart-name">{item.name}</div>
-                                        </div>
-                                        <div class="ncp-cart-right">
-                                            <div class="ncp-cart-price">{item.unitPrice} $</div>
-                                            <button class="ncp-remove-btn" onclick={handleRemoveFromCart} data-idx={item.idx}>
-                                                <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </template>
-                            </template>
-                        </div>
-
-                        <!-- Order summary -->
-                        <div class="ncp-summary-card">
-                            <h4 class="ncp-summary-title">Résumé de la commande</h4>
-                            <div class="ncp-summary-rows">
-                                <div class="ncp-summary-row">
-                                    <span>Sous-total</span>
-                                    <span>{cartSubtotal} $</span>
-                                </div>
-                                <div class="ncp-summary-row">
-                                    <span>TVA (20%)</span>
-                                    <span>{cartTax} $</span>
-                                </div>
-                                <div class="ncp-summary-total">
-                                    <span>Total</span>
-                                    <span class="ncp-total-price">{cartTotal} $</span>
-                                </div>
-                            </div>
-                            <button class="ncp-checkout-btn">Procéder au paiement</button>
-                        </div>
-
-                    </div>
+                    <c-nexus-portal-cart
+                        onnavigate={handleNavigateFromCart}
+                        oncartchanged={handleCartChanged}
+                    ></c-nexus-portal-cart>
                 </div>
             </template>
 
             <!-- ─ Commandes ────────────────────────────────────────────────── -->
             <template if:true={isOrders}>
-                <div class="ncp-section">
-                    <div class="ncp-placeholder">
-                        <lightning-icon icon-name="utility:list" size="large"></lightning-icon>
-                        <h3 class="ncp-placeholder-title">Historique des Commandes</h3>
-                        <p class="ncp-placeholder-sub">Vous n'avez pas encore passé de commande.</p>
-                    </div>
+                <div class="ncp-section ncp-fullbleed">
+                    <c-nexus-order-system></c-nexus-order-system>
                 </div>
             </template>
 
             <!-- ─ Devis ────────────────────────────────────────────────────── -->
             <template if:true={isQuotations}>
-                <div class="ncp-section">
-                    <div class="ncp-placeholder">
-                        <lightning-icon icon-name="utility:chat" size="large"></lightning-icon>
-                        <h3 class="ncp-placeholder-title">Demandes de Devis</h3>
-                        <p class="ncp-placeholder-sub">Aucune demande de devis en cours.</p>
-                    </div>
+                <div class="ncp-section ncp-fullbleed">
+                    <c-nexus-quotation-system></c-nexus-quotation-system>
+                </div>
+            </template>
+
+            <!-- ─ Eco Swap ─────────────────────────────────────────────────── -->
+            <template if:true={isSwap}>
+                <div class="ncp-section ncp-fullbleed">
+                    <c-nexus-swap></c-nexus-swap>
+                </div>
+            </template>
+
+            <!-- ─ Passeport Digital ───────────────────────────────────────── -->
+            <template if:true={isPassport}>
+                <div class="ncp-section ncp-fullbleed">
+                    <c-nexus-digital-passport></c-nexus-digital-passport>
+                </div>
+            </template>
+
+            <!-- ─ Timeline 360° ───────────────────────────────────────────── -->
+            <template if:true={isTimeline}>
+                <div class="ncp-section ncp-fullbleed">
+                    <c-nexus-time-machine></c-nexus-time-machine>
+                </div>
+            </template>
+
+            <!-- ─ War Room ────────────────────────────────────────────────── -->
+            <template if:true={isWarRoom}>
+                <div class="ncp-section ncp-fullbleed">
+                    <c-nexus-war-room></c-nexus-war-room>
                 </div>
             </template>
 
             <!-- ─ Profil ───────────────────────────────────────────────────── -->
             <template if:true={isProfile}>
-                <div class="ncp-section ncp-profile-gap">
+                <div class="ncp-section">
 
-                    <!-- Top section: avatar + cards -->
-                    <div class="ncp-profile-top">
-                        <div class="ncp-avatar">
-                            <lightning-icon icon-name="utility:user" size="large"></lightning-icon>
+                    <!-- Avatar + Identity header -->
+                    <div class="ncp-profile-head">
+                        <div class="ncp-profile-avatar-wrap">
+                            <div class="ncp-avatar-lg">
+                                <lightning-icon icon-name="utility:user" size="large"></lightning-icon>
+                            </div>
+                            <div class="ncp-avatar-camera">
+                                <lightning-icon icon-name="utility:camera" size="x-small" variant="inverse"></lightning-icon>
+                            </div>
+                            <div class="ncp-avatar-verified">
+                                <lightning-icon icon-name="utility:check" size="x-small" variant="inverse"></lightning-icon>
+                            </div>
                         </div>
-                        <div class="ncp-profile-info">
-                            <h3 class="ncp-page-title">Profil Entreprise</h3>
-                            <p class="ncp-page-sub">Gérez vos informations et préférences de compte.</p>
-                            <div class="ncp-profile-cards">
-                                <div class="ncp-mini-card">
-                                    <div class="ncp-mini-card-tag ncp-tag-indigo">Sécurité</div>
-                                    <div class="ncp-mini-card-label">Mot de passe</div>
-                                    <div class="ncp-mini-card-sub">Dernière modification il y a 3 mois</div>
-                                    <button class="ncp-link-btn">Changer le mot de passe</button>
-                                </div>
-                                <div class="ncp-mini-card">
-                                    <div class="ncp-mini-card-tag ncp-tag-emerald">Statut du compte</div>
-                                    <div class="ncp-mini-card-label">Vérifié</div>
-                                    <div class="ncp-mini-card-sub">Accès complet aux services Nexus</div>
-                                    <span class="ncp-active-badge">ACTIF</span>
-                                </div>
+                        <div class="ncp-profile-id">
+                            <span class="ncp-verified-badge">Compte Vérifié</span>
+                            <h2 class="ncp-profile-name">Nexus Global Corp.</h2>
+                            <div class="ncp-profile-email-row">
+                                <lightning-icon icon-name="utility:email" size="x-small"></lightning-icon>
+                                <span>contact@nexus-global.com</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Detail cards -->
-                    <div class="ncp-profile-detail">
+                    <!-- Cards grid -->
+                    <div class="ncp-profile-grid">
+
                         <div class="ncp-info-card">
                             <h4 class="ncp-info-title">Informations Générales</h4>
-                            <div class="ncp-info-row">
-                                <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
-                                <span>Nexus Global Corp</span>
+                            <div class="ncp-field">
+                                <label class="ncp-label">Nom Complet / Entreprise</label>
+                                <input class="ncp-input" type="text" value="Nexus Global Corp." />
                             </div>
-                            <div class="ncp-info-row">
-                                <lightning-icon icon-name="utility:email" size="x-small"></lightning-icon>
-                                <span>contact@nexus-global.com</span>
+                            <div class="ncp-field">
+                                <label class="ncp-label">Email</label>
+                                <input class="ncp-input" type="email" value="contact@nexus-global.com" />
                             </div>
-                            <div class="ncp-info-row">
-                                <lightning-icon icon-name="utility:call" size="x-small"></lightning-icon>
-                                <span>+33 1 23 45 67 89</span>
+                            <div class="ncp-field">
+                                <label class="ncp-label">Téléphone</label>
+                                <input class="ncp-input" type="tel" value="+33 1 23 45 67 89" />
                             </div>
                         </div>
+
                         <div class="ncp-info-card">
+                            <h4 class="ncp-info-title">Sécurité</h4>
+                            <div class="ncp-security-row">
+                                <div class="ncp-security-icon">
+                                    <lightning-icon icon-name="utility:shield" size="small"></lightning-icon>
+                                </div>
+                                <div class="ncp-security-info">
+                                    <div class="ncp-security-label">Mot de passe</div>
+                                    <div class="ncp-security-sub">Dernière modification : il y a 3 mois</div>
+                                </div>
+                                <button class="ncp-modify-btn">Modifier</button>
+                            </div>
+                            <button class="ncp-update-btn">Mettre à jour le profil</button>
+                        </div>
+
+                        <div class="ncp-info-card ncp-info-full">
                             <h4 class="ncp-info-title">Localisation</h4>
-                            <div class="ncp-info-row">
-                                <lightning-icon icon-name="utility:location" size="x-small"></lightning-icon>
-                                <span>128 Rue de la Technologie — 75008 Paris, France</span>
-                            </div>
-                            <div class="ncp-prime-card">
-                                <div class="ncp-prime-icon">
-                                    <lightning-icon icon-name="utility:zap" size="x-small"></lightning-icon>
+                            <div class="ncp-location-grid">
+                                <div class="ncp-field">
+                                    <label class="ncp-label">Adresse</label>
+                                    <input class="ncp-input" type="text" value="128 Rue de la Technologie" />
                                 </div>
-                                <div>
-                                    <div class="ncp-prime-name">Nexus Prime</div>
-                                    <div class="ncp-prime-since">Membre depuis 2023</div>
+                                <div class="ncp-field">
+                                    <label class="ncp-label">Ville</label>
+                                    <input class="ncp-input" type="text" value="Paris" />
+                                </div>
+                                <div class="ncp-field">
+                                    <label class="ncp-label">Code Postal</label>
+                                    <input class="ncp-input" type="text" value="75008" />
                                 </div>
                             </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Reviews received -->
+                    <div class="ncp-reviews-section">
+                        <div class="ncp-reviews-header">
+                            <h3 class="ncp-reviews-title">Avis Reçus</h3>
+                            <span class="ncp-reviews-count-badge">312 avis au total</span>
+                        </div>
+
+                        <!-- Score + bars -->
+                        <div class="ncp-reviews-summary">
+                            <div class="ncp-reviews-score-box">
+                                <span class="ncp-reviews-score-num">4.9</span>
+                                <div class="ncp-reviews-score-stars">
+                                    <span class="ncp-reviews-score-star">&#9733;</span>
+                                    <span class="ncp-reviews-score-star">&#9733;</span>
+                                    <span class="ncp-reviews-score-star">&#9733;</span>
+                                    <span class="ncp-reviews-score-star">&#9733;</span>
+                                    <span class="ncp-reviews-score-star">&#9733;</span>
+                                </div>
+                                <span class="ncp-reviews-score-label">Moyenne</span>
+                            </div>
+                            <div class="ncp-reviews-bars">
+                                <div class="ncp-reviews-bar-row">
+                                    <span class="ncp-reviews-bar-label">5★</span>
+                                    <div class="ncp-reviews-bar-track"><div class="ncp-reviews-bar-fill" style="width:87%"></div></div>
+                                    <span class="ncp-reviews-bar-count">271</span>
+                                </div>
+                                <div class="ncp-reviews-bar-row">
+                                    <span class="ncp-reviews-bar-label">4★</span>
+                                    <div class="ncp-reviews-bar-track"><div class="ncp-reviews-bar-fill" style="width:9%"></div></div>
+                                    <span class="ncp-reviews-bar-count">28</span>
+                                </div>
+                                <div class="ncp-reviews-bar-row">
+                                    <span class="ncp-reviews-bar-label">3★</span>
+                                    <div class="ncp-reviews-bar-track"><div class="ncp-reviews-bar-fill" style="width:3%"></div></div>
+                                    <span class="ncp-reviews-bar-count">9</span>
+                                </div>
+                                <div class="ncp-reviews-bar-row">
+                                    <span class="ncp-reviews-bar-label">2★</span>
+                                    <div class="ncp-reviews-bar-track"><div class="ncp-reviews-bar-fill" style="width:1%"></div></div>
+                                    <span class="ncp-reviews-bar-count">3</span>
+                                </div>
+                                <div class="ncp-reviews-bar-row">
+                                    <span class="ncp-reviews-bar-label">1★</span>
+                                    <div class="ncp-reviews-bar-track"><div class="ncp-reviews-bar-fill" style="width:0%"></div></div>
+                                    <span class="ncp-reviews-bar-count">1</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Swap review cards — stars only (hotel style) -->
+                        <div class="ncp-reviews-grid">
+
+                            <div class="ncp-review-card">
+                                <div class="ncp-review-author-row">
+                                    <div class="ncp-review-avatar ncp-review-avatar--em">JD</div>
+                                    <div>
+                                        <div class="ncp-review-author-name">Jean D.</div>
+                                        <div class="ncp-review-author-role">Nexus Hub v2 · Swap</div>
+                                    </div>
+                                </div>
+                                <div class="ncp-review-stars-row">
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                </div>
+                                <span class="ncp-review-date">14 Feb 2026</span>
+                            </div>
+
+                            <div class="ncp-review-card">
+                                <div class="ncp-review-author-row">
+                                    <div class="ncp-review-avatar ncp-review-avatar--in">ML</div>
+                                    <div>
+                                        <div class="ncp-review-author-name">Marie L.</div>
+                                        <div class="ncp-review-author-role">Smart Sensor Pack · Swap</div>
+                                    </div>
+                                </div>
+                                <div class="ncp-review-stars-row">
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star ncp-review-star--empty">&#9733;</span>
+                                </div>
+                                <span class="ncp-review-date">5 Jan 2026</span>
+                            </div>
+
+                            <div class="ncp-review-card">
+                                <div class="ncp-review-author-row">
+                                    <div class="ncp-review-avatar ncp-review-avatar--ro">SM</div>
+                                    <div>
+                                        <div class="ncp-review-author-name">Sophie M.</div>
+                                        <div class="ncp-review-author-role">Nexus Bridge Pro · Swap</div>
+                                    </div>
+                                </div>
+                                <div class="ncp-review-stars-row">
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                </div>
+                                <span class="ncp-review-date">18 Dec 2025</span>
+                            </div>
+
+                            <div class="ncp-review-card">
+                                <div class="ncp-review-author-row">
+                                    <div class="ncp-review-avatar ncp-review-avatar--am">PK</div>
+                                    <div>
+                                        <div class="ncp-review-author-name">Pierre K.</div>
+                                        <div class="ncp-review-author-role">Legacy Controller · Swap</div>
+                                    </div>
+                                </div>
+                                <div class="ncp-review-stars-row">
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                </div>
+                                <span class="ncp-review-date">3 Nov 2025</span>
+                            </div>
+
+                            <div class="ncp-review-card">
+                                <div class="ncp-review-author-row">
+                                    <div class="ncp-review-avatar ncp-review-avatar--em">AB</div>
+                                    <div>
+                                        <div class="ncp-review-author-name">Alex B.</div>
+                                        <div class="ncp-review-author-role">Nexus Hub v2 · Swap</div>
+                                    </div>
+                                </div>
+                                <div class="ncp-review-stars-row">
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                </div>
+                                <span class="ncp-review-date">20 Oct 2025</span>
+                            </div>
+
+                            <div class="ncp-review-card">
+                                <div class="ncp-review-author-row">
+                                    <div class="ncp-review-avatar ncp-review-avatar--in">LR</div>
+                                    <div>
+                                        <div class="ncp-review-author-name">Lucas R.</div>
+                                        <div class="ncp-review-author-role">Smart Sensor Pack · Swap</div>
+                                    </div>
+                                </div>
+                                <div class="ncp-review-stars-row">
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star">&#9733;</span>
+                                    <span class="ncp-review-star ncp-review-star--empty">&#9733;</span>
+                                </div>
+                                <span class="ncp-review-date">8 Sep 2025</span>
+                            </div>
+
                         </div>
                     </div>
 
                 </div>
             </template>
 
-            <!-- ─ Réclamations ─────────────────────────────────────────────── -->
+            <!-- ─ Paramètres ──────────────────────────────────────────────── -->
+            <template if:true={isSettings}>
+                <div class="ncp-section">
+                    <div class="ncp-settings-placeholder">
+                        <div class="ncp-settings-icon-wrap">
+                            <lightning-icon icon-name="utility:settings" size="large"></lightning-icon>
+                        </div>
+                        <h2 class="ncp-settings-title">Paramètres</h2>
+                        <p class="ncp-settings-sub">Personnalisez votre expérience Nexus.</p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ─ Réclamations / Support ───────────────────────────────────── -->
             <template if:true={isCases}>
                 <div class="ncp-section">
+                    <div class="ncp-cases-layout">
 
-                    <!-- Header + toggle -->
-                    <div class="ncp-cases-header">
-                        <div>
-                            <h3 class="ncp-page-title">Réclamations &amp; Support</h3>
-                            <p class="ncp-page-sub">Résolvez vos problèmes rapidement avec notre assistance intelligente.</p>
+                        <!-- Left: main content -->
+                        <div class="ncp-cases-main">
+                            <div class="ncp-cases-top">
+                                <div>
+                                    <h2 class="ncp-cases-title">Support &amp; Réclamations</h2>
+                                    <p class="ncp-cases-sub">Résolution intelligente propulsée par Agentforce.</p>
+                                </div>
+                                <div class="ncp-step-indicators">
+                                    <div class={caseStepDot1}></div>
+                                    <div class={caseStepDot2}></div>
+                                </div>
+                            </div>
+
+                            <!-- Step 1: AI Agent -->
+                            <template if:true={isCaseStep1}>
+                                <div class="ncp-agent-card">
+                                    <div class="ncp-agent-header">
+                                        <div class="ncp-agent-avatar">
+                                            <lightning-icon icon-name="utility:bot" size="medium" variant="inverse"></lightning-icon>
+                                        </div>
+                                        <div>
+                                            <h3 class="ncp-agent-name">Nexus Agentforce</h3>
+                                            <div class="ncp-agent-status">
+                                                <span class="ncp-online-dot"></span>
+                                                <span>En ligne &amp; Prêt</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="ncp-agent-quote">"Bonjour ! Je suis l'IA Nexus. Décrivez votre situation, j'analyse les données en temps réel pour vous proposer une solution immédiate."</p>
+                                    <div class="ncp-agent-chat">
+                                        <div class="ncp-agent-msg">
+                                            <div class="ncp-agent-msg-icon">
+                                                <lightning-icon icon-name="utility:bot" size="x-small" variant="inverse"></lightning-icon>
+                                            </div>
+                                            <div class="ncp-agent-bubble">Comment puis-je accélérer votre demande aujourd'hui ?</div>
+                                        </div>
+                                        <div class="ncp-agent-input-wrap">
+                                            <input type="text" class="ncp-agent-input" placeholder="Décrivez votre problème..." />
+                                            <button class="ncp-agent-send">
+                                                <lightning-icon icon-name="utility:send" size="x-small" variant="inverse"></lightning-icon>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="ncp-quick-tags">
+                                        <button class="ncp-quick-tag">Statut Livraison</button>
+                                        <button class="ncp-quick-tag">Retour Produit</button>
+                                        <button class="ncp-quick-tag">Facturation</button>
+                                        <button class="ncp-quick-tag">Garantie</button>
+                                    </div>
+                                    <div class="ncp-agent-footer">
+                                        <div class="ncp-experts-wrap">
+                                            <div class="ncp-expert-dots">
+                                                <span class="ncp-edot"></span>
+                                                <span class="ncp-edot"></span>
+                                                <span class="ncp-edot"></span>
+                                            </div>
+                                            <span class="ncp-experts-label">Experts disponibles</span>
+                                        </div>
+                                        <button class="ncp-human-btn" onclick={handleNextCaseStep}>
+                                            Parler à un humain ›
+                                        </button>
+                                    </div>
+                                    <div class="ncp-agent-glow1"></div>
+                                    <div class="ncp-agent-glow2"></div>
+                                </div>
+                            </template>
+
+                            <!-- Step 2: Expert form -->
+                            <template if:true={isCaseStep2}>
+                                <div class="ncp-expert-card">
+                                    <div class="ncp-expert-hdr">
+                                        <div class="ncp-headphones-icon">
+                                            <lightning-icon icon-name="utility:headphones" size="medium"></lightning-icon>
+                                        </div>
+                                        <div>
+                                            <h3 class="ncp-expert-title">Escalation Expert</h3>
+                                            <p class="ncp-expert-sub">Un administrateur Nexus prendra le relais sous 24h.</p>
+                                        </div>
+                                    </div>
+                                    <div class="ncp-form-row-2">
+                                        <div class="ncp-field">
+                                            <label class="ncp-label">Sujet de la réclamation</label>
+                                            <input class="ncp-input" type="text" placeholder="Ex: Produit défectueux" />
+                                        </div>
+                                        <div class="ncp-field">
+                                            <label class="ncp-label">Priorité</label>
+                                            <div class="ncp-prio-group">
+                                                <button class={pLow}      onclick={handlePriority} data-priority="Low">Low</button>
+                                                <button class={pMedium}   onclick={handlePriority} data-priority="Medium">Medium</button>
+                                                <button class={pHigh}     onclick={handlePriority} data-priority="High">High</button>
+                                                <button class={pCritical} onclick={handlePriority} data-priority="Critical">Critical</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ncp-field">
+                                        <label class="ncp-label">Description détaillée</label>
+                                        <textarea class="ncp-textarea" rows="5" placeholder="Détaillez votre demande..."></textarea>
+                                    </div>
+                                    <div class="ncp-upload-area">
+                                        <div class="ncp-upload-icon">
+                                            <lightning-icon icon-name="utility:attach" size="medium"></lightning-icon>
+                                        </div>
+                                        <p class="ncp-upload-title">Joindre des preuves</p>
+                                        <p class="ncp-upload-sub">PDF, JPG, PNG (Max 10MB)</p>
+                                    </div>
+                                    <div class="ncp-expert-btns">
+                                        <button class="ncp-back-btn" onclick={handlePrevCaseStep}>Retour</button>
+                                        <button class="ncp-submit-btn">Soumettre</button>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
-                        <div class="ncp-case-toggle">
-                            <button class={caseTabAI} onclick={handleCaseAI}>
-                                <lightning-icon icon-name="utility:bot" size="x-small"></lightning-icon>
-                                Agent AI
-                            </button>
-                            <button class={caseTabHuman} onclick={handleCaseExpert}>
-                                <lightning-icon icon-name="utility:headphones" size="x-small"></lightning-icon>
-                                Expert Humain
-                            </button>
+
+                        <!-- Right: sidebar -->
+                        <div class="ncp-cases-aside">
+
+                            <!-- Active Tickets -->
+                            <div class="ncp-tickets-card">
+                                <h4 class="ncp-tickets-title">Tickets Actifs</h4>
+                                <div class="ncp-ticket-list">
+                                    <div class="ncp-ticket-item">
+                                        <div>
+                                            <div class="ncp-ticket-id">CAS-9021</div>
+                                            <div class="ncp-ticket-subject">Retard Livraison</div>
+                                            <div class="ncp-ticket-date">Hier</div>
+                                        </div>
+                                        <span class="ncp-twarn-badge">En cours</span>
+                                    </div>
+                                    <div class="ncp-ticket-item">
+                                        <div>
+                                            <div class="ncp-ticket-id">CAS-8842</div>
+                                            <div class="ncp-ticket-subject">Erreur Facturation</div>
+                                            <div class="ncp-ticket-date">12 Fév</div>
+                                        </div>
+                                        <span class="ncp-tsuccess-badge">Résolu</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Help card -->
+                            <div class="ncp-help-card">
+                                <div class="ncp-help-icon">
+                                    <lightning-icon icon-name="utility:error" size="small" variant="inverse"></lightning-icon>
+                                </div>
+                                <h4 class="ncp-help-title">Besoin d'aide ?</h4>
+                                <p class="ncp-help-desc">Experts disponibles 24/7.</p>
+                                <button class="ncp-call-btn">Lancer un Appel</button>
+                                <div class="ncp-help-glow"></div>
+                            </div>
+
+                            <!-- Agentforce stats -->
+                            <div class="ncp-agentforce-card">
+                                <div class="ncp-agentforce-label">Activité Agentforce</div>
+                                <div class="ncp-agentforce-stat">
+                                    <span class="ncp-pulse-dot"></span>
+                                    <span>124 tickets en cours</span>
+                                </div>
+                                <div class="ncp-agentforce-stat">
+                                    <span class="ncp-pulse-dot"></span>
+                                    <span>Résolution : 14min</span>
+                                </div>
+                                <div class="ncp-agentforce-stat">
+                                    <span class="ncp-pulse-dot"></span>
+                                    <span>Satisfaction : 98.4%</span>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-
-                    <!-- AI Chat -->
-                    <template if:true={isAiView}>
-                        <div class="ncp-chat-wrap">
-                            <div class="ncp-chat-header">
-                                <div class="ncp-chat-avatar">
-                                    <lightning-icon icon-name="utility:bot" size="small" variant="inverse"></lightning-icon>
-                                </div>
-                                <div>
-                                    <div class="ncp-chat-name">Nexus Agentforce</div>
-                                    <div class="ncp-chat-status">
-                                        <span class="ncp-online-dot"></span>
-                                        <span>En ligne</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ncp-chat-messages">
-                                <div class="ncp-msg-bot">
-                                    <div class="ncp-msg-avatar-bot">
-                                        <lightning-icon icon-name="utility:bot" size="x-small" variant="inverse"></lightning-icon>
-                                    </div>
-                                    <div class="ncp-msg-bubble-bot">
-                                        Bonjour ! Je suis l'agent AI de Nexus. Comment puis-je vous aider aujourd'hui ? Je peux suivre vos commandes, expliquer une facture ou diagnostiquer un problème technique.
-                                    </div>
-                                </div>
-                                <div class="ncp-msg-user">
-                                    <div class="ncp-msg-bubble-user">
-                                        J'ai un problème avec ma dernière commande #ORD-2024-001. Le capteur semble défectueux.
-                                    </div>
-                                    <div class="ncp-msg-avatar-user">
-                                        <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
-                                    </div>
-                                </div>
-                                <div class="ncp-msg-bot">
-                                    <div class="ncp-msg-avatar-bot">
-                                        <lightning-icon icon-name="utility:bot" size="x-small" variant="inverse"></lightning-icon>
-                                    </div>
-                                    <div class="ncp-msg-bubble-bot">
-                                        Je suis navré d'apprendre cela. J'ai vérifié le statut de votre commande. Souhaitez-vous que je lance une procédure de retour automatique ou préférez-vous parler à un administrateur pour une assistance personnalisée ?
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ncp-chat-footer">
-                                <div class="ncp-chat-input-wrap">
-                                    <input type="text" class="ncp-chat-input" placeholder="Écrivez votre message..." />
-                                    <button class="ncp-send-btn">
-                                        <lightning-icon icon-name="utility:send" size="x-small" variant="inverse"></lightning-icon>
-                                    </button>
-                                </div>
-                                <div class="ncp-escalate-link">
-                                    <button class="ncp-link-btn" onclick={handleCaseExpert}>
-                                        Escalader vers un administrateur →
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- Expert Form -->
-                    <template if:true={isExpertView}>
-                        <div class="ncp-expert-layout">
-
-                            <div class="ncp-ticket-card">
-                                <div class="ncp-ticket-header">
-                                    <div class="ncp-ticket-icon">
-                                        <lightning-icon icon-name="utility:error" size="small"></lightning-icon>
-                                    </div>
-                                    <div>
-                                        <h4 class="ncp-ticket-title">Ouvrir un Ticket Support</h4>
-                                        <p class="ncp-ticket-sub">Un administrateur vous répondra sous 24h.</p>
-                                    </div>
-                                </div>
-                                <div class="ncp-form-row-2">
-                                    <div class="ncp-field">
-                                        <label class="ncp-label">Sujet de la réclamation</label>
-                                        <input class="ncp-input" type="text" placeholder="Ex: Produit défectueux" />
-                                    </div>
-                                    <div class="ncp-field">
-                                        <label class="ncp-label">Priorité</label>
-                                        <div class="ncp-prio-group">
-                                            <button class={pLow}      onclick={handlePriority} data-priority="Low">Low</button>
-                                            <button class={pMedium}   onclick={handlePriority} data-priority="Medium">Medium</button>
-                                            <button class={pHigh}     onclick={handlePriority} data-priority="High">High</button>
-                                            <button class={pCritical} onclick={handlePriority} data-priority="Critical">Critical</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="ncp-field">
-                                    <label class="ncp-label">Description détaillée</label>
-                                    <textarea class="ncp-textarea" rows="5" placeholder="Décrivez votre problème avec le plus de détails possible..."></textarea>
-                                </div>
-                                <button class="ncp-submit-btn">Envoyer la réclamation</button>
-                            </div>
-
-                            <div class="ncp-expert-aside">
-                                <div class="ncp-escalate-card">
-                                    <h4 class="ncp-escalate-title">Pourquoi escalader ?</h4>
-                                    <div class="ncp-escalate-item">
-                                        <div class="ncp-escalate-dot">
-                                            <lightning-icon icon-name="utility:shield" size="x-small" variant="inverse"></lightning-icon>
-                                        </div>
-                                        <div>
-                                            <div class="ncp-escalate-item-title">Garantie Nexus</div>
-                                            <div class="ncp-escalate-item-desc">Tous nos produits sont couverts par une garantie de remplacement immédiat.</div>
-                                        </div>
-                                    </div>
-                                    <div class="ncp-escalate-item">
-                                        <div class="ncp-escalate-dot">
-                                            <lightning-icon icon-name="utility:clock" size="x-small" variant="inverse"></lightning-icon>
-                                        </div>
-                                        <div>
-                                            <div class="ncp-escalate-item-title">Support 24h</div>
-                                            <div class="ncp-escalate-item-desc">Nos experts s'engagent à traiter votre demande en moins de 24 heures ouvrées.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="ncp-recent-tickets">
-                                    <h4 class="ncp-section-sm-title">Tickets Récents</h4>
-                                    <div class="ncp-ticket-row">
-                                        <div>
-                                            <div class="ncp-ticket-num">#TKT-882</div>
-                                            <div class="ncp-ticket-type">Facturation</div>
-                                        </div>
-                                        <span class="ncp-resolved-badge">Résolu</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </template>
-
                 </div>
             </template>
 
         </main>
+
+        <!-- ══ Product Detail Modal ══════════════════════════════════════════ -->
+        <template if:true={showProductModal}>
+            <div class="ncat-modal-overlay" onclick={handleCloseProductDetail}>
+                <div class="ncat-modal-panel" onclick={handleStopPropagation}>
+                    <!-- Close -->
+                    <button class="ncat-modal-close" onclick={handleCloseProductDetail}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <!-- Left: image + color picker -->
+                    <div class="ncat-modal-left">
+                        <div class="ncat-modal-img-wrap">
+                            <img src={selectedProduct.displayImage} alt={selectedProduct.name} class="ncat-modal-img" />
+                        </div>
+                        <template if:true={selectedProduct.hasColors}>
+                            <div class="ncat-modal-colors">
+                                <span class="ncat-modal-colors-label">Select Configuration</span>
+                                <div class="ncat-modal-dots-row">
+                                    <template for:each={selectedProduct.colorDots} for:item="cdot">
+                                        <button key={cdot.key} class={cdot.dotCls} style={cdot.dotStyle} onclick={handleModalColorSelect} data-color={cdot.name} title={cdot.name}></button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <!-- Right: details -->
+                    <div class="ncat-modal-right">
+                        <div class="ncat-modal-badges-row">
+                            <span class="ncat-mbadge ncat-mbadge-dark">{selectedProduct.family}</span>
+                            <span class="ncat-mbadge ncat-mbadge-green">New Gen</span>
+                        </div>
+                        <h2 class="ncat-modal-name">{selectedProduct.name}</h2>
+                        <div class="ncat-modal-rating-row">
+                            <span class="ncat-modal-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                            <span class="ncat-modal-rating-num">4.9</span>
+                            <span class="ncat-modal-arch">· Verified Architecture</span>
+                        </div>
+                        <div class="ncat-modal-price">{selectedProduct.priceDisplay}</div>
+                        <p class="ncat-modal-desc">{selectedProduct.description}</p>
+                        <div class="ncat-modal-features-section">
+                            <div class="ncat-modal-features-label">Core Capabilities</div>
+                            <template for:each={selectedProduct.features} for:item="feat">
+                                <div key={feat} class="ncat-modal-feat-row">
+                                    <div class="ncat-feat-icon-wrap">
+                                        <lightning-icon icon-name="utility:zap" size="x-small" variant="inverse"></lightning-icon>
+                                    </div>
+                                    <span class="ncat-feat-text">{feat}</span>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="ncat-modal-action-row">
+                            <button class={selectedProduct.favBtnCls} onclick={handleToggleFavoriteFromModal} data-id={selectedProduct.id}>
+                                <lightning-icon icon-name="utility:heart" size="x-small"></lightning-icon>
+                                <span>{selectedProduct.favLabel}</span>
+                            </button>
+                            <button class="ncat-modal-add-cart" onclick={handleAddToCartFromModal}>
+                                <lightning-icon icon-name="utility:cart" size="x-small" variant="inverse"></lightning-icon>
+                                <span>Add to Cart</span>
+                            </button>
+                        </div>
+                        <button class="ncat-modal-quote-full" onclick={handleOpenQuoteFromModal}>
+                            <lightning-icon icon-name="utility:file" size="x-small"></lightning-icon>
+                            <span>Request B2B Quote</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══ B2B Quote Modal ════════════════════════════════════════════════ -->
+        <template if:true={showQuoteModal}>
+            <div class="ncat-modal-overlay" onclick={handleCloseQuoteModal}>
+                <div class="ncat-quote-panel" onclick={handleStopPropagation}>
+
+                    <!-- Form step -->
+                    <template if:true={isQuoteForm}>
+                        <div class="ncat-quote-header">
+                            <div class="ncat-quote-header-left">
+                                <div class="ncat-quote-header-icon">
+                                    <lightning-icon icon-name="utility:company" size="small" variant="inverse"></lightning-icon>
+                                </div>
+                                <div>
+                                    <h3 class="ncat-quote-title">B2B Quote Request</h3>
+                                    <p class="ncat-quote-subtitle">Enterprise Solutions Division</p>
+                                </div>
+                            </div>
+                            <button class="ncat-quote-close-btn" onclick={handleCloseQuoteModal}>
+                                <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                            </button>
+                        </div>
+                        <div class="ncat-quote-body">
+                            <template if:true={quoteProduct}>
+                                <div class="ncat-quote-product-row">
+                                    <img src={quoteProduct.image} alt={quoteProduct.name} class="ncat-quote-product-img" />
+                                    <div>
+                                        <div class="ncat-quote-product-name">{quoteProduct.name}</div>
+                                        <div class="ncat-quote-product-code">Product ID: {quoteProduct.productCode}</div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="ncat-quote-form-row">
+                                <div class="ncat-qfield">
+                                    <label class="ncat-qlabel">Company Name</label>
+                                    <input class="ncat-qinput" type="text" placeholder="e.g. Nexus Corp" value={_quoteCompany} onchange={handleQuoteCompany} />
+                                </div>
+                                <div class="ncat-qfield">
+                                    <label class="ncat-qlabel">Business Email</label>
+                                    <input class="ncat-qinput" type="email" placeholder="name@company.com" value={_quoteEmail} onchange={handleQuoteEmail} />
+                                </div>
+                            </div>
+                            <div class="ncat-quote-form-row">
+                                <div class="ncat-qfield">
+                                    <label class="ncat-qlabel">Estimated Quantity</label>
+                                    <input class="ncat-qinput" type="number" min="1" value={_quoteQty} onchange={handleQuoteQty} />
+                                </div>
+                                <div class="ncat-qfield">
+                                    <label class="ncat-qlabel">Industry</label>
+                                    <select class="ncat-qinput ncat-qselect" onchange={handleQuoteIndustry}>
+                                        <option value="Technology">Technology</option>
+                                        <option value="Manufacturing">Manufacturing</option>
+                                        <option value="Healthcare">Healthcare</option>
+                                        <option value="Logistics">Logistics</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="ncat-qfield">
+                                <label class="ncat-qlabel">Specific Requirements</label>
+                                <textarea class="ncat-qtextarea" rows="3" placeholder="Tell us about your project..." onchange={handleQuoteMessage}></textarea>
+                            </div>
+                            <button class="ncat-quote-submit-btn" onclick={handleQuoteSubmit}>
+                                <lightning-icon icon-name="utility:send" size="x-small" variant="inverse"></lightning-icon>
+                                <span>Submit Quote Request</span>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Success step -->
+                    <template if:true={isQuoteSuccess}>
+                        <div class="ncat-quote-success">
+                            <div class="ncat-quote-success-icon">
+                                <lightning-icon icon-name="utility:success" size="large"></lightning-icon>
+                            </div>
+                            <h3 class="ncat-quote-success-title">Request Received</h3>
+                            <p class="ncat-quote-success-msg">Our Enterprise team has received your request. A dedicated account manager will contact you within 2 business hours.</p>
+                            <button class="ncat-quote-submit-btn" onclick={handleCloseQuoteModal}>Back to Catalog</button>
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+        </template>
+
     </div>
 </template>

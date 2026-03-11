@@ -1,0 +1,111 @@
+<template>
+
+    <!-- ══ HISTORY DRAWER ══════════════════════════════════════════════════════ -->
+    <div class={historyOverlayCls}>
+        <div class="nes-backdrop" onclick={handleCloseHistory}></div>
+        <div class={historyPanelCls}>
+
+            <!-- Header -->
+            <div class="nes-panel-header">
+                <div class="nes-panel-icon">
+                    <lightning-icon icon-name="utility:event_ext" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div class="nes-panel-title-wrap">
+                    <h3 class="nes-panel-title">HISTORY</h3>
+                    <p class="nes-panel-subtitle">All your interactions</p>
+                </div>
+                <button class="nes-close-btn" onclick={handleCloseHistory}>
+                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                </button>
+            </div>
+
+            <!-- Activity list -->
+            <div class="nes-panel-body">
+                <template for:each={activities} for:item="act">
+                    <div key={act.id} class="nes-act-row">
+                        <div class="nes-act-num">#{act.id}</div>
+                        <div class="nes-act-info">
+                            <div class="nes-act-title">{act.title}</div>
+                            <div class="nes-act-sub">{act.time} · {act.client}</div>
+                        </div>
+                        <span class={act.badgeCls}>{act.status}</span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Footer -->
+            <div class="nes-panel-footer">
+                <button class="nes-close-panel-btn" onclick={handleCloseHistory}>Fermer le Panneau</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ══ OFFER DRAWER ═════════════════════════════════════════════════════════ -->
+    <div class={offerOverlayCls}>
+        <div class="nes-backdrop" onclick={handleCloseOffer}></div>
+        <div class={offerPanelCls}>
+
+            <template if:true={selectedOffer}>
+
+                <!-- Image header -->
+                <div class="nes-offer-img-wrap">
+                    <img src={selectedOffer.image} class="nes-offer-img" alt={selectedOffer.name} />
+                    <div class="nes-offer-img-gradient"></div>
+                    <button class="nes-offer-close-btn" onclick={handleCloseOffer}>
+                        <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                    </button>
+                </div>
+
+                <!-- Content card -->
+                <div class="nes-offer-body">
+                    <div class="nes-offer-card">
+
+                        <div class="nes-offer-top">
+                            <span class="nes-offer-badge">{selectedOffer.category}</span>
+                            <div class="nes-offer-ai-label">
+                                <lightning-icon icon-name="utility:sparkles" size="x-small"></lightning-icon>
+                                <span>AI Recommendation</span>
+                            </div>
+                        </div>
+
+                        <h3 class="nes-offer-name">{selectedOffer.name}</h3>
+                        <p class="nes-offer-reason">{selectedOffer.reasonFull}</p>
+
+                        <div class="nes-offer-price-box">
+                            <div>
+                                <div class="nes-price-label">Prix Spécial</div>
+                                <div class="nes-price-value">{selectedOffer.price}</div>
+                            </div>
+                            <div>
+                                <div class="nes-price-label">Disponibilité</div>
+                                <div class="nes-stock-value">
+                                    <span class="nes-stock-dot"></span>
+                                    Stock Limité
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nes-offer-actions">
+                            <button class="nes-add-cart-btn" data-id={selectedOffer.id} onclick={handleAddToCart}>
+                                <lightning-icon icon-name="utility:cart" size="x-small" variant="inverse"></lightning-icon>
+                                Ajouter au Panier
+                            </button>
+                            <button class="nes-save-later-btn" onclick={handleCloseOffer}>
+                                Sauvegarder pour plus tard
+                            </button>
+                        </div>
+
+                        <div class="nes-warranty">
+                            <lightning-icon icon-name="utility:shield" size="x-small"></lightning-icon>
+                            <span>Nexus Enterprise Warranty Included</span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </template>
+        </div>
+    </div>
+
+</template>

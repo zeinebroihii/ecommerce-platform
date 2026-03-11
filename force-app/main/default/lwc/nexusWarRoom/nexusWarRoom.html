@@ -1,0 +1,256 @@
+<template>
+    <div class="nwr-wrap">
+
+        <!-- Decorative BG -->
+        <div class="nwr-bg" aria-hidden="true">
+            <div class="nwr-bg-glow nwr-bg-glow--rose"></div>
+            <div class="nwr-bg-glow nwr-bg-glow--indigo"></div>
+            <div class="nwr-hud-corner nwr-hud--tl"></div>
+            <div class="nwr-hud-corner nwr-hud--tr"></div>
+            <div class="nwr-hud-corner nwr-hud--bl"></div>
+            <div class="nwr-hud-corner nwr-hud--br"></div>
+            <div class="nwr-scan-line"></div>
+        </div>
+
+        <!-- ── Header ── -->
+        <div class="nwr-header">
+            <div class="nwr-header-left">
+                <div class="nwr-logo-box">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="nwr-title">
+                        Nexus Deal Battlefield
+                        <span class="nwr-live-badge">Live Auction</span>
+                    </h2>
+                    <div class="nwr-subtitle-row">
+                        <span class="nwr-subtitle">High-Stakes Real-Time Negotiation Arena</span>
+                        <span class="nwr-dot"></span>
+                        <span class="nwr-session">Session ID: NX-882-BATTLE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nwr-header-right">
+                <div class="nwr-scarcity">
+                    <div class="nwr-scarcity-top">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        </svg>
+                        <span class="nwr-scarcity-label">Critical Scarcity</span>
+                    </div>
+                    <span class="nwr-scarcity-value">ONLY 1 LEFT</span>
+                </div>
+                <div class="nwr-header-sep"></div>
+                <button class="nwr-pause-btn" onclick={handleToggleLive}>
+                    <template if:true={isLive}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+                        </svg>
+                        Pause Battlefield
+                    </template>
+                    <template if:false={isLive}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                        Resume Battlefield
+                    </template>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Main Grid ── -->
+        <div class="nwr-grid">
+
+            <!-- LEFT: Leaderboard + AI Arbiter -->
+            <div class="nwr-left">
+                <div class="nwr-leaderboard">
+                    <div class="nwr-panel-head">
+                        <span class="nwr-panel-title">Live Competition</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="nwr-leaderboard-body">
+                        <template for:each={dealRoomItems} for:item="room">
+                            <div key={room.id} class={room.rowCls}>
+                                <div class="nwr-room-inner">
+                                    <div class={room.posCls}>{room.position}</div>
+                                    <div>
+                                        <div class={room.nameCls}>{room.account}</div>
+                                        <div class={room.bidCls}>{room.bidFormatted}</div>
+                                    </div>
+                                </div>
+                                <template if:true={room.isLeading}>
+                                    <div class="nwr-leading-indicator">
+                                        <div class="nwr-leading-dot"></div>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <polyline stroke-linecap="round" stroke-linejoin="round" points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                            <polyline stroke-linecap="round" stroke-linejoin="round" points="17 6 23 6 23 12"/>
+                                        </svg>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="nwr-arbiter">
+                    <div class="nwr-arbiter-header">
+                        <div class="nwr-arbiter-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 2a2 2 0 012 2v4a2 2 0 01-2 2 2 2 0 01-2-2V4a2 2 0 012-2zM12 16a2 2 0 012 2v2a2 2 0 01-2 2 2 2 0 01-2-2v-2a2 2 0 012-2zM4 12a2 2 0 012-2h2a2 2 0 012 2 2 2 0 01-2 2H6a2 2 0 01-2-2zM16 12a2 2 0 012-2h2a2 2 0 012 2 2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <span class="nwr-arbiter-title">AI Arbiter</span>
+                    </div>
+                    <div class="nwr-arbiter-target">
+                        <div class="nwr-arbiter-target-label">Target to Beat</div>
+                        <div class="nwr-arbiter-target-value">{topBidFormatted}</div>
+                    </div>
+                    <p class="nwr-arbiter-text">
+                        Nexus AI Analysis: The current lead is held by
+                        <strong>{topAccount}</strong>. A bid of
+                        <strong>{topBidSuggested}</strong> is required to regain strategic dominance.
+                    </p>
+                    <div class="nwr-arbiter-glow"></div>
+                </div>
+            </div>
+
+            <!-- CENTER: 3D Stage -->
+            <div class="nwr-center">
+                <div class="nwr-stage">
+                    <div class="nwr-stage-grid"></div>
+
+                    <div class="nwr-3d-wrap">
+                        <div class="nwr-core-glow"></div>
+                        <div class="nwr-core-glow nwr-core-glow--outer"></div>
+                        <div class="nwr-core-sphere">
+                            <svg class="nwr-cpu-icon" width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                <rect x="9" y="9" width="6" height="6"/>
+                                <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+                                <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+                                <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+                                <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+                            </svg>
+                        </div>
+                        <div class="nwr-ring nwr-ring--1"></div>
+                        <div class="nwr-ring nwr-ring--2"></div>
+                        <div class="nwr-ring nwr-ring--3"></div>
+
+                        <!-- Floating callout: Inventory -->
+                        <div class="nwr-callout nwr-callout--left">
+                            <div class="nwr-callout-row">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2">
+                                    <path stroke-linecap="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                                </svg>
+                                <span class="nwr-callout-label">Inventory Status</span>
+                            </div>
+                            <div class="nwr-callout-value">CRITICAL_1</div>
+                            <div class="nwr-callout-bar-wrap">
+                                <div class="nwr-callout-bar">
+                                    <div class="nwr-callout-bar-fill" style="width:10%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Floating callout: Velocity -->
+                        <div class="nwr-callout nwr-callout--right">
+                            <div class="nwr-callout-row">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                                    <polyline stroke-linecap="round" stroke-linejoin="round" points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                    <polyline stroke-linecap="round" stroke-linejoin="round" points="17 6 23 6 23 12"/>
+                                </svg>
+                                <span class="nwr-callout-label nwr-callout-label--emerald">Market Velocity</span>
+                            </div>
+                            <div class="nwr-callout-value">+420.8%</div>
+                            <div class="nwr-callout-sub">Global Demand Spike</div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom product info overlay -->
+                    <div class="nwr-product-overlay">
+                        <div class="nwr-product-left">
+                            <span class="nwr-product-badge">Rare Item // Limited Edition</span>
+                            <h3 class="nwr-product-name">Nexus Quantum Core X-1</h3>
+                            <p class="nwr-product-desc">The last unit available globally. High-frequency demand detected across all nodes.</p>
+                        </div>
+                        <div class="nwr-product-right">
+                            <div class="nwr-product-bid-label">Current Highest Bid</div>
+                            <div class="nwr-product-bid-value">{topBidK}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Console + Stream -->
+            <div class="nwr-right">
+                <!-- Bidding Console -->
+                <div class="nwr-console">
+                    <div class="nwr-console-head">
+                        <span class="nwr-console-title">Bidding Console</span>
+                        <div class="nwr-live-dot"></div>
+                    </div>
+
+                    <div class="nwr-slider-group">
+                        <div class="nwr-slider-labels">
+                            <span class="nwr-slider-name">Strategic Bid</span>
+                            <span class="nwr-slider-val">{myBidFormatted}</span>
+                        </div>
+                        <input type="range" min="100000" max="500000" step="5000"
+                               value={myBid} oninput={handleBidChange} class="nwr-range" />
+                    </div>
+
+                    <div class="nwr-slider-group">
+                        <div class="nwr-slider-labels">
+                            <span class="nwr-slider-name">Discount Request</span>
+                            <span class="nwr-slider-val nwr-slider-val--rose">{myDiscountFormatted}</span>
+                        </div>
+                        <input type="range" min="0" max="20" step="1"
+                               value={myDiscount} oninput={handleDiscountChange} class="nwr-range" />
+                    </div>
+
+                    <button class="nwr-submit-btn" onclick={handlePlaceBid}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline stroke-linecap="round" stroke-linejoin="round" points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            <polyline stroke-linecap="round" stroke-linejoin="round" points="17 6 23 6 23 12"/>
+                        </svg>
+                        Submit Strategic Bid
+                    </button>
+                    <div class="nwr-console-glow"></div>
+                </div>
+
+                <!-- Stream -->
+                <div class="nwr-stream">
+                    <div class="nwr-panel-head">
+                        <div class="nwr-stream-title-row">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2">
+                                <polyline stroke-linecap="round" stroke-linejoin="round" points="4 17 10 11 4 5"/>
+                                <line stroke-linecap="round" x1="12" y1="19" x2="20" y2="19"/>
+                            </svg>
+                            <span class="nwr-panel-title">Battlefield Stream</span>
+                        </div>
+                        <span class="nwr-live-feed-badge">Live Feed</span>
+                    </div>
+                    <div class="nwr-stream-body">
+                        <template for:each={logItems} for:item="log">
+                            <div key={log.id} class="nwr-log-row">
+                                <span class="nwr-log-time">[{log.timestamp}]</span>
+                                <span class={log.sourceCls}>{log.source}</span>
+                                <span class="nwr-log-msg">{log.message}</span>
+                            </div>
+                        </template>
+                        <template if:false={hasLogs}>
+                            <div class="nwr-log-empty">Awaiting live feed...</div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

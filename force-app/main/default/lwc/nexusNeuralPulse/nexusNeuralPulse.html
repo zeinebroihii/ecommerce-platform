@@ -1,0 +1,122 @@
+<template>
+    <div class="nnp-wrap">
+        <!-- Labels overlay -->
+        <div class="nnp-header">
+            <div class="nnp-title-row">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="nnp-sparkle">
+                    <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74z"/>
+                </svg>
+                <h3 class="nnp-title">Nexus Neural Pulse</h3>
+            </div>
+            <p class="nnp-subtitle">Real-time Ecosystem Energy Flow</p>
+        </div>
+
+        <!-- SVG canvas -->
+        <svg viewBox="0 0 800 400" class="nnp-svg" xmlns="http://www.w3.org/2000/svg">
+
+            <!-- ── Connecting Lines ── -->
+            <!-- B2B ↔ CORE -->
+            <line x1="200" y1="200" x2="400" y2="200"
+                  stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.5"/>
+            <!-- B2C ↔ CORE -->
+            <line x1="600" y1="200" x2="400" y2="200"
+                  stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.5"/>
+            <!-- B2B ↔ B2C (curved over) -->
+            <path d="M 200 200 Q 400 80 600 200"
+                  stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 6" opacity="0.3" fill="none"/>
+
+            <!-- ── Particles: B2B → CORE ── -->
+            <circle r="3" fill="#6366f1" opacity="0.9">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="0s" path="M200,200 L400,200"/>
+            </circle>
+            <circle r="3" fill="#6366f1" opacity="0.7">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.8s" path="M200,200 L400,200"/>
+            </circle>
+            <circle r="2" fill="#818cf8" opacity="0.6">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.6s" path="M200,200 L400,200"/>
+            </circle>
+
+            <!-- ── Particles: B2C → CORE ── -->
+            <circle r="3" fill="#10b981" opacity="0.9">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.3s" path="M600,200 L400,200"/>
+            </circle>
+            <circle r="3" fill="#10b981" opacity="0.7">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.1s" path="M600,200 L400,200"/>
+            </circle>
+            <circle r="2" fill="#34d399" opacity="0.6">
+                <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.9s" path="M600,200 L400,200"/>
+            </circle>
+
+            <!-- ── Particles: B2B → B2C (curved arc) ── -->
+            <circle r="2" fill="#94a3b8" opacity="0.6">
+                <animateMotion dur="4.5s" repeatCount="indefinite" begin="0s" path="M200,200 Q400,80 600,200"/>
+            </circle>
+            <circle r="2" fill="#94a3b8" opacity="0.5">
+                <animateMotion dur="4.5s" repeatCount="indefinite" begin="2.25s" path="M200,200 Q400,80 600,200"/>
+            </circle>
+
+            <!-- ── Particles: CORE → B2B ── -->
+            <circle r="2" fill="#f43f5e" opacity="0.5">
+                <animateMotion dur="3s" repeatCount="indefinite" begin="1.2s" path="M400,200 L200,200"/>
+            </circle>
+            <!-- ── Particles: CORE → B2C ── -->
+            <circle r="2" fill="#f43f5e" opacity="0.5">
+                <animateMotion dur="3s" repeatCount="indefinite" begin="0.6s" path="M400,200 L600,200"/>
+            </circle>
+
+            <!-- ── Node: B2B Segment ── -->
+            <circle cx="200" cy="200" r="55" fill="#6366f1" opacity="0.06"/>
+            <circle cx="200" cy="200" r="38" fill="#6366f1" opacity="0.12">
+                <animate attributeName="r" values="38;44;38" dur="2.2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="200" cy="200" r="22" fill="#6366f1"/>
+            <!-- Building icon (simplified) -->
+            <rect x="192" y="194" width="4" height="12" fill="white" rx="0.5"/>
+            <rect x="204" y="194" width="4" height="12" fill="white" rx="0.5"/>
+            <rect x="188" y="202" width="24" height="4" fill="white" rx="0.5"/>
+            <text x="200" y="258" text-anchor="middle" fill="#475569" font-size="12" font-weight="900" font-family="sans-serif" letter-spacing="1">B2B Segment</text>
+
+            <!-- ── Node: Nexus Core ── -->
+            <circle cx="400" cy="200" r="55" fill="#f43f5e" opacity="0.06"/>
+            <circle cx="400" cy="200" r="38" fill="#f43f5e" opacity="0.12">
+                <animate attributeName="r" values="38;46;38" dur="1.8s" repeatCount="indefinite" begin="0.3s"/>
+            </circle>
+            <circle cx="400" cy="200" r="24" fill="#f43f5e"/>
+            <!-- Zap icon (simplified) -->
+            <polygon points="403,190 397,202 402,202 397,214 407,200 402,200" fill="white"/>
+            <text x="400" y="258" text-anchor="middle" fill="#475569" font-size="12" font-weight="900" font-family="sans-serif" letter-spacing="1">Nexus Core</text>
+
+            <!-- ── Node: B2C Segment ── -->
+            <circle cx="600" cy="200" r="55" fill="#10b981" opacity="0.06"/>
+            <circle cx="600" cy="200" r="38" fill="#10b981" opacity="0.12">
+                <animate attributeName="r" values="38;44;38" dur="2.5s" repeatCount="indefinite" begin="0.7s"/>
+            </circle>
+            <circle cx="600" cy="200" r="22" fill="#10b981"/>
+            <!-- Users icon (simplified circles) -->
+            <circle cx="596" cy="196" r="4" fill="white"/>
+            <circle cx="606" cy="196" r="4" fill="white"/>
+            <path d="M588,208 Q596,204 604,208" stroke="white" stroke-width="2" fill="none"/>
+            <path d="M598,208 Q606,204 614,208" stroke="white" stroke-width="2" fill="none"/>
+            <text x="600" y="258" text-anchor="middle" fill="#475569" font-size="12" font-weight="900" font-family="sans-serif" letter-spacing="1">B2C Segment</text>
+        </svg>
+
+        <!-- Bottom legend -->
+        <div class="nnp-footer">
+            <div class="nnp-legend">
+                <div class="nnp-legend-item">
+                    <div class="nnp-dot nnp-dot--indigo"></div>
+                    <span class="nnp-legend-label">B2B Activity</span>
+                </div>
+                <div class="nnp-legend-item">
+                    <div class="nnp-dot nnp-dot--emerald"></div>
+                    <span class="nnp-legend-label">B2C Swaps</span>
+                </div>
+                <div class="nnp-legend-item">
+                    <div class="nnp-dot nnp-dot--rose"></div>
+                    <span class="nnp-legend-label">Core Processing</span>
+                </div>
+            </div>
+            <span class="nnp-live">Live Sync Active</span>
+        </div>
+    </div>
+</template>

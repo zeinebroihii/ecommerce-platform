@@ -1,0 +1,70 @@
+<template>
+    <section class="nh-section">
+
+        <!-- ── Background layers ──────────────────────────────────────────── -->
+        <div class="nh-bg">
+            <img
+                src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2000"
+                class="nh-bg-img"
+                alt=""
+                aria-hidden="true"
+                referrerpolicy="no-referrer"
+            />
+            <div class="nh-bg-gradient"></div>
+            <div class="nh-bg-radial"></div>
+            <div class="nh-bg-grid"></div>
+        </div>
+
+        <!-- ── Content ────────────────────────────────────────────────────── -->
+        <div class="nh-grid">
+            <div class="nh-left">
+
+                <!-- Badge -->
+                <div class="nh-badge">
+                    <svg class="nh-badge-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#34d399" stroke="#34d399" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    Next-Gen Tech Solutions
+                </div>
+
+                <!-- Title -->
+                <h1 class="nh-title">
+                    NEXUS<br/>
+                    <span class="nh-title-emerald">ECOSYSTEM</span><br/>
+                    CRM.
+                </h1>
+
+                <!-- Subtitle -->
+                <p class="nh-subtitle">
+                    The unified CRM platform that natively merges
+                    <strong class="nh-strong">IoT Products</strong>,
+                    <strong class="nh-strong">Expert Services</strong> and
+                    <strong class="nh-strong">Artificial Intelligence</strong>.
+                </p>
+
+                <!-- CTAs -->
+                <div class="nh-ctas">
+                    <button class="nh-cta-primary" onclick={handleExploreProducts}>
+                        <span>Explore Products</span>
+                        <svg class="nh-cta-arrow" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <button class="nh-cta-outline" onclick={handleGetStarted}>
+                        <span>Get Started</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── Scroll indicator ───────────────────────────────────────────── -->
+        <div class="nh-scroll">
+            <span class="nh-scroll-label">Scroll to Explore</span>
+            <div class="nh-scroll-track">
+                <div class="nh-scroll-thumb"></div>
+            </div>
+        </div>
+
+    </section>
+</template>

@@ -91,13 +91,36 @@ public without sharing class AuthController {
      * For forgot-password flows the reset token is automatically read
      * from the current Site context (URL parameter).
      */
+    /**
+     * Send a password-reset email for an Experience Cloud site user.
+     * Site.forgotPassword() never reveals whether the email exists (security best practice).
+     */
     @AuraEnabled
-    public static void changeUserPassword(String newPassword, String verifyPassword) {
+    public static void forgotPassword(String email) {
         try {
-            // Site.changePassword returns a PageReference on success, null on failure
-            PageReference ref = Site.changePassword(newPassword, verifyPassword, '');
+            if (String.isBlank(email)) {
+                throw new AuraHandledException('L\'adresse email est requise.');
+            }
+            Site.forgotPassword(email);
+        } catch (AuraHandledException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AuraHandledException('Impossible d\'envoyer l\'email de réinitialisation.');
+        }
+    }
+
+    /**
+     * Change / set password for the current site user.
+     * For forgot-password flows the reset token is automatically read
+     * from the current Site context (URL parameter).
+     */
+    @AuraEnabled
+    public static void changeUserPassword(String newPassword, String verifyPassword, String oldPassword) {
+        try {
+            // Site.changePassword returns a PageReference on success, null on failure.
+            // oldPassword is required when the user is logged in (not via a reset token).
+            PageReference ref = Site.changePassword(newPassword, verifyPassword, oldPassword != null ? oldPassword : '');
             if (ref == null) {
-                // Check ApexPages for error messages
                 String errMsg = '';
                 for (ApexPages.Message m : ApexPages.getMessages()) {
                     errMsg += m.getSummary() + ' ';
@@ -105,7 +128,7 @@ public without sharing class AuthController {
                 throw new AuraHandledException(
                     String.isNotBlank(errMsg)
                         ? errMsg.trim()
-                        : 'Impossible de changer le mot de passe. Veuillez réessayer.'
+                        : 'Impossible de changer le mot de passe. Vérifiez que le mot de passe temporaire est correct.'
                 );
             }
         } catch (AuraHandledException e) {

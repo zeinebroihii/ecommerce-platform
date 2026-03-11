@@ -1,0 +1,97 @@
+/* ─── Host ────────────────────────────────────────────────────────────── */
+:host {
+    display: contents;     /* transparent wrapper — children render as if direct */
+}
+
+/* ─── Full-screen wrap ────────────────────────────────────────────────── */
+.nam-wrap {
+    position:        fixed;
+    inset:           0;
+    z-index:         10000;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    padding:         1rem;
+}
+
+@media (min-width: 48rem) {
+    .nam-wrap { padding: 1.5rem; }
+}
+
+/* ─── Backdrop ────────────────────────────────────────────────────────── */
+.nam-backdrop {
+    position:         absolute;
+    inset:            0;
+    background:       rgba(2, 6, 23, 0.60);    /* slate-950/60 */
+    backdrop-filter:  blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation:        nam-fade-in 0.2s ease both;
+}
+
+/* ─── Modal card ──────────────────────────────────────────────────────── */
+.nam-modal {
+    position:         relative;
+    z-index:          10;
+    width:            100%;
+    max-width:        56rem;       /* max-w-4xl */
+    background:       #ffffff;
+    border-radius:    2rem;
+    box-shadow:       0 25px 50px -12px rgba(0, 0, 0, 0.40);
+    border:           1px solid #e2e8f0;
+    overflow:         hidden;
+    animation:        nam-scale-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition:       background 0.5s, border-color 0.5s;
+}
+
+/* ─── Entrance animations ─────────────────────────────────────────────── */
+@keyframes nam-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes nam-scale-in {
+    from { opacity: 0; transform: scale(0.95) translateY(1.25rem); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ─── Close button ────────────────────────────────────────────────────── */
+.nam-close-btn {
+    position:        absolute;
+    top:             1rem;
+    right:           1rem;
+    z-index:         50;
+    width:           2.5rem;
+    height:          2.5rem;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    background:      #f1f5f9;
+    border:          1px solid #e2e8f0;
+    border-radius:   0.75rem;
+    color:           #94a3b8;
+    cursor:          pointer;
+    transition:      background 0.15s, color 0.15s;
+}
+
+.nam-close-btn:hover {
+    background: #e2e8f0;
+    color:      #0f172a;
+}
+
+/* ─── Scrollable content ──────────────────────────────────────────────── */
+.nam-content {
+    max-height:  85vh;
+    overflow-y:  auto;
+
+    /* Custom scrollbar */
+    scrollbar-width:      thin;
+    scrollbar-color:      #e2e8f0 transparent;
+}
+
+.nam-content::-webkit-scrollbar       { width: 0.375rem; }
+.nam-content::-webkit-scrollbar-track { background: transparent; }
+.nam-content::-webkit-scrollbar-thumb {
+    background:    #e2e8f0;
+    border-radius: 9999px;
+}
+.nam-content::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }

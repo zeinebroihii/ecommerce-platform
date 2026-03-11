@@ -1,0 +1,178 @@
+:host {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.nr-section {
+    padding: 8rem 0;
+    background: #f8f9fb;
+    overflow: hidden;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.nr-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 3rem !important;
+    box-sizing: border-box !important;
+}
+@media (min-width: 768px) { .nr-container { padding: 0 6rem !important; } }
+
+/* ── Header ── */
+.nr-header {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    margin-bottom: 6rem;
+}
+@media (min-width: 1024px) {
+    .nr-header {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+    }
+}
+
+.nr-header-left { flex: 1; }
+
+.nr-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #059669;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    margin-bottom: 2rem;
+}
+.nr-eyebrow-line { width: 3rem; height: 2px; background: #059669; }
+
+.nr-heading {
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 0.85;
+    font-style: italic;
+    text-transform: uppercase;
+    color: #0f172a;
+    margin: 0;
+}
+.nr-heading-gradient {
+    background: linear-gradient(to right, #4f46e5, #059669);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ── Nav buttons ── */
+.nr-nav { display: flex; gap: 1rem; align-items: center; }
+
+.nr-nav-btn {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+.nr-nav-btn--outline {
+    border: 1px solid #e2e8f0;
+    background: transparent;
+    color: #94a3b8;
+}
+.nr-nav-btn--outline:hover { background: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+.nr-nav-btn--dark { background: #0f172a; color: #ffffff; }
+.nr-nav-btn--dark:hover { background: #4f46e5; }
+
+/* ── Grid ── */
+.nr-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+}
+@media (min-width: 768px) { .nr-grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+/* ── Card ── */
+.nr-card {
+    background: #ffffff;
+    padding: 3rem;
+    border-radius: 3.5rem;
+    box-shadow: 0 25px 50px rgba(148,163,184,0.15);
+    position: relative;
+    transition: transform 0.5s;
+}
+.nr-card:hover { transform: translateY(-1rem); }
+
+.nr-quote-icon {
+    position: absolute;
+    top: 2.5rem;
+    right: 2.5rem;
+    color: #f1f5f9;
+    transition: color 0.3s;
+}
+.nr-card:hover .nr-quote-icon { color: #e0e7ff; }
+
+/* Stars */
+.nr-stars { display: flex; gap: 0.25rem; margin-bottom: 2rem; }
+.nr-star { color: #f59e0b; font-size: 1rem; }
+
+/* Content */
+.nr-content {
+    font-size: 1.125rem;
+    color: #475569;
+    font-weight: 500;
+    line-height: 1.7;
+    font-style: italic;
+    margin: 0 0 3rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Author */
+.nr-author {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nr-avatar {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 900;
+    flex-shrink: 0;
+    color: #ffffff;
+}
+.nr-avatar--emerald { background: #059669; }
+.nr-avatar--indigo  { background: #4f46e5; }
+.nr-avatar--rose    { background: #e11d48; }
+
+.nr-author-name {
+    font-size: 1.125rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.05em;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+.nr-author-role {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+}

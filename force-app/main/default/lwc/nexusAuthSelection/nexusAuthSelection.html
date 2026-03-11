@@ -1,0 +1,85 @@
+<template>
+    <section id="login-section" class="nas-section">
+
+        <!-- ── Section header ──────────────────────────────────────────── -->
+        <div class="nas-header">
+            <h2 class="nas-title">Identify Yourself</h2>
+            <p class="nas-subtitle">Choose your profile to access your personalized space</p>
+        </div>
+
+        <!-- ── Cards grid ──────────────────────────────────────────────── -->
+        <div class="nas-grid">
+
+            <!-- B2B Card -->
+            <div class="nas-card nas-card--b2b">
+                <!-- Decorative blob -->
+                <div class="nas-card-blob nas-card-blob--b2b"></div>
+
+                <div class="nas-card-body">
+                    <!-- Icon -->
+                    <div class="nas-icon-wrap nas-icon-wrap--b2b">
+                        <!-- Building2 SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="9" height="14"/><rect x="13" y="3" width="9" height="18"/>
+                            <path d="M6 7V5M10 7V5M18 7V5M6 14h.01M10 14h.01M6 11h.01M10 11h.01M18 11h.01M14 11h.01M18 14h.01M14 14h.01"/>
+                        </svg>
+                    </div>
+
+                    <h3 class="nas-card-title">Enterprise (B2B)</h3>
+                    <p class="nas-card-desc">
+                        Access wholesale pricing, manage complex orders, and track your quotes.
+                    </p>
+
+                    <!-- Actions -->
+                    <div class="nas-card-actions">
+                        <button class="nas-btn nas-btn--b2b-primary" onclick={handleB2BLogin}>
+                            Login
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <button class="nas-btn nas-btn--outline" onclick={handleB2BSignup}>
+                            Register Company
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B2C Card -->
+            <div class="nas-card nas-card--b2c">
+                <!-- Decorative blob -->
+                <div class="nas-card-blob nas-card-blob--b2c"></div>
+
+                <div class="nas-card-body">
+                    <!-- Icon -->
+                    <div class="nas-icon-wrap nas-icon-wrap--b2c">
+                        <!-- User SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+
+                    <h3 class="nas-card-title">Individual (B2C)</h3>
+                    <p class="nas-card-desc">
+                        Direct purchase, instant order tracking, and immediate activation of your account.
+                    </p>
+
+                    <!-- Actions -->
+                    <div class="nas-card-actions">
+                        <button class="nas-btn nas-btn--b2c-primary" onclick={handleB2CLogin}>
+                            Login
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <button class="nas-btn nas-btn--outline" onclick={handleB2CSignup}>
+                            Create Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</template>

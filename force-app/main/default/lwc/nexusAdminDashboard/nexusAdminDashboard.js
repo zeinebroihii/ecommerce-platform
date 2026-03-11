@@ -1,9 +1,11 @@
 import { LightningElement, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import getLeadsToConvert  from '@salesforce/apex/LeadManagementController.getLeadsToConvert';
-import convertLeadFull    from '@salesforce/apex/LeadManagementController.convertLeadFull';
-import getContacts        from '@salesforce/apex/LeadManagementController.getContacts';
-import approveRejectLead  from '@salesforce/apex/LeadManagementController.approveRejectLead';
+import getLeadsToConvert      from '@salesforce/apex/LeadManagementController.getLeadsToConvert';
+import convertLeadFull        from '@salesforce/apex/LeadManagementController.convertLeadFull';
+import provisionPortalUser    from '@salesforce/apex/LeadManagementController.provisionPortalUser';
+import getContacts            from '@salesforce/apex/LeadManagementController.getContacts';
+import approveRejectLead      from '@salesforce/apex/LeadManagementController.approveRejectLead';
+import sendLeadRejectionEmail from '@salesforce/apex/LeadManagementController.sendLeadRejectionEmail';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex }    from '@salesforce/apex';
 
@@ -105,13 +107,15 @@ export default class NexusAdminDashboard extends NavigationMixin(LightningElemen
                 closeDateStr:    '',
                 stage:           'Qualification'
             });
+            // Create portal user with real password + send credentials email
+            await provisionPortalUser({ leadId });
             this.dispatchEvent(new ShowToastEvent({
-                title: 'Succès', message: 'Lead converti avec succès !', variant: 'success'
+                title: 'Succès', message: 'Lead converti. Compte portail créé et identifiants envoyés par email.', variant: 'success'
             }));
             this.handleRefresh();
         } catch (e) {
             this.dispatchEvent(new ShowToastEvent({
-                title: 'Erreur', message: e.body.message, variant: 'error'
+                title: 'Erreur', message: e.body ? e.body.message : 'Erreur inconnue', variant: 'error'
             }));
         }
     }
@@ -121,11 +125,14 @@ export default class NexusAdminDashboard extends NavigationMixin(LightningElemen
         const decision = event.currentTarget.dataset.decision;
         try {
             await approveRejectLead({ leadId, decision });
+            if (decision === 'Rejected') {
+                await sendLeadRejectionEmail({ leadId });
+            }
             this.dispatchEvent(new ShowToastEvent({
                 title: decision === 'Approved' ? 'Lead approuvé' : 'Lead rejeté',
                 message: decision === 'Approved'
-                    ? 'Le lead a été approuvé. Statut mis à jour : Working.'
-                    : 'Le lead a été rejeté.',
+                    ? 'Lead approuvé. Les identifiants seront envoyés lors de la conversion.'
+                    : 'Lead rejeté. Email de notification envoyé au lead.',
                 variant: decision === 'Approved' ? 'success' : 'warning'
             }));
             refreshApex(this.wiredLeadsResult);

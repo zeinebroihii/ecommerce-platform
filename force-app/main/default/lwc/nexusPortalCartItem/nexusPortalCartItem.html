@@ -16,12 +16,11 @@
         <!-- Content -->
         <div class="npci-content">
 
-            <!-- Top: family + name + description + delete -->
+            <!-- Top: family + name + delete -->
             <div class="npci-top">
                 <div class="npci-info">
-                    <div class="npci-family">Nexus Product</div>
+                    <div class="npci-family">{productFamily}</div>
                     <h4 class="npci-name">{productName}</h4>
-                    <p class="npci-desc">{productDescription}</p>
                 </div>
                 <button class="npci-delete" onclick={handleRemove} title="Supprimer">
                     <lightning-icon icon-name="utility:delete" size="small"></lightning-icon>

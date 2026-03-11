@@ -1,0 +1,28 @@
+<template>
+    <div class="ni-wrapper">
+        <template if:true={label}>
+            <label class="ni-label" for={inputId}>{label}</label>
+        </template>
+        <div class="ni-input-wrap">
+            <!-- Named slot: pass a lightning-icon or SVG here, then set has-icon -->
+            <template if:true={hasIcon}>
+                <div class="ni-icon-slot">
+                    <slot name="icon"></slot>
+                </div>
+            </template>
+            <input
+                id={inputId}
+                class={computedInputClass}
+                type={type}
+                value={value}
+                placeholder={placeholder}
+                disabled={disabled}
+                required={required}
+                min={min}
+                max={max}
+                onchange={handleChange}
+                oninput={handleInput}
+            />
+        </div>
+    </div>
+</template>

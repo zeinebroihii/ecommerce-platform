@@ -1,0 +1,84 @@
+/* ─── Design Tokens ──────────────────────────────────────────────────── */
+:host {
+    --accent-primary:  #6366f1;
+    --nexus-50:        #f8fafc;
+    --nexus-200:       #e2e8f0;
+    --nexus-400:       #94a3b8;
+    display: block;
+}
+
+/* ─── Wrapper ────────────────────────────────────────────────────────── */
+.ni-wrapper {
+    display:        flex;
+    flex-direction: column;
+    gap:            0.5rem;
+    width:          100%;
+}
+
+/* ─── Label ──────────────────────────────────────────────────────────── */
+.ni-label {
+    display:        block;
+    font-size:      10px;
+    font-weight:    900;
+    color:          var(--nexus-400);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-left:    0.25rem;
+    transition:     color 0.5s ease;
+}
+
+/* ─── Input wrap (for icon positioning) ─────────────────────────────── */
+.ni-input-wrap {
+    position: relative;
+    width:    100%;
+}
+
+/* ─── Icon slot ──────────────────────────────────────────────────────── */
+.ni-icon-slot {
+    position:   absolute;
+    left:       1rem;
+    top:        50%;
+    transform:  translateY(-50%);
+    color:      var(--nexus-400);
+    display:    flex;
+    align-items: center;
+    pointer-events: none;
+    transition: color 0.5s ease;
+}
+
+/* ─── Input ──────────────────────────────────────────────────────────── */
+.ni-input {
+    width:            100%;
+    background-color: var(--nexus-50);
+    border:           1px solid var(--nexus-200);
+    border-radius:    1rem;             /* rounded-2xl */
+    padding:          1rem 1.5rem;      /* py-4 pr-6 pl-6 */
+    padding-left:     1.5rem;
+    font-size:        0.875rem;
+    font-weight:      500;
+    color:            #0f172a;
+    font-family:      inherit;
+    outline:          none;
+    transition:       all 0.15s ease;
+    box-sizing:       border-box;
+}
+
+/* When an icon is present, shift text right */
+.ni-input--icon {
+    padding-left: 3rem;                 /* pl-12 */
+}
+
+.ni-input::placeholder {
+    color: var(--nexus-400);
+}
+
+.ni-input:focus {
+    box-shadow:   0 0 0 2px rgba(99, 102, 241, 0.30);
+    border-color: var(--accent-primary);
+    background-color: #ffffff;
+}
+
+.ni-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

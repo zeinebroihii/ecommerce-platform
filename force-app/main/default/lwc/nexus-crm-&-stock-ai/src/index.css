@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Space Grotesk", sans-serif;
+  
+  --color-nexus-950: #020617;
+  --color-nexus-900: #0f172a;
+  --color-nexus-800: #1e293b;
+  --color-nexus-700: #334155;
+  --color-nexus-600: #475569;
+  --color-nexus-500: #64748b;
+  --color-nexus-400: #94a3b8;
+  --color-nexus-300: #cbd5e1;
+  --color-nexus-200: #e2e8f0;
+  --color-nexus-100: #f1f5f9;
+  --color-nexus-50: #f8fafc;
+  
+  --color-accent-primary: #6366f1;
+  --color-accent-secondary: #8b5cf6;
+  --color-accent-success: #10b981;
+  --color-accent-warning: #f59e0b;
+  --color-accent-danger: #ef4444;
+}
+
+@layer base {
+  body {
+    @apply font-sans text-nexus-900 bg-nexus-50 antialiased transition-colors duration-500;
+  }
+  
+  .dark body {
+    @apply text-nexus-50 bg-nexus-950;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer components {
+  .nexus-glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm transition-all duration-500;
+  }
+  
+  .dark .nexus-glass {
+    @apply bg-slate-900/80 border-white/5;
+  }
+  
+  .nexus-card-hover {
+    @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-1;
+  }
+  
+  .nexus-scrollbar::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+  
+  .nexus-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .nexus-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-nexus-200 rounded-full hover:bg-nexus-300 transition-colors;
+  }
+
+  .dark .nexus-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-800 hover:bg-slate-700;
+  }
+}
