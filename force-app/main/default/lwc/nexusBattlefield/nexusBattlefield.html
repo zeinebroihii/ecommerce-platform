@@ -1,0 +1,191 @@
+<template>
+    <div class="nbf-grid">
+
+        <!-- ── Radar panel (2/3 width) ──────────────────────────────────── -->
+        <div class="nbf-radar-panel">
+
+            <!-- Header row -->
+            <div class="nbf-radar-head">
+                <div class="nbf-radar-title-wrap">
+                    <div class="nbf-crosshair-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="nbf-radar-title">Tactical Battlefield</h3>
+                        <p class="nbf-radar-sub">Active Negotiation Radar</p>
+                    </div>
+                </div>
+                <div class="nbf-legend">
+                    <div class="nbf-legend-item">
+                        <div class="nbf-dot nbf-dot--red"></div>
+                        <span>High Risk</span>
+                    </div>
+                    <div class="nbf-legend-item">
+                        <div class="nbf-dot nbf-dot--green"></div>
+                        <span>Stable</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SVG Radar (pure SVG + SMIL, no D3) -->
+            <svg viewBox="0 0 600 400" class="nbf-svg" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="radarBg" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%"   stop-color="rgba(244,63,94,0.05)"/>
+                        <stop offset="100%" stop-color="rgba(244,63,94,0)"/>
+                    </radialGradient>
+                </defs>
+
+                <!-- Radar fill -->
+                <circle cx="300" cy="200" r="150" fill="url(#radarBg)"/>
+
+                <!-- Rings -->
+                <circle cx="300" cy="200" r="50"  fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+                <circle cx="300" cy="200" r="100" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+                <circle cx="300" cy="200" r="150" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+
+                <!-- Cross lines -->
+                <line x1="150" y1="200" x2="450" y2="200" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <line x1="300" y1="50"  x2="300" y2="350" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <line x1="194" y1="94"  x2="406" y2="306" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+                <line x1="406" y1="94"  x2="194" y2="306" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+                <!-- Sweep (rotating wedge) — SMIL animateTransform -->
+                <g>
+                    <!-- wedge: center(300,200), radius 150, ~45° arc from top -->
+                    <path d="M300,200 L300,50 A150,150 0 0,1 406,94 Z"
+                          fill="rgba(244,63,94,0.15)" stroke="rgba(244,63,94,0.4)" stroke-width="0.5">
+                        <animateTransform attributeName="transform" attributeType="XML"
+                            type="rotate" from="0 300 200" to="360 300 200"
+                            dur="3s" repeatCount="indefinite"/>
+                    </path>
+                </g>
+
+                <!-- Blip: TechFlow (rose) -->
+                <g transform="translate(220,140)">
+                    <circle r="12" fill="#f43f5e" opacity="0.2">
+                        <animate attributeName="r" values="12;22;12" dur="2s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.2;0;0.2" dur="2s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle r="4" fill="#f43f5e">
+                        <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+                    </circle>
+                    <text x="14" y="4" fill="rgba(255,255,255,0.6)" font-size="8" font-weight="900" letter-spacing="1">TECHFLOW</text>
+                </g>
+
+                <!-- Blip: GlobalTech (emerald) -->
+                <g transform="translate(400,240)">
+                    <circle r="12" fill="#10b981" opacity="0.2">
+                        <animate attributeName="r" values="12;22;12" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.2;0;0.2" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle r="4" fill="#10b981">
+                        <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" begin="0.5s" repeatCount="indefinite"/>
+                    </circle>
+                    <text x="14" y="4" fill="rgba(255,255,255,0.6)" font-size="8" font-weight="900" letter-spacing="1">GLOBALTECH</text>
+                </g>
+
+                <!-- Blip: Innovate (amber) -->
+                <g transform="translate(260,290)">
+                    <circle r="12" fill="#f59e0b" opacity="0.2">
+                        <animate attributeName="r" values="12;22;12" dur="2s" begin="1s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="0.2;0;0.2" dur="2s" begin="1s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle r="4" fill="#f59e0b">
+                        <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" begin="1s" repeatCount="indefinite"/>
+                    </circle>
+                    <text x="14" y="4" fill="rgba(255,255,255,0.6)" font-size="8" font-weight="900" letter-spacing="1">INNOVATE</text>
+                </g>
+            </svg>
+
+            <!-- Bottom stats bar -->
+            <div class="nbf-stats-bar">
+                <div class="nbf-victory-card">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    <div>
+                        <div class="nbf-stat-label">Victory Probability</div>
+                        <div class="nbf-stat-value">74.2% <span class="nbf-stat-delta">+2.4%</span></div>
+                    </div>
+                </div>
+                <div class="nbf-count-pills">
+                    <div class="nbf-count-pill">
+                        <span class="nbf-count-label">Active</span>
+                        <span class="nbf-count-val">12</span>
+                    </div>
+                    <div class="nbf-count-pill">
+                        <span class="nbf-count-label">Defense</span>
+                        <span class="nbf-count-val">04</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Tactical Log panel (1/3 width) ───────────────────────────── -->
+        <div class="nbf-log-panel">
+
+            <!-- Log header -->
+            <div class="nbf-log-head">
+                <div class="nbf-log-title-wrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <h4 class="nbf-log-title">Tactical Log</h4>
+                </div>
+                <div class="nbf-live-badge">
+                    <div class="nbf-live-dot"></div>
+                    Live
+                </div>
+            </div>
+
+            <!-- Events -->
+            <div class="nbf-events">
+
+                <div class="nbf-event">
+                    <div class="nbf-event-bar nbf-event-bar--threat"></div>
+                    <div class="nbf-event-body">
+                        <div class="nbf-event-meta">
+                            <span>09:42</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        </div>
+                        <p class="nbf-event-msg">Competitor &ldquo;Apex&rdquo; detected in TechFlow negotiation.</p>
+                    </div>
+                </div>
+
+                <div class="nbf-event">
+                    <div class="nbf-event-bar nbf-event-bar--primary"></div>
+                    <div class="nbf-event-body">
+                        <div class="nbf-event-meta">
+                            <span>09:45</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <p class="nbf-event-msg">Senior Strategist Sarah M. joined War Room 4.</p>
+                    </div>
+                </div>
+
+                <div class="nbf-event">
+                    <div class="nbf-event-bar nbf-event-bar--success"></div>
+                    <div class="nbf-event-body">
+                        <div class="nbf-event-meta">
+                            <span>09:50</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <p class="nbf-event-msg">GlobalTech contract probability increased to 85%.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- AI Strategist box -->
+            <div class="nbf-ai-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nbf-ai-icon"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <p class="nbf-ai-msg">
+                    <strong class="nbf-ai-strong">AI STRATEGIST:</strong>
+                    Deploy reinforcements to TechFlow. Competitor movement detected in procurement phase.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+</template>

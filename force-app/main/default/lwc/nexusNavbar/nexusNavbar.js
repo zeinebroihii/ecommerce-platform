@@ -6,11 +6,12 @@ import FIRSTNAME_FIELD                          from '@salesforce/schema/User.Fi
 import LASTNAME_FIELD                           from '@salesforce/schema/User.LastName';
 
 // ── Site-relative URLs (override via Experience Builder properties) ──────────
-const HOME_URL   = '/shop/s/';
-const PORTAL_URL = '/shop/s/';
-const LOGIN_URL  = '/shop/s/login';
-const DEVIS_URL  = '/shop/s/demande-devis';
-const CART_URL   = '/shop/s/panier';
+const HOME_URL   = '/ss/s/';
+const PORTAL_URL = '/ss/s/';
+const LOGIN_URL  = '/ss/s/login';
+const DEVIS_URL  = '/ss/s/demande-devis';
+const CART_URL   = '/ss/s/panier';
+const ADMIN_URL  = '/lightning/app/NexusAdmin';
 
 export default class NexusNavbar extends LightningElement {
 
@@ -20,17 +21,18 @@ export default class NexusNavbar extends LightningElement {
     @api loginUrl  = LOGIN_URL;
     @api devisUrl  = DEVIS_URL;
     @api cartUrl   = CART_URL;
+    @api adminUrl  = ADMIN_URL;
     @api cartCount = 0;
 
-    @track mobileOpen    = false;
-    @track _firstName    = '';
-    @track _accountId    = null;
+    @track mobileOpen      = false;
+    @track _firstName      = '';
+    @track _accountId      = null;
     @track _userWireLoaded = false;
 
     userId = Id;
 
     @wire(getRecord, { recordId: '$userId', fields: [ACCOUNT_ID_FIELD, FIRSTNAME_FIELD, LASTNAME_FIELD] })
-    wiredUser({ data, error }) {
+    wiredUser({ data }) {
         this._userWireLoaded = true;
         if (data) {
             this._accountId = getFieldValue(data, ACCOUNT_ID_FIELD);
@@ -41,7 +43,6 @@ export default class NexusNavbar extends LightningElement {
     // ── Computed ─────────────────────────────────────────────────────────────
 
     get isAuthenticated() {
-        // Guest: no userId; internal SF users have no AccountId
         if (!this.userId || !this._userWireLoaded) return false;
         return !!this._accountId;
     }
@@ -58,9 +59,34 @@ export default class NexusNavbar extends LightningElement {
 
     goHome()   { window.location.href = this.homeUrl;   }
     goPortal() { window.location.href = this.portalUrl; }
-    goLogin()  { window.location.href = this.loginUrl;  }
     goDevis()  { window.location.href = this.devisUrl;  }
     goCart()   { window.location.href = this.cartUrl;   }
+    goAdmin()  { window.location.href = this.adminUrl;  }
+
+    /**
+     * Login button — fires a document-level event so the page-body component
+     * (nexusLoginView) can open the auth modal there.
+     * We cannot embed the modal inside the navbar because backdrop-filter +
+     * position:sticky create a new stacking context that breaks position:fixed.
+     */
+    goLogin() {
+        document.dispatchEvent(new CustomEvent('nexusopenauth', {
+            detail: { mode: 'login' }
+        }));
+        this.mobileOpen = false;
+    }
+
+    // ── Scroll helpers ────────────────────────────────────────────────────────
+    scrollToProducts() { this._scrollTo('products-section'); }
+    scrollToAbout()    { this._scrollTo('about-section');    }
+    scrollToJourney()  { this._scrollTo('journey-section');  }
+    scrollToFaq()      { this._scrollTo('faq-section');      }
+
+    _scrollTo(id) {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        this.mobileOpen = false;
+    }
 
     handleLogout() {
         sessionStorage.removeItem('ecomm_cart');

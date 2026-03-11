@@ -3,43 +3,53 @@
         <div class="nn-inner">
 
             <!-- ── Logo ──────────────────────────────────────────────────── -->
-            <div class="nn-logo" onclick={goHome}>
-                <div class="nn-logo-icon">
-                    <lightning-icon icon-name="utility:lightning_alt" size="x-small" class="nn-zap"></lightning-icon>
-                </div>
-                <span class="nn-logo-name">Nexus CRM</span>
-            </div>
+            <c-nexus-logo
+                variant="emerald"
+                size="md"
+                subtitle="Platform"
+                onlogoclick={goHome}>
+            </c-nexus-logo>
 
-            <!-- ── Nav links ──────────────────────────────────────────────── -->
+            <!-- ── Desktop nav ────────────────────────────────────────────── -->
             <nav class="nn-nav">
                 <button class="nn-link" onclick={goHome}>Home</button>
+                <button class="nn-link" onclick={scrollToProducts}>Products</button>
+                <button class="nn-link" onclick={scrollToAbout}>About</button>
+                <button class="nn-link" onclick={scrollToJourney}>Journey</button>
+                <button class="nn-link" onclick={scrollToFaq}>FAQ</button>
                 <template if:true={isAuthenticated}>
                     <button class="nn-link" onclick={goPortal}>Portal</button>
                 </template>
+                <button class="nn-link nn-link-admin" onclick={goAdmin}>Admin</button>
+
                 <div class="nn-divider"></div>
 
                 <!-- Guest actions -->
                 <template if:false={isAuthenticated}>
-                    <button class="nn-link nn-link-bold" onclick={goDevis}>
-                        <lightning-icon icon-name="utility:file" size="x-small" class="nn-icon-sm"></lightning-icon>
-                        &nbsp;Demande de Devis
+                    <button class="nn-link nn-link-quote" onclick={goDevis}>
+                        <span class="nn-link-quote-icon">
+                            <lightning-icon icon-name="utility:file" size="x-small" class="nn-icon-sm"></lightning-icon>
+                        </span>
+                        Request Quote
                     </button>
                     <button class="nn-btn-login" onclick={goLogin}>
-                        <lightning-icon icon-name="utility:login" size="x-small" class="nn-icon-sm"></lightning-icon>
-                        &nbsp;Login
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="nn-login-svg">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        Login
                     </button>
                 </template>
 
                 <!-- Authenticated actions -->
                 <template if:true={isAuthenticated}>
-                    <!-- Bell -->
                     <button class="nn-icon-btn" aria-label="Notifications">
                         <lightning-icon icon-name="utility:notification" size="x-small"></lightning-icon>
                     </button>
 
-                    <!-- Cart -->
                     <div class="nn-cart-wrap">
-                        <button class="nn-icon-btn" onclick={goCart} aria-label="Panier">
+                        <button class="nn-icon-btn" onclick={goCart} aria-label="Cart">
                             <lightning-icon icon-name="utility:cart" size="x-small"></lightning-icon>
                         </button>
                         <template if:true={hasCartItems}>
@@ -47,7 +57,6 @@
                         </template>
                     </div>
 
-                    <!-- User chip -->
                     <div class="nn-user-chip">
                         <div class="nn-avatar">
                             <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
@@ -55,8 +64,7 @@
                         <span class="nn-user-label">{userLabel}</span>
                     </div>
 
-                    <!-- Logout -->
-                    <button class="nn-icon-btn nn-logout" onclick={handleLogout} aria-label="Se déconnecter">
+                    <button class="nn-icon-btn nn-logout" onclick={handleLogout} aria-label="Logout">
                         <lightning-icon icon-name="utility:logout" size="x-small"></lightning-icon>
                     </button>
                 </template>
@@ -74,15 +82,20 @@
         <template if:true={mobileOpen}>
             <div class="nn-mobile-drawer">
                 <button class="nn-mobile-link" onclick={goHome}>Home</button>
+                <button class="nn-mobile-link" onclick={scrollToProducts}>Products</button>
+                <button class="nn-mobile-link" onclick={scrollToAbout}>About</button>
+                <button class="nn-mobile-link" onclick={scrollToJourney}>Journey</button>
+                <button class="nn-mobile-link" onclick={scrollToFaq}>FAQ</button>
                 <template if:true={isAuthenticated}>
                     <button class="nn-mobile-link" onclick={goPortal}>Portal</button>
                 </template>
+                <button class="nn-mobile-link" onclick={goAdmin}>Admin</button>
                 <template if:false={isAuthenticated}>
-                    <button class="nn-mobile-link" onclick={goDevis}>Demande de Devis</button>
+                    <button class="nn-mobile-link" onclick={goDevis}>Request Quote</button>
                     <button class="nn-mobile-cta" onclick={goLogin}>Login</button>
                 </template>
                 <template if:true={isAuthenticated}>
-                    <button class="nn-mobile-link nn-mobile-logout" onclick={handleLogout}>Se d&eacute;connecter</button>
+                    <button class="nn-mobile-link nn-mobile-logout" onclick={handleLogout}>Logout</button>
                 </template>
             </div>
         </template>

@@ -3,7 +3,17 @@
     "allow": [
       "Bash(sf data query:*)",
       "Bash(sf project deploy start --source-dir force-app/main/default/classes/LeadManagementController.cls --source-dir force-app/main/default/classes/LeadConversionEmailAction.cls --wait 5)",
-      "Bash(cmd /c \"sf data query --query \"\"SELECT MasterLabel, IsConverted FROM LeadStatus\"\" 2>&1\")"
+      "Bash(cmd /c \"sf data query --query \"\"SELECT MasterLabel, IsConverted FROM LeadStatus\"\" 2>&1\")",
+      "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusOrderSystem --source-dir force-app/main/default/lwc/nexusCustomerPortal -o nexus-dev)",
+      "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusFavoritesSystem --source-dir force-app/main/default/lwc/nexusCustomerPortal -o nexus-dev)",
+      "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusFavoritesSystem --source-dir force-app/main/default/lwc/nexusCustomerPortal -o nexus-dev --json)",
+      "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusEngagementSystem force-app/main/default/lwc/nexusCustomerPortal)",
+      "Bash(sf project deploy report --job-id 0Afg5000004x4LRCAY)",
+      "Bash(sf project deploy start --source-dir force-app/main/default/cspTrustedSites)",
+      "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusB2BQuoteForm --source-dir force-app/main/default/lwc/nexusCatalog --source-dir force-app/main/default/lwc/nexusProductDetailModal --source-dir force-app/main/default/cspTrustedSites)",
+      "Bash(sf project deploy report --job-id 0Afg5000004x8SHCAY)",
+      "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusLoginView)",
+      "Bash(sf project:*)"
     ]
   }
 }

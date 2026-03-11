@@ -8,10 +8,7 @@
                 <!-- Brand -->
                 <div class="nf-brand">
                     <div class="nf-logo-row">
-                        <div class="nf-logo-icon">
-                            <lightning-icon icon-name="utility:lightning_alt" size="small" class="nf-zap"></lightning-icon>
-                        </div>
-                        <span class="nf-logo-name">Nexus CRM</span>
+                        <c-nexus-logo variant="emerald" size="lg" subtitle="Platform"></c-nexus-logo>
                     </div>
                     <p class="nf-brand-desc">
                         L&rsquo;&eacute;cosyst&egrave;me CRM le plus avanc&eacute; pour les entreprises modernes.
@@ -27,7 +24,7 @@
                 </div>
 
                 <!-- Solutions -->
-                <div class="nf-col">
+                <div class="nf-col nf-col--solutions">
                     <h4 class="nf-col-title">Solutions</h4>
                     <ul class="nf-link-list">
                         <template for:each={solutions} for:item="item">
@@ -37,7 +34,7 @@
                 </div>
 
                 <!-- Entreprise -->
-                <div class="nf-col">
+                <div class="nf-col nf-col--company">
                     <h4 class="nf-col-title">Entreprise</h4>
                     <ul class="nf-link-list">
                         <template for:each={company} for:item="item">

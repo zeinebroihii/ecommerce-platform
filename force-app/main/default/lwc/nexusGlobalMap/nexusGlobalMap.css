@@ -1,0 +1,65 @@
+/* ── Outer wrapper ── */
+.ngm-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    background: #0f172a;
+    border-radius: 2rem;
+    padding: 2rem;
+}
+
+/* ── Loading / error / empty states ── */
+.ngm-state-msg   { color: rgba(255,255,255,0.4); font-size: 0.875rem; text-align: center; padding: 2rem 0; }
+.ngm-state-error { color: #f43f5e; }
+.ngm-spinner     { color: #6366f1; }
+
+/* ── Header ── */
+.ngm-header     { display: flex; align-items: center; justify-content: space-between; }
+.ngm-title      { font-size: 1.5rem; font-weight: 900; color: #fff; margin: 0; letter-spacing: -0.02em; }
+.ngm-subtitle   { font-size: 0.6875rem; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; margin: 0.25rem 0 0; }
+.ngm-badge-wrap { display: flex; align-items: center; gap: 0.5rem; background: rgba(79,70,229,0.2); border: 1px solid rgba(99,102,241,0.35); padding: 0.5rem 1rem; border-radius: 9999px; flex-shrink: 0; }
+.ngm-dot        { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #6366f1; flex-shrink: 0; animation: ngmPulse 1.8s ease-in-out infinite; }
+.ngm-badge-text { font-size: 0.625rem; font-weight: 900; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* ── Grid ── */
+.ngm-grid    { display: grid; grid-template-columns: 1fr 280px; gap: 1.5rem; align-items: start; }
+.ngm-map-col { background: #1e293b; border: 1px solid rgba(255,255,255,0.07); border-radius: 1.5rem; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
+
+/* ── Sidebar ── */
+.ngm-sidebar { display: flex; flex-direction: column; gap: 1rem; }
+
+/* ── Directory card ── */
+.ngm-dir-card   { background: #1e293b; border: 1px solid rgba(255,255,255,0.07); border-radius: 1.5rem; padding: 1.25rem; box-shadow: 0 4px 24px rgba(0,0,0,0.25); }
+.ngm-dir-header { display: flex; align-items: center; font-size: 0.625rem; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.875rem; }
+.ngm-dir-icon   { color: #818cf8; }
+.ngm-dir-list   { display: flex; flex-direction: column; gap: 0.375rem; max-height: 300px; overflow-y: auto; }
+
+/* ── User cards ── */
+.ngm-user-card        { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 0.75rem; border-radius: 0.875rem; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.04); cursor: pointer; transition: all 0.18s; }
+.ngm-user-card:hover  { background: rgba(79,70,229,0.15); border-color: rgba(99,102,241,0.3); box-shadow: 0 4px 12px rgba(79,70,229,0.15); }
+.ngm-user-card-active { background: rgba(79,70,229,0.22); border-color: rgba(99,102,241,0.45); }
+.ngm-user-inner       { display: flex; align-items: center; gap: 0.625rem; }
+.ngm-avatar           { width: 1.875rem; height: 1.875rem; border-radius: 0.5rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.5625rem; font-weight: 900; color: #818cf8; flex-shrink: 0; }
+.ngm-user-name        { font-size: 0.75rem; font-weight: 700; color: #f1f5f9; line-height: 1.3; }
+.ngm-user-company     { font-size: 0.625rem; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.06em; }
+.ngm-chevron          { color: rgba(255,255,255,0.15); transition: color 0.18s; }
+.ngm-chevron-active   { color: #818cf8; }
+
+/* ── Detail card ── */
+.ngm-detail-card   { background: #4f46e5; border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 20px 40px rgba(79,70,229,0.35); position: relative; overflow: hidden; }
+.ngm-detail-card::after { content: ''; position: absolute; bottom: -2rem; right: -2rem; width: 8rem; height: 8rem; background: rgba(255,255,255,0.05); border-radius: 50%; pointer-events: none; }
+.ngm-detail-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 1rem; position: relative; z-index: 1; }
+.ngm-detail-icon   { width: 1.875rem; height: 1.875rem; background: rgba(255,255,255,0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ngm-detail-label  { font-size: 0.5625rem; font-weight: 900; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em; }
+.ngm-detail-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; position: relative; z-index: 1; }
+.ngm-detail-item   { position: relative; z-index: 1; }
+.ngm-detail-postal { margin-top: 0.875rem; position: relative; z-index: 1; }
+.ngm-detail-key    { font-size: 0.5rem; font-weight: 900; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+.ngm-detail-val    { font-size: 0.875rem; font-weight: 900; color: #fff; }
+.ngm-mono          { letter-spacing: 0.1em; }
+
+/* ── Pulse animation ── */
+@keyframes ngmPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}

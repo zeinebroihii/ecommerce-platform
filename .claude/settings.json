@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc/nexus-crm-&-stock-ai/src/components\" -name \"*.tsx\" -type f)",
+      "Bash(ls -la \"c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc/nexus-crm-&-stock-ai/src/components/\")",
+      "Bash(sf org:*)"
+    ]
+  }
+}

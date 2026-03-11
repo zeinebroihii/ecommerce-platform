@@ -1,0 +1,84 @@
+<template>
+    <div class="ncc-card">
+
+        <!-- ── Image section ─────────────────────────────────────────────── -->
+        <div class="ncc-img-wrap">
+            <img src={product.image} alt={product.name} class="ncc-img" referrerpolicy="no-referrer"/>
+            <div class="ncc-img-overlay"></div>
+
+            <!-- Top-left badges -->
+            <div class="ncc-badges">
+                <div class="ncc-family-badge">{product.family}</div>
+                <div class="ncc-active-badge">
+                    <div class="ncc-active-dot"></div>
+                    Active Node
+                </div>
+            </div>
+
+            <!-- Top-right quick actions -->
+            <div class="ncc-actions">
+                <button class={favBtnClass} onclick={handleFavorite} aria-label="Toggle Favourite">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill={favFill}>
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
+                <button class="ncc-action-btn" aria-label="Quick boost">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Bottom-right detail arrow -->
+            <button class="ncc-detail-btn" onclick={handleViewDetails} aria-label="View details">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </button>
+
+            <!-- Bottom-left price tag -->
+            <div class="ncc-price-tag">
+                <span class="ncc-price-label">MSRP</span>
+                <span class="ncc-price-value">${product.price}</span>
+            </div>
+        </div>
+
+        <!-- ── Content section ───────────────────────────────────────────── -->
+        <div class="ncc-body">
+            <div class="ncc-meta-row">
+                <div class="ncc-stars">
+                    <span class="ncc-star">&#9733;</span>
+                    <span class="ncc-star">&#9733;</span>
+                    <span class="ncc-star">&#9733;</span>
+                    <span class="ncc-star">&#9733;</span>
+                    <span class="ncc-star">&#9733;</span>
+                    <span class="ncc-rating">{product.rating}</span>
+                </div>
+                <span class="ncc-code">ID: {product.productCode}</span>
+            </div>
+
+            <h4 class="ncc-name">{product.name}</h4>
+            <p class="ncc-desc">{product.description}</p>
+
+            <div class="ncc-footer">
+                <div class="ncc-verified">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <polyline points="9 12 11 14 15 10"/>
+                    </svg>
+                    <div>
+                        <span class="ncc-verified-label">Nexus Verified</span>
+                        <span class="ncc-verified-sub">Enterprise Ready</span>
+                    </div>
+                </div>
+                <button class="ncc-cart-btn" onclick={handleAddToCart} aria-label="Add to cart">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</template>

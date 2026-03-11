@@ -1,8 +1,37 @@
 /* ── Shell ─────────────────────────────────────────────────────────────── */
 .nf-footer {
     border-top: 1px solid #e2e8f0;
-    background: #ffffff;
+    background: #f8fafc;
     padding: 6rem 0 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Background glows */
+.nf-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 25%;
+    width: 24rem;
+    height: 24rem;
+    background: rgba(99, 102, 241, 0.05);
+    filter: blur(120px);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.nf-footer::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 25%;
+    width: 24rem;
+    height: 24rem;
+    background: rgba(5, 150, 105, 0.05);
+    filter: blur(120px);
+    border-radius: 50%;
+    pointer-events: none;
 }
 
 .nf-inner {
@@ -36,25 +65,7 @@
     gap: 0.75rem;
 }
 
-.nf-logo-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    background: #4f46e5;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 15px -3px rgba(79,70,229,.2);
-}
-
-.nf-logo-icon .nf-zap { --lwc-colorTextIconDefault: #ffffff; }
-
-.nf-logo-name {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: #0f172a;
-    letter-spacing: -0.05em;
-}
+/* Logo styles live in nexusLogo component */
 
 .nf-brand-desc {
     font-size: 0.875rem;
@@ -82,7 +93,8 @@
 }
 
 .nf-social-btn:hover {
-    background: #4f46e5;
+    background: #059669;           /* emerald on hover */
+    border: 1px solid transparent;
     --lwc-colorTextIconDefault: #ffffff;
 }
 
@@ -90,11 +102,13 @@
 .nf-col-title {
     font-size: 0.625rem;
     font-weight: 900;
-    color: #0f172a;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    margin: 0 0 2rem;
+    letter-spacing: 0.4em;
+    margin: 0 0 2.5rem;
 }
+
+.nf-col--solutions .nf-col-title { color: #059669; }  /* emerald-600 */
+.nf-col--company   .nf-col-title { color: #6366f1; }  /* indigo-500  */
 
 .nf-link-list {
     list-style: none;

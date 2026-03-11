@@ -1,231 +1,521 @@
 <template>
-    <div class="nav-outer">
-        <div class={splitCardClass}>
+    <div class={outerClass}>
 
-            <!-- ══ LEFT — Brand Panel ══ -->
-            <div class="nav-brand-panel">
-                <div class="nav-brand-inner">
-                    <div class="nav-brand-pill">
-                        <lightning-icon icon-name="utility:zap" size="x-small" variant="inverse"></lightning-icon>
-                        &nbsp;Nexus AI Intelligence
+        <!-- ══ LOGIN MODE ════════════════════════════════════════════════════ -->
+        <template if:true={isLogin}>
+            <div class="nav-login-wrap">
+
+                <!-- Left: Branding panel (desktop only) -->
+                <div class="nav-login-left">
+                    <div class="nav-login-left-top">
+                        <!-- Shield-check icon -->
+                        <div class="nav-shield-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+                            </svg>
+                        </div>
+                        <h2 class="nav-gateway-heading">
+                            SECURE <br/>
+                            <span class="nav-gateway-em">GATEWAY.</span>
+                        </h2>
+                        <p class="nav-gateway-desc">
+                            Access the most advanced CRM ecosystem for modern businesses.
+                        </p>
                     </div>
-                    <h1 class="nav-brand-title">
-                        NEXUS<br/>
-                        <span class="nav-brand-gradient">SYSTEMS</span>
-                    </h1>
-                    <p class="nav-brand-desc">
-                        L&rsquo;architecture ultime pour vos flux B2B &amp; B2C.<br/>
-                        Propuls&eacute; par l&rsquo;intelligence Nexus.
-                    </p>
-                    <div class="nav-brand-stats">
-                        <div class="nav-stat">
-                            <div class="nav-stat-val">98%</div>
-                            <div class="nav-stat-lbl">Satisfaction</div>
+
+                    <!-- Avatars row -->
+                    <div class="nav-avatar-row">
+                        <div class="nav-avatar-stack">
+                            <div class="nav-avatar"><img src="https://i.pravatar.cc/100?img=11" alt="User" referrerpolicy="no-referrer"/></div>
+                            <div class="nav-avatar"><img src="https://i.pravatar.cc/100?img=12" alt="User" referrerpolicy="no-referrer"/></div>
+                            <div class="nav-avatar"><img src="https://i.pravatar.cc/100?img=13" alt="User" referrerpolicy="no-referrer"/></div>
                         </div>
-                        <div class="nav-stat">
-                            <div class="nav-stat-val">24/7</div>
-                            <div class="nav-stat-lbl">Support</div>
+                        <span class="nav-avatar-label">Joined by 2k+ Professionals</span>
+                    </div>
+
+                    <!-- Decorative elements -->
+                    <div class="nav-left-blur"></div>
+                    <div class="nav-dot-grid"></div>
+                </div>
+
+                <!-- Right: Login form -->
+                <div class="nav-login-right">
+                    <div class="nav-form-container">
+                        <div>
+                            <h3 class="nav-form-title">Welcome back!</h3>
+                            <p class="nav-form-subtitle">Log in to your Nexus ecosystem.</p>
                         </div>
-                        <div class="nav-stat">
-                            <div class="nav-stat-val">500+</div>
-                            <div class="nav-stat-lbl">Clients B2B</div>
+
+                        <form onsubmit={handleLogin} class="nav-form nav-form-login">
+                            <!-- Email -->
+                            <div class="nav-input-wrap">
+                                <span class="nav-input-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                </span>
+                                <input class="nav-input nav-input-emerald" type="email" placeholder="Professional Email" data-field="email" required />
+                            </div>
+                            <!-- Password -->
+                            <div class="nav-input-wrap">
+                                <span class="nav-input-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                    </svg>
+                                </span>
+                                <input class="nav-input nav-input-emerald nav-input-padded" type={passwordType} placeholder="Password" data-field="password" required />
+                                <button type="button" class="nav-eye-btn" onclick={handleTogglePwd}>
+                                    <template if:false={showPassword}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </template>
+                                    <template if:true={showPassword}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                    </template>
+                                </button>
+                            </div>
+
+                            <!-- Remember / Forgot row -->
+                            <div class="nav-row-between">
+                                <label class="nav-remember">
+                                    <input type="checkbox" class="nav-checkbox-em" />
+                                    <span>Remember me</span>
+                                </label>
+                                <button type="button" class="nav-forgot-link" onclick={handleShowForgot}>
+                                    Forgot?
+                                </button>
+                            </div>
+
+                            <!-- Submit -->
+                            <button type="submit" class="nav-btn-submit nav-btn-dark" disabled={isLoading}>
+                                <template if:false={isLoading}>
+                                    Login
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
+                                </template>
+                                <template if:true={isLoading}>Logging in&hellip;</template>
+                            </button>
+                        </form>
+
+                        <!-- Create account link -->
+                        <div class="nav-create-row">
+                            <p class="nav-subtext">
+                                New to Nexus?&nbsp;
+                                <button type="button" class="nav-inline-link nav-inline-link-emerald" onclick={handleShowSignup}>
+                                    Create an account
+                                </button>
+                            </p>
+                        </div>
+
+                        <!-- Change / set password link -->
+                        <div class="nav-cp-hint-row">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-cp-hint-icon">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            <span class="nav-cp-hint-text">Premi&egrave;re connexion ?&nbsp;</span>
+                            <button type="button" class="nav-inline-link nav-cp-link" onclick={handleShowChangePassword}>
+                                D&eacute;finir votre mot de passe
+                            </button>
                         </div>
                     </div>
                 </div>
+
             </div>
+        </template>
 
-            <!-- ══ RIGHT — Form Panel ══ -->
-            <div class="nav-form-panel">
-
-                <!-- ── CHOOSE MODE (B2B / B2C) ── -->
-                <template if:true={isChoose}>
-                    <div class="nav-center nav-mb-lg">
-                        <h2 class="nav-h2">Identifiez-vous</h2>
-                        <p class="nav-subtext">Choisissez votre profil pour acc&eacute;der &agrave; votre espace.</p>
-                    </div>
-                    <div class="nav-choose-grid">
-                        <!-- B2B -->
-                        <div class="nav-choose-card nav-choose-b2b" onclick={handleChooseB2B}>
-                            <div class="nav-signup-icon nav-icon-indigo">
-                                <lightning-icon icon-name="utility:company" size="medium"></lightning-icon>
-                            </div>
-                            <h3 class="nav-signup-title">Entreprise (B2B)</h3>
-                            <p class="nav-signup-desc">Tarifs de gros, devis personnalis&eacute;s et gestion de flotte.</p>
-                            <div class="nav-choose-actions">
-                                <button class="nav-choose-btn nav-choose-btn-indigo" onclick={handleChooseB2B}>Se Connecter &rarr;</button>
-                                <button class="nav-choose-btn nav-choose-btn-outline" onclick={handleB2BSignup}>Enregistrer l&apos;entreprise</button>
-                            </div>
-                        </div>
-                        <!-- B2C -->
-                        <div class="nav-choose-card nav-choose-b2c" onclick={handleChooseB2C}>
-                            <div class="nav-signup-icon nav-icon-emerald">
-                                <lightning-icon icon-name="utility:user" size="medium"></lightning-icon>
-                            </div>
-                            <h3 class="nav-signup-title">Particulier (B2C)</h3>
-                            <p class="nav-signup-desc">Achat direct, suivi instantan&eacute; et activation imm&eacute;diate.</p>
-                            <div class="nav-choose-actions">
-                                <button class="nav-choose-btn nav-choose-btn-emerald" onclick={handleChooseB2C}>Se Connecter &rarr;</button>
-                                <button class="nav-choose-btn nav-choose-btn-outline" onclick={handleB2CSignup}>Cr&eacute;er un compte</button>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- ── LOGIN MODE ── -->
-                <template if:true={isLogin}>
-                    <div class="nav-center nav-mb-lg">
-                        <span class="nav-badge-pill">
-                            <lightning-icon icon-name="utility:lock" size="x-small"></lightning-icon>
-                            &nbsp;Acc&egrave;s S&eacute;curis&eacute;
-                        </span>
-                        <h2 class="nav-h2">Bon retour !</h2>
-                        <p class="nav-subtext">Connectez-vous &agrave; votre &eacute;cosyst&egrave;me Nexus.</p>
-                    </div>
-
-                    <form onsubmit={handleLogin} class="nav-form">
-                        <div class="nav-input-wrap">
-                            <lightning-icon icon-name="utility:email" size="x-small" class="nav-input-icon"></lightning-icon>
-                            <input class="nav-input" type="email" placeholder="Email professionnel" data-field="email" required />
-                        </div>
-                        <div class="nav-input-wrap">
-                            <lightning-icon icon-name="utility:lock" size="x-small" class="nav-input-icon"></lightning-icon>
-                            <input class="nav-input nav-input-padded" type={passwordType} placeholder="Mot de passe" data-field="password" required />
-                            <button type="button" class="nav-eye-btn" onclick={handleTogglePwd}>
-                                <lightning-icon icon-name={eyeIcon} size="x-small"></lightning-icon>
-                            </button>
-                        </div>
-                        <div class="nav-row-between">
-                            <label class="nav-remember">
-                                <input type="checkbox" /> Se souvenir de moi
-                            </label>
-                            <button type="button" class="nav-text-link" onclick={handleShowForgot}>
-                                Mot de passe oubli&eacute; ?
-                            </button>
-                        </div>
-                        <button type="submit" class="nav-btn-submit" disabled={isLoading}>
-                            <template if:false={isLoading}>Se Connecter &rarr;</template>
-                            <template if:true={isLoading}>Connexion&hellip;</template>
+        <!-- ══ SIGNUP-SELECT MODE ═════════════════════════════════════════════ -->
+        <template if:true={isSignupSelect}>
+            <div class="nav-select-wrap">
+                <div class="nav-select-inner">
+                    <div class="nav-select-header">
+                        <button type="button" class="nav-back-btn" onclick={handleShowLogin}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                            &nbsp;Back to login
                         </button>
-                    </form>
-
-                    <div class="nav-center nav-mt-md">
-                        <p class="nav-subtext">
-                            Nouveau chez Nexus ?&nbsp;
-                            <button class="nav-inline-link" onclick={handleShowSignup}>Cr&eacute;er un compte</button>
-                        </p>
+                        <h2 class="nav-select-title">Choose your profile</h2>
+                        <p class="nav-subtext">A tailored experience for your needs.</p>
                     </div>
-                </template>
 
-                <!-- ── SIGNUP SELECT MODE ── -->
-                <template if:true={isSignupSelect}>
-                    <div class="nav-center nav-mb-lg">
-                        <button class="nav-back-btn" onclick={handleShowLogin}>
-                            <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
+                    <div class="nav-select-grid">
+
+                        <!-- Enterprise (B2B) -->
+                        <button type="button" class="nav-profile-card nav-profile-b2b" onclick={handleB2BSignup}>
+                            <div class="nav-profile-icon nav-profile-icon-b2b">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="9" height="14"/><rect x="13" y="3" width="9" height="18"/>
+                                    <path d="M6 7V5M10 7V5"/>
+                                </svg>
+                            </div>
+                            <h3 class="nav-profile-title">Enterprise</h3>
+                            <p class="nav-profile-desc">
+                                Wholesale rates, fleet management, and personalized quotes for professionals.
+                            </p>
+                            <div class="nav-profile-cta nav-profile-cta-b2b">
+                                Sign Up
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="nav-profile-blob nav-profile-blob-b2b"></div>
+                        </button>
+
+                        <!-- Individual (B2C) -->
+                        <button type="button" class="nav-profile-card nav-profile-b2c" onclick={handleB2CSignup}>
+                            <div class="nav-profile-icon nav-profile-icon-b2c">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                            <h3 class="nav-profile-title">Individual</h3>
+                            <p class="nav-profile-desc">
+                                Direct purchase, instant tracking, and exclusive access to Nexus novelties.
+                            </p>
+                            <div class="nav-profile-cta nav-profile-cta-b2c">
+                                Sign Up
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="nav-profile-blob nav-profile-blob-b2c"></div>
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══ FORGOT-PASSWORD MODE ═══════════════════════════════════════════ -->
+        <template if:true={isForgotPassword}>
+            <div class="nav-centered-wrap nav-centered-wrap--compact">
+                <div class="nav-centered-content">
+
+                    <!-- ── EMAIL SENT SUCCESS STATE ── -->
+                    <template if:true={forgotEmailSent}>
+                        <div class="nav-fp-anim-wrap">
+                            <!-- Outer pulse ring -->
+                            <div class="nav-fp-ring"></div>
+                            <!-- Icon circle -->
+                            <div class="nav-fp-sent-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                    <polyline points="8,13 4,17"/>
+                                    <polyline points="16,13 20,17"/>
+                                </svg>
+                                <!-- Check badge -->
+                                <div class="nav-fp-check-badge">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h2 class="nav-centered-title nav-fp-sent-title">V&eacute;rifiez votre messagerie&nbsp;!</h2>
+                        <p class="nav-fp-sent-desc">
+                            Un lien de r&eacute;initialisation a &eacute;t&eacute; envoy&eacute; &agrave;&nbsp;
+                            <strong class="nav-fp-email-highlight">{forgotEmail}</strong>.
+                            Pensez &agrave; v&eacute;rifier vos spams si vous ne le voyez pas.
+                        </p>
+
+                        <!-- Step hints -->
+                        <div class="nav-fp-steps">
+                            <div class="nav-fp-step">
+                                <div class="nav-fp-step-num">1</div>
+                                <span>Ouvrez votre bo&icirc;te mail</span>
+                            </div>
+                            <div class="nav-fp-step">
+                                <div class="nav-fp-step-num">2</div>
+                                <span>Cliquez sur le lien re&ccedil;u</span>
+                            </div>
+                            <div class="nav-fp-step">
+                                <div class="nav-fp-step-num">3</div>
+                                <span>D&eacute;finissez votre nouveau mot de passe</span>
+                            </div>
+                        </div>
+
+                        <p class="nav-fp-resend-hint">
+                            Pas re&ccedil;u &nbsp;&bull;&nbsp;
+                            <button type="button" class="nav-inline-link nav-inline-link-emerald" onclick={handleResendForgot}>
+                                Modifier l&rsquo;adresse
+                            </button>
+                        </p>
+
+                        <button type="button" class="nav-btn-submit nav-btn-dark nav-fp-back-login" onclick={handleShowLogin}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
                             &nbsp;Retour &agrave; la connexion
                         </button>
-                        <h2 class="nav-h2">Choisissez votre profil</h2>
-                        <p class="nav-subtext">Une exp&eacute;rience sur mesure pour vos besoins.</p>
-                    </div>
-                    <div class="nav-signup-grid">
-                        <div class="nav-signup-card nav-signup-b2b" onclick={handleB2BSignup}>
-                            <div class="nav-signup-icon nav-icon-indigo">
-                                <lightning-icon icon-name="utility:company" size="medium"></lightning-icon>
-                            </div>
-                            <h3 class="nav-signup-title">Entreprise (B2B)</h3>
-                            <p class="nav-signup-desc">Tarifs de gros, gestion de flotte et devis personnalis&eacute;s.</p>
-                            <span class="nav-signup-cta nav-cta-indigo">S&rsquo;inscrire &rarr;</span>
-                        </div>
-                        <div class="nav-signup-card nav-signup-b2c" onclick={handleB2CSignup}>
-                            <div class="nav-signup-icon nav-icon-emerald">
-                                <lightning-icon icon-name="utility:user" size="medium"></lightning-icon>
-                            </div>
-                            <h3 class="nav-signup-title">Particulier (B2C)</h3>
-                            <p class="nav-signup-desc">Achat direct, suivi instantan&eacute; et acc&egrave;s exclusif Nexus.</p>
-                            <span class="nav-signup-cta nav-cta-emerald">S&rsquo;inscrire &rarr;</span>
-                        </div>
-                    </div>
-                </template>
+                    </template>
 
-                <!-- ── B2C SIGNUP MODE ── -->
-                <template if:true={isB2CSignup}>
-                    <div class="nav-b2c-wrap">
-                    <div class="nav-center nav-mb-lg">
-                        <button class="nav-back-btn" onclick={handleShowLogin}>
-                            <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
-                            &nbsp;Retour &agrave; la connexion
+                    <!-- ── FORM STATE ── -->
+                    <template if:false={forgotEmailSent}>
+                        <button type="button" class="nav-back-btn nav-back-centered" onclick={handleShowLogin}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                            &nbsp;Back
                         </button>
-                        <span class="nav-badge-pill nav-badge-emerald">
-                            <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
-                            &nbsp;Particulier (B2C)
-                        </span>
-                        <h2 class="nav-h2">Cr&eacute;er un compte</h2>
-                        <p class="nav-subtext">Activation imm&eacute;diate &mdash; aucune validation requise.</p>
-                    </div>
-                    <form onsubmit={handleB2CSignupSubmit} class="nav-form">
-                        <div class="nav-name-row">
-                            <div class="nav-input-wrap">
-                                <lightning-icon icon-name="utility:user" size="x-small" class="nav-input-icon"></lightning-icon>
-                                <input class="nav-input" type="text" placeholder="Pr&eacute;nom" data-field="firstName" required />
-                            </div>
-                            <div class="nav-input-wrap">
-                                <input class="nav-input nav-input-no-icon" type="text" placeholder="Nom" data-field="lastName" required />
-                            </div>
-                        </div>
-                        <div class="nav-input-wrap">
-                            <lightning-icon icon-name="utility:email" size="x-small" class="nav-input-icon"></lightning-icon>
-                            <input class="nav-input" type="email" placeholder="Adresse email" data-field="email" required />
-                        </div>
-                        <div class="nav-input-wrap">
-                            <lightning-icon icon-name="utility:lock" size="x-small" class="nav-input-icon"></lightning-icon>
-                            <input class="nav-input nav-input-padded" type={passwordType} placeholder="Mot de passe" data-field="password" required />
-                            <button type="button" class="nav-eye-btn" onclick={handleTogglePwd}>
-                                <lightning-icon icon-name={eyeIcon} size="x-small"></lightning-icon>
-                            </button>
-                        </div>
-                        <div class="nav-input-wrap">
-                            <lightning-icon icon-name="utility:lock" size="x-small" class="nav-input-icon"></lightning-icon>
-                            <input class="nav-input" type="password" placeholder="Confirmer le mot de passe" data-field="confirmPassword" required />
-                        </div>
-                        <div class="nav-info-box">
-                            <lightning-icon icon-name="utility:check" size="x-small" class="nav-info-icon"></lightning-icon>
-                            <span>Votre compte sera activ&eacute; imm&eacute;diatement.</span>
-                        </div>
-                        <button type="submit" class="nav-btn-submit nav-btn-emerald" disabled={isLoading}>
-                            <template if:false={isLoading}>Cr&eacute;er mon compte &rarr;</template>
-                            <template if:true={isLoading}>Cr&eacute;ation en cours&hellip;</template>
-                        </button>
-                    </form>
-                    <div class="nav-center nav-mt-md">
-                        <p class="nav-subtext">D&eacute;j&agrave; un compte ?&nbsp;
-                            <button class="nav-inline-link" onclick={handleShowLogin}>Se connecter</button>
-                        </p>
-                    </div>
-                    </div>
-                </template>
 
-                <!-- ── FORGOT PASSWORD MODE ── -->
-                <template if:true={isForgotPwd}>
-                    <div class="nav-center nav-mb-lg">
-                        <button class="nav-back-btn" onclick={handleShowLogin}>
-                            <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
-                            &nbsp;Retour
-                        </button>
-                        <div class="nav-key-icon">
-                            <lightning-icon icon-name="utility:key" size="medium"></lightning-icon>
+                        <!-- Shield-check icon (emerald) -->
+                        <div class="nav-centered-icon nav-centered-icon-emerald">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                            </svg>
                         </div>
-                        <h2 class="nav-h2">R&eacute;cup&eacute;ration</h2>
+
+                        <h2 class="nav-centered-title">R&eacute;cup&eacute;ration</h2>
                         <p class="nav-subtext">Saisissez votre email pour recevoir un lien de r&eacute;initialisation.</p>
+
+                        <form class="nav-centered-form" onsubmit={handleForgotSubmit}>
+                            <div class="nav-input-wrap">
+                                <span class="nav-input-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                </span>
+                                <input class="nav-input nav-input-emerald" type="email" data-field="forgotEmail"
+                                    placeholder="Email de r&eacute;cup&eacute;ration" required />
+                            </div>
+
+                            <template if:true={forgotError}>
+                                <div class="nav-fp-error-box">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                    </svg>
+                                    &nbsp;{forgotError}
+                                </div>
+                            </template>
+
+                            <button type="submit" class="nav-btn-submit nav-btn-dark" disabled={isLoading}>
+                                <template if:false={isLoading}>
+                                    Envoyer le lien
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
+                                </template>
+                                <template if:true={isLoading}>
+                                    <span class="nav-fp-spinner"></span>
+                                    Envoi en cours&hellip;
+                                </template>
+                            </button>
+                        </form>
+                    </template>
+
+                </div>
+            </div>
+        </template>
+
+        <!-- ══ SIGNUP-B2C MODE — dark emerald two-column ════════════════════ -->
+        <template if:true={isSignupB2C}>
+            <div class="nav-b2c-outer">
+
+                <!-- Left: Dark Emerald Branding Panel -->
+                <div class="nav-b2c-left">
+                    <div class="nav-b2c-dot-grid"></div>
+                    <div class="nav-b2c-blur"></div>
+
+                    <div class="nav-b2c-left-top">
+                        <!-- Live avatar preview (updates as user types) -->
+                        <div class={b2cAvatarClass}>{b2cAvatarText}</div>
+
+                        <h2 class="nav-b2c-heading">
+                            JOIN THE<br/>
+                            <span class="nav-b2c-heading-em">NEXUS.</span>
+                        </h2>
+                        <p class="nav-b2c-desc">
+                            Your personal gateway to exclusive products, live order tracking, and a world-class ecosystem.
+                        </p>
                     </div>
-                    <form onsubmit={handleForgotSubmit} class="nav-form">
-                        <div class="nav-input-wrap">
-                            <lightning-icon icon-name="utility:email" size="x-small" class="nav-input-icon"></lightning-icon>
-                            <input class="nav-input" type="email" placeholder="Email de r&eacute;cup&eacute;ration" required />
+
+                    <!-- Feature list (white on dark) -->
+                    <div class="nav-b2c-features-list">
+                        <div class="nav-b2c-feature-dark">
+                            <div class="nav-b2c-check-dark">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <span>Exclusive product catalogue</span>
                         </div>
-                        <button type="submit" class="nav-btn-submit">Envoyer le lien</button>
-                    </form>
-                </template>
+                        <div class="nav-b2c-feature-dark">
+                            <div class="nav-b2c-check-dark">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <span>Real-time order tracking</span>
+                        </div>
+                        <div class="nav-b2c-feature-dark">
+                            <div class="nav-b2c-check-dark">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <span>Priority 24h support</span>
+                        </div>
+                        <div class="nav-b2c-feature-dark">
+                            <div class="nav-b2c-check-dark">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <span>Enterprise upgrade path</span>
+                        </div>
+                    </div>
+
+                    <!-- Stats row -->
+                    <div class="nav-b2c-stats-row">
+                        <div class="nav-b2c-stat">
+                            <span class="nav-b2c-stat-num">2K+</span>
+                            <span class="nav-b2c-stat-lbl">Members</span>
+                        </div>
+                        <div class="nav-b2c-stat">
+                            <span class="nav-b2c-stat-num">150+</span>
+                            <span class="nav-b2c-stat-lbl">Products</span>
+                        </div>
+                        <div class="nav-b2c-stat">
+                            <span class="nav-b2c-stat-num">24h</span>
+                            <span class="nav-b2c-stat-lbl">Support</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Signup form -->
+                <div class="nav-b2c-right">
+                    <div class="nav-form-container">
+                        <div>
+                            <button type="button" class="nav-back-btn" onclick={handleShowSignupSelect}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6"/>
+                                </svg>
+                                &nbsp;Back
+                            </button>
+                            <h3 class="nav-form-title">Create Account</h3>
+                            <p class="nav-form-subtitle">Join as an individual customer.</p>
+                        </div>
+
+                        <form class="nav-form nav-form-login" onsubmit={handleB2CSignupSubmit}>
+
+                            <!-- First + Last name — side by side -->
+                            <div class="nav-b2c-name-row">
+                                <div class="nav-input-wrap">
+                                    <span class="nav-input-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                    </span>
+                                    <input class="nav-input nav-input-emerald" type="text" placeholder="First name"
+                                        data-field="firstName" oninput={handleB2CFirstNameInput} required />
+                                </div>
+                                <div class="nav-input-wrap">
+                                    <span class="nav-input-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                    </span>
+                                    <input class="nav-input nav-input-emerald" type="text" placeholder="Last name"
+                                        data-field="lastName" oninput={handleB2CLastNameInput} required />
+                                </div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="nav-input-wrap">
+                                <span class="nav-input-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                </span>
+                                <input class="nav-input nav-input-emerald" type="email" placeholder="Email address"
+                                    data-field="email" required />
+                            </div>
+
+                            <!-- Password + strength bar -->
+                            <div>
+                                <div class="nav-input-wrap">
+                                    <span class="nav-input-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                        </svg>
+                                    </span>
+                                    <input class="nav-input nav-input-emerald nav-input-padded" type={passwordType}
+                                        placeholder="Password (min 8 chars)" data-field="password"
+                                        oninput={handleB2CPasswordInput} required />
+                                    <button type="button" class="nav-eye-btn" onclick={handleTogglePwd}>
+                                        <template if:false={showPassword}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        </template>
+                                        <template if:true={showPassword}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                                            </svg>
+                                        </template>
+                                    </button>
+                                </div>
+                                <!-- Strength bar (shows once user starts typing) -->
+                                <template if:true={b2cHasPassword}>
+                                    <div class="nav-strength-wrap">
+                                        <div class="nav-strength-track">
+                                            <div class={b2cStrengthBarClass}></div>
+                                        </div>
+                                        <span class={b2cStrengthLabelClass}>{b2cStrengthLabel}</span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <button type="submit" class="nav-btn-submit nav-btn-dark" disabled={isLoading}>
+                                <template if:false={isLoading}>
+                                    Create my account
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
+                                </template>
+                                <template if:true={isLoading}>
+                                    <span class="nav-fp-spinner"></span>
+                                    Creating&hellip;
+                                </template>
+                            </button>
+                        </form>
+
+                        <div class="nav-create-row">
+                            <p class="nav-subtext">
+                                Already have an account?&nbsp;
+                                <button type="button" class="nav-inline-link nav-inline-link-emerald" onclick={handleShowLogin}>
+                                    Sign in
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
             </div>
-        </div>
+        </template>
+
+        <!-- ══ CHANGE-PASSWORD MODE ═══════════════════════════════════════════ -->
+        <template if:true={isChangePassword}>
+            <div class="nav-cp-mode-wrap">
+                <!-- Back bar -->
+                <div class="nav-cp-back-bar">
+                    <button type="button" class="nav-back-btn" onclick={handleShowLogin}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                        &nbsp;Retour &agrave; la connexion
+                    </button>
+                </div>
+                <!-- Embed change-password form in modal mode -->
+                <c-nexus-change-password is-modal></c-nexus-change-password>
+            </div>
+        </template>
+
     </div>
 </template>

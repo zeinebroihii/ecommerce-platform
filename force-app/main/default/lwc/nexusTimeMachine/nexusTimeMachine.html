@@ -1,0 +1,105 @@
+<template>
+    <div class="ntm-wrap">
+
+        <!-- ── Header ── -->
+        <div class="ntm-header">
+            <div>
+                <h2 class="ntm-title">Inventory Time Machine</h2>
+                <p class="ntm-subtitle">AI-Powered Predictive Stock Analysis</p>
+            </div>
+            <span class={riskBadgeCls}>Risk Level: {riskLevel}</span>
+        </div>
+
+        <!-- ── Chart Card ── -->
+        <div class="ntm-card">
+
+            <!-- Prediction slider (top-right) -->
+            <div class="ntm-slider-box">
+                <div class="ntm-slider-info">
+                    <span class="ntm-slider-label">Prediction Horizon</span>
+                    <span class="ntm-slider-value">{monthsAhead} Months</span>
+                </div>
+                <input type="range" min="1" max="12" value={monthsAhead}
+                       oninput={handleSlider} class="ntm-range" />
+            </div>
+
+            <!-- SVG Chart -->
+            <div class="ntm-chart-wrap">
+                <svg viewBox="0 0 620 310" class="ntm-svg" xmlns="http://www.w3.org/2000/svg">
+
+                    <!-- Grid lines (horizontal) -->
+                    <line x1="50" y1="20"  x2="570" y2="20"  stroke="#f1f5f9" stroke-width="1"/>
+                    <line x1="50" y1="83"  x2="570" y2="83"  stroke="#f1f5f9" stroke-width="1"/>
+                    <line x1="50" y1="145" x2="570" y2="145" stroke="#f1f5f9" stroke-width="1"/>
+                    <line x1="50" y1="207" x2="570" y2="207" stroke="#f1f5f9" stroke-width="1"/>
+                    <line x1="50" y1="270" x2="570" y2="270" stroke="#f1f5f9" stroke-width="1"/>
+
+                    <!-- Y axis labels -->
+                    <text x="42" y="24"  text-anchor="end" fill="#94a3b8" font-size="10" font-weight="900" font-family="sans-serif">100</text>
+                    <text x="42" y="87"  text-anchor="end" fill="#94a3b8" font-size="10" font-weight="900" font-family="sans-serif">75</text>
+                    <text x="42" y="149" text-anchor="end" fill="#94a3b8" font-size="10" font-weight="900" font-family="sans-serif">50</text>
+                    <text x="42" y="211" text-anchor="end" fill="#94a3b8" font-size="10" font-weight="900" font-family="sans-serif">25</text>
+                    <text x="42" y="274" text-anchor="end" fill="#94a3b8" font-size="10" font-weight="900" font-family="sans-serif">0</text>
+
+                    <!-- Stock area (indigo fill) -->
+                    <path d={stockAreaPath} fill="rgba(99,102,241,0.12)"/>
+                    <!-- Stock line -->
+                    <path d={stockLinePath} fill="none" stroke="#6366f1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+                    <!-- Demand dashed line (rose) -->
+                    <path d={demandPath} fill="none" stroke="#f43f5e" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round" stroke-linejoin="round"/>
+
+                    <!-- X axis labels -->
+                    <text for:each={xAxisLabels} for:item="lbl" key={lbl.key}
+                          x={lbl.x} y="295" text-anchor="middle"
+                          fill="#94a3b8" font-size="9" font-weight="900" font-family="sans-serif">{lbl.label}</text>
+
+                    <!-- Legend -->
+                    <rect x="50" y="5" width="12" height="6" rx="3" fill="#6366f1" opacity="0.8"/>
+                    <text x="68" y="11" fill="#64748b" font-size="9" font-weight="900" font-family="sans-serif">Stock</text>
+                    <line x1="110" y1="8" x2="122" y2="8" stroke="#f43f5e" stroke-width="2" stroke-dasharray="4,3"/>
+                    <text x="128" y="11" fill="#64748b" font-size="9" font-weight="900" font-family="sans-serif">Demand</text>
+                </svg>
+            </div>
+
+            <!-- ── Insight Cards ── -->
+            <div class="ntm-insights">
+                <div class="ntm-insight ntm-insight--rose">
+                    <div class="ntm-insight-head">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="ntm-insight-icon ntm-insight-icon--rose">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        </svg>
+                        <h4 class="ntm-insight-title">Stockout Warning</h4>
+                    </div>
+                    <p class="ntm-insight-text">
+                        Predicted stockout in <strong class="ntm-highlight--rose">Month +{stockoutMonth}</strong> if current demand trends continue.
+                    </p>
+                </div>
+
+                <div class="ntm-insight ntm-insight--indigo">
+                    <div class="ntm-insight-head">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="ntm-insight-icon ntm-insight-icon--indigo">
+                            <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74z"/>
+                        </svg>
+                        <h4 class="ntm-insight-title">AI Action Plan</h4>
+                    </div>
+                    <p class="ntm-insight-text">
+                        Recommend restocking <strong class="ntm-highlight--indigo">500 units</strong> by next week to maintain 95% service level.
+                    </p>
+                </div>
+
+                <div class="ntm-insight ntm-insight--emerald">
+                    <div class="ntm-insight-head">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="ntm-insight-icon ntm-insight-icon--emerald">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        <h4 class="ntm-insight-title">Optimization</h4>
+                    </div>
+                    <p class="ntm-insight-text">
+                        Switching to sea freight for this batch could save <strong class="ntm-highlight--emerald">$1,200</strong> in logistics.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

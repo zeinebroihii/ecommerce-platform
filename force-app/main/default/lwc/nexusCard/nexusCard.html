@@ -1,0 +1,11 @@
+<template>
+    <div class={computedClass} onclick={handleClick}>
+        <template if:true={title}>
+            <h3 class="nc-card__title">
+                <span class="nc-card__title-dot"></span>
+                {title}
+            </h3>
+        </template>
+        <slot></slot>
+    </div>
+</template>

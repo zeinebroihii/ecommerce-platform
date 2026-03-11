@@ -1,0 +1,425 @@
+<template>
+    <div class="ns-wrap">
+
+        <!-- ── Hero ── -->
+        <div class="ns-hero">
+            <img class="ns-hero-bg" src="https://picsum.photos/seed/circular-economy/1920/1080" alt="" />
+            <div class="ns-hero-overlay"></div>
+            <div class="ns-hero-content">
+                <div class="ns-hero-top">
+                    <div class="ns-hero-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                        </svg>
+                    </div>
+                    <span class="ns-hero-badge">Community Circular Economy</span>
+                </div>
+                <h2 class="ns-hero-title">Nexus Swap:<br /><span class="ns-hero-accent">Trade &amp; Reuse</span></h2>
+                <p class="ns-hero-desc">Exchange hardware with the community. Verified by Nexus Digital Passport for guaranteed authenticity and circularity.</p>
+                <div class="ns-hero-actions">
+                    <button class="ns-btn-hero-primary">List My Product</button>
+                    <div class="ns-co2-pill">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 8C8 10 5.9 16.17 3.82 19.5 2 17 1 13 1 9c0-4.97 4.03-9 9-9 2.15 0 4.13.76 5.69 2.02A8.95 8.95 0 0117 8z"/>
+                        </svg>
+                        <span>41.5kg CO2 Saved Total</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Active Requests ── -->
+        <template if:true={hasRequests}>
+            <section class="ns-requests">
+                <div class="ns-section-header">
+                    <h3 class="ns-section-title">Mes Échanges en Cours</h3>
+                    <span class="ns-badge-count">{requestCount} Actifs</span>
+                </div>
+                <div class="ns-requests-grid">
+                    <template for:each={requestItems} for:item="req">
+                        <div key={req.id} class="ns-request-card">
+                            <img src={req.itemImage} class="ns-request-img" alt={req.itemName} />
+                            <div class="ns-request-body">
+                                <div class="ns-request-header">
+                                    <h4 class="ns-request-name">{req.itemName}</h4>
+                                    <span class={req.statusBadgeCls}>{req.statusLabel}</span>
+                                </div>
+                                <p class="ns-request-offer">Contre : {req.offeredItem}</p>
+                                <div class="ns-request-actions">
+                                    <button class="ns-btn-sm ns-btn-outline" data-id={req.id} onclick={handleOpenChat}>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                                        Chat
+                                    </button>
+                                    <template if:true={req.isPending}>
+                                        <button class="ns-btn-sm ns-btn-indigo" data-id={req.id} onclick={handleAccept}>Accepter</button>
+                                    </template>
+                                    <template if:true={req.isAccepted}>
+                                        <button class="ns-btn-sm ns-btn-emerald" data-id={req.id} onclick={handleConfirm}>Confirmer l'échange</button>
+                                    </template>
+                                    <template if:true={req.isConfirmed}>
+                                        <button class="ns-btn-sm ns-btn-dark" data-id={req.id} onclick={handleComplete}>Terminer</button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </template>
+
+        <!-- ── Search & Filter ── -->
+        <div class="ns-filter-bar">
+            <div class="ns-search-wrap">
+                <svg class="ns-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" class="ns-search-input" placeholder="Search community items..."
+                       value={searchQuery} oninput={handleSearch} />
+            </div>
+            <div class="ns-pills">
+                <template for:each={categoryFilters} for:item="cat">
+                    <button key={cat.id} class={cat.cls} data-category={cat.id} onclick={handleCategoryChange}>{cat.label}</button>
+                </template>
+            </div>
+        </div>
+
+        <!-- ── Item Grid ── -->
+        <div class="ns-grid">
+            <template for:each={filteredItems} for:item="item">
+                <div key={item.id} class="ns-item-card">
+                    <div class="ns-item-img-wrap">
+                        <img src={item.image} class="ns-item-img" alt={item.name} />
+                        <div class="ns-item-badges">
+                            <template if:true={item.verified}>
+                                <div class="ns-verified-badge" title="Verified by Nexus">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                        <polyline points="9 12 11 14 15 10"/>
+                                    </svg>
+                                </div>
+                            </template>
+                            <div class="ns-condition-badge">{item.condition}</div>
+                        </div>
+                        <div class="ns-item-action-wrap">
+                            <button class="ns-btn-swap" data-id={item.id} onclick={handleSelectItem}>Request Swap</button>
+                        </div>
+                    </div>
+                    <div class="ns-item-info">
+                        <div class="ns-item-info-row">
+                            <h4 class="ns-item-name">{item.name}</h4>
+                            <div class="ns-item-co2">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 8C8 10 5.9 16.17 3.82 19.5 2 17 1 13 1 9c0-4.97 4.03-9 9-9 2.15 0 4.13.76 5.69 2.02A8.95 8.95 0 0117 8z"/>
+                                </svg>
+                                {item.co2Saved}kg
+                            </div>
+                        </div>
+                        <div class="ns-item-owner">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            {item.owner}
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- ── Swap Modal ── -->
+        <template if:true={isSwapModalOpen}>
+            <div class="ns-overlay" onclick={handleOverlayClick}>
+                <div class="ns-modal-wrap">
+                    <div class="ns-modal" onclick={handleModalClick}>
+
+                        <!-- Image header -->
+                        <div class="ns-modal-img-header">
+                            <img src={selectedItemImage} class="ns-modal-img" alt={selectedItemName} />
+                            <button class="ns-modal-back-btn" onclick={handleCloseSwapModal}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6"/>
+                                </svg>
+                            </button>
+                            <div class="ns-modal-img-fade"></div>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="ns-modal-body">
+                            <div class="ns-modal-meta-row">
+                                <span class="ns-badge-trade">Trade Proposal</span>
+                                <div class="ns-modal-co2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17 8C8 10 5.9 16.17 3.82 19.5 2 17 1 13 1 9c0-4.97 4.03-9 9-9 2.15 0 4.13.76 5.69 2.02A8.95 8.95 0 0117 8z"/>
+                                    </svg>
+                                    {selectedItemCo2}kg CO2 Offset
+                                </div>
+                            </div>
+
+                            <div class="ns-modal-title-block">
+                                <h3 class="ns-modal-item-name">{selectedItemName}</h3>
+                                <span class="ns-modal-item-meta">{selectedItemCategory} • Condition: {selectedItemCondition}</span>
+                            </div>
+
+                            <!-- Owner rating card -->
+                            <div class="ns-owner-card">
+                                <div class="ns-owner-avatar">{ownerInitials}</div>
+                                <div class="ns-owner-info">
+                                    <span class="ns-owner-name">{selectedItemOwner}</span>
+                                    <template if:false={selectedItemIsNewSwapper}>
+                                        <div class="ns-owner-rating-row">
+                                            <template for:each={ownerRatingStars} for:item="s">
+                                                <svg key={s.key} class="ns-owner-star-svg" width="13" height="13" viewBox="0 0 24 24"
+                                                     stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                     fill={s.fill}>
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                </svg>
+                                            </template>
+                                            <span class="ns-owner-rating-text">{ownerRatingDisplay} · {ownerSwapCount} swaps</span>
+                                        </div>
+                                    </template>
+                                    <template if:true={selectedItemIsNewSwapper}>
+                                        <span class="ns-owner-new-badge">New swapper</span>
+                                    </template>
+                                </div>
+                                <button class="ns-btn-see-reviews" onclick={handleToggleOwnerReviews}>{reviewsToggleLabel}</button>
+                            </div>
+
+                            <!-- Expandable owner reviews -->
+                            <template if:true={showOwnerReviews}>
+                                <div class="ns-owner-reviews">
+                                    <template for:each={selectedItemOwnerReviews} for:item="rev">
+                                        <div key={rev.key} class="ns-owner-review-item">
+                                            <div class="ns-ori-header">
+                                                <div class="ns-ori-stars">
+                                                    <template for:each={rev.starItems} for:item="s">
+                                                        <svg key={s.key} width="12" height="12" viewBox="0 0 24 24"
+                                                             stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                             fill={s.fill}>
+                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                        </svg>
+                                                    </template>
+                                                </div>
+                                                <span class="ns-ori-author">{rev.author}</span>
+                                                <span class="ns-ori-date">{rev.date}</span>
+                                            </div>
+                                            <p class="ns-ori-text">{rev.text}</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <div class="ns-verification-block">
+                                <div class="ns-verification-head">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#6366f1"><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74z"/></svg>
+                                    <span class="ns-verification-label">Nexus Verification</span>
+                                </div>
+                                <div class="ns-verification-row">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span>Authenticity Guaranteed by Nexus Blockchain</span>
+                                </div>
+                            </div>
+
+                            <div class="ns-offer-block">
+                                <label class="ns-offer-label">What are you offering in exchange?</label>
+                                <select class="ns-offer-select" onchange={handleOfferChange}>
+                                    <option value="Nexus Sensor Pack (v1)">Nexus Sensor Pack (v1)</option>
+                                    <option value="Nexus Smart Plug">Nexus Smart Plug</option>
+                                    <option value="Nexus Bridge Lite">Nexus Bridge Lite</option>
+                                </select>
+                            </div>
+
+                            <div class="ns-modal-action-row">
+                                <button class="ns-btn-send-swap" onclick={handleSendRequest}>Send Swap Request</button>
+                                <button class="ns-btn-passport-icon" onclick={handleShowPassport} title="View Digital Passport">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="ns-modal-extra">
+                                <div class="ns-modal-extra-grid">
+                                    <div>
+                                        <div class="ns-extra-label">Handover Method</div>
+                                        <div class="ns-extra-value">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                                            Local Pickup / Shipping
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="ns-extra-label">Response Time</div>
+                                        <div class="ns-extra-value">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                            Usually within 24h
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ns-modal-info-box">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    <p>Nexus Swap protects both parties by escrowing the digital ownership until physical handover is confirmed by both users.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Passport overlay (inside modal) ── -->
+                        <template if:true={showPassport}>
+                            <div class="ns-passport-overlay">
+                                <div class="ns-passport-panel">
+                                    <div class="ns-passport-header">
+                                        <div class="ns-passport-header-left">
+                                            <div class="ns-passport-icon">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                            </div>
+                                            <div>
+                                                <h4 class="ns-passport-title">Digital Asset Passport</h4>
+                                                <p class="ns-passport-subtitle">Blockchain Verified Ownership Ledger</p>
+                                            </div>
+                                        </div>
+                                        <button class="ns-passport-close-btn" onclick={handleHidePassport}>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="ns-passport-body">
+                                        <div class="ns-passport-img-wrap">
+                                            <img src={selectedItemImage} class="ns-passport-img" alt={selectedItemName} />
+                                        </div>
+                                        <div class="ns-passport-id-block">
+                                            <h5 class="ns-passport-item-name">{selectedItemName}</h5>
+                                            <div class="ns-passport-serial">NX-{selectedItemId}00-V2-ALPHA</div>
+                                        </div>
+                                        <div class="ns-passport-meta-grid">
+                                            <div class="ns-passport-meta-cell">
+                                                <div class="ns-pm-label">Mint Date</div>
+                                                <div class="ns-pm-value">Jan 12, 2024</div>
+                                            </div>
+                                            <div class="ns-passport-meta-cell">
+                                                <div class="ns-pm-label">Status</div>
+                                                <div class="ns-pm-value ns-pm-value--verified">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                                    Verified
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ns-passport-history">
+                                            <div class="ns-ph-label">Immutable Ledger History</div>
+                                            <div class="ns-ph-item">
+                                                <div class="ns-ph-icon">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                                                </div>
+                                                <div class="ns-ph-text">
+                                                    <div class="ns-ph-event">Asset Minted</div>
+                                                    <div class="ns-ph-desc">Initial block generation</div>
+                                                </div>
+                                                <span class="ns-ph-date">Jan 12</span>
+                                            </div>
+                                            <div class="ns-ph-item">
+                                                <div class="ns-ph-icon">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </div>
+                                                <div class="ns-ph-text">
+                                                    <div class="ns-ph-event">QA Passed</div>
+                                                    <div class="ns-ph-desc">Quality assurance validation</div>
+                                                </div>
+                                                <span class="ns-ph-date">Jan 15</span>
+                                            </div>
+                                            <div class="ns-ph-item">
+                                                <div class="ns-ph-icon">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                                </div>
+                                                <div class="ns-ph-text">
+                                                    <div class="ns-ph-event">Ownership Transferred</div>
+                                                    <div class="ns-ph-desc">Secondary market listing</div>
+                                                </div>
+                                                <span class="ns-ph-date">Feb 20</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ns-passport-footer">
+                                        <button class="ns-btn-passport-return" onclick={handleHidePassport}>Return to Transaction</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Chat Modal ── -->
+        <template if:true={isChatOpen}>
+            <div class="ns-overlay">
+                <div class="ns-chat-modal">
+                    <div class="ns-chat-header">
+                        <div class="ns-chat-header-left">
+                            <div class="ns-chat-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="ns-chat-title">Chat with {activeRequestOwner}</h4>
+                                <p class="ns-chat-subtitle">Nexus Secure Messaging</p>
+                            </div>
+                        </div>
+                        <button class="ns-chat-close-btn" onclick={handleCloseChat}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="ns-chat-messages">
+                        <template for:each={messageItems} for:item="msg">
+                            <div key={msg.key} class={msg.wrapCls}>
+                                <div class={msg.bubbleCls}>{msg.text}</div>
+                                <span class="ns-chat-meta">{msg.sender} · {msg.time}</span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="ns-chat-input-bar">
+                        <input type="text" class="ns-chat-input" placeholder="Type your message..."
+                               value={messageInput} oninput={handleMessageInput} onkeydown={handleMessageKeydown} />
+                        <button class="ns-btn-send" onclick={handleSendMessage}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Review Modal ── -->
+        <template if:true={showReview}>
+            <div class="ns-overlay">
+                <div class="ns-review-modal">
+                    <div class="ns-review-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                            <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
+                            <path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
+                        </svg>
+                    </div>
+                    <h3 class="ns-review-title">Échange Réussi !</h3>
+                    <p class="ns-review-desc">L'échange de propriété a été enregistré sur la blockchain Nexus. Comment s'est passée votre expérience avec l'autre utilisateur ?</p>
+                    <div class="ns-stars">
+                        <template for:each={starItems} for:item="s">
+                            <button key={s.star} class={s.cls} data-star={s.star} onclick={handleSetRating}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round" fill={s.fill}>
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                            </button>
+                        </template>
+                    </div>
+                    <div class="ns-review-actions">
+                        <button class="ns-btn-review-submit" onclick={handleSubmitReview}>Soumettre l'avis</button>
+                        <button class="ns-btn-review-skip" onclick={handleSubmitReview}>Passer pour le moment</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

@@ -1,9 +1,7 @@
 import { LightningElement, api, wire, track } from 'lwc';
-import { NavigationMixin }          from 'lightning/navigation';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { refreshApex }              from '@salesforce/apex';
 import { ShowToastEvent }           from 'lightning/platformShowToastEvent';
-import approveRejectLead            from '@salesforce/apex/LeadManagementController.approveRejectLead';
 
 import AI_SCORE_FIELD    from '@salesforce/schema/Lead.AIScore__c';
 import AI_REASON_FIELD   from '@salesforce/schema/Lead.AIReason__c';
@@ -14,9 +12,8 @@ import STATUS_FIELD      from '@salesforce/schema/Lead.Status';
 
 const FIELDS = [AI_SCORE_FIELD, AI_REASON_FIELD, DECISION_FIELD, INTENT_FIELD, COMPANY_FIELD, STATUS_FIELD];
 
-export default class NexusLeadDecision extends NavigationMixin(LightningElement) {
+export default class NexusLeadDecision extends LightningElement {
     @api recordId;
-    @track isActing     = false;
     @track isRefreshing = false;
 
     _wiredResult;
@@ -81,27 +78,24 @@ export default class NexusLeadDecision extends NavigationMixin(LightningElement)
     }
 
     // ── Handlers ──────────────────────────────────────────────────────────────
-    async handleOpenAgent() {
+    async handleCopyPrompt() {
         const prompt = `Analyse ce lead et mets à jour ses champs : ${this.recordId}`;
-        let copied = false;
         try {
             await navigator.clipboard.writeText(prompt);
-            copied = true;
+            this.dispatchEvent(new ShowToastEvent({
+                title: '✓ Prompt copié',
+                message: `Ctrl+V dans l'agent : "${prompt}"`,
+                variant: 'info',
+                mode: 'sticky'
+            }));
         } catch(e) {
-            // clipboard blocked in this context — show prompt in toast instead
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Nexus Lead Analyst',
+                message: `Copiez ce texte dans l'agent → ${prompt}`,
+                variant: 'info',
+                mode: 'sticky'
+            }));
         }
-        this[NavigationMixin.GenerateUrl]({
-            type: 'standard__webPage',
-            attributes: { url: '/AiCopilot/copilotStudio.app#/copilot/builder?copilotId=0Xxg5000000b81pCAA&versionId=0X9g5000000s8mzCAA' }
-        }).then(url => window.open(url, '_blank'));
-        this.dispatchEvent(new ShowToastEvent({
-            title: copied ? '✓ Prompt copié — collez dans l\'agent' : 'Nexus Lead Analyst',
-            message: copied
-                ? `Ctrl+V dans l'agent : "${prompt}"`
-                : `Copiez ce texte → ${prompt}`,
-            variant: 'info',
-            mode: 'sticky'
-        }));
     }
 
     async handleRefresh() {
@@ -113,34 +107,4 @@ export default class NexusLeadDecision extends NavigationMixin(LightningElement)
         }
     }
 
-    async handleApprove() {
-        await this._decide('Approved');
-    }
-
-    async handleReject() {
-        await this._decide('Rejected');
-    }
-
-    async _decide(decision) {
-        this.isActing = true;
-        try {
-            await approveRejectLead({ leadId: this.recordId, decision });
-            this.dispatchEvent(new ShowToastEvent({
-                title: decision === 'Approved' ? 'Lead approuvé' : 'Lead rejeté',
-                message: decision === 'Approved'
-                    ? 'Statut mis à jour : Working. Le lead peut maintenant être converti.'
-                    : 'Lead marqué comme rejeté.',
-                variant: decision === 'Approved' ? 'success' : 'warning'
-            }));
-            await refreshApex(this._wiredResult);
-        } catch (e) {
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Erreur',
-                message: e.body ? e.body.message : 'Une erreur est survenue.',
-                variant: 'error'
-            }));
-        } finally {
-            this.isActing = false;
-        }
-    }
 }

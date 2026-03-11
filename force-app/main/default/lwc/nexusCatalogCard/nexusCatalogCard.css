@@ -1,0 +1,254 @@
+:host { display: block; height: 100%; }
+
+.ncc-card {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    transition: border-color 0.5s, box-shadow 0.5s;
+}
+.ncc-card:hover {
+    border-color: rgba(79,70,229,0.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+/* ── Image ─────────────────────────────────────────────────────────────── */
+.ncc-img-wrap {
+    position: relative;
+    height: 16rem;
+    overflow: hidden;
+    background: #f1f5f9;
+}
+
+.ncc-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1s ease-out;
+}
+.ncc-card:hover .ncc-img { transform: scale(1.1); }
+
+.ncc-img-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(2,6,23,0.8), transparent, transparent);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+.ncc-card:hover .ncc-img-overlay { opacity: 1; }
+
+/* Badges top-left */
+.ncc-badges {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.ncc-family-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #0f172a;
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.ncc-active-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    background: rgba(16,185,129,0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #ffffff;
+    font-size: 7px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+}
+.ncc-active-dot {
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: #ffffff;
+    animation: ncc-pulse 1.5s ease-in-out infinite;
+}
+@keyframes ncc-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* Quick actions top-right */
+.ncc-actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transform: translateX(4rem);
+    transition: transform 0.5s ease-out;
+}
+.ncc-card:hover .ncc-actions { transform: translateX(0); }
+
+.ncc-action-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #94a3b8;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    transition: color 0.2s, transform 0.2s;
+}
+.ncc-action-btn:hover { transform: scale(1.1); }
+.ncc-action-btn--fav:hover    { color: #f43f5e; }
+.ncc-action-btn--fav-active   { background: #f43f5e; color: #ffffff; }
+
+/* Detail arrow bottom-right */
+.ncc-detail-btn {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 1rem;
+    background: #4f46e5;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(79,70,229,0.4);
+    transform: translateY(5rem);
+    transition: transform 0.5s ease-out, background 0.2s, scale 0.2s;
+    z-index: 20;
+}
+.ncc-card:hover .ncc-detail-btn { transform: translateY(0); }
+.ncc-detail-btn:hover { background: #6366f1; transform: translateY(0) scale(1.1); }
+
+/* Price tag bottom-left */
+.ncc-price-tag {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    transform: translateY(4rem);
+    transition: transform 0.5s ease-out;
+}
+.ncc-card:hover .ncc-price-tag { transform: translateY(0); }
+.ncc-price-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.125rem; }
+.ncc-price-value { font-size: 1.25rem; font-weight: 900; color: #0f172a; }
+
+/* ── Body ──────────────────────────────────────────────────────────────── */
+.ncc-body {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.ncc-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+.ncc-stars { display: flex; align-items: center; gap: 0.125rem; }
+.ncc-star  { color: #f59e0b; font-size: 0.75rem; }
+.ncc-rating { font-size: 10px; font-weight: 900; color: #0f172a; margin-left: 0.375rem; }
+.ncc-code  { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+
+.ncc-name {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin: 0 0 0.5rem;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    transition: color 0.3s;
+}
+.ncc-card:hover .ncc-name { color: #4f46e5; }
+
+.ncc-desc {
+    font-size: 0.8125rem;
+    color: #64748b;
+    font-weight: 500;
+    margin: 0 0 1.5rem;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+.ncc-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+    margin-top: auto;
+}
+
+.ncc-verified {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.ncc-verified-label {
+    font-size: 8px;
+    font-weight: 900;
+    color: #6366f1;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+    line-height: 1.2;
+}
+.ncc-verified-sub {
+    font-size: 8px;
+    font-weight: 700;
+    color: #94a3b8;
+    display: block;
+    line-height: 1.2;
+}
+
+.ncc-cart-btn {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(15,23,42,0.1);
+    transition: background 0.3s, transform 0.15s;
+}
+.ncc-cart-btn:hover  { background: #4f46e5; }
+.ncc-cart-btn:active { transform: scale(0.95); }

@@ -1,0 +1,205 @@
+/* ── Section ────────────────────────────────────────────────────────────── */
+:host {
+    display: block;
+}
+
+.nas-section {
+    max-width: 88rem;
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.nas-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.nas-title {
+    font-size: 1.75rem;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+    margin: 0 0 0.5rem;
+    transition: color 0.5s;
+}
+
+.nas-subtitle {
+    font-size: 0.9375rem;
+    color: #64748b;
+    font-weight: 500;
+    margin: 0;
+    transition: color 0.5s;
+}
+
+/* ── Grid ───────────────────────────────────────────────────────────────── */
+.nas-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    max-width: 42rem;
+    margin: 0 auto;
+}
+
+@media (min-width: 40rem) {
+    .nas-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Card base ──────────────────────────────────────────────────────────── */
+.nas-card {
+    position: relative;
+    padding: 1.75rem 1.5rem;
+    border-radius: 1.25rem;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    text-align: left;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+
+/* Top accent bar */
+.nas-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 1.25rem 1.25rem 0 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+
+.nas-card--b2b::before { background: linear-gradient(90deg, #6366f1, #4f46e5); }
+.nas-card--b2c::before { background: linear-gradient(90deg, #10b981, #059669); }
+
+.nas-card--b2b:hover {
+    border-color: #6366f1;
+    box-shadow: 0 16px 40px rgba(99,102,241,0.13), 0 4px 12px rgba(99,102,241,0.07);
+    transform: translateY(-3px);
+}
+
+.nas-card--b2c:hover {
+    border-color: #10b981;
+    box-shadow: 0 16px 40px rgba(16,185,129,0.13), 0 4px 12px rgba(16,185,129,0.07);
+    transform: translateY(-3px);
+}
+
+.nas-card--b2b:hover::before,
+.nas-card--b2c:hover::before { opacity: 1; }
+
+.nas-card-body {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ── Decorative blob ────────────────────────────────────────────────────── */
+.nas-card-blob {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    margin-right: -4rem;
+    margin-top: -4rem;
+    transition: background 0.5s;
+}
+
+.nas-card-blob--b2b { background: rgba(99, 102, 241, 0.08); }
+.nas-card-blob--b2c { background: rgba(5, 150, 105, 0.08);  }
+
+.nas-card--b2b:hover .nas-card-blob--b2b { background: rgba(99, 102, 241, 0.14); }
+.nas-card--b2c:hover .nas-card-blob--b2c { background: rgba(5, 150, 105, 0.14);  }
+
+/* ── Icon wrap ──────────────────────────────────────────────────────────── */
+.nas-icon-wrap {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    transition: background 0.25s, color 0.25s;
+}
+
+.nas-icon-wrap--b2b { background: rgba(99, 102, 241, 0.08); color: #6366f1; }
+.nas-icon-wrap--b2c { background: rgba(5, 150, 105, 0.08);  color: #059669; }
+
+.nas-card--b2b:hover .nas-icon-wrap--b2b { background: #6366f1; color: #ffffff; }
+.nas-card--b2c:hover .nas-icon-wrap--b2c { background: #059669; color: #ffffff; }
+
+/* ── Card text ──────────────────────────────────────────────────────────── */
+.nas-card-title {
+    font-size: 1.125rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.5rem;
+    transition: color 0.25s;
+}
+
+.nas-card-desc {
+    font-size: 0.8125rem;
+    color: #64748b;
+    line-height: 1.6;
+    font-weight: 500;
+    margin: 0 0 1.25rem;
+    transition: color 0.25s;
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────── */
+.nas-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* ── Buttons base ───────────────────────────────────────────────────────── */
+.nas-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 0.625rem;
+    font-size: 0.6875rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.nas-btn:active { transform: scale(0.97); }
+
+/* B2B primary — indigo */
+.nas-btn--b2b-primary {
+    background: #6366f1;
+    color: #ffffff;
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.20);
+}
+.nas-btn--b2b-primary:hover { background: rgba(99, 102, 241, 0.90); }
+
+/* B2C primary — emerald */
+.nas-btn--b2c-primary {
+    background: #059669;
+    color: #ffffff;
+    box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.20);
+}
+.nas-btn--b2c-primary:hover { background: #047857; }
+
+/* Outline — shared */
+.nas-btn--outline {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.nas-btn--outline:hover { background: #f8fafc; }

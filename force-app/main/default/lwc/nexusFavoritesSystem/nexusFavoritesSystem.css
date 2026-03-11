@@ -1,0 +1,224 @@
+:host {
+    --nfs-slate-9:  #0f172a;
+    --nfs-slate-7:  #334155;
+    --nfs-slate-5:  #64748b;
+    --nfs-slate-4:  #94a3b8;
+    --nfs-slate-3:  #cbd5e1;
+    --nfs-slate-1:  #f1f5f9;
+    --nfs-slate-05: #f8fafc;
+    --nfs-indigo:   #4f46e5;
+    --nfs-indigo-l: #818cf8;
+    --nfs-emerald:  #10b981;
+    --nfs-amber:    #f59e0b;
+    --nfs-rose:     #f43f5e;
+    font-family: 'Inter', system-ui, sans-serif;
+    display: block;
+}
+
+/* ── Wrap ── */
+.nfs-wrap { display: flex; flex-direction: column; gap: 2rem; padding: 1.5rem 0; }
+
+/* ── Header ── */
+.nfs-header    { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.nfs-title     { font-size: 1.75rem; font-weight: 900; color: var(--nfs-slate-9); text-transform: uppercase; font-style: italic; letter-spacing: -0.02em; margin: 0; }
+.nfs-sub       { font-size: 0.875rem; font-weight: 500; color: var(--nfs-slate-5); margin: 0.35rem 0 0; }
+.nfs-count-badge {
+    padding: 0.35rem 1rem; background: #ede9fe; color: var(--nfs-indigo);
+    border: 1px solid #ddd6fe; border-radius: 9999px; white-space: nowrap;
+    font-size: 0.6rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+/* ── Empty state ── */
+.nfs-empty-card {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 6rem 2rem;
+    background: rgba(255,255,255,0.5); border: 2px dashed var(--nfs-slate-1);
+    border-radius: 3rem;
+}
+.nfs-empty-icon-wrap {
+    width: 6rem; height: 6rem; background: var(--nfs-slate-05); border-radius: 2rem;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;
+    color: var(--nfs-slate-3);
+}
+.nfs-empty-title {
+    font-size: 1.5rem; font-weight: 900; color: var(--nfs-slate-9);
+    text-transform: uppercase; font-style: italic; letter-spacing: -0.02em; margin: 0 0 0.5rem;
+}
+.nfs-empty-desc { font-size: 0.875rem; color: var(--nfs-slate-5); font-weight: 500; max-width: 28rem; margin: 0 0 2.5rem; line-height: 1.6; }
+.nfs-explore-btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 1rem 2.5rem; background: #fff;
+    border: 2px solid var(--nfs-slate-9); border-radius: 0.875rem;
+    font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--nfs-slate-9); cursor: pointer; transition: all 0.2s;
+}
+.nfs-explore-btn:hover { background: var(--nfs-slate-9); color: #fff; }
+
+/* ── Product grid ── */
+.nfs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+@media (max-width: 1024px) { .nfs-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .nfs-grid { grid-template-columns: 1fr; } }
+
+/* ── Product card ── */
+.nfs-card {
+    background: #fff; border-radius: 2rem;
+    border: 1px solid rgba(203,213,225,0.6);
+    box-shadow: 0 1px 4px rgba(15,23,42,0.04);
+    overflow: hidden; display: flex; flex-direction: column;
+    transition: box-shadow 0.4s, border-color 0.4s, transform 0.3s;
+}
+.nfs-card:hover {
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    border-color: rgba(79,70,229,0.3);
+    transform: translateY(-2px);
+}
+
+/* Image area */
+.nfs-img-wrap {
+    position: relative; height: 16rem; overflow: hidden; background: var(--nfs-slate-1);
+}
+.nfs-img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 1s ease;
+}
+.nfs-card:hover .nfs-img { transform: scale(1.1); }
+
+.nfs-img-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(2,6,23,0.8), transparent, transparent);
+    opacity: 0; transition: opacity 0.5s;
+}
+.nfs-card:hover .nfs-img-overlay { opacity: 1; }
+
+/* Family badge */
+.nfs-family-badge {
+    position: absolute; top: 1rem; left: 1rem;
+    background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);
+    padding: 0.25rem 0.75rem; border-radius: 9999px;
+    font-size: 0.5625rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--nfs-slate-9);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+/* Heart button — slides in from right on hover */
+.nfs-heart-btn {
+    position: absolute; top: 1rem; right: 1rem;
+    width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    transform: translateX(4rem); transition: transform 0.5s ease, background 0.2s;
+}
+.nfs-card:hover .nfs-heart-btn { transform: translateX(0); }
+.nfs-heart-active { background: var(--nfs-rose); }
+.nfs-heart-btn:hover { transform: translateX(0) scale(1.1) !important; }
+
+/* MSRP price box — slides up from bottom on hover */
+.nfs-price-hover {
+    position: absolute; bottom: 1rem; left: 1rem;
+    background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);
+    padding: 0.5rem 1rem; border-radius: 0.875rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transform: translateY(4rem); transition: transform 0.5s ease;
+}
+.nfs-card:hover .nfs-price-hover { transform: translateY(0); }
+.nfs-price-label { display: block; font-size: 0.5625rem; font-weight: 900; color: var(--nfs-slate-4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.1rem; }
+.nfs-price-val   { font-size: 1.25rem; font-weight: 900; color: var(--nfs-slate-9); }
+
+/* Card body */
+.nfs-card-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+.nfs-meta-row  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.nfs-stars     { font-size: 0.75rem; color: var(--nfs-amber); display: flex; align-items: center; gap: 0.25rem; }
+.nfs-rating    { font-size: 0.625rem; font-weight: 900; color: var(--nfs-slate-9); margin-left: 0.25rem; }
+.nfs-code      { font-size: 0.5625rem; font-weight: 900; color: var(--nfs-slate-4); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.nfs-name {
+    font-size: 1.15rem; font-weight: 900; color: var(--nfs-slate-9);
+    letter-spacing: -0.02em; margin: 0 0 0.5rem; line-height: 1.1;
+    transition: color 0.3s;
+}
+.nfs-card:hover .nfs-name { color: var(--nfs-indigo); }
+.nfs-desc { font-size: 0.8125rem; color: var(--nfs-slate-5); font-weight: 500; line-height: 1.6; margin: 0 0 1.25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.nfs-card-footer   { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--nfs-slate-1); display: flex; align-items: center; justify-content: space-between; }
+.nfs-verified      { display: flex; flex-direction: column; gap: 0.2rem; }
+.nfs-verified-row  { display: flex; align-items: center; gap: 0.35rem; }
+.nfs-shield-icon   { color: var(--nfs-indigo); }
+.nfs-verified-label  { font-size: 0.5rem; font-weight: 900; color: var(--nfs-indigo); text-transform: uppercase; letter-spacing: 0.1em; }
+.nfs-enterprise-label { font-size: 0.625rem; font-weight: 700; color: var(--nfs-slate-4); }
+
+.nfs-cart-btn {
+    width: 3rem; height: 3rem; border-radius: 0.875rem; border: none;
+    background: var(--nfs-slate-9); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+    transition: background 0.2s, transform 0.15s;
+}
+.nfs-cart-btn:hover  { background: var(--nfs-indigo); }
+.nfs-cart-btn:active { transform: scale(0.93); }
+
+/* ── AI Banner ── */
+.nfs-ai-banner {
+    position: relative; overflow: hidden;
+    background: var(--nfs-slate-9); border-radius: 2rem; padding: 2.5rem;
+    box-shadow: 0 8px 32px rgba(15,23,42,0.2);
+}
+.nfs-ai-inner {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: row; align-items: center; gap: 2.5rem; flex-wrap: wrap;
+}
+.nfs-ai-left  { flex: 1; min-width: 0; }
+.nfs-ai-label-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+.nfs-ai-icon  { color: var(--nfs-indigo-l); }
+.nfs-ai-label { font-size: 0.65rem; font-weight: 900; color: var(--nfs-indigo-l); text-transform: uppercase; letter-spacing: 0.12em; }
+.nfs-ai-title {
+    font-size: 1.75rem; font-weight: 900; color: #fff;
+    text-transform: uppercase; font-style: italic; letter-spacing: -0.02em; margin: 0 0 1rem;
+}
+.nfs-ai-desc   { font-size: 0.875rem; font-weight: 500; color: var(--nfs-slate-4); line-height: 1.7; margin: 0; max-width: 40rem; }
+.nfs-ai-strong { color: #fff; font-weight: 900; }
+.nfs-ai-discount { color: var(--nfs-emerald); font-weight: 900; }
+.nfs-ai-btns   { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+
+.nfs-bundle-btn {
+    padding: 0.875rem 2rem; background: var(--nfs-indigo); color: #fff; border: none;
+    border-radius: 0.875rem; font-size: 0.65rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.1em; cursor: pointer; transition: background 0.15s;
+}
+.nfs-bundle-btn:hover { background: #6366f1; }
+.nfs-dismiss-btn {
+    padding: 0.875rem 2rem; background: transparent; color: rgba(255,255,255,0.5); border: none;
+    border-radius: 0.875rem; font-size: 0.65rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.1em; cursor: pointer; transition: background 0.15s;
+}
+.nfs-dismiss-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+/* Package box */
+.nfs-ai-pkg-box {
+    width: 14rem; height: 14rem; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 3rem;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; flex-shrink: 0;
+}
+.nfs-pkg-icon { color: rgba(255,255,255,0.15); }
+.nfs-discount-tag {
+    position: absolute; top: -0.75rem; right: -0.75rem;
+    background: var(--nfs-emerald); color: #fff;
+    padding: 0.35rem 0.875rem; border-radius: 0.75rem;
+    font-size: 0.65rem; font-weight: 900; letter-spacing: 0.06em;
+    box-shadow: 0 4px 14px rgba(16,185,129,0.4);
+    animation: nfsBounce 1.5s ease-in-out infinite;
+}
+@media (max-width: 768px) { .nfs-ai-pkg-box { display: none; } }
+
+/* Decorative orbs */
+.nfs-ai-orb {
+    position: absolute; width: 16rem; height: 16rem;
+    border-radius: 50%; filter: blur(80px); pointer-events: none;
+}
+.nfs-orb-indigo  { background: rgba(79,70,229,0.2);  top: -4rem; left: -4rem; }
+.nfs-orb-emerald { background: rgba(16,185,129,0.1); bottom: -4rem; right: -4rem; }
+
+/* ── Animations ── */
+@keyframes nfsBounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+}

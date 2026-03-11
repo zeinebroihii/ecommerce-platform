@@ -1,0 +1,198 @@
+<template>
+    <div class="nc-wrap">
+
+        <!-- ── Hero ── -->
+        <div class="nc-hero">
+            <div class="nc-hero-bg">
+                <img src="https://picsum.photos/seed/industrial-tech/1920/1080"
+                     class="nc-hero-bg-img" alt="" referrerpolicy="no-referrer"/>
+                <div class="nc-hero-overlay"></div>
+            </div>
+
+            <div class="nc-hero-content">
+                <div class="nc-hero-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="nc-hero-badge-icon">
+                        <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74z"/>
+                    </svg>
+                    Nexus Ecosystem 2024
+                </div>
+
+                <h1 class="nc-hero-title">
+                    The Future<br/>
+                    <span class="nc-hero-title-indigo">of Industry.</span>
+                </h1>
+
+                <p class="nc-hero-desc">
+                    Explore our curated selection of high-performance hardware and software solutions
+                    designed to elevate your industrial intelligence.
+                </p>
+
+                <div class="nc-hero-btns">
+                    <button class="nc-btn-primary" onclick={handleNewArrivals}>New Arrivals</button>
+                    <button class="nc-btn-outline" onclick={handleViewSpecs}>View All Specs</button>
+                </div>
+            </div>
+
+            <!-- Stats panel (large screens) -->
+            <div class="nc-hero-stats">
+                <div class="nc-stat-card">
+                    <div class="nc-stat-row">
+                        <div class="nc-stat-icon nc-stat-icon--indigo">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="nc-stat-value">99.9%</div>
+                            <div class="nc-stat-label">Uptime Guaranteed</div>
+                        </div>
+                    </div>
+                    <div class="nc-stat-row">
+                        <div class="nc-stat-icon nc-stat-icon--emerald">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="nc-stat-value">ISO 27001</div>
+                            <div class="nc-stat-label">Security Certified</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Filter Bar ── -->
+        <div class="nc-filter-bar">
+            <div class="nc-filter-row">
+                <!-- Family Filter -->
+                <div class="nc-filter-group">
+                    <span class="nc-filter-label">Family</span>
+                    <div class="nc-pills">
+                        <template for:each={familyFilters} for:item="f">
+                            <button key={f.value}
+                                    class={f.cls}
+                                    data-value={f.value}
+                                    onclick={handleFamilyChange}>
+                                {f.label}
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Color/Finish Filter -->
+                <div class="nc-filter-group">
+                    <span class="nc-filter-label">Finish</span>
+                    <div class="nc-pills">
+                        <template for:each={colorFilters} for:item="c">
+                            <button key={c.value}
+                                    class={c.cls}
+                                    data-value={c.value}
+                                    onclick={handleColorChange}>
+                                {c.label}
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="nc-search-wrap">
+                <svg class="nc-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text"
+                       placeholder="Search products..."
+                       value={searchQuery}
+                       oninput={handleSearch}
+                       class="nc-search-input"/>
+            </div>
+        </div>
+
+        <!-- ── Product Grid ── -->
+        <div class="nc-grid">
+            <template for:each={filteredProducts} for:item="p">
+                <c-nexus-card
+                    key={p.id}
+                    product={p}
+                    favorited={p.isFav}
+                    onviewdetails={handleViewProduct}
+                    ontogglefavorite={handleToggleFavorite}
+                    onaddtocart={handleAddToCart}>
+                </c-nexus-card>
+            </template>
+
+            <template if:false={hasProducts}>
+                <div class="nc-empty">No products match your filters.</div>
+            </template>
+        </div>
+
+        <!-- ── Product Detail View (full-page overlay) ── -->
+        <template if:true={isDetailViewOpen}>
+            <c-nexus-product-detail-view
+                product={detailProduct}
+                favorites={favoritedIds}
+                onclose={handleDetailClose}
+                onaddtocart={handleDetailAddToCart}
+                ontogglefavorite={handleDetailToggleFavorite}>
+            </c-nexus-product-detail-view>
+        </template>
+
+        <!-- ── B2B Quote Form ── -->
+        <template if:true={isQuoteFormOpen}>
+            <div class="nc-modal-backdrop" onclick={handleQuoteBackdropClick}>
+                <div class="nc-modal nc-quote-modal" onclick={handleModalContentClick}>
+                    <div class="nc-modal-header">
+                        <div>
+                            <h2 class="nc-modal-title">Request a Quote</h2>
+                            <p class="nc-modal-code">{quoteProduct.name} — {quoteProduct.productCode}</p>
+                        </div>
+                        <button class="nc-modal-close" onclick={handleQuoteFormClose}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="nc-quote-body">
+                        <div class="nc-quote-field">
+                            <label class="nc-quote-label">Company Name</label>
+                            <input type="text" class="nc-quote-input" placeholder="Acme Corp"
+                                   data-field="company" oninput={handleQuoteFieldChange}/>
+                        </div>
+                        <div class="nc-quote-field">
+                            <label class="nc-quote-label">Contact Email</label>
+                            <input type="email" class="nc-quote-input" placeholder="you@company.com"
+                                   data-field="email" oninput={handleQuoteFieldChange}/>
+                        </div>
+                        <div class="nc-quote-field">
+                            <label class="nc-quote-label">Quantity</label>
+                            <input type="number" class="nc-quote-input" placeholder="1"
+                                   data-field="quantity" oninput={handleQuoteFieldChange}/>
+                        </div>
+                        <div class="nc-quote-field">
+                            <label class="nc-quote-label">Message</label>
+                            <textarea class="nc-quote-input nc-quote-textarea"
+                                      placeholder="Tell us about your requirements..."
+                                      data-field="message" oninput={handleQuoteFieldChange}></textarea>
+                        </div>
+                        <button class="nc-btn-primary nc-quote-submit" onclick={handleQuoteSubmit}>
+                            Submit Quote Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Cart Toast ── -->
+        <template if:true={showToast}>
+            <div class="nc-toast">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                Added to cart
+            </div>
+        </template>
+
+    </div>
+</template>

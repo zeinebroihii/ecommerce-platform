@@ -1,0 +1,55 @@
+/* ── Nexus Site — Global CSS Overrides ──────────────────────────────────── */
+/* Force all Experience Cloud containers to stretch full page width          */
+
+/* ── Core Experience Cloud wrappers ─────────────────────────────────────── */
+.siteforceContentArea,
+.forcePageContainer,
+.siteforceBody .siteforceContentArea,
+.siteforceBody .forcePageContainer,
+.siteforceBody .forceChatterPage {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* ── LWR / Aura layout columns ───────────────────────────────────────────── */
+.forceCommunityThemeLayoutOneColumn .layoutColumn,
+.forceCommunityThemeLayoutTwoColumn .layoutColumn,
+.forceCommunityThemeLayout .layoutColumn,
+.cCommunityThemeContainer,
+.cCommunityThemeContainer > .container,
+.forceCommunityGlobalNavigation + .mainContent,
+.mainContent {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* ── LWR Experience Cloud (newer orgs) ───────────────────────────────────── */
+.experience-component,
+[data-region-name="content"] > *,
+.dxp-c-page-container,
+.dxp-c-page-container > *,
+.lds-container,
+.lds-container-fluid {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* ── Page body / html ────────────────────────────────────────────────────── */
+body,
+.siteforceBody {
+    overflow-x: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}

@@ -6,4 +6,29 @@
         <target>lightningCommunity__Page</target>
         <target>lightningCommunity__Default</target>
     </targets>
+    <targetConfigs>
+        <targetConfig targets="lightningCommunity__Default">
+            <property
+                name="pageWidth"
+                type="String"
+                label="Page Width"
+                description="CSS width of the page wrapper (e.g. 100%, 1440px)"
+                default="100%"
+            />
+            <property
+                name="pageMaxWidth"
+                type="String"
+                label="Page Max Width"
+                description="CSS max-width of the page wrapper (e.g. 100%, 1600px)"
+                default="100%"
+            />
+            <property
+                name="pagePadding"
+                type="String"
+                label="Page Padding"
+                description="CSS padding of the page wrapper (e.g. 0, 0 2rem)"
+                default="0"
+            />
+        </targetConfig>
+    </targetConfigs>
 </LightningComponentBundle>

@@ -1,0 +1,137 @@
+<template>
+    <div class="qf-overlay" onclick={handleOverlayClick}>
+        <div class="qf-modal" onclick={stopPropagation}>
+
+            <!-- ── Form step ── -->
+            <template if:false={isSuccess}>
+
+                <div class="qf-header">
+                    <div class="qf-header-inner">
+                        <div class="qf-header-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="qf-title">B2B Quote Request</h3>
+                            <p class="qf-subtitle">Enterprise Solutions Division</p>
+                        </div>
+                    </div>
+                    <button class="qf-close" onclick={handleClose} aria-label="Close">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="qf-body">
+                    <!-- Product preview -->
+                    <template if:true={hasProduct}>
+                        <div class="qf-product-preview">
+                            <img src={product.image} class="qf-product-img" alt={product.name} referrerpolicy="no-referrer"/>
+                            <div>
+                                <h4 class="qf-product-name">{product.name}</h4>
+                                <p class="qf-product-code">Product ID: {product.productCode}</p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="qf-grid">
+                        <!-- Company Name -->
+                        <div class="qf-field">
+                            <label class="qf-label">Company Name</label>
+                            <div class="qf-input-wrap">
+                                <svg class="qf-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                                </svg>
+                                <input type="text" class="qf-input" placeholder="e.g. Nexus Corp"
+                                       value={companyName} oninput={handleInput} data-field="companyName" required/>
+                            </div>
+                        </div>
+
+                        <!-- Business Email -->
+                        <div class="qf-field">
+                            <label class="qf-label">Business Email</label>
+                            <div class="qf-input-wrap">
+                                <svg class="qf-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                <input type="email" class="qf-input" placeholder="name@company.com"
+                                       value={email} oninput={handleInput} data-field="email" required/>
+                            </div>
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="qf-field">
+                            <label class="qf-label">Estimated Quantity</label>
+                            <div class="qf-input-wrap">
+                                <svg class="qf-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/>
+                                    <line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
+                                </svg>
+                                <input type="number" class="qf-input" min="1"
+                                       value={quantity} oninput={handleInput} data-field="quantity" required/>
+                            </div>
+                        </div>
+
+                        <!-- Industry -->
+                        <div class="qf-field">
+                            <label class="qf-label">Industry</label>
+                            <select class="qf-select" onchange={handleIndustry}>
+                                <option value="Technology">Technology</option>
+                                <option value="Manufacturing">Manufacturing</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Logistics">Logistics</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="qf-field">
+                        <label class="qf-label">Specific Requirements</label>
+                        <div class="qf-input-wrap qf-input-wrap--textarea">
+                            <svg class="qf-input-icon qf-input-icon--top" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                            </svg>
+                            <textarea class="qf-textarea" rows="3" placeholder="Tell us about your project..."
+                                      oninput={handleInput} data-field="message">{message}</textarea>
+                        </div>
+                    </div>
+
+                    <button type="button" class="qf-submit-btn" onclick={handleSubmit} disabled={isSubmitting}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        <template if:false={isSubmitting}>Submit Quote Request</template>
+                        <template if:true={isSubmitting}>Sending...</template>
+                    </button>
+                </div>
+            </template>
+
+            <!-- ── Success step ── -->
+            <template if:true={isSuccess}>
+                <div class="qf-success">
+                    <div class="qf-success-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <h3 class="qf-success-title">Request Received</h3>
+                    <p class="qf-success-desc">
+                        Our Enterprise team has received your request
+                        <template if:true={hasProduct}>&nbsp;for <strong>{product.name}</strong></template>.
+                        A dedicated account manager will contact you within 2 business hours.
+                    </p>
+                    <button type="button" class="qf-back-btn" onclick={handleClose}>
+                        Back to Catalog
+                    </button>
+                </div>
+            </template>
+
+        </div>
+    </div>
+</template>

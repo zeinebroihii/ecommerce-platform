@@ -1,0 +1,234 @@
+:host {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* ── Section ─────────────────────────────────────────────────────────────── */
+.nh-section {
+    position: relative;
+    min-height: calc(100vh - 5rem);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: #020617;
+    padding: 5rem 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+@media (min-width: 1024px) { .nh-section { padding: 0; } }
+
+/* ── Background layers ───────────────────────────────────────────────────── */
+.nh-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.nh-bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.4;
+}
+
+.nh-bg-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, #020617, rgba(2,6,23,0.8), transparent);
+}
+
+.nh-bg-radial {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(16,185,129,0.15), transparent 50%);
+}
+
+.nh-bg-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.1;
+    background-image:
+        linear-gradient(#ffffff 1px, transparent 1px),
+        linear-gradient(90deg, #ffffff 1px, transparent 1px);
+    background-size: 80px 80px;
+}
+
+/* ── Content grid ────────────────────────────────────────────────────────── */
+.nh-grid {
+    position: relative;
+    z-index: 10;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 3rem !important;
+    align-items: center;
+    box-sizing: border-box !important;
+}
+@media (min-width: 768px) { .nh-grid { padding: 0 6rem !important; } }
+
+.nh-left { width: 100% !important; }
+
+/* ── Badge ───────────────────────────────────────────────────────────────── */
+.nh-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.2);
+    color: #34d399;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    margin-bottom: 1.5rem;
+}
+@media (min-width: 768px) { .nh-badge { margin-bottom: 2rem; } }
+
+.nh-badge-icon { flex-shrink: 0; }
+
+/* ── Title ───────────────────────────────────────────────────────────────── */
+.nh-title {
+    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.05em;
+    line-height: 0.85;
+    margin: 0 0 1.5rem;
+}
+@media (min-width: 768px) { .nh-title { margin-bottom: 2rem; } }
+
+.nh-title-emerald {
+    color: #10b981;
+    font-style: italic;
+}
+
+/* ── Subtitle ────────────────────────────────────────────────────────────── */
+.nh-subtitle {
+    font-size: 1rem;
+    color: #cbd5e1;
+    max-width: 36rem;
+    font-weight: 500;
+    line-height: 1.7;
+    margin: 0 0 2rem;
+}
+@media (min-width: 768px) { .nh-subtitle { font-size: 1.125rem; margin-bottom: 2.5rem; } }
+@media (min-width: 1024px) { .nh-subtitle { font-size: 1.25rem; } }
+
+.nh-strong { color: #ffffff; font-weight: 900; }
+
+/* ── CTA buttons ─────────────────────────────────────────────────────────── */
+.nh-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+@media (min-width: 768px) { .nh-ctas { gap: 1.5rem; } }
+
+.nh-cta-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    height: 3.5rem;
+    padding: 0 2rem;
+    border: none;
+    border-radius: 1rem;
+    background: #059669;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    box-shadow: 0 20px 40px rgba(5,150,105,0.4);
+    transition: background 0.3s, transform 0.15s, box-shadow 0.3s;
+    overflow: hidden;
+    position: relative;
+    font-family: inherit;
+}
+@media (min-width: 768px) { .nh-cta-primary { height: 4rem; padding: 0 3rem; } }
+
+.nh-cta-primary:hover  { background: #10b981; transform: scale(1.05); }
+.nh-cta-primary:active { transform: scale(0.95); }
+
+.nh-cta-arrow { transition: transform 0.5s; flex-shrink: 0; }
+.nh-cta-primary:hover .nh-cta-arrow { transform: translateX(0.5rem); }
+
+.nh-cta-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 3.5rem;
+    padding: 0 2rem;
+    border: 2px solid rgba(16,185,129,0.5);
+    border-radius: 1rem;
+    background: transparent;
+    color: #34d399;
+    font-size: 0.75rem;
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.15s;
+    font-family: inherit;
+}
+@media (min-width: 768px) { .nh-cta-outline { height: 4rem; padding: 0 3rem; } }
+
+.nh-cta-outline:hover  { background: #10b981; color: #ffffff; border-color: #10b981; transform: scale(1.05); }
+.nh-cta-outline:active { transform: scale(0.95); }
+
+/* ── Scroll indicator ────────────────────────────────────────────────────── */
+.nh-scroll {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    z-index: 10;
+}
+
+.nh-scroll-label {
+    font-size: 10px;
+    font-weight: 900;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5em;
+    white-space: nowrap;
+}
+
+.nh-scroll-track {
+    width: 1.5rem;
+    height: 2.5rem;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 9999px;
+    display: flex;
+    justify-content: center;
+    padding: 0.25rem;
+}
+
+.nh-scroll-thumb {
+    width: 0.25rem;
+    height: 0.5rem;
+    background: #10b981;
+    border-radius: 9999px;
+    animation: nh-scroll-bob 2s ease-in-out infinite;
+}
+
+@keyframes nh-scroll-bob {
+    0%, 100% { transform: translateY(0);    opacity: 1;   }
+    50%       { transform: translateY(0.75rem); opacity: 0.4; }
+}

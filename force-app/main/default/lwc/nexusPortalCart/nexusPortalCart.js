@@ -27,7 +27,7 @@ export default class NexusPortalCart extends LightningElement {
 
     get itemCountLabel() {
         const n = this.itemCount;
-        return n === 1 ? '1 article' : `${n} articles`;
+        return n === 1 ? '1 Item' : `${n} Items`;
     }
 
     get subtotal() {
@@ -54,6 +54,11 @@ export default class NexusPortalCart extends LightningElement {
         try {
             sessionStorage.setItem(CART_KEY, JSON.stringify(this.cartItems));
         } catch (e) { /* quota */ }
+        // Notify parent so the sidebar badge stays in sync
+        this.dispatchEvent(new CustomEvent('cartchanged', {
+            bubbles: true,
+            detail: { cart: this.cartItems }
+        }));
     }
 
     // ── item events ────────────────────────────────────────────────

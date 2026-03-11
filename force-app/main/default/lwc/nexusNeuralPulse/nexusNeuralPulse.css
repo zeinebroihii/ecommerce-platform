@@ -1,0 +1,40 @@
+:host { display: block; }
+
+.nnp-wrap {
+    position: relative;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 3rem;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    box-shadow: inset 0 2px 12px rgba(0,0,0,0.03);
+}
+
+.nnp-header {
+    position: absolute;
+    top: 2rem; left: 2rem;
+    z-index: 10;
+}
+.nnp-title-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem; }
+.nnp-sparkle { color: #4f46e5; }
+.nnp-title { font-size: 1.25rem; font-weight: 900; color: #0f172a; letter-spacing: -0.03em; text-transform: uppercase; margin: 0; }
+.nnp-subtitle { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em; }
+
+.nnp-svg { width: 100%; height: auto; display: block; }
+
+.nnp-footer {
+    position: absolute;
+    bottom: 2rem; left: 2rem; right: 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 10;
+}
+.nnp-legend { display: flex; gap: 2rem; }
+.nnp-legend-item { display: flex; align-items: center; gap: 0.5rem; }
+.nnp-dot { width: 0.75rem; height: 0.75rem; border-radius: 9999px; }
+.nnp-dot--indigo  { background: #6366f1; }
+.nnp-dot--emerald { background: #10b981; }
+.nnp-dot--rose    { background: #f43f5e; }
+.nnp-legend-label { font-size: 9px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; }
+
+.nnp-live { font-size: 9px; font-weight: 900; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.1em; animation: nnp-pulse 1.5s ease-in-out infinite; }
+@keyframes nnp-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
