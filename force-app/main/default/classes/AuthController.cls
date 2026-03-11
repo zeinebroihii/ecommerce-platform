@@ -76,8 +76,10 @@ public without sharing class AuthController {
             }
 
             // 5. Auto-login and redirect to portal
-            PageReference ref = Site.login(email, password, '/shop/s/');
-            return ref != null ? ref.getUrl() : '/shop/s/';
+            String siteBase = Site.getBaseUrl();
+            String portalHome = String.isNotBlank(siteBase) ? siteBase + '/s/' : '/s/';
+            PageReference ref = Site.login(email, password, portalHome);
+            return ref != null ? ref.getUrl() : portalHome;
 
         } catch (AuraHandledException e) {
             throw e;

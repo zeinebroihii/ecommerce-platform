@@ -49,7 +49,7 @@ public class LeadConversionEmailAction {
 
                 Messaging.SingleEmailMessage adminMail = new Messaging.SingleEmailMessage();
                 adminMail.setToAddresses(new List<String>{ adminEmail });
-                adminMail.setSubject('TALCORE \u2014 Lead Converti : ' + fullName);
+                adminMail.setSubject('Nexus \u2014 Lead Converti : ' + fullName + '.');
                 adminMail.setHtmlBody(buildAdminHtml(
                     r.firstName, r.lastName, r.company, r.email,
                     oppLink, contactLink, convertedContactId
@@ -146,78 +146,73 @@ public class LeadConversionEmailAction {
                                          String oppLink, String contactLink,
                                          Id convertedContactId) {
         String fullName = (firstName + ' ' + lastName).trim();
-        return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-            + '<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">'
-            + '<div style="max-width:600px;margin:32px auto;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(15,23,42,0.14);">'
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>'
+            + '<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">'
+            + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:48px 20px;">'
+            + '<tr><td align="center">'
+            + '<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(15,23,42,0.08);">'
 
-            // ── Dark header top row ──
-            + '<div style="background:#0f172a;padding:28px 36px 0;">'
-            + '<table style="width:100%;border-collapse:collapse;"><tr>'
-            + '<td><span style="font-size:20px;font-weight:800;color:#fff;letter-spacing:0.14em;">TALCORE</span>'
-            + '<br><span style="color:#64748b;font-size:11px;letter-spacing:0.05em;">IT &amp; Enterprise Solutions</span></td>'
-            + '<td style="text-align:right;vertical-align:middle;">'
-            + '<span style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);'
-            + 'color:#6ee7b7;font-size:11px;font-weight:700;letter-spacing:0.06em;padding:5px 13px;border-radius:100px;">'
-            + '&#x2705; LEAD CONVERTI</span>'
-            + '</td></tr></table>'
-            + '<div style="margin-top:22px;height:2px;background:#10b981;"></div>'
-            + '</div>'
+            // ── Top accent line: emerald gradient ──
+            + '<tr><td style="height:4px;background:linear-gradient(90deg,#10b981,#059669,#0ea5e9);"></td></tr>'
 
-            // ── Dark header title ──
-            + '<div style="background:#0f172a;padding:18px 36px 30px;">'
-            + '<div style="font-size:20px;font-weight:700;color:#f1f5f9;">Conversion r\u00e9alis\u00e9e avec succ\u00e8s</div>'
-            + '<div style="color:#94a3b8;font-size:13px;margin-top:5px;">Le lead a \u00e9t\u00e9 converti en Client et Opportunit\u00e9</div>'
+            // ── Dark header ──
+            + '<tr><td style="background:linear-gradient(160deg,#0f172a 0%,#042f2e 50%,#064e3b 100%);padding:40px 48px;text-align:center;">'
+            + '<div style="display:inline-block;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:12px;padding:10px 24px;margin-bottom:20px;">'
+            + '<span style="font-size:20px;font-weight:900;color:#fff;letter-spacing:4px;">NEXUS</span>'
             + '</div>'
+            + '<div style="font-size:10px;color:#6ee7b7;letter-spacing:3px;font-weight:600;margin-bottom:24px;">CRM &amp; INTELLIGENCE PLATFORM</div>'
+            + '<div style="width:60px;height:60px;background:linear-gradient(135deg,#059669,#10b981);border-radius:50%;margin:0 auto 16px;font-size:26px;line-height:60px;text-align:center;color:#fff;">&#x2705;</div>'
+            + '<h1 style="margin:0;font-size:24px;font-weight:700;color:#f9fafb;">Lead Converti avec Succ\u00e8s</h1>'
+            + '<p style="margin:10px 0 0;font-size:14px;color:#94a3b8;">Le prospect a \u00e9t\u00e9 converti en Client et Opportunit\u00e9</p>'
+            + '</td></tr>'
 
             // ── White body ──
-            + '<div style="background:#fff;padding:36px;">'
-            + '<p style="color:#475569;line-height:1.7;font-size:14px;margin:0 0 24px;">'
-            + 'Le prospect suivant vient d\'\u00eatre converti avec succ\u00e8s dans TALCORE CRM :</p>'
+            + '<tr><td style="background:#ffffff;padding:36px 48px;">'
+            + '<p style="color:#475569;line-height:1.75;font-size:14px;margin:0 0 24px;">'
+            + 'Le prospect suivant vient d\'\u00eatre converti avec succ\u00e8s dans <strong style="color:#0f172a;">Nexus CRM</strong> :</p>'
 
-            // ── Client info card (green accent) ──
-            + '<div style="background:#f8fafc;border-left:4px solid #10b981;border-radius:0 12px 12px 0;padding:20px 24px;margin:0 0 24px;">'
+            // ── Client info card (emerald accent) ──
+            + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin:0 0 20px;">'
+            + '<div style="font-size:10px;color:#10b981;letter-spacing:3px;font-weight:700;margin-bottom:16px;">&#128100; INFORMATIONS CLIENT</div>'
             + '<table style="width:100%;border-collapse:collapse;">'
             + '<tr>'
-            + '<td style="padding:8px 16px 8px 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;">CLIENT</td>'
+            + '<td style="padding:8px 16px 8px 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;vertical-align:top;">CLIENT</td>'
             + '<td style="padding:8px 0;color:#0f172a;font-weight:700;font-size:14px;">' + fullName + '</td>'
             + '</tr><tr>'
-            + '<td style="padding:8px 16px 8px 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;">ENTREPRISE</td>'
+            + '<td style="padding:8px 16px 8px 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;vertical-align:top;">ENTREPRISE</td>'
             + '<td style="padding:8px 0;color:#0f172a;font-weight:600;font-size:14px;">' + (String.isNotBlank(company) ? company : '\u2014') + '</td>'
             + '</tr><tr>'
-            + '<td style="padding:8px 16px 8px 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;">EMAIL</td>'
+            + '<td style="padding:8px 16px 8px 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;vertical-align:top;">EMAIL</td>'
             + '<td style="padding:8px 0;color:#0f172a;font-weight:600;font-size:14px;">' + (String.isNotBlank(email) ? email : '\u2014') + '</td>'
             + '</tr></table></div>'
 
-            // ── Next-step action box ──
-            + '<div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:12px;padding:20px 24px;margin:0 0 24px;">'
-            + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
-            + '<span style="font-size:18px;">&#9888;&#65039;</span>'
-            + '<span style="font-size:13px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.06em;">'
-            + '\u00c9tape suivante \u2014 Activer le compte portail</span>'
-            + '</div>'
-            + '<p style="margin:0 0 14px;color:#78350f;font-size:14px;line-height:1.6;">'
-            + 'Le compte portail client <strong>' + fullName + '</strong> n\u2019a pas encore \u00e9t\u00e9 cr\u00e9\u00e9. '
-            + 'Rendez-vous dans le <strong>tableau de bord TALCORE</strong> et cliquez sur '
-            + '<strong>\u201cCr\u00e9er compte portail\u201d</strong> pour activer l\u2019acc\u00e8s et envoyer les identifiants au client.</p>'
-            + '<p style="margin:0;color:#92400e;font-size:13px;">'
-            + 'Email du client : <strong>' + (String.isNotBlank(email) ? email : '\u2014') + '</strong></p>'
+            // ── Auto-provisioned portal account confirmation ──
+            + '<div style="background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:20px 24px;margin:0 0 24px;">'
+            + '<div style="font-size:11px;font-weight:700;color:#065f46;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">&#x2705; Compte Portail Cr\u00e9\u00e9 Automatiquement</div>'
+            + '<p style="margin:0;color:#047857;font-size:14px;line-height:1.6;">'
+            + 'Le compte portail de <strong>' + fullName + '</strong> a \u00e9t\u00e9 cr\u00e9\u00e9 automatiquement. '
+            + 'Un email contenant les identifiants de connexion a \u00e9t\u00e9 envoy\u00e9 directement \u00e0 <strong>' + (String.isNotBlank(email) ? email : fullName) + '</strong>.'
+            + '</p>'
             + '</div>'
 
             // ── CTA buttons ──
-            + '<div style="text-align:center;">'
+            + '<div style="text-align:center;padding-bottom:8px;">'
             + (String.isNotBlank(oppLink)
-                ? '<a href="' + oppLink + '" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;margin-right:12px;">Voir Opportunit\u00e9 &rarr;</a>'
+                ? '<a href="' + oppLink + '" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:13px;display:inline-block;margin:4px 6px;">Voir Opportunit\u00e9 &rarr;</a>'
                 : '')
             + (String.isNotBlank(contactLink)
-                ? '<a href="' + contactLink + '" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;">Voir Contact &rarr;</a>'
+                ? '<a href="' + contactLink + '" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:13px;display:inline-block;margin:4px 6px;">Voir Contact &rarr;</a>'
                 : '')
-            + '</div></div>'
+            + '</div>'
+            + '</td></tr>'
 
             // ── Dark footer ──
-            + '<div style="background:#1e293b;padding:18px 36px;text-align:center;">'
-            + '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 TALCORE &bull; IT &amp; Enterprise Solutions</p>'
-            + '<p style="color:#475569;font-size:11px;margin:0;">Notification CRM automatique &mdash; Ne pas r\u00e9pondre \u00e0 cet email</p>'
-            + '</div>'
-            + '</div></body></html>';
+            + '<tr><td style="background:#0a0d14;padding:20px 48px;text-align:center;border-top:1px solid #1f2937;">'
+            + '<div style="font-size:13px;font-weight:800;color:#10b981;letter-spacing:3px;margin-bottom:4px;">NEXUS</div>'
+            + '<div style="font-size:11px;color:#4b5563;margin-bottom:4px;">CRM &amp; Intelligence Platform</div>'
+            + '<div style="font-size:11px;color:#374151;">Notification CRM automatique &mdash; Ne pas r\u00e9pondre \u00e0 cet email</div>'
+            + '</td></tr>'
+            + '</table></td></tr></table>'
+            + '</body></html>';
     }
 }
