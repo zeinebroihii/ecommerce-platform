@@ -48,7 +48,7 @@ img    { max-width: 100%; height: auto; }
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.25rem;
-    max-width: 10rem;
+    max-width:65rem;
     margin: 0 auto;
     box-sizing: border-box;
 }
