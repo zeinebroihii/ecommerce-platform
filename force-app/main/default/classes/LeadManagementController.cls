@@ -626,8 +626,8 @@ public without sharing class LeadManagementController {
                 Id roleId;
                 if (roles.isEmpty()) {
                     UserRole defaultRole = new UserRole(
-                        Name          = 'TALCORE Admin',
-                        DeveloperName = 'TALCORE_Admin'
+                        Name          = 'Nexus Admin',
+                        DeveloperName = 'Nexus_Admin'
                     );
                     insert defaultRole;
                     roleId = defaultRole.Id;
@@ -645,7 +645,7 @@ public without sharing class LeadManagementController {
             String msg = e.getMessage();
             if (msg.contains('DUPLICATE_USERNAME')) {
                 // Username taken — append a suffix and retry
-                u.Username = c.Email + '.talcore';
+                u.Username = c.Email + '.nexus';
                 try {
                     insert u;
                 } catch (DmlException e2) {
@@ -696,7 +696,7 @@ public without sharing class LeadManagementController {
             String siteBaseX = Site.getBaseUrl();
             String baseUrlX  = String.isNotBlank(siteBaseX)
                 ? siteBaseX
-                : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/NexusPortal';
+                : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss';
             String changePwdUrlX = baseUrlX + '/s/changer-mot-de-passe';
             String loginUrlX     = baseUrlX + '/s/login?startUrl='
                 + EncodingUtil.urlEncode(changePwdUrlX, 'UTF-8');
@@ -803,7 +803,7 @@ public without sharing class LeadManagementController {
         String siteBase     = Site.getBaseUrl();
         String baseUrl      = String.isNotBlank(siteBase)
             ? siteBase
-            : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/NexusPortal';
+            : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss';
         String changePwdUrl = baseUrl + '/s/changer-mot-de-passe';
         String loginUrl     = baseUrl + '/s/login?startUrl='
             + EncodingUtil.urlEncode(changePwdUrl, 'UTF-8');
@@ -821,10 +821,12 @@ public without sharing class LeadManagementController {
     ) {
         try {
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            mail.setTargetObjectId(contactId);   // links email to Contact record + uses contact's email
+            // Use setToAddresses (not setTargetObjectId) to guarantee delivery —
+            // setTargetObjectId on portal contacts can be silently suppressed.
+            mail.setToAddresses(new List<String>{ email });
             mail.setSubject('Nexus \u2014 Vos identifiants de connexion');
             mail.setHtmlBody(buildWelcomeEmailHtml(firstName, email, company, tempPwd, loginUrl));
-            mail.setSaveAsActivity(true);        // logs as Activity on the Contact record
+            mail.setSaveAsActivity(false);
             Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
         } catch (Exception e) {
             throw new AuraHandledException('Erreur envoi email de bienvenue : ' + e.getMessage());
@@ -836,14 +838,19 @@ public without sharing class LeadManagementController {
         String email, String firstName, String lastName, String salutation
     ) {
         try {
-            String loginUrl = 'https://orgfarm-36e06c1f3e-dev-ed.develop.my.site.com/shop/s/login';
-            String pwdUrl   = loginUrl.replace('/login', '/ForgotPassword');
+            String siteBase = Site.getBaseUrl();
+            String loginUrl = String.isNotBlank(siteBase)
+                ? siteBase + '/s/login'
+                : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/login';
+            String pwdUrl   = String.isNotBlank(siteBase)
+                ? siteBase + '/s/ForgotPassword'
+                : loginUrl.replace('/login', '/ForgotPassword');
             String greeting = (salutation == 'Mr.') ? 'Cher' : 'Ch\u00e8re';
             String fullName = (firstName + ' ' + lastName).trim();
 
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(new List<String>{ email });
-            mail.setSubject('Bienvenue sur TALCORE \u2014 Votre espace est pr\u00eat !');
+            mail.setSubject('Bienvenue sur Nexus \u2014 Votre espace est pr\u00eat !');
             mail.setHtmlBody(buildPortalWelcomeHtml(greeting, fullName, email, loginUrl, pwdUrl));
             mail.setSaveAsActivity(false);
             Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
@@ -852,69 +859,73 @@ public without sharing class LeadManagementController {
         }
     }
 
-    // ── Welcome email HTML (identical styling to LeadConversionEmailAction) ───
+    // ── Welcome email HTML ────────────────────────────────────────────────────
     private static String buildPortalWelcomeHtml(
         String greeting, String fullName, String email, String loginUrl, String pwdUrl
     ) {
-        return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-            + '<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">'
-            + '<div style="max-width:600px;margin:32px auto;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(15,23,42,0.14);">'
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>'
+            + '<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">'
+            + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:48px 20px;">'
+            + '<tr><td align="center">'
+            + '<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(15,23,42,0.08);">'
 
-            // Header
-            + '<div style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);padding:32px 36px;">'
-            + '<table style="width:100%;border-collapse:collapse;"><tr>'
-            + '<td><span style="font-size:22px;font-weight:800;color:#fff;letter-spacing:0.12em;">TALCORE</span>'
-            + '<br><span style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:0.06em;">IT &amp; Enterprise Solutions</span></td>'
-            + '<td style="text-align:right;vertical-align:middle;">'
-            + '<span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);'
-            + 'color:#fff;font-size:11px;font-weight:700;letter-spacing:0.06em;padding:5px 13px;border-radius:100px;">'
-            + '&#x1F389; BIENVENUE</span></td></tr></table>'
+            // ── Top accent line ──
+            + '<tr><td style="height:4px;background:linear-gradient(90deg,#059669,#10b981,#0ea5e9);"></td></tr>'
+
+            // ── Dark header ──
+            + '<tr><td style="background:linear-gradient(160deg,#0f172a 0%,#042f2e 50%,#064e3b 100%);padding:40px 48px;text-align:center;">'
+            + '<div style="display:inline-block;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:12px;padding:10px 24px;margin-bottom:20px;">'
+            + '<span style="font-size:20px;font-weight:900;color:#fff;letter-spacing:4px;">NEXUS</span>'
+            + '</div>'
+            + '<div style="font-size:10px;color:#6ee7b7;letter-spacing:3px;font-weight:600;margin-bottom:24px;">INTELLIGENCE PLATFORM</div>'
+            + '<div style="width:60px;height:60px;background:linear-gradient(135deg,#059669,#10b981);border-radius:50%;margin:0 auto 16px;font-size:26px;line-height:60px;text-align:center;color:#fff;">&#x1F389;</div>'
+            + '<h1 style="margin:0;font-size:24px;font-weight:700;color:#f9fafb;">Bienvenue sur Nexus !</h1>'
+            + '<p style="margin:10px 0 0;font-size:14px;color:#94a3b8;">' + greeting + ' <strong style="color:#6ee7b7;">' + fullName + '</strong>, votre espace est pr\u00eat.</p>'
+            + '</td></tr>'
+
+            // ── White body ──
+            + '<tr><td style="background:#ffffff;padding:36px 48px;">'
+            + '<p style="color:#475569;line-height:1.75;font-size:14px;margin:0 0 24px;">'
+            + 'Votre demande a \u00e9t\u00e9 valid\u00e9e et votre espace personnel sur la plateforme <strong style="color:#0f172a;">Nexus</strong> est d\u00e9sormais actif.</p>'
+
+            // ── Login info ──
+            + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin:0 0 20px;">'
+            + '<div style="font-size:10px;color:#10b981;letter-spacing:3px;font-weight:700;margin-bottom:12px;">&#128274; IDENTIFIANT DE CONNEXION</div>'
+            + '<div style="font-size:15px;color:#0f172a;font-family:\'Courier New\',monospace;background:#ffffff;padding:12px 16px;border-radius:8px;border:1px solid #e2e8f0;">' + email + '</div>'
             + '</div>'
 
-            // Body
-            + '<div style="background:#fff;padding:36px;">'
-            + '<p style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 16px;">'
-            + greeting + ' ' + fullName + ',</p>'
-            + '<p style="color:#475569;line-height:1.7;font-size:14px;margin:0 0 14px;">'
-            + 'Nous vous remercions de votre confiance en <strong style="color:#6366f1;">TALCORE</strong>. '
-            + 'Votre demande a \u00e9t\u00e9 valid\u00e9e et votre espace personnel est d\u00e9sormais actif.</p>'
-
-            // Login info card
-            + '<div style="background:#f8fafc;border-left:4px solid #6366f1;border-radius:0 12px 12px 0;padding:18px 24px;margin:0 0 18px;">'
-            + '<div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Identifiant de connexion</div>'
-            + '<table style="border-collapse:collapse;"><tr>'
-            + '<td style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding-right:16px;">Email</td>'
-            + '<td style="color:#0f172a;font-weight:700;font-size:14px;">' + email + '</td>'
-            + '</tr></table>'
+            // ── Set password section ──
+            + '<div style="background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:20px 24px;margin:0 0 28px;">'
+            + '<div style="font-size:11px;font-weight:700;color:#065f46;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">Premi\u00e8re connexion — D\u00e9finissez votre mot de passe</div>'
+            + '<p style="margin:0 0 14px;color:#047857;font-size:14px;line-height:1.6;">'
+            + 'Cliquez sur le bouton ci-dessous pour d\u00e9finir votre mot de passe et acc\u00e9der \u00e0 votre espace Nexus :</p>'
+            + '<div style="text-align:center;">'
+            + '<a href="' + pwdUrl + '" style="background:#059669;color:#fff;text-decoration:none;padding:11px 28px;border-radius:8px;font-weight:700;font-size:13px;display:inline-block;">'
+            + 'D\u00e9finir mon mot de passe &rarr;</a>'
+            + '</div>'
             + '</div>'
 
-            // Password section
-            + '<div style="background:#faf5ff;border-left:4px solid #7c3aed;border-radius:0 12px 12px 0;padding:18px 24px;margin:0 0 28px;">'
-            + '<div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Premi\u00e8re connexion — D\u00e9finissez votre mot de passe</div>'
-            + '<p style="margin:0;color:#334155;font-size:14px;line-height:1.6;">'
-            + 'Vous recevrez dans quelques instants un second email intitul\u00e9 <strong>\u00ab\u00a0R\u00e9initialiser votre mot de passe\u00a0\u00bb</strong>. '
-            + 'Cliquez sur le lien qu\'il contient pour d\u00e9finir votre mot de passe et acc\u00e9der \u00e0 votre espace TALCORE.</p>'
-            + '</div>'
-
-            // Main CTA
+            // ── Main CTA ──
             + '<div style="text-align:center;margin:0 0 28px;">'
-            + '<a href="' + loginUrl + '" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;'
+            + '<a href="' + loginUrl + '" style="background:linear-gradient(135deg,#059669,#0ea5e9);color:#fff;'
             + 'text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;">'
-            + 'Acc\u00e9der \u00e0 mon espace TALCORE &rarr;</a>'
+            + 'Acc\u00e9der \u00e0 mon espace Nexus &rarr;</a>'
             + '</div>'
 
             + '<div style="border-top:1px solid #e2e8f0;padding-top:20px;">'
             + '<p style="color:#94a3b8;font-size:13px;text-align:center;margin:0;">'
             + 'Des questions ? Notre \u00e9quipe support est disponible pour vous aider.</p>'
             + '</div>'
-            + '</div>'
+            + '</td></tr>'
 
-            // Footer
-            + '<div style="background:#1e293b;padding:18px 36px;text-align:center;">'
-            + '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 TALCORE &bull; IT &amp; Enterprise Solutions</p>'
-            + '<p style="color:#475569;font-size:11px;margin:0;">Ne pas r\u00e9pondre \u00e0 cet email automatique</p>'
-            + '</div>'
-            + '</div></body></html>';
+            // ── Footer ──
+            + '<tr><td style="background:#0a0d14;padding:20px 48px;text-align:center;border-top:1px solid #1f2937;">'
+            + '<div style="font-size:13px;font-weight:800;color:#10b981;letter-spacing:3px;margin-bottom:4px;">NEXUS</div>'
+            + '<div style="font-size:11px;color:#4b5563;">Intelligence Platform &bull; &copy; 2026</div>'
+            + '<div style="margin-top:8px;font-size:11px;color:#374151;">Ne pas r\u00e9pondre \u00e0 cet email automatique</div>'
+            + '</td></tr>'
+            + '</table></td></tr></table>'
+            + '</body></html>';
     }
 
     private static String fmtAmount(Decimal v) {

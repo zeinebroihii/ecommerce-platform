@@ -13,7 +13,8 @@
       "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusB2BQuoteForm --source-dir force-app/main/default/lwc/nexusCatalog --source-dir force-app/main/default/lwc/nexusProductDetailModal --source-dir force-app/main/default/cspTrustedSites)",
       "Bash(sf project deploy report --job-id 0Afg5000004x8SHCAY)",
       "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusLoginView)",
-      "Bash(sf project:*)"
+      "Bash(sf project:*)",
+      "Read(//c/Users/MSI/.claude/projects/c--Users-MSI-Desktop-Salesforces-ecommerce-platform/3aab8743-ee67-4588-aef8-b9683c4d8cb0/tool-results/**)"
     ]
   }
 }
