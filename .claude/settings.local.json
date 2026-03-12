@@ -14,7 +14,15 @@
       "Bash(sf project deploy report --job-id 0Afg5000004x8SHCAY)",
       "Bash(sf project deploy start --source-dir force-app/main/default/lwc/nexusLoginView)",
       "Bash(sf project:*)",
-      "Read(//c/Users/MSI/.claude/projects/c--Users-MSI-Desktop-Salesforces-ecommerce-platform/3aab8743-ee67-4588-aef8-b9683c4d8cb0/tool-results/**)"
+      "Read(//c/Users/MSI/.claude/projects/c--Users-MSI-Desktop-Salesforces-ecommerce-platform/3aab8743-ee67-4588-aef8-b9683c4d8cb0/tool-results/**)",
+      "Read(//c/Users/MSI/Desktop/Salesforces/nexus-crm-&-stock-ai/components/**)",
+      "Read(//c/Users/MSI/Desktop/Salesforces/**)",
+      "Bash(find c:UsersMSIDesktopSalesforces -name LoginView.tsx -o -name *LoginView*)",
+      "Bash(find c:UsersMSIDesktopSalesforcessf-ecommerce-ai -type f -name *.tsx)",
+      "Bash(find \"c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform\\\\force-app\\\\main\\\\default\\\\lwc\\\\nexus-crm-&-stock-ai\\\\src\\\\components\" -type f)",
+      "Bash(find \"c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform\\\\force-app\\\\main\\\\default\\\\lwc\\\\nexus-crm-&-stock-ai\\\\src\\\\components\\\\ui\" -type f)",
+      "Bash(find \"c:/Users/MSI/Desktop/Salesforces/nexus-crm-&-stock-ai\" -type f)",
+      "Bash(find c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc -name *.tsx)"
     ]
   }
 }

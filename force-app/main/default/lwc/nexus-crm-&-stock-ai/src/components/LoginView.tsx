@@ -8,6 +8,7 @@ import { Hero } from './Hero';
 import { NexusAbout } from './NexusAbout';
 import { NexusJourney } from './NexusJourney';
 import { NexusReviews } from './NexusReviews';
+import { NexusDealsSection } from './NexusDealsSection';
 import { NexusFAQ } from './NexusFAQ';
 import { ProductCard } from './ProductCard';
 import { ProductDetailView } from './ProductDetailView';
@@ -21,13 +22,27 @@ interface LoginViewProps {
   onAddToCart: (product: any) => void;
   onToggleFavorite?: (product: any) => void;
   favorites?: any[];
+  isAuthenticated?: boolean;
+  userType?: 'B2B' | 'B2C' | null;
+  cartCount?: number;
+  onViewChange?: (view: any) => void;
+  onLogout?: () => void;
+  onLoginClick?: () => void;
+  onRequestQuote?: () => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ 
   onSelect, 
   onAddToCart,
   onToggleFavorite,
-  favorites = []
+  favorites = [],
+  isAuthenticated,
+  userType,
+  cartCount,
+  onViewChange,
+  onLogout,
+  onLoginClick,
+  onRequestQuote
 }) => {
   const [products] = useState<any[]>([
     {
@@ -90,6 +105,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
       <NexusAbout />
       
       <NexusJourney />
+      
+      <NexusDealsSection 
+        onAddToCart={onAddToCart} 
+        onViewDetails={(product) => setSelectedProduct(product)} 
+      />
 
       {/* Tech Product Showcase Section */}
       <section id="products-section" className="py-20 bg-slate-50 flex flex-col justify-center">
@@ -295,6 +315,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
             onToggleFavorite={onToggleFavorite}
             onAddToCart={onAddToCart}
             favorites={favorites}
+            isAuthenticated={isAuthenticated}
+            userType={userType}
+            cartCount={cartCount}
+            onViewChange={onViewChange}
+            onLogout={onLogout}
+            onLoginClick={onLoginClick}
+            onRequestQuote={onRequestQuote}
           />
         )}
       </AnimatePresence>

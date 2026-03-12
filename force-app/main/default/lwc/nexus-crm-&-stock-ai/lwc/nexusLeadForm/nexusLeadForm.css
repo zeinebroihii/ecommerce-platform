@@ -1,0 +1,29 @@
+.rounded-3xl { border-radius: 1.5rem; }
+.p-8 { padding: 2rem; }
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+.border { border-width: 1px; border-style: solid; }
+.border-slate-200 { border-color: #e2e8f0; }
+.text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+.font-black { font-weight: 900; }
+.text-slate-900 { color: #0f172a; }
+.mb-2 { margin-bottom: 0.5rem; }
+.text-slate-500 { color: #64748b; }
+.font-medium { font-weight: 500; }
+.w-full { width: 100%; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.bg-indigo-600 { background-color: #4f46e5; }
+.text-white { color: #ffffff; }
+.rounded-2xl { border-radius: 1rem; }
+.hover\:bg-indigo-700:hover { background-color: #4338ca; }
+.transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+.shadow-indigo-200 { --tw-shadow-color: #c7d2fe; box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow); }
+
+.nexus-button-primary {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

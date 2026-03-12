@@ -330,6 +330,18 @@ public without sharing class LeadManagementController {
             }
         }
 
+        // Ensure contact has email (lead field mapping may not copy it)
+        if (res.getContactId() != null) {
+            Lead srcLead = [SELECT Email FROM Lead WHERE Id = :leadId LIMIT 1];
+            if (String.isNotBlank(srcLead.Email)) {
+                Contact conv = [SELECT Id, Email FROM Contact WHERE Id = :res.getContactId() LIMIT 1];
+                if (String.isBlank(conv.Email)) {
+                    conv.Email = srcLead.Email;
+                    update conv;
+                }
+            }
+        }
+
         return new Map<String, Id>{
             'contactId'     => res.getContactId(),
             'accountId'     => res.getAccountId(),
@@ -701,16 +713,32 @@ public without sharing class LeadManagementController {
             String loginUrlX     = baseUrlX + '/s/login?startUrl='
                 + EncodingUtil.urlEncode(changePwdUrlX, 'UTF-8');
             String newPwd = generateTempPassword();
-            try { System.setPassword(existing[0].Id, newPwd); } catch (Exception ignored) {}
+            Boolean pwdSetX = false;
+            try { System.setPassword(existing[0].Id, newPwd); pwdSetX = true; } catch (Exception ignored) {}
+            // Always send native reset email as guaranteed fallback
+            try { System.resetPassword(existing[0].Id, true); } catch (Exception ignored) {}
             String companyX = l.Company != null ? l.Company : '';
             String fnX = cx.FirstName != null ? cx.FirstName : '';
-            sendProvisionedWelcomeEmail(cx.Id, cx.Email, fnX, companyX, newPwd, loginUrlX);
+            if (pwdSetX) {
+                sendProvisionedWelcomeEmail(cx.Id, cx.Email, fnX, companyX, newPwd, loginUrlX);
+            }
             return existing[0].Username;
         }
 
-        // 3. Load contact
-        Contact c = [SELECT Id, FirstName, LastName, Email, AccountId
-                     FROM Contact WHERE Id = :l.ConvertedContactId LIMIT 1];
+        // 3. Load contact — fallback to email lookup if ConvertedContactId points to wrong/ghost record
+        List<Contact> cList = [SELECT Id, FirstName, LastName, Email, AccountId
+                               FROM Contact WHERE Id = :l.ConvertedContactId LIMIT 1];
+        if (cList.isEmpty() || String.isBlank(cList[0].Email)) {
+            // ConvertedContactId is stale — find the real contact by lead email
+            if (String.isNotBlank(l.Email)) {
+                cList = [SELECT Id, FirstName, LastName, Email, AccountId
+                         FROM Contact WHERE Email = :l.Email ORDER BY CreatedDate DESC LIMIT 1];
+            }
+            if (cList.isEmpty()) {
+                throw new AuraHandledException('Contact introuvable pour ce lead (ID: ' + l.ConvertedContactId + ')');
+            }
+        }
+        Contact c = cList[0];
 
         // 4. Community profile
         List<Profile> profiles = [
@@ -789,14 +817,14 @@ public without sharing class LeadManagementController {
             }
         }
 
-        // 9. Generate temp password and SET it (not just reset-email)
+        // 9. Set a temp password on the account
         String tempPwd = generateTempPassword();
+        Boolean pwdSet = false;
         try {
             System.setPassword(u.Id, tempPwd);
+            pwdSet = true;
         } catch (Exception e) {
-            throw new AuraHandledException(
-                'Compte créé mais impossible de définir le mot de passe : ' + e.getMessage()
-            );
+            System.debug('setPassword failed: ' + e.getMessage());
         }
 
         // 10. Build login URL → redirects to change-password page after login
@@ -808,9 +836,17 @@ public without sharing class LeadManagementController {
         String loginUrl     = baseUrl + '/s/login?startUrl='
             + EncodingUtil.urlEncode(changePwdUrl, 'UTF-8');
 
-        // 11. Send branded welcome email with actual credentials
+        // 11. Always send the native Salesforce reset-password email (bypasses deliverability limits)
+        try { System.resetPassword(u.Id, true); } catch (Exception ignored) {}
+
+        // 12. Send branded welcome email — with temp password if set, otherwise with forgot-password link
         String company = l.Company != null ? l.Company : '';
-        sendProvisionedWelcomeEmail(c.Id, c.Email, fn, company, tempPwd, loginUrl);
+        if (pwdSet) {
+            sendProvisionedWelcomeEmail(c.Id, c.Email, fn, company, tempPwd, loginUrl);
+        } else {
+            String forgotPwdUrl = baseUrl + '/s/ForgotPassword';
+            sendPortalWelcomeEmail(c.Email, fn, c.LastName != null ? c.LastName : '', null);
+        }
 
         return u.Username;
     }

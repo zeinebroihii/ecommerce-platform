@@ -10,6 +10,12 @@
         <!-- ══ 3. Journey ═══════════════════════════════════════════════════ -->
         <c-nexus-journey></c-nexus-journey>
 
+        <!-- ══ 3b. Deals Section ════════════════════════════════════════════ -->
+        <c-nexus-deals-section
+            onaddtocart={handleDealsAddToCart}
+            onviewdetails={handleDealsViewDetails}>
+        </c-nexus-deals-section>
+
         <!-- ══ 4. Products ══════════════════════════════════════════════════ -->
         <section class="nlv-products" id="products-section">
             <div class="nlv-products-container">
@@ -38,70 +44,88 @@
                 <!-- grid -->
                 <div class="nlv-products-grid">
                     <template for:each={filteredProducts} for:item="product">
-                        <div key={product.id} class="nlv-pcard">
+                        <div key={product.id} class="nlv-pcard2">
 
-                            <!-- Image -->
-                            <div class="nlv-pcard-img-wrap">
-                                <img src={product.image} alt={product.name} class="nlv-pcard-img" referrerpolicy="no-referrer"/>
-                                <div class="nlv-pcard-overlay"></div>
+                            <!-- Image Section -->
+                            <div class="nlv-pcard2-img-wrap">
+                                <img src={product.image} alt={product.name} class="nlv-pcard2-img" referrerpolicy="no-referrer"/>
+                                <div class="nlv-pcard2-img-overlay"></div>
 
-                                <!-- Top-left: New / Popular badges -->
-                                <div class="nlv-pcard-badges">
-                                    <template if:true={product.isNew}>
-                                        <span class="nlv-pcard-badge nlv-pcard-badge--new">New</span>
-                                    </template>
-                                    <template if:true={product.isPopular}>
-                                        <span class="nlv-pcard-badge nlv-pcard-badge--popular">Popular</span>
-                                    </template>
+                                <!-- Top-left: Family badge + Active Node -->
+                                <div class="nlv-pcard2-badges-tl">
+                                    <span class="nlv-pcard2-family-badge">{product.family}</span>
+                                    <div class="nlv-pcard2-active-node">
+                                        <span class="nlv-pcard2-active-dot"></span>
+                                        Active Node
+                                    </div>
                                 </div>
 
-                                <!-- Bottom-right: detail chevron (slides up on hover) -->
-                                <button class="nlv-pcard-detail-btn" onclick={handleProductClick}
+                                <!-- Top-right: Heart + Zap (slide in from right on hover) -->
+                                <div class="nlv-pcard2-actions-tr">
+                                    <button class={product.favCls} onclick={handleToggleFavorite}
+                                            data-id={product.id} aria-label="Toggle favourite">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill={product.favFill} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="nlv-pcard2-zap-btn" aria-label="Quick view">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Bottom-right: Detail arrow (slides up on hover) -->
+                                <button class="nlv-pcard2-detail-btn" onclick={handleProductClick}
                                         data-id={product.id} aria-label="View details">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M9 5l7 7-7 7"/>
                                     </svg>
                                 </button>
 
-                                <!-- Top-right: favorite heart -->
-                                <button class={product.favCls} onclick={handleToggleFavorite}
-                                        data-id={product.id} aria-label="Toggle favourite">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill={product.favFill} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                                    </svg>
-                                </button>
+                                <!-- Bottom-left: Price tag (slides up on hover) -->
+                                <div class="nlv-pcard2-price-tag">
+                                    <span class="nlv-pcard2-price-label">MSRP</span>
+                                    <span class="nlv-pcard2-price-val">{product.priceFormatted}</span>
+                                </div>
                             </div>
 
-                            <!-- Body -->
-                            <div class="nlv-pcard-body">
-                                <div class="nlv-pcard-meta">
-                                    <span class="nlv-pcard-family-tag">{product.family}</span>
-                                    <div class="nlv-pcard-rating">
-                                        <span class="nlv-pcard-star">&#9733;</span>
-                                        <span class="nlv-pcard-rating-val">{product.rating}</span>
+                            <!-- Content Section -->
+                            <div class="nlv-pcard2-content">
+                                <div class="nlv-pcard2-meta-row">
+                                    <div class="nlv-pcard2-stars">
+                                        <span class="nlv-pcard2-star">&#9733;</span>
+                                        <span class="nlv-pcard2-star">&#9733;</span>
+                                        <span class="nlv-pcard2-star">&#9733;</span>
+                                        <span class="nlv-pcard2-star">&#9733;</span>
+                                        <span class="nlv-pcard2-star">&#9733;</span>
+                                        <span class="nlv-pcard2-rating-num">4.9</span>
                                     </div>
+                                    <span class="nlv-pcard2-code">ID: {product.productCode}</span>
                                 </div>
 
-                                <h3 class="nlv-pcard-name">{product.name}</h3>
-                                <p class="nlv-pcard-desc">{product.description}</p>
+                                <h4 class="nlv-pcard2-name">{product.name}</h4>
+                                <p class="nlv-pcard2-desc">{product.description}</p>
 
-                                <div class="nlv-pcard-footer">
-                                    <div class="nlv-pcard-price">
-                                        <span class="nlv-pcard-price-label">Prix</span>
-                                        <span class="nlv-pcard-price-value">{product.priceFormatted}</span>
+                                <div class="nlv-pcard2-footer">
+                                    <div class="nlv-pcard2-verified">
+                                        <div class="nlv-pcard2-verified-row">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                                <polyline points="9 12 11 14 15 10"/>
+                                            </svg>
+                                            <span class="nlv-pcard2-verified-text">Nexus Verified</span>
+                                        </div>
+                                        <span class="nlv-pcard2-enterprise-text">Enterprise Ready</span>
                                     </div>
-                                    <button class="nlv-pcard-cart" onclick={handleAddToCart}
-                                            data-id={product.id} aria-label="Ajouter au panier">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <button class="nlv-pcard2-cart-btn" onclick={handleAddToCart}
+                                            data-id={product.id} aria-label="Add to cart">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                                            <path d="M1 1h4l2.68 13.39a2 2 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+                                            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.97-1.67L21 6H6"/>
                                         </svg>
                                     </button>
                                 </div>
-
-                                <button class="nlv-pcard-quote-btn" onclick={handleQuoteRequest} data-id={product.id}>
-                                    Request Quote
-                                </button>
                             </div>
 
                         </div>
@@ -115,15 +139,20 @@
             </div>
         </section>
 
-        <!-- ══ 4b. Product Detail Modal ══════════════════════════════════════ -->
-        <c-nexus-product-detail-modal
-            product={selectedProduct}
-            is-favorited={isSelectedFavorited}
-            onclose={handleModalClose}
-            onaddtocart={handleModalAddToCart}
-            ontogglefavorite={handleModalToggleFavorite}
-            onrequestquote={handleQuoteRequest}>
-        </c-nexus-product-detail-modal>
+        <!-- ══ 4b. Product Detail View (full-page) ═══════════════════════════ -->
+        <template if:true={selectedProduct}>
+            <c-nexus-product-detail-view
+                product={selectedProduct}
+                favorites={favoritedProducts}
+                all-products={allProducts}
+                onclose={handleModalClose}
+                onaddtocart={handleModalAddToCart}
+                ontogglefavorite={handleModalToggleFavorite}
+                onviewproduct={handleDetailViewProduct}
+                onrequireauth={handleDetailRequireAuth}
+                onquoterequest={handleDetailQuoteRequest}>
+            </c-nexus-product-detail-view>
+        </template>
 
         <!-- ══ 4c. B2B Quote Form ═════════════════════════════════════════════ -->
         <template if:true={isQuoteFormOpen}>

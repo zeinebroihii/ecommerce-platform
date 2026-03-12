@@ -1,0 +1,69 @@
+<template>
+    <div class="slds-box slds-theme_default rounded-[3rem] p-10 shadow-sm border border-slate-200 bg-white">
+        <div class="slds-grid slds-grid_vertical-align-end slds-m-bottom_xx-large">
+            <div class="slds-col slds-size_2-of-3">
+                <div class="flex items-center gap-3 text-indigo-500 font-black uppercase tracking-[0.3em] text-[10px] mb-6">
+                    <div class="w-10 h-[2px] bg-indigo-500"></div>
+                    Nexus Control Center
+                </div>
+                <h2 class="text-6xl font-black text-slate-900 tracking-tighter leading-none">
+                    PIPELINE <br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">DES LEADS</span>
+                </h2>
+            </div>
+            <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                <lightning-button-icon icon-name="utility:refresh" variant="border-filled" onclick={handleRefresh}></lightning-button-icon>
+            </div>
+        </div>
+
+        <div class="slds-scrollable_x">
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-no-row-hover">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="text-[10px] font-black text-slate-400 uppercase tracking-widest py-6" scope="col">Entreprise</th>
+                        <th class="text-[10px] font-black text-slate-400 uppercase tracking-widest py-6" scope="col">Contact</th>
+                        <th class="text-[10px] font-black text-slate-400 uppercase tracking-widest py-6" scope="col">Secteur</th>
+                        <th class="text-[10px] font-black text-slate-400 uppercase tracking-widest py-6" scope="col">AI Score</th>
+                        <th class="text-[10px] font-black text-slate-400 uppercase tracking-widest py-6" scope="col">Status</th>
+                        <th class="text-[10px] font-black text-slate-400 uppercase tracking-widest py-6" scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={leads} for:item="lead">
+                        <tr key={lead.Id} class="slds-hint-parent group">
+                            <td class="py-8">
+                                <div class="font-black text-slate-900">{lead.Company}</div>
+                                <div class="text-[10px] text-slate-400">{lead.City}, {lead.Country}</div>
+                            </td>
+                            <td class="py-8">
+                                <div class="font-bold text-slate-700">{lead.FirstName} {lead.LastName}</div>
+                                <div class="text-[10px] text-slate-400">{lead.Title}</div>
+                            </td>
+                            <td class="py-8">
+                                <span class="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                                    {lead.Industry}
+                                </span>
+                            </td>
+                            <td class="py-8">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-12 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-indigo-500" style={lead.scoreStyle}></div>
+                                    </div>
+                                    <span class="text-xs font-black text-indigo-600">{lead.Nexus_Score__c}</span>
+                                </div>
+                            </td>
+                            <td class="py-8">
+                                <span class={lead.statusClass}>{lead.Status}</span>
+                            </td>
+                            <td class="py-8">
+                                <button class="px-6 py-2 bg-slate-950 text-white rounded-xl text-[10px] font-black uppercase hover:bg-indigo-600 transition-all" onclick={handleConvert} data-id={lead.Id}>
+                                    Convertir
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</template>

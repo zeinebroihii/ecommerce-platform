@@ -1,0 +1,326 @@
+/* ── Host reset ── */
+:host {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* ── Section ── */
+.nds-section {
+    background: #020617;
+    color: #ffffff;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden;
+}
+
+/* ── Urgency Banner ── */
+.nds-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: linear-gradient(90deg, #10b981, #059669);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    padding: 0.625rem 1.5rem;
+    text-align: center;
+}
+
+/* ── Container ── */
+.nds-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 6rem 3rem !important;
+    box-sizing: border-box !important;
+}
+@media (min-width: 768px) { .nds-container { padding: 7rem 6rem !important; } }
+
+/* ── Header ── */
+.nds-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+@media (min-width: 1024px) {
+    .nds-header {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+    }
+}
+.nds-header-left { flex: 1; }
+
+.nds-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #10b981;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    margin-bottom: 1.5rem;
+}
+.nds-eyebrow-line { width: 3rem; height: 2px; background: #10b981; flex-shrink: 0; }
+
+.nds-heading {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+    text-transform: uppercase;
+    font-style: italic;
+    color: #ffffff;
+    margin: 0;
+}
+.nds-heading-emerald {
+    color: #10b981;
+}
+
+.nds-subtitle {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    font-weight: 500;
+    line-height: 1.6;
+    max-width: 28rem;
+    margin: 0;
+}
+
+/* ── Grid ── */
+.nds-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+@media (min-width: 640px)  { .nds-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .nds-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* ── Card ── */
+.nds-card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+.nds-card:hover {
+    border-color: #10b981;
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(16, 185, 129, 0.15);
+}
+
+/* Image wrap */
+.nds-card-img-wrap {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #1e293b;
+    flex-shrink: 0;
+}
+.nds-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+.nds-card:hover .nds-card-img { transform: scale(1.08); }
+
+.nds-card-img-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(2,6,23,0.7) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+/* Discount badge — top-left */
+.nds-card-discount {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    background: #10b981;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.5rem;
+    line-height: 1;
+}
+
+/* Sale badge — top-right */
+.nds-card-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: rgba(15, 23, 42, 0.85);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    color: #f59e0b;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    line-height: 1;
+}
+
+/* Family — bottom-left */
+.nds-card-family {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    background: rgba(79, 70, 229, 0.85);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.35rem;
+    line-height: 1;
+}
+
+/* Card body */
+.nds-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.nds-card-name {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    font-style: italic;
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
+}
+
+.nds-card-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0 0 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Features */
+.nds-card-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+}
+.nds-card-feat {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #94a3b8;
+    line-height: 1;
+}
+
+/* Pricing */
+.nds-card-pricing {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #1e293b;
+}
+.nds-card-original {
+    font-size: 0.8125rem;
+    color: #475569;
+    font-weight: 600;
+    text-decoration: line-through;
+}
+.nds-card-sale {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #10b981;
+    font-style: italic;
+    letter-spacing: -0.03em;
+}
+.nds-card-saving {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.35rem;
+    line-height: 1;
+}
+
+/* Actions */
+.nds-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.nds-btn-cart {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.75rem;
+    background: #10b981;
+    color: #ffffff;
+    font-size: 0.6875rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: none;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+    line-height: 1;
+}
+.nds-btn-cart:hover { background: #059669; transform: scale(1.02); }
+
+.nds-btn-detail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.6rem 0.75rem;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    border: 1px solid #1e293b;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+    line-height: 1;
+}
+.nds-btn-detail:hover { border-color: #475569; color: #e2e8f0; }
