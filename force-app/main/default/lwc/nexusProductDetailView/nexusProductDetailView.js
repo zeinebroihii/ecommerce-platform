@@ -1,25 +1,42 @@
 import { LightningElement, api, track } from 'lwc';
+import userId from '@salesforce/user/Id';
 
 export default class NexusProductDetailView extends LightningElement {
 
-    @api favorites = [];
+    @api favorites   = [];
+    @api allProducts = [];
 
     @track _product         = null;
     @track activeColorIndex = 0;
-    @track activeTab        = 'overview';
+    @track activeTab        = 'specs';
     @track showStickyNav    = false;
-    @track showQuoteForm    = false;
-    @track _quoteData       = {};
+    @track showQuoteForm       = false;
+    @track showClientTypeModal = false;
+    @track showReviewForm      = false;
+    @track _quoteData          = {};
+    @track _reviewData      = {};
+    @track _reviewRating    = 5;
 
     /* ── Public product setter ── */
     @api
     get product() { return this._product; }
     set product(value) {
-        this._product = value;
+        this._product         = value;
         this.activeColorIndex = 0;
-        this.activeTab        = 'overview';
-        this.showStickyNav    = false;
-        this.showQuoteForm    = false;
+        this.activeTab        = 'specs';
+        this.showStickyNav       = false;
+        this.showQuoteForm       = false;
+        this.showClientTypeModal = false;
+        this.showReviewForm      = false;
+        this._scrollToTop        = true;
+    }
+
+    renderedCallback() {
+        if (this._scrollToTop) {
+            this._scrollToTop = false;
+            const wrap = this.template.querySelector('.npdv-wrap');
+            if (wrap) wrap.scrollTop = 0;
+        }
     }
 
     /* ─────────────────────────────────────
@@ -97,30 +114,67 @@ export default class NexusProductDetailView extends LightningElement {
     }
 
     /* ─────────────────────────────────────
-       DERIVED: similar products (static)
+       DERIVED: similar products
     ───────────────────────────────────── */
     get similarProducts() {
-        return [1, 2, 3, 4].map(i => ({
-            id:    `sim-${i}`,
-            name:  `Nexus Variant ${i}`,
-            price: '$1,299.99',
-            image: `https://picsum.photos/seed/tech${i}/400/400`
+        if (!this._product || !this.allProducts || this.allProducts.length === 0) {
+            return [1, 2, 3, 4].map(i => ({
+                id:    `sim-${i}`,
+                name:  `Nexus Variant ${i}`,
+                price: '$1,299',
+                image: `https://picsum.photos/seed/tech${i}/400/400`
+            }));
+        }
+        return this.allProducts
+            .filter(p => p.id !== this._product.id)
+            .slice(0, 4)
+            .map(p => ({
+                id:    p.id,
+                name:  p.name,
+                price: `$${p.price}`,
+                image: p.image
+            }));
+    }
+
+    /* ─────────────────────────────────────
+       DERIVED: review star selector
+    ───────────────────────────────────── */
+    get reviewStars() {
+        return [1, 2, 3, 4, 5].map(v => ({
+            val: v,
+            cls: v <= this._reviewRating
+                ? 'npdv-rstar npdv-rstar--on'
+                : 'npdv-rstar'
         }));
     }
 
     /* ─────────────────────────────────────
        DERIVED: tab classes
     ───────────────────────────────────── */
-    get tab1Cls() { return this._tabCls('overview'); }
-    get tab2Cls() { return this._tabCls('specs'); }
-    get tab3Cls() { return this._tabCls('reviews'); }
-    get tab4Cls() { return this._tabCls('compare'); }
-    get tab5Cls() { return this._tabCls('warranty'); }
+    get tab1Cls() { return this._tabCls('specs'); }
+    get tab2Cls() { return this._tabCls('reviews'); }
+    get tab3Cls() { return this._tabCls('similar'); }
+    get tab4Cls() { return this._tabCls('warranty'); }
 
     _tabCls(id) {
         return this.activeTab === id
             ? 'npdv-tab npdv-tab--active'
             : 'npdv-tab';
+    }
+
+    /* ─────────────────────────────────────
+       AUTH HELPER
+    ───────────────────────────────────── */
+    get isAuthenticated() {
+        return !!userId;
+    }
+
+    _requireAuth(mode = 'login') {
+        this.dispatchEvent(new CustomEvent('requireauth', {
+            detail: { mode },
+            bubbles: true,
+            composed: true
+        }));
     }
 
     /* ─────────────────────────────────────
@@ -134,8 +188,7 @@ export default class NexusProductDetailView extends LightningElement {
         const scrollTop = event.currentTarget.scrollTop;
         this.showStickyNav = scrollTop > 50;
 
-        // Determine active tab by which section is in view
-        const sections = ['overview', 'specs', 'reviews', 'compare', 'warranty'];
+        const sections = ['specs', 'reviews', 'similar', 'warranty'];
         for (let i = sections.length - 1; i >= 0; i--) {
             const el = this.template.querySelector(`#section-${sections[i]}`);
             if (el) {
@@ -162,14 +215,51 @@ export default class NexusProductDetailView extends LightningElement {
     }
 
     handleToggleFavorite() {
+        if (!this.isAuthenticated) {
+            this._requireAuth('signup-select');
+            return;
+        }
         this.dispatchEvent(new CustomEvent('togglefavorite', {
             detail: { product: this._product }, bubbles: true, composed: true
         }));
     }
 
     handleAddToCart() {
+        if (!this.isAuthenticated) {
+            this._requireAuth('signup-select');
+            return;
+        }
         this.dispatchEvent(new CustomEvent('addtocart', {
             detail: { product: this._product }, bubbles: true, composed: true
+        }));
+    }
+
+    /* ── Client type selection (B2B / B2C) ── */
+    handleQuoteTypeOpen() {
+        this.showClientTypeModal = true;
+    }
+
+    handleClientTypeClose() {
+        this.showClientTypeModal = false;
+    }
+
+    handleClientTypeBackdropClick(event) {
+        if (event.target === event.currentTarget) {
+            this.showClientTypeModal = false;
+        }
+    }
+
+    handleClientTypeModalClick(event) {
+        event.stopPropagation();
+    }
+
+    handleClientTypeSelect(event) {
+        const clientType = event.currentTarget.dataset.type;
+        this.showClientTypeModal = false;
+        this.dispatchEvent(new CustomEvent('quoterequest', {
+            detail: { product: this._product, clientType },
+            bubbles: true,
+            composed: true
         }));
     }
 
@@ -200,5 +290,55 @@ export default class NexusProductDetailView extends LightningElement {
     handleQuoteSubmit() {
         console.log('Quote Request Submitted:', this._quoteData);
         this.showQuoteForm = false;
+    }
+
+    /* ── Review handlers ── */
+    handleWriteReview() {
+        if (!this.isAuthenticated) {
+            this._requireAuth();
+            return;
+        }
+        this._reviewData   = {};
+        this._reviewRating = 5;
+        this.showReviewForm = true;
+    }
+
+    handleReviewClose() {
+        this.showReviewForm = false;
+    }
+
+    handleReviewBackdropClick(event) {
+        if (event.target === event.currentTarget) {
+            this.showReviewForm = false;
+        }
+    }
+
+    handleReviewModalClick(event) {
+        event.stopPropagation();
+    }
+
+    handleReviewStar(event) {
+        this._reviewRating = parseInt(event.currentTarget.dataset.val, 10);
+    }
+
+    handleReviewField(event) {
+        const field = event.currentTarget.dataset.field;
+        this._reviewData[field] = event.target.value;
+    }
+
+    handleReviewSubmit() {
+        console.log('Review Submitted:', { rating: this._reviewRating, ...this._reviewData });
+        this.showReviewForm = false;
+    }
+
+    /* ── Similar Products ── */
+    handleSimilarProductClick(event) {
+        const id = event.currentTarget.dataset.id;
+        const product = (this.allProducts || []).find(p => p.id === id);
+        if (product) {
+            this.dispatchEvent(new CustomEvent('viewproduct', {
+                detail: { product }, bubbles: true, composed: true
+            }));
+        }
     }
 }

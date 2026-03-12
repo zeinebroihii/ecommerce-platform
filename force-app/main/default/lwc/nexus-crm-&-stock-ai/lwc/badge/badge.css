@@ -1,0 +1,18 @@
+.px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+.rounded-full { border-radius: 9999px; }
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+.font-medium { font-weight: 500; }
+.border { border-width: 1px; border-style: solid; }
+
+.bg-blue-50 { background-color: #eff6ff; }
+.text-blue-700 { color: #1d4ed8; }
+.border-blue-100 { border-color: #dbeafe; }
+
+.bg-emerald-50 { background-color: #ecfdf5; }
+.text-emerald-700 { color: #047857; }
+.border-emerald-100 { border-color: #d1fae5; }
+
+.bg-rose-50 { background-color: #fff1f2; }
+.text-rose-700 { color: #be123c; }
+.border-rose-100 { border-color: #ffe4e6; }

@@ -1,0 +1,104 @@
+<template>
+    <section class="nds-section" id="deals-section">
+
+        <!-- ── Urgency Banner ── -->
+        <div class="nds-banner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            OFFRES EXCLUSIVES &mdash; JUSQU&apos;&Agrave; 40% DE R&Eacute;DUCTION &mdash; STOCK LIMIT&Eacute;
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+        </div>
+
+        <div class="nds-container">
+
+            <!-- ── Header ── -->
+            <div class="nds-header">
+                <div class="nds-header-left">
+                    <div class="nds-eyebrow">
+                        <div class="nds-eyebrow-line"></div>
+                        Offres Exclusives
+                    </div>
+                    <h2 class="nds-heading">
+                        NEXUS <span class="nds-heading-emerald">DEALS</span>
+                    </h2>
+                </div>
+                <p class="nds-subtitle">
+                    Des offres &agrave; dur&eacute;e limit&eacute;e sur notre gamme premium.
+                    Ne manquez pas ces opportunit&eacute;s exceptionnelles.
+                </p>
+            </div>
+
+            <!-- ── Deal Cards Grid ── -->
+            <div class="nds-grid">
+                <template for:each={deals} for:item="deal">
+                    <div key={deal.id} class="nds-card">
+
+                        <!-- Image -->
+                        <div class="nds-card-img-wrap">
+                            <img src={deal.image} alt={deal.name} class="nds-card-img" referrerpolicy="no-referrer" />
+                            <div class="nds-card-img-overlay"></div>
+
+                            <!-- Discount badge -->
+                            <div class="nds-card-discount">
+                                -{deal.discount}%
+                            </div>
+
+                            <!-- Sale badge -->
+                            <div class="nds-card-badge">{deal.badge}</div>
+
+                            <!-- Family -->
+                            <div class="nds-card-family">{deal.family}</div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="nds-card-body">
+                            <h4 class="nds-card-name">{deal.name}</h4>
+                            <p class="nds-card-desc">{deal.description}</p>
+
+                            <!-- Features -->
+                            <ul class="nds-card-features">
+                                <template for:each={deal.features} for:item="feat">
+                                    <li key={feat} class="nds-card-feat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                        {feat}
+                                    </li>
+                                </template>
+                            </ul>
+
+                            <!-- Pricing -->
+                            <div class="nds-card-pricing">
+                                <span class="nds-card-original">${deal.originalPriceFormatted}</span>
+                                <span class="nds-card-sale">${deal.salePriceFormatted}</span>
+                                <span class="nds-card-saving">Économie ${deal.savingFormatted}</span>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="nds-card-actions">
+                                <button class="nds-btn-cart" onclick={handleAddToCart} data-id={deal.id} aria-label="Ajouter au panier">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                                        <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.97-1.67L21 6H6"/>
+                                    </svg>
+                                    Ajouter
+                                </button>
+                                <button class="nds-btn-detail" onclick={handleViewDetails} data-id={deal.id} aria-label="Voir les détails">
+                                    D&eacute;tails
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </template>
+            </div>
+
+        </div>
+    </section>
+</template>

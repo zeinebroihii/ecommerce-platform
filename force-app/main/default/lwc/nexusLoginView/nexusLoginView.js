@@ -112,7 +112,7 @@ export default class NexusLoginView extends LightningElement {
             return {
                 ...p,
                 priceFormatted: `$${p.price}`,
-                favCls:  isFav ? 'nlv-pcard-fav nlv-pcard-fav--active' : 'nlv-pcard-fav',
+                favCls:  isFav ? 'nlv-pcard2-heart nlv-pcard2-heart--active' : 'nlv-pcard2-heart',
                 favFill: isFav ? 'currentColor' : 'none'
             };
         });
@@ -120,6 +120,8 @@ export default class NexusLoginView extends LightningElement {
 
     get hasProducts()         { return this.filteredProducts.length > 0; }
     get isQuoteFormOpen()     { return !!this.quoteProduct; }
+    get favoritedProducts()   { return MOCK_PRODUCTS.filter(p => this.favoritedIds.includes(p.id)); }
+    get allProducts()         { return MOCK_PRODUCTS; }
     get isSelectedFavorited() {
         return this.selectedProduct ? this.favoritedIds.includes(this.selectedProduct.id) : false;
     }
@@ -166,6 +168,28 @@ export default class NexusLoginView extends LightningElement {
     /* ── Modal ── */
     handleModalClose()  { this.selectedProduct = null; }
 
+    handleDetailViewProduct(event) {
+        const product = event.detail && event.detail.product;
+        if (product) this.selectedProduct = product;
+    }
+
+    handleDetailRequireAuth(event) {
+        this.selectedProduct = null;
+        setTimeout(() => {
+            const section = this.template.querySelector('#login-section');
+            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+
+    handleDetailQuoteRequest(event) {
+        this.selectedProduct = null;
+        // Scroll to login section so user can sign up / access lead form
+        setTimeout(() => {
+            const section = this.template.querySelector('#login-section');
+            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+
     handleModalAddToCart(event) {
         const product = event.detail && event.detail.product;
         if (product) this._addToCart(product);
@@ -175,6 +199,17 @@ export default class NexusLoginView extends LightningElement {
     handleModalToggleFavorite(event) {
         const product = event.detail && event.detail.product;
         if (product) this._toggleFav(product.id);
+    }
+
+    /* ── Deals section ── */
+    handleDealsAddToCart(event) {
+        const product = event.detail && event.detail.product;
+        if (product) this._addToCart(product);
+    }
+
+    handleDealsViewDetails(event) {
+        const product = event.detail && event.detail.product;
+        if (product) this.selectedProduct = product;
     }
 
     /* ── Quote form ── */

@@ -1,0 +1,78 @@
+<template>
+    <div class="slds-grid slds-gutters_direct-xx-large">
+        <!-- Sidebar -->
+        <aside class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-large-size_1-of-5">
+            <div class="space-y-2">
+                <template for:each={tabs} for:item="tab">
+                    <button key={tab.id} class={tab.className} onclick={handleTabChange} data-id={tab.id}>
+                        <lightning-icon icon-name={tab.icon} size="small" variant={tab.iconVariant} class="slds-m-right_small"></lightning-icon>
+                        {tab.label}
+                    </button>
+                </template>
+            </div>
+
+            <div class="slds-m-top_xx-large slds-p-top_xx-large border-t border-slate-200">
+                <div class="p-6 bg-indigo-50 rounded-[2rem] border border-indigo-100">
+                    <h4 class="text-sm font-black text-indigo-900 mb-2">Support Premium</h4>
+                    <p class="text-xs text-indigo-700 leading-relaxed mb-4">Besoin d'aide pour une commande complexe ?</p>
+                    <button class="w-full py-3 bg-white text-indigo-600 rounded-xl text-xs font-black shadow-sm hover:bg-indigo-600 hover:text-white transition-all">
+                        Contacter un expert
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="slds-col slds-size_1-of-1 slds-medium-size_3-of-4 slds-large-size_4-of-5">
+            <template if:true={isDashboard}>
+                <div class="space-y-12">
+                    <section class="relative bg-slate-900 rounded-[3rem] p-12 text-white overflow-hidden shadow-2xl">
+                        <div class="relative z-10 slds-grid slds-wrap slds-grid_vertical-align-center">
+                            <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-400 mb-6">
+                                    <lightning-icon icon-name="utility:cpu" size="xx-small" variant="inverse"></lightning-icon>
+                                    <span class="text-[10px] font-black uppercase tracking-widest">Nexus AI Optimizer</span>
+                                </div>
+                                <h2 class="text-5xl font-black mb-6 tracking-tighter leading-none">
+                                    OPTIMISEZ VOTRE <span class="text-indigo-400">STOCK</span> EN TEMPS RÉEL
+                                </h2>
+                                <p class="text-slate-400 text-lg mb-8 leading-relaxed font-medium">
+                                    Notre algorithme prédictif a identifié 3 opportunités de réapprovisionnement.
+                                </p>
+                                <button class="px-8 py-4 bg-indigo-600 rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-xl">
+                                    Appliquer les recommandations
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </template>
+
+            <template if:true={isCatalog}>
+                <!-- Catalog Content -->
+                <div class="text-center p-12 bg-white rounded-[3rem] border border-slate-200">
+                    <h3 class="text-2xl font-black text-slate-900">Catalogue Produits</h3>
+                    <p class="text-slate-500 mt-2">Intégration avec Salesforce Products & Pricebooks.</p>
+                </div>
+            </template>
+
+            <template if:true={isProfile}>
+                <!-- Profile Content -->
+                <div class="bg-white rounded-[3rem] border border-slate-200 p-12">
+                    <h3 class="text-4xl font-black text-slate-900 mb-8">Profil Utilisateur</h3>
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="w-48 h-48 bg-slate-100 rounded-[3rem] flex items-center justify-center border-4 border-white shadow-2xl">
+                                <lightning-icon icon-name="utility:user" size="large"></lightning-icon>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_2-of-3">
+                            <lightning-input label="Nom complet" value="John Doe" readonly></lightning-input>
+                            <lightning-input label="Email" value="john@example.com" readonly class="slds-m-top_small"></lightning-input>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </main>
+    </div>
+</template>

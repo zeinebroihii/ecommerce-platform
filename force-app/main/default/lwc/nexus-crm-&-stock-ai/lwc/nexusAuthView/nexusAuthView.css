@@ -1,0 +1,29 @@
+.rounded-\[3rem\] { border-radius: 3rem; }
+.p-12 { padding: 3rem; }
+.p-6 { padding: 1.5rem; }
+.rounded-3xl { border-radius: 1.5rem; }
+.rounded-2xl { border-radius: 1rem; }
+.bg-white { background-color: #ffffff; }
+.bg-slate-50 { background-color: #f8fafc; }
+.bg-slate-900 { background-color: #0f172a; }
+.text-white { color: #ffffff; }
+.text-slate-900 { color: #0f172a; }
+.text-slate-500 { color: #64748b; }
+.text-slate-400 { color: #94a3b8; }
+.text-indigo-600 { color: #4f46e5; }
+.text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+.font-black { font-weight: 900; }
+.font-medium { font-weight: 500; }
+.uppercase { text-transform: uppercase; }
+.tracking-widest { letter-spacing: 0.1em; }
+.shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+.shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+.border { border-width: 1px; border-style: solid; }
+.border-slate-200 { border-color: #e2e8f0; }
+.hover\:border-indigo-500:hover { border-color: #4f46e5; }
+.hover\:border-emerald-500:hover { border-color: #10b981; }
+.hover\:bg-indigo-600:hover { background-color: #4f46e5; }
+.transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+.w-full { width: 100%; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+button { cursor: pointer; border: none; outline: none; }

@@ -1,0 +1,16 @@
+.bg-indigo-600 { background-color: #4f46e5; }
+.hover\:bg-indigo-700:hover { background-color: #4338ca; }
+.bg-slate-100 { background-color: #f1f5f9; }
+.hover\:bg-slate-200:hover { background-color: #e2e8f0; }
+.bg-white { background-color: #ffffff; }
+.text-white { color: #ffffff; }
+.text-slate-900 { color: #0f172a; }
+.border { border-width: 1px; border-style: solid; }
+.border-slate-200 { border-color: #e2e8f0; }
+.hover\:bg-slate-50:hover { background-color: #f8fafc; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.rounded-lg { border-radius: 0.5rem; }
+.font-medium { font-weight: 500; }
+.transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+button { cursor: pointer; border: none; outline: none; }

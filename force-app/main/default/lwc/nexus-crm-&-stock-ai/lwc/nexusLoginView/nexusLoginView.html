@@ -1,0 +1,71 @@
+<template>
+    <div class="slds-box slds-theme_default slds-p-around_none border-none bg-transparent">
+        <!-- Hero Section -->
+        <section class="hero-section slds-m-around_medium rounded-[3.5rem] bg-slate-950 relative overflow-hidden flex items-center justify-center">
+            <div class="relative z-10 slds-text-align_center slds-p-around_xx-large">
+                <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-indigo-300 text-[10px] font-black uppercase tracking-[0.2em] mb-10 backdrop-blur-xl">
+                    L'Élite du CRM Intelligent
+                </div>
+                <h1 class="text-7xl md:text-9xl font-black text-white tracking-tighter leading-[0.85] mb-10">
+                    NEXUS <br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-emerald-400">SYSTEMS</span>
+                </h1>
+                <p class="text-xl text-slate-400 max-w-3xl slds-m-horizontal_auto mb-16 font-medium">
+                    L'architecture ultime pour vos flux B2B & B2C. Propulsée par l'intelligence Nexus.
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-8">
+                    <button class="px-12 py-6 bg-indigo-600 text-white rounded-2xl font-black text-xl shadow-2xl shadow-indigo-500/20 hover:scale-105 transition-all" onclick={handleStart}>
+                        Commencer l'aventure
+                    </button>
+                </div>
+            </div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(79,70,229,0.15),transparent_70%)]"></div>
+        </section>
+
+        <!-- Catalogue Section -->
+        <section class="slds-m-around_xx-large">
+            <div class="slds-grid slds-grid_vertical-align-end slds-m-bottom_xx-large">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <div class="flex items-center gap-3 text-indigo-500 font-black uppercase tracking-[0.3em] text-[10px] mb-6">
+                        <div class="w-10 h-[2px] bg-indigo-500"></div>
+                        Solutions Technologiques
+                    </div>
+                    <h2 class="text-6xl font-black text-slate-900 tracking-tighter leading-none">
+                        CATALOGUE <br/>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">PRODUITS</span>
+                    </h2>
+                </div>
+            </div>
+
+            <div class="slds-grid slds-wrap slds-gutters">
+                <template for:each={products} for:item="product">
+                    <div key={product.Id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-m-bottom_large">
+                        <div class="bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all overflow-hidden group">
+                            <div class="h-64 bg-slate-50 relative overflow-hidden">
+                                <img src={product.Image_URL__c} class="w-full h-full object-cover group-hover:scale-110 transition-all" alt={product.Name} />
+                                <div class="absolute bottom-6 left-6">
+                                    <span class="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">
+                                        {product.Family}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="p-10">
+                                <h4 class="text-2xl font-black text-slate-900 mb-2 leading-tight">{product.Name}</h4>
+                                <p class="text-sm text-slate-500 font-medium mb-8 line-clamp-2">{product.Description}</p>
+                                <div class="flex items-center justify-between pt-8 border-t border-slate-50">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Investissement</span>
+                                        <span class="text-3xl font-black text-slate-900">${product.UnitPrice}</span>
+                                    </div>
+                                    <button class="p-5 bg-slate-950 text-white rounded-[1.5rem] hover:bg-indigo-600 transition-all shadow-2xl" onclick={handleAddToCart} data-id={product.Id}>
+                                        <lightning-icon icon-name="utility:cart" size="small" variant="inverse"></lightning-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+    </div>
+</template>
