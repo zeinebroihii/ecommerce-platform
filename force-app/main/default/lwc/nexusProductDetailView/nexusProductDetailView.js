@@ -1,5 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
-import userId from '@salesforce/user/Id';
+import isGuest from '@salesforce/user/isGuest';
 
 export default class NexusProductDetailView extends LightningElement {
 
@@ -49,7 +49,11 @@ export default class NexusProductDetailView extends LightningElement {
     get productBrand()       { return (this._product && this._product.brand)       ? this._product.brand       : 'Nexus'; }
     get productWarranty()    { return (this._product && this._product.warranty)    ? this._product.warranty    : '3 Years Limited'; }
     get productDescription() { return this._product ? this._product.description  : ''; }
-    get productPrice()       { return this._product ? this._product.price.toLocaleString() : '0'; }
+    get productPrice() {
+        if (!this._product) return '0';
+        const p = this._product.price ?? this._product.salePrice ?? 0;
+        return p.toLocaleString('fr-FR');
+    }
 
     /* ─────────────────────────────────────
        DERIVED: image / colors
@@ -166,7 +170,7 @@ export default class NexusProductDetailView extends LightningElement {
        AUTH HELPER
     ───────────────────────────────────── */
     get isAuthenticated() {
-        return !!userId;
+        return !isGuest;
     }
 
     _requireAuth(mode = 'login') {

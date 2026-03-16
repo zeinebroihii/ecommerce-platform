@@ -1,342 +1,451 @@
 import { LightningElement, track } from 'lwc';
 
-const MOCK_PRODUCTS = [
+const CATEGORIES = [
     {
-        id: 'pc-1',
-        name: 'Nexus Pro-Station G1',
-        productCode: 'PC-G1',
-        family: 'Computing',
-        price: 2499,
-        rating: 5.0,
-        reviews: 156,
-        image: 'https://picsum.photos/seed/pc-black/800/800',
-        description: 'The ultimate workstation for high-performance computing. Available in three distinct finishes.',
-        features: ['RTX 5090 Ready', '128GB DDR5', 'Liquid Cooled'],
-        isNew: true,
-        isActive: true,
-        stockLevel: 12,
-        status: 'In Stock',
-        specs: { 'CPU': 'Nexus Quantum X1', 'GPU': 'RTX 5090', 'RAM': '128GB' },
-        colors: [
-            { name: 'Black', hex: '#000000', image: 'https://picsum.photos/seed/pc-black/800/800' },
-            { name: 'White', hex: '#ffffff', image: 'https://picsum.photos/seed/pc-white/800/800' },
-            { name: 'Gray',  hex: '#64748b', image: 'https://picsum.photos/seed/pc-gray/800/800' }
+        id: 'computing', name: 'Computing', iconName: 'utility:cpu_spec',
+        subcategories: [
+            { id: 'workstations', name: 'Workstations' },
+            { id: 'edge-nodes',   name: 'Edge Nodes'   },
+            { id: 'quantum',      name: 'Quantum Computing' }
         ]
     },
     {
-        id: '1',
-        name: 'Nexus Core Hub v3',
-        productCode: 'NX-100',
-        family: 'Central Systems',
-        price: 1299,
-        rating: 4.9,
-        reviews: 128,
-        image: 'https://picsum.photos/seed/hub/800/800',
-        description: 'The ultimate central intelligence unit for your industrial ecosystem. Powered by Nexus Neural Engine.',
-        features: ['AI-Driven Optimization', 'Real-time Analytics', 'Quantum Encryption'],
-        isActive: true,
-        stockLevel: 45,
-        status: 'In Stock',
-        specs: { 'Processor': 'Nexus N2 Chip', 'Connectivity': '5G / Wi-Fi 7', 'Power': 'Solar-Ready' },
-        colors: [
-            { name: 'Titanium', hex: '#475569', image: 'https://picsum.photos/seed/hub/800/800' },
-            { name: 'Midnight', hex: '#0f172a', image: 'https://picsum.photos/seed/hub-dark/800/800' }
+        id: 'connectivity', name: 'Connectivity', iconName: 'utility:connected_apps',
+        subcategories: [
+            { id: 'hubs',     name: 'Hubs & Gateways' },
+            { id: 'bridges',  name: 'Bridges'          },
+            { id: 'wireless', name: 'Wireless Modules' }
         ]
     },
     {
-        id: '2',
-        name: 'Neural Sensor Pack',
-        productCode: 'NX-200',
-        family: 'Sensors',
-        price: 499,
-        rating: 4.8,
-        reviews: 85,
-        image: 'https://picsum.photos/seed/sensor/800/800',
-        description: 'High-precision environmental sensors with edge-computing capabilities for instant data processing.',
-        features: ['Ultra-low Latency', 'Self-Calibrating', 'IP68 Rated'],
-        isPopular: true,
-        isActive: true,
-        stockLevel: 120,
-        status: 'In Stock',
-        specs: { 'Accuracy': '±0.01%', 'Range': '500m', 'Battery': '5 Years' }
+        id: 'sensors', name: 'Sensors & Monitoring', iconName: 'utility:preview',
+        subcategories: [
+            { id: 'environmental', name: 'Environmental'    },
+            { id: 'visual',        name: 'Visual Monitoring'},
+            { id: 'neural',        name: 'Neural Sensors'   }
+        ]
     },
     {
-        id: '3',
-        name: 'Quantum Link Bridge',
-        productCode: 'NX-300',
-        family: 'Connectivity',
-        price: 899,
-        rating: 5.0,
-        reviews: 42,
-        image: 'https://picsum.photos/seed/bridge/800/800',
-        description: 'Seamlessly bridge your legacy systems with the Nexus ecosystem using our quantum-secure gateway.',
-        features: ['Legacy Support', 'Zero-Trust Security', 'Auto-Scaling'],
-        isActive: true,
-        stockLevel: 15,
-        status: 'Low Stock',
-        specs: { 'Throughput': '100 Gbps', 'Security': 'AES-512', 'Latency': '<1ms' }
-    },
-    {
-        id: '4',
-        name: 'Nexus Vision Pro',
-        productCode: 'NX-400',
-        family: 'Monitoring',
-        price: 1599,
-        rating: 4.7,
-        reviews: 210,
-        image: 'https://picsum.photos/seed/vision/800/800',
-        description: 'Advanced visual monitoring system with integrated AI for anomaly detection and predictive maintenance.',
-        features: ['8K Resolution', 'Night Vision', 'Object Tracking'],
-        isNew: true,
-        isActive: true,
-        stockLevel: 8,
-        status: 'Low Stock',
-        specs: { 'Resolution': '8K Ultra HD', 'FOV': '180°', 'AI Engine': 'VisionX' }
-    },
-    {
-        id: '5',
-        name: 'Eco-Pulse Monitor',
-        productCode: 'NX-500',
-        family: 'Sustainability',
-        price: 299,
-        rating: 4.9,
-        reviews: 67,
-        image: 'https://picsum.photos/seed/pulse/800/800',
-        description: 'Track your carbon footprint and energy efficiency in real-time with the Eco-Pulse ecosystem.',
-        features: ['CO2 Tracking', 'Energy Insights', 'Auto-Reporting'],
-        isPopular: true,
-        isActive: true,
-        stockLevel: 200,
-        status: 'In Stock',
-        specs: { 'Precision': 'High', 'Integration': 'Universal', 'Eco-Score': 'A+' }
-    },
-    {
-        id: '6',
-        name: 'Nexus Edge Node',
-        productCode: 'NX-600',
-        family: 'Computing',
-        price: 749,
-        rating: 4.6,
-        reviews: 54,
-        image: 'https://picsum.photos/seed/node/800/800',
-        description: 'Decentralized computing nodes for distributed intelligence across your entire network.',
-        features: ['Edge AI', 'Dynamic Mesh', 'Hot-Swappable'],
-        isActive: true,
-        stockLevel: 3,
-        status: 'Critical',
-        specs: { 'RAM': '32GB', 'Storage': '2TB NVMe', 'OS': 'NexusOS' }
+        id: 'sustainability', name: 'Sustainability', iconName: 'utility:world',
+        subcategories: [
+            { id: 'energy', name: 'Energy Monitoring' },
+            { id: 'carbon', name: 'Carbon Tracking'   }
+        ]
     }
 ];
 
+const MOCK_PRODUCTS = [
+    {
+        id: 'ups-1',
+        name: 'CyberPower CP1500PFCLCD PFC Sinewave UPS Systems',
+        productCode: 'CP1500PFCLCD',
+        family: 'Power Protection',
+        category: 'computing',
+        subcategory: 'workstations',
+        brand: 'CyberPower',
+        price: 299,
+        rating: 4.8,
+        reviews: 748,
+        image: 'https://images.unsplash.com/photo-1601524909162-ae8725290836?w=600&h=600&fit=crop',
+        description: 'A rock-solid performer — can keep a gaming rig up even under full load.',
+        features: ['1500VA / 1000W', 'Pure Sinewave', 'LCD Display'],
+        isNew: false,
+        isActive: true,
+        stockLevel: 12,
+        status: 'En stock'
+    },
+    {
+        id: 'gpu-1',
+        name: 'NVIDIA RTX PRO 6000 Blackwell Workstation Edition Graphic Card',
+        productCode: 'RTX-6000-BW',
+        family: 'Graphics',
+        category: 'computing',
+        subcategory: 'workstations',
+        brand: 'NVIDIA',
+        price: 13559,
+        rating: 5.0,
+        reviews: 9,
+        image: 'https://images.unsplash.com/photo-1587831991378-5cb1e2756591?w=600&h=600&fit=crop',
+        description: 'Good packaging from Newegg. Obviously it performs quite well.',
+        features: ['Blackwell Architecture', '48GB GDDR7', 'ECC Memory'],
+        isNew: true,
+        isActive: true,
+        stockLevel: 5,
+        status: 'En stock'
+    },
+    {
+        id: 'nas-1',
+        name: 'Synology 2-bay DiskStation DS725+ (Diskless)',
+        productCode: 'DS725+',
+        family: 'Storage',
+        category: 'computing',
+        subcategory: 'edge-nodes',
+        brand: 'Synology',
+        price: 759,
+        rating: 4.9,
+        reviews: 3,
+        image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&h=600&fit=crop',
+        description: 'As of DSM 7.3 you can now use any name brand drive again. No issues with old Seagate Red drives.',
+        features: ['Dual Core CPU', 'NVMe Support', '2.5GbE Port'],
+        isActive: true,
+        stockLevel: 8,
+        status: 'En stock'
+    },
+    {
+        id: 'gpu-2',
+        name: 'PNY NVIDIA RTX PRO 6000 Blackwell Max-Q 96GB GDDR7 with ECC AI',
+        productCode: 'RTX-6000-96G',
+        family: 'Graphics',
+        category: 'computing',
+        subcategory: 'workstations',
+        brand: 'PNY',
+        price: 13424,
+        rating: 5.0,
+        reviews: 1,
+        image: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=600&h=600&fit=crop',
+        description: '96GB of VRAM and energy efficient. Perfect for large scale AI training and simulations.',
+        features: ['96GB VRAM', 'ECC Support', 'AI Optimized'],
+        isNew: true,
+        isActive: true,
+        stockLevel: 2,
+        status: 'En arrivage'
+    },
+    {
+        id: 'nas-2',
+        name: 'Synology 8-bay DiskStation DS1825+ (Diskless)',
+        productCode: 'DS1825+',
+        family: 'Storage',
+        category: 'computing',
+        subcategory: 'edge-nodes',
+        brand: 'Synology',
+        price: 1299,
+        rating: 4.8,
+        reviews: 4,
+        image: 'https://images.unsplash.com/photo-1600267185393-e158a98703de?w=600&h=600&fit=crop',
+        description: 'High-capacity storage solution for business environments. Scalable and reliable.',
+        features: ['8-Bay', 'Expandable', 'DSM OS'],
+        isActive: true,
+        stockLevel: 3,
+        status: 'En stock'
+    },
+    {
+        id: 'switch-1',
+        name: 'TP-Link TL-SG108-M2 | 8 Port Multi-Gigabit Unmanaged Network Switch',
+        productCode: 'TL-SG108-M2',
+        family: 'Networking',
+        category: 'connectivity',
+        subcategory: 'hubs',
+        brand: 'TP-Link',
+        price: 199,
+        rating: 4.7,
+        reviews: 5,
+        image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&h=600&fit=crop',
+        description: 'Plug and play, no configuration required. Fanless and quiet.',
+        features: ['2.5G Ports', 'Fanless', 'Metal Casing'],
+        isActive: true,
+        stockLevel: 45,
+        status: 'En stock'
+    }
+];
+
+const ALL_STATUSES = ['En stock', 'En arrivage', 'Epuisé', 'Sur commande 48h'];
+
 export default class NexusCatalog extends LightningElement {
 
-    @track selectedFamily = 'All';
-    @track selectedColor  = 'All';
-    @track searchQuery    = '';
-    @track favoritedIds   = [];
-    @track showToast      = false;
-
-    // Full-page detail view
-    @track detailProduct  = null;
-
-    // Quote form
-    @track quoteProduct   = null;
-    _quoteData = {};
+    @track selectedCategory    = null;
+    @track selectedSubcategory = null;
+    @track expandedCategories  = [];
+    @track searchQuery         = '';
+    @track viewMode            = 'grid';
+    @track priceMax            = 20000;
+    @track sortBy              = 'rating';
+    @track statusFilter        = [];
+    @track brandFilter         = [];
+    @track favoritedIds        = [];
+    @track detailProduct       = null;
+    @track showToast           = false;
     _toastTimer;
 
-    /* ─────────────────────────────────────
-       DERIVED: filter pills
-    ───────────────────────────────────── */
-    get familyFilters() {
-        const families = ['All', ...Array.from(new Set(MOCK_PRODUCTS.map(p => p.family)))];
-        return families.map(f => ({
-            value: f,
-            label: f,
-            cls: this.selectedFamily === f ? 'nc-pill nc-pill--active' : 'nc-pill'
+    // ── Sidebar: categories ──────────────────────────────────────────────────
+
+    get categoriesEnriched() {
+        return CATEGORIES.map(cat => ({
+            ...cat,
+            isExpanded : this.expandedCategories.includes(cat.id),
+            isSelected : this.selectedCategory === cat.id,
+            btnClass   : this.selectedCategory === cat.id
+                ? 'nc2-cat-btn nc2-cat-btn--active'
+                : 'nc2-cat-btn',
+            iconWrapClass: this.selectedCategory === cat.id
+                ? 'nc2-cat-icon nc2-cat-icon--active'
+                : 'nc2-cat-icon',
+            subcategories: cat.subcategories.map(sub => ({
+                ...sub,
+                isSelected: this.selectedSubcategory === sub.id,
+                btnClass  : this.selectedSubcategory === sub.id
+                    ? 'nc2-sub-btn nc2-sub-btn--active'
+                    : 'nc2-sub-btn',
+                dotClass  : this.selectedSubcategory === sub.id
+                    ? 'nc2-sub-dot nc2-sub-dot--active'
+                    : 'nc2-sub-dot'
+            }))
         }));
     }
 
-    get colorFilters() {
-        const colors = ['All', ...Array.from(new Set(
-            MOCK_PRODUCTS.flatMap(p => (p.colors || []).map(c => c.name))
-        ))];
-        return colors.map(c => ({
-            value: c,
-            label: c,
-            cls: this.selectedColor === c ? 'nc-pill nc-pill--active' : 'nc-pill'
+    get allBtnClass() {
+        return !this.selectedCategory ? 'nc2-cat-btn nc2-cat-btn--active' : 'nc2-cat-btn';
+    }
+
+    // ── Sidebar: availability filter ────────────────────────────────────────
+
+    get availabilityItems() {
+        return ALL_STATUSES.map(status => ({
+            status,
+            isChecked : this.statusFilter.includes(status),
+            count     : MOCK_PRODUCTS.filter(p => p.status === status).length,
+            checkClass: this.statusFilter.includes(status)
+                ? 'nc2-check nc2-check--active'
+                : 'nc2-check',
+            labelClass: this.statusFilter.includes(status)
+                ? 'nc2-filter-label-text nc2-filter-label-text--active'
+                : 'nc2-filter-label-text'
         }));
     }
 
-    /* ─────────────────────────────────────
-       DERIVED: filtered products
-    ───────────────────────────────────── */
+    get hasStatusFilters() { return this.statusFilter.length > 0; }
+
+    // ── Sidebar: brand filter ────────────────────────────────────────────────
+
+    get brandItems() {
+        const brands = [...new Set(MOCK_PRODUCTS.map(p => p.brand).filter(Boolean))];
+        return brands.map(brand => ({
+            brand,
+            isChecked : this.brandFilter.includes(brand),
+            count     : MOCK_PRODUCTS.filter(p => p.brand === brand).length,
+            checkClass: this.brandFilter.includes(brand)
+                ? 'nc2-check nc2-check--active'
+                : 'nc2-check',
+            labelClass: this.brandFilter.includes(brand)
+                ? 'nc2-filter-label-text nc2-filter-label-text--active'
+                : 'nc2-filter-label-text'
+        }));
+    }
+
+    get hasBrandFilters() { return this.brandFilter.length > 0; }
+
+    // ── Main panel: derived ──────────────────────────────────────────────────
+
     get filteredProducts() {
         const q = this.searchQuery.toLowerCase();
         return MOCK_PRODUCTS
             .filter(p => {
-                const matchFamily = this.selectedFamily === 'All' || p.family === this.selectedFamily;
-                const matchSearch = !q
-                    || p.name.toLowerCase().includes(q)
-                    || p.description.toLowerCase().includes(q);
-                const matchColor = this.selectedColor === 'All'
-                    || (p.colors || []).some(c => c.name === this.selectedColor);
-                return matchFamily && matchSearch && matchColor;
+                if (this.selectedCategory    && p.category    !== this.selectedCategory)    return false;
+                if (this.selectedSubcategory && p.subcategory !== this.selectedSubcategory) return false;
+                if (q && !p.name.toLowerCase().includes(q) && !p.description.toLowerCase().includes(q) && !p.productCode.toLowerCase().includes(q)) return false;
+                if (p.price > this.priceMax) return false;
+                if (this.statusFilter.length > 0 && !this.statusFilter.includes(p.status)) return false;
+                if (this.brandFilter.length  > 0 && !this.brandFilter.includes(p.brand))  return false;
+                return true;
             })
-            .map(p => this._enrichProduct(p, this.selectedColor));
+            .sort((a, b) => {
+                if (this.sortBy === 'price-asc')  return a.price - b.price;
+                if (this.sortBy === 'price-desc') return b.price - a.price;
+                return (b.rating || 0) - (a.rating || 0);
+            })
+            .map((p, idx) => {
+                const isFav = this.favoritedIds.includes(p.id);
+                return {
+                    ...p,
+                    indexNum      : idx + 1,
+                    priceFormatted: '$' + p.price.toLocaleString(),
+                    isFav,
+                    favBtnClass   : isFav ? 'nc2-card-fav nc2-card-fav--active' : 'nc2-card-fav',
+                    cardClass     : 'nc2-product-card',
+                    stars         : [1,2,3,4,5].map(n => ({
+                        n,
+                        cls: n <= Math.floor(p.rating || 0) ? 'nc2-star nc2-star--filled' : 'nc2-star'
+                    }))
+                };
+            });
     }
 
     get hasProducts()      { return this.filteredProducts.length > 0; }
-    get isDetailViewOpen() { return !!this.detailProduct; }
-    get isQuoteFormOpen()  { return !!this.quoteProduct; }
+    get filteredCount()    { return this.filteredProducts.length;       }
+    get isGridMode()       { return this.viewMode === 'grid';           }
+    get gridClass()        { return this.viewMode === 'grid' ? 'nc2-grid nc2-grid--grid' : 'nc2-grid nc2-grid--list'; }
+    get gridBtnClass()     { return this.viewMode === 'grid' ? 'nc2-view-btn nc2-view-btn--active' : 'nc2-view-btn'; }
+    get listBtnClass()     { return this.viewMode === 'list' ? 'nc2-view-btn nc2-view-btn--active' : 'nc2-view-btn'; }
 
-    /* ─────────────────────────────────────
-       HANDLERS: filter bar
-    ───────────────────────────────────── */
-    handleFamilyChange(event) {
-        this.selectedFamily = event.currentTarget.dataset.value;
+    // ── Active filter pills ──────────────────────────────────────────────────
+
+    get hasActiveFilters() {
+        return !!(this.selectedCategory || this.selectedSubcategory || this.searchQuery ||
+                  this.statusFilter.length || this.brandFilter.length || this.priceMax < 20000);
     }
 
-    handleColorChange(event) {
-        this.selectedColor = event.currentTarget.dataset.value;
+    get activeFilterPills() {
+        const pills = [];
+        if (this.selectedCategory) {
+            const cat = CATEGORIES.find(c => c.id === this.selectedCategory);
+            pills.push({ id: 'cat', label: cat ? cat.name : this.selectedCategory, filterType: 'category', value: this.selectedCategory });
+        }
+        if (this.selectedSubcategory) {
+            const cat = CATEGORIES.find(c => c.id === this.selectedCategory);
+            const sub = cat && cat.subcategories.find(s => s.id === this.selectedSubcategory);
+            pills.push({ id: 'sub', label: sub ? sub.name : this.selectedSubcategory, filterType: 'subcategory', value: this.selectedSubcategory });
+        }
+        if (this.searchQuery) {
+            pills.push({ id: 'search', label: 'Search: ' + this.searchQuery, filterType: 'search', value: '' });
+        }
+        this.statusFilter.forEach(s => pills.push({ id: 'status-' + s, label: s, filterType: 'status', value: s }));
+        this.brandFilter.forEach(b  => pills.push({ id: 'brand-'  + b, label: b, filterType: 'brand',  value: b }));
+        return pills;
     }
 
-    handleSearch(event) {
-        this.searchQuery = event.target.value;
+    // ── Breadcrumb ───────────────────────────────────────────────────────────
+
+    get breadcrumbCategory() {
+        if (!this.selectedCategory) return null;
+        return CATEGORIES.find(c => c.id === this.selectedCategory) || null;
     }
 
-    /* ─────────────────────────────────────
-       HANDLERS: hero buttons
-    ───────────────────────────────────── */
-    handleNewArrivals() {
-        this.selectedFamily = 'All';
-        this.searchQuery    = '';
-        this.selectedColor  = 'All';
+    get breadcrumbSubcategory() {
+        if (!this.selectedSubcategory || !this.breadcrumbCategory) return null;
+        return this.breadcrumbCategory.subcategories.find(s => s.id === this.selectedSubcategory) || null;
     }
 
-    handleViewSpecs() { /* no-op */ }
+    get showBreadcrumbCategory()    { return !!this.selectedCategory;    }
+    get showBreadcrumbSubcategory() { return !!this.selectedSubcategory; }
+    get breadcrumbAllClass()  { return this.selectedCategory ? 'nc2-bc-item' : 'nc2-bc-item nc2-bc-item--active'; }
 
-    /* ─────────────────────────────────────
-       HANDLERS: c-nexus-card events
-    ───────────────────────────────────── */
+    get isDetailViewOpen()  { return !!this.detailProduct; }
+    get allProductsList()   { return MOCK_PRODUCTS; }
 
-    // Called by onviewdetails from c-nexus-card — opens full-page detail view
+    // ── Handlers: sidebar ────────────────────────────────────────────────────
+
+    handleSelectAll() {
+        this.selectedCategory    = null;
+        this.selectedSubcategory = null;
+    }
+
+    handleToggleCategory(event) {
+        const id = event.currentTarget.dataset.id;
+        this.selectedCategory    = id;
+        this.selectedSubcategory = null;
+        this.expandedCategories  = this.expandedCategories.includes(id)
+            ? this.expandedCategories.filter(c => c !== id)
+            : [...this.expandedCategories, id];
+    }
+
+    handleSelectSubcategory(event) {
+        this.selectedCategory    = event.currentTarget.dataset.category;
+        this.selectedSubcategory = event.currentTarget.dataset.sub;
+    }
+
+    handleToggleStatus(event) {
+        const s = event.currentTarget.dataset.status;
+        this.statusFilter = this.statusFilter.includes(s)
+            ? this.statusFilter.filter(x => x !== s)
+            : [...this.statusFilter, s];
+    }
+
+    handleClearStatus() { this.statusFilter = []; }
+
+    handleToggleBrand(event) {
+        const b = event.currentTarget.dataset.brand;
+        this.brandFilter = this.brandFilter.includes(b)
+            ? this.brandFilter.filter(x => x !== b)
+            : [...this.brandFilter, b];
+    }
+
+    handleClearBrand() { this.brandFilter = []; }
+
+    handlePriceChange(event) {
+        this.priceMax = parseInt(event.target.value, 10);
+    }
+
+    handleResetFilters() {
+        this.selectedCategory    = null;
+        this.selectedSubcategory = null;
+        this.searchQuery         = '';
+        this.priceMax            = 20000;
+        this.statusFilter        = [];
+        this.brandFilter         = [];
+    }
+
+    // ── Handlers: toolbar ────────────────────────────────────────────────────
+
+    handleSearch(event)     { this.searchQuery = event.target.value; }
+    handleSortChange(event) { this.sortBy = event.target.value;       }
+    handleViewGrid()        { this.viewMode = 'grid'; }
+    handleViewList()        { this.viewMode = 'list'; }
+
+    // ── Handlers: filter pills ───────────────────────────────────────────────
+
+    handleRemoveFilter(event) {
+        const type  = event.currentTarget.dataset.type;
+        const value = event.currentTarget.dataset.value;
+        if (type === 'category')    { this.selectedCategory = null; this.selectedSubcategory = null; }
+        if (type === 'subcategory') { this.selectedSubcategory = null; }
+        if (type === 'search')      { this.searchQuery = ''; }
+        if (type === 'status')      { this.statusFilter = this.statusFilter.filter(s => s !== value); }
+        if (type === 'brand')       { this.brandFilter  = this.brandFilter.filter(b => b !== value);  }
+    }
+
+    handleClearAllFilters() { this.handleResetFilters(); }
+
+    // ── Handlers: product cards ──────────────────────────────────────────────
+
     handleViewProduct(event) {
-        const id = event.detail && event.detail.product
-            ? event.detail.product.id
-            : event.currentTarget && event.currentTarget.dataset.id;
-        const product = MOCK_PRODUCTS.find(p => p.id === id) || null;
-        if (product) {
-            this.detailProduct = product;
-        }
+        const id = event.currentTarget.dataset.id;
+        this.detailProduct = MOCK_PRODUCTS.find(p => p.id === id) || null;
+        if (this.detailProduct) document.dispatchEvent(new CustomEvent('nexusproductdetailopen'));
     }
 
-    // Called by ontogglefavorite from c-nexus-card
     handleToggleFavorite(event) {
-        const id = event.detail && event.detail.product
-            ? event.detail.product.id
-            : event.currentTarget.dataset.id;
-        this._toggleFav(id);
-    }
-
-    // Called by onaddtocart from c-nexus-card
-    handleAddToCart(event) {
-        const product = event.detail && event.detail.product
-            ? event.detail.product
-            : MOCK_PRODUCTS.find(p => p.id === event.currentTarget.dataset.id);
-        if (product) this._dispatchCart(product);
-    }
-
-    /* ─────────────────────────────────────
-       HANDLERS: c-nexus-product-detail-view events
-    ───────────────────────────────────── */
-    handleDetailClose() {
-        this.detailProduct = null;
-    }
-
-    handleDetailAddToCart(event) {
-        const product = event.detail && event.detail.product;
-        if (product) this._dispatchCart(product);
-    }
-
-    handleDetailToggleFavorite(event) {
-        const product = event.detail && event.detail.product;
-        if (product) this._toggleFav(product.id);
-    }
-
-    /* ─────────────────────────────────────
-       HANDLERS: quote form (from catalog grid)
-    ───────────────────────────────────── */
-    handleQuoteRequest(event) {
-        const id = event.detail && event.detail.product
-            ? event.detail.product.id
-            : event.currentTarget.dataset.id;
-        const product = MOCK_PRODUCTS.find(p => p.id === id);
-        if (product) {
-            this.detailProduct = null;
-            this.quoteProduct  = product;
-            this._quoteData    = {};
-        }
-    }
-
-    handleQuoteBackdropClick(event) {
-        if (event.target === event.currentTarget) {
-            this.quoteProduct = null;
-        }
-    }
-
-    handleModalContentClick(event) {
+        const id = event.currentTarget.dataset.id;
         event.stopPropagation();
-    }
-
-    handleQuoteFieldChange(event) {
-        const field = event.currentTarget.dataset.field;
-        this._quoteData[field] = event.target.value;
-    }
-
-    handleQuoteSubmit() {
-        console.log('Quote Request Submitted:', this._quoteData);
-        this.quoteProduct = null;
-        this._showToast();
-    }
-
-    handleQuoteFormClose() {
-        this.quoteProduct = null;
-    }
-
-    /* ─────────────────────────────────────
-       HELPERS
-    ───────────────────────────────────── */
-    _enrichProduct(p, colorFilter) {
-        const isFav = this.favoritedIds.includes(p.id);
-
-        const matchedColor = colorFilter !== 'All'
-            ? (p.colors || []).find(c => c.name === colorFilter)
-            : null;
-        const displayImage = matchedColor
-            ? matchedColor.image
-            : (p.colors && p.colors.length > 0 ? p.colors[0].image : p.image);
-
-        return {
-            ...p,
-            displayImage,
-            priceFormatted: '$' + p.price.toLocaleString(),
-            isFav,
-            favCls:  isFav ? 'nc-fav-btn nc-fav-btn--active' : 'nc-fav-btn',
-            favFill: isFav ? 'currentColor' : 'none'
-        };
-    }
-
-    _toggleFav(id) {
         this.favoritedIds = this.favoritedIds.includes(id)
             ? this.favoritedIds.filter(fid => fid !== id)
             : [...this.favoritedIds, id];
     }
 
-    _dispatchCart(product) {
-        this.dispatchEvent(new CustomEvent('addtocart', {
-            detail: { product }, bubbles: true, composed: true
-        }));
-        this._showToast();
+    handleAddToCart(event) {
+        event.stopPropagation();
+        const id = event.currentTarget.dataset.id;
+        const product = MOCK_PRODUCTS.find(p => p.id === id);
+        if (product) {
+            this.dispatchEvent(new CustomEvent('addtocart', { detail: { product }, bubbles: true, composed: true }));
+            this._showToast();
+        }
+    }
+
+    handleDetailClose()  {
+        this.detailProduct = null;
+        document.dispatchEvent(new CustomEvent('nexusproductdetailclose'));
+    }
+
+    handleSimilarProductView(event) {
+        const product = event.detail && event.detail.product;
+        if (product) {
+            this.detailProduct = null;
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            setTimeout(() => {
+                this.detailProduct = product;
+                document.dispatchEvent(new CustomEvent('nexusproductdetailopen'));
+            }, 0);
+        }
+    }
+    handleDetailAddToCart(event)  {
+        if (event.detail && event.detail.product) this._showToast();
+    }
+    handleDetailToggleFavorite(event) {
+        if (event.detail && event.detail.product) {
+            const id = event.detail.product.id;
+            this.favoritedIds = this.favoritedIds.includes(id)
+                ? this.favoritedIds.filter(fid => fid !== id)
+                : [...this.favoritedIds, id];
+        }
     }
 
     _showToast() {

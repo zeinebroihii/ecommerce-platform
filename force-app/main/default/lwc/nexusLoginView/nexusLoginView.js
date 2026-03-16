@@ -175,19 +175,14 @@ export default class NexusLoginView extends LightningElement {
 
     handleDetailRequireAuth(event) {
         this.selectedProduct = null;
-        setTimeout(() => {
-            const section = this.template.querySelector('#login-section');
-            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        this.authMode = (event.detail && event.detail.mode) || 'signup-select';
+        this.authOpen = true;
     }
 
     handleDetailQuoteRequest(event) {
         this.selectedProduct = null;
-        // Scroll to login section so user can sign up / access lead form
-        setTimeout(() => {
-            const section = this.template.querySelector('#login-section');
-            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        this.authMode = 'signup-select';
+        this.authOpen = true;
     }
 
     handleModalAddToCart(event) {
@@ -202,9 +197,9 @@ export default class NexusLoginView extends LightningElement {
     }
 
     /* ── Deals section ── */
-    handleDealsAddToCart(event) {
-        const product = event.detail && event.detail.product;
-        if (product) this._addToCart(product);
+    handleDealsAddToCart() {
+        this.authMode = 'signup-select';
+        this.authOpen = true;
     }
 
     handleDealsViewDetails(event) {
