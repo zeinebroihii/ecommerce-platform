@@ -407,7 +407,7 @@ public without sharing class LeadManagementController {
 
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         mail.setToAddresses(new List<String>{ admins[0].Email });
-        mail.setSubject('🔔 TALCORE — Nouveau Lead : ' + fullName
+        mail.setSubject('🔔 Nexus Systems — Nouveau Lead : ' + fullName
                         + (String.isNotBlank(company) ? ' (' + company + ')' : ''));
         mail.setHtmlBody(html);
         mail.setSaveAsActivity(false);
@@ -439,8 +439,8 @@ public without sharing class LeadManagementController {
             // ── Dark header top row ──
             + '<div style="background:#0f172a;padding:28px 36px 0;">'
             + '<table style="width:100%;border-collapse:collapse;"><tr>'
-            + '<td><span style="font-size:20px;font-weight:800;color:#fff;letter-spacing:0.14em;">TALCORE</span>'
-            + '<br><span style="color:#64748b;font-size:11px;letter-spacing:0.05em;">IT &amp; Enterprise Solutions</span></td>'
+            + '<td><span style="font-size:20px;font-weight:800;color:#fff;letter-spacing:0.14em;">NEXUS</span>'
+            + '<br><span style="color:#64748b;font-size:11px;letter-spacing:0.05em;">CRM &amp; Intelligence Platform</span></td>'
             + '<td style="text-align:right;vertical-align:middle;">'
             + '<span style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);'
             + 'color:#6ee7b7;font-size:11px;font-weight:700;letter-spacing:0.06em;padding:5px 13px;border-radius:100px;">'
@@ -458,7 +458,7 @@ public without sharing class LeadManagementController {
             // ── White body ──
             + '<div style="background:#fff;padding:36px;">'
             + '<p style="color:#475569;line-height:1.7;font-size:14px;margin:0 0 24px;">'
-            + 'Le prospect suivant vient d\'\u00eatre converti avec succ\u00e8s dans le CRM TALCORE :</p>'
+            + 'Le prospect suivant vient d\'\u00eatre converti avec succ\u00e8s dans Nexus CRM :</p>'
 
             // Client info card (green accent)
             + '<div style="background:#f8fafc;border-left:4px solid #10b981;border-radius:0 12px 12px 0;padding:20px 24px;margin:0 0 24px;">'
@@ -482,14 +482,14 @@ public without sharing class LeadManagementController {
 
             // ── Dark footer ──
             + '<div style="background:#1e293b;padding:18px 36px;text-align:center;">'
-            + '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 TALCORE &bull; IT &amp; Enterprise Solutions</p>'
+            + '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 Nexus Systems &bull; CRM &amp; Intelligence Platform</p>'
             + '<p style="color:#475569;font-size:11px;margin:0;">Notification CRM automatique &mdash; Ne pas r\u00e9pondre \u00e0 cet email</p>'
             + '</div>'
             + '</div></body></html>';
 
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         mail.setToAddresses(new List<String>{ admins[0].Email });
-        mail.setSubject('✅ TALCORE — Lead Converti : ' + firstName + ' ' + lastName);
+        mail.setSubject('✅ Nexus Systems — Lead Converti : ' + firstName + ' ' + lastName);
         mail.setHtmlBody(html);
         mail.setSaveAsActivity(false);
         try { Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail }); }
@@ -511,8 +511,8 @@ public without sharing class LeadManagementController {
             // ── Dark header top row ──
             + '<div style="background:#0f172a;padding:28px 36px 0;">'
             + '<table style="width:100%;border-collapse:collapse;"><tr>'
-            + '<td><span style="font-size:20px;font-weight:800;color:#fff;letter-spacing:0.14em;">TALCORE</span>'
-            + '<br><span style="color:#64748b;font-size:11px;letter-spacing:0.05em;">IT &amp; Enterprise Solutions</span></td>'
+            + '<td><span style="font-size:20px;font-weight:800;color:#fff;letter-spacing:0.14em;">NEXUS</span>'
+            + '<br><span style="color:#64748b;font-size:11px;letter-spacing:0.05em;">CRM &amp; Intelligence Platform</span></td>'
             + '<td style="text-align:right;vertical-align:middle;">'
             + '<span style="background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.4);'
             + 'color:#a5b4fc;font-size:11px;font-weight:700;letter-spacing:0.06em;padding:5px 13px;border-radius:100px;">'
@@ -524,14 +524,14 @@ public without sharing class LeadManagementController {
             // ── Dark header title ──
             + '<div style="background:#0f172a;padding:18px 36px 30px;">'
             + '<div style="font-size:20px;font-weight:700;color:#f1f5f9;">Un nouveau prospect vous attend</div>'
-            + '<div style="color:#94a3b8;font-size:13px;margin-top:5px;">Soumis via le portail client TALCORE</div>'
+            + '<div style="color:#94a3b8;font-size:13px;margin-top:5px;">Soumis via le portail Nexus Systems</div>'
             + '</div>'
 
             // ── White body ──
             + '<div style="background:#fff;padding:36px;">'
             + '<p style="font-size:15px;color:#0f172a;margin:0 0 10px;">Bonjour ' + adminGreet + ',</p>'
             + '<p style="color:#475569;line-height:1.7;font-size:14px;margin:0 0 24px;">'
-            + 'Un nouveau prospect vient de soumettre sa demande sur le portail TALCORE. Voici les informations :</p>'
+            + 'Un nouveau prospect vient de soumettre sa demande sur le portail Nexus Systems. Voici les informations :</p>'
 
             // Info card
             + '<div style="background:#f8fafc;border-left:4px solid #6366f1;border-radius:0 12px 12px 0;padding:20px 24px;margin:0 0 28px;">'
@@ -556,7 +556,7 @@ public without sharing class LeadManagementController {
 
             // ── Dark footer ──
             + '<div style="background:#1e293b;padding:18px 36px;text-align:center;">'
-            + '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 TALCORE &bull; IT &amp; Enterprise Solutions</p>'
+            + '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 Nexus Systems &bull; CRM &amp; Intelligence Platform</p>'
             + '<p style="color:#475569;font-size:11px;margin:0;">Notification CRM automatique &mdash; Ne pas r\u00e9pondre \u00e0 cet email</p>'
             + '</div>'
             + '</div></body></html>';
@@ -703,25 +703,10 @@ public without sharing class LeadManagementController {
         List<User> existing = [SELECT Id, Username FROM User
                                WHERE ContactId = :l.ConvertedContactId AND IsActive = true LIMIT 1];
         if (!existing.isEmpty()) {
-            // User already provisioned — resend credentials email
-            Contact cx = [SELECT Id, FirstName, Email FROM Contact WHERE Id = :l.ConvertedContactId LIMIT 1];
-            String siteBaseX = Site.getBaseUrl();
-            String baseUrlX  = String.isNotBlank(siteBaseX)
-                ? siteBaseX
-                : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss';
-            String changePwdUrlX = baseUrlX + '/s/changer-mot-de-passe';
-            String loginUrlX     = baseUrlX + '/s/login?startUrl='
-                + EncodingUtil.urlEncode(changePwdUrlX, 'UTF-8');
-            String newPwd = generateTempPassword();
-            Boolean pwdSetX = false;
-            try { System.setPassword(existing[0].Id, newPwd); pwdSetX = true; } catch (Exception ignored) {}
-            // Always send native reset email as guaranteed fallback
+            // User already provisioned — resend set-password link via native Salesforce email
+            Contact cx = [SELECT Id, FirstName, LastName, Email FROM Contact WHERE Id = :l.ConvertedContactId LIMIT 1];
             try { System.resetPassword(existing[0].Id, true); } catch (Exception ignored) {}
-            String companyX = l.Company != null ? l.Company : '';
-            String fnX = cx.FirstName != null ? cx.FirstName : '';
-            if (pwdSetX) {
-                sendProvisionedWelcomeEmail(cx.Id, cx.Email, fnX, companyX, newPwd, loginUrlX);
-            }
+            sendPortalWelcomeEmail(cx.Email, cx.FirstName, cx.LastName, null);
             return existing[0].Username;
         }
 
@@ -817,38 +802,20 @@ public without sharing class LeadManagementController {
             }
         }
 
-        // 9. Set a temp password on the account
-        String tempPwd = generateTempPassword();
-        Boolean pwdSet = false;
-        try {
-            System.setPassword(u.Id, tempPwd);
-            pwdSet = true;
-        } catch (Exception e) {
-            System.debug('setPassword failed: ' + e.getMessage());
-        }
-
-        // 10. Build login URL → redirects to change-password page after login
-        String siteBase     = Site.getBaseUrl();
-        String baseUrl      = String.isNotBlank(siteBase)
-            ? siteBase
-            : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss';
-        String changePwdUrl = baseUrl + '/s/changer-mot-de-passe';
-        String loginUrl     = baseUrl + '/s/login?startUrl='
-            + EncodingUtil.urlEncode(changePwdUrl, 'UTF-8');
-
-        // 11. Always send the native Salesforce reset-password email (bypasses deliverability limits)
-        try { System.resetPassword(u.Id, true); } catch (Exception ignored) {}
-
-        // 12. Send branded welcome email — with temp password if set, otherwise with forgot-password link
-        String company = l.Company != null ? l.Company : '';
-        if (pwdSet) {
-            sendProvisionedWelcomeEmail(c.Id, c.Email, fn, company, tempPwd, loginUrl);
-        } else {
-            String forgotPwdUrl = baseUrl + '/s/ForgotPassword';
-            sendPortalWelcomeEmail(c.Email, fn, c.LastName != null ? c.LastName : '', null);
-        }
+        // 9 & 10. Send emails in a @future context — Salesforce restricts Messaging.sendEmail
+        //         and System.resetPassword immediately after User DML in the same transaction.
+        sendPortalUserEmailsAsync(u.Id, c.Email, fn, c.LastName != null ? c.LastName : '');
 
         return u.Username;
+    }
+
+    // ── Post-User-insert emails — must run in a separate transaction (@future) ──
+    @future(callout=false)
+    private static void sendPortalUserEmailsAsync(String userId, String email, String firstName, String lastName) {
+        // Native SF reset-password email (one-click set-password link)
+        try { System.resetPassword(userId, true); } catch (Exception e) { System.debug('resetPassword: ' + e.getMessage()); }
+        // Branded Nexus welcome email
+        sendPortalWelcomeEmail(email, firstName, lastName, null);
     }
 
     // ── Branded welcome email that includes the actual temp password ───────────

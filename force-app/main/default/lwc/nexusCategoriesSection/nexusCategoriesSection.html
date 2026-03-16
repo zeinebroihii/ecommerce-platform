@@ -1,0 +1,78 @@
+<template>
+    <section class="ncs-section">
+        <div class="ncs-container">
+
+            <!-- ── Header ── -->
+            <div class="ncs-header">
+                <div class="ncs-eyebrow">
+                    <div class="ncs-eyebrow-line"></div>
+                    Product Ecosystem
+                </div>
+                <h2 class="ncs-heading">
+                    EXPLORE <span class="ncs-heading-grad">CATEGORIES</span>
+                </h2>
+            </div>
+
+            <!-- ── Category Grid ── -->
+            <div class="ncs-grid">
+                <template for:each={categories} for:item="cat">
+                    <div key={cat.id} class="ncs-col">
+
+                        <!-- Ghost number watermark -->
+                        <div class="ncs-ghost-num" aria-hidden="true">{cat.num}</div>
+
+                        <!-- Column header: title + NX code -->
+                        <div class="ncs-col-top">
+                            <h3 class="ncs-col-title">{cat.title}</h3>
+                            <span class="ncs-col-code">{cat.code}</span>
+                        </div>
+
+                        <!-- Subcategory items -->
+                        <div class={cat.subGridClass}>
+                            <template for:each={cat.subCategories} for:item="sub">
+                                <div key={sub.id} class="ncs-sub-item">
+
+                                    <!-- Image wrapper -->
+                                    <div class={sub.imgWrapClass}>
+
+                                        <!-- Crosshair overlay (shown on hover) -->
+                                        <div class="ncs-crosshair" aria-hidden="true">
+                                            <div class="ncs-ch-h"></div>
+                                            <div class="ncs-ch-v"></div>
+                                            <div class="ncs-ch-ring"></div>
+                                        </div>
+
+                                        <!-- Glow pulse (shown on hover) -->
+                                        <div class="ncs-glow" aria-hidden="true"></div>
+
+                                        <img
+                                            src={sub.image}
+                                            alt={sub.name}
+                                            class="ncs-sub-img"
+                                            referrerpolicy="no-referrer"
+                                        />
+                                    </div>
+
+                                    <!-- Label -->
+                                    <div class="ncs-sub-label">
+                                        <div class="ncs-ready-badge">
+                                            <span>Ready for Dispatch</span>
+                                        </div>
+                                        <span class="ncs-sub-name">{sub.name}</span>
+                                        <div class="ncs-underline"></div>
+                                    </div>
+
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Bottom accent bar -->
+                        <div class="ncs-bottom-bar"></div>
+
+                    </div>
+                </template>
+            </div>
+
+        </div>
+    </section>
+</template>

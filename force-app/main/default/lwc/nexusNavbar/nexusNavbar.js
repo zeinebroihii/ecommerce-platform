@@ -124,7 +124,7 @@ export default class NexusNavbar extends LightningElement {
     }
 
     get hasMoreItems() {
-        return this._items.length > this._visibleCount;
+        return this._dynIsPortal && this._items.length > this._visibleCount;
     }
 
     get allNavItems() {
@@ -133,8 +133,23 @@ export default class NexusNavbar extends LightningElement {
 
     // ── Navigation ────────────────────────────────────────────────────────────
 
-    goHome()   { window.location.href = this.homeUrl;   }
-    goPortal() { window.location.href = this.portalUrl; }
+    goHome()   { window.location.href = this.homeUrl; }
+    goPortal() {
+        if (this._dynIsPortal) {
+            this._dynActiveView = 'dashboard';
+            document.dispatchEvent(new CustomEvent('nexusnavviewchange', { detail: { viewId: 'dashboard' } }));
+        } else {
+            window.location.href = this.portalUrl;
+        }
+    }
+    handleNotifications() {
+        if (this._dynIsPortal) {
+            this._dynActiveView = 'dashboard';
+            document.dispatchEvent(new CustomEvent('nexusnavviewchange', { detail: { viewId: 'dashboard' } }));
+        } else {
+            window.location.href = this.portalUrl;
+        }
+    }
     goCart() {
         if (this._dynIsPortal) {
             this._dynActiveView = 'cart';

@@ -115,9 +115,9 @@ public without sharing class LeadController {
             // Footer
             + '<div style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;text-align:center;">'
             + '<p style="color:#94a3b8;font-size:12px;margin:0;">'
-            + 'Merci pour votre confiance. &mdash; L\u2019\u00e9quipe TALCORE</p>'
+            + 'Merci pour votre confiance. &mdash; L\u2019\u00e9quipe Nexus Systems</p>'
             + '<p style="color:#cbd5e1;font-size:11px;margin:6px 0 0;">'
-            + '&copy; 2025 TALCORE. Tous droits r\u00e9serv\u00e9s.</p>'
+            + '&copy; 2026 Nexus Systems. Tous droits r\u00e9serv\u00e9s.</p>'
             + '</div>'
             + '</div></body></html>';
     }

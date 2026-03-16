@@ -57,7 +57,7 @@
 
                     <!-- Bell -->
                     <div class="nn-bell-wrap">
-                        <button class="nn-action-icon" aria-label="Notifications">
+                        <button class="nn-action-icon" onclick={handleNotifications} aria-label="Notifications">
                             <lightning-icon icon-name="utility:notification" size="x-small" class="nn-icon"></lightning-icon>
                         </button>
                         <span class="nn-bell-badge">3</span>
@@ -86,7 +86,7 @@
                     </button>
                 </template>
 
-                <template if:false={isAuthenticated}>
+                <template if:false={isPortalMode}>
                     <button class="nn-login-btn" onclick={goLogin}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor" stroke-width="2.5"
