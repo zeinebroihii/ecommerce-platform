@@ -813,9 +813,19 @@ public without sharing class LeadManagementController {
     @future(callout=false)
     private static void sendPortalUserEmailsAsync(String userId, String email, String firstName, String lastName) {
         // Native SF reset-password email (one-click set-password link)
-        try { System.resetPassword(userId, true); } catch (Exception e) { System.debug('resetPassword: ' + e.getMessage()); }
+        try {
+            System.resetPassword(userId, true);
+            System.debug('resetPassword sent OK for userId=' + userId);
+        } catch (Exception e) {
+            System.debug('resetPassword FAILED: ' + e.getMessage());
+        }
         // Branded Nexus welcome email
-        sendPortalWelcomeEmail(email, firstName, lastName, null);
+        try {
+            sendPortalWelcomeEmail(email, firstName, lastName, null);
+            System.debug('Portal welcome email sent OK to ' + email);
+        } catch (Exception e) {
+            System.debug('sendPortalWelcomeEmail FAILED: ' + e.getMessage());
+        }
     }
 
     // ── Branded welcome email that includes the actual temp password ───────────
@@ -840,26 +850,25 @@ public without sharing class LeadManagementController {
     private static void sendPortalWelcomeEmail(
         String email, String firstName, String lastName, String salutation
     ) {
-        try {
-            String siteBase = Site.getBaseUrl();
-            String loginUrl = String.isNotBlank(siteBase)
-                ? siteBase + '/s/login'
-                : 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/login';
-            String pwdUrl   = String.isNotBlank(siteBase)
-                ? siteBase + '/s/ForgotPassword'
-                : loginUrl.replace('/login', '/ForgotPassword');
-            String greeting = (salutation == 'Mr.') ? 'Cher' : 'Ch\u00e8re';
-            String fullName = (firstName + ' ' + lastName).trim();
+        String loginUrl = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/login';
+        String greeting = (salutation == 'Mr.') ? 'Cher' : 'Ch\u00e8re';
+        String fullName = (firstName + ' ' + lastName).trim();
 
-            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            mail.setToAddresses(new List<String>{ email });
-            mail.setSubject('Bienvenue sur Nexus \u2014 Votre espace est pr\u00eat !');
-            mail.setHtmlBody(buildPortalWelcomeHtml(greeting, fullName, email, loginUrl, pwdUrl));
-            mail.setSaveAsActivity(false);
-            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
-        } catch (Exception e) {
-            System.debug('sendPortalWelcomeEmail: ' + e.getMessage());
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setToAddresses(new List<String>{ email });
+        mail.setSubject('Bienvenue sur Nexus \u2014 Votre espace est pr\u00eat !');
+        mail.setHtmlBody(buildPortalWelcomeHtml(greeting, fullName, email, loginUrl, loginUrl));
+        mail.setSaveAsActivity(false);
+
+        // Use OrgWideEmailAddress to bypass unverified domain restriction
+        List<OrgWideEmailAddress> owas = [SELECT Id FROM OrgWideEmailAddress LIMIT 1];
+        if (!owas.isEmpty()) {
+            mail.setOrgWideEmailAddressId(owas[0].Id);
+        } else {
+            mail.setSenderDisplayName('Nexus Platform');
         }
+
+        Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
     }
 
     // ── Welcome email HTML ────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ import { LightningElement, track } from 'lwc';
 
 const CATEGORIES = [
     {
-        id: 'computing', name: 'Computing', iconName: 'utility:cpu_spec',
+        id: 'computing', name: 'Computing', iconName: 'utility:desktop_and_phone',
         subcategories: [
             { id: 'workstations', name: 'Workstations' },
             { id: 'edge-nodes',   name: 'Edge Nodes'   },

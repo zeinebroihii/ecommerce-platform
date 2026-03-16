@@ -1,4 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
+import Id from '@salesforce/user/Id';
 
 const MOCK_PRODUCTS = [
     {
@@ -78,8 +79,12 @@ export default class NexusLoginView extends LightningElement {
     @track authOpen        = false;
     @track authMode        = 'login';
 
-    // ── Listen for navbar Login button (document event bridge) ───────────────
+    // ── Auto-redirect authenticated users to the portal ──────────────────────
     connectedCallback() {
+        if (Id) {
+            window.location.replace('/ss/s/customportal');
+            return;
+        }
         this._openAuthHandler = (e) => {
             this.authMode = (e.detail && e.detail.mode) || 'login';
             this.authOpen = true;
@@ -151,18 +156,14 @@ export default class NexusLoginView extends LightningElement {
 
     handleAddToCart(event) {
         event.stopPropagation();
-        const product = MOCK_PRODUCTS.find(p => p.id === event.currentTarget.dataset.id);
-        if (product) this._addToCart(product);
+        this.authMode = 'signup-select';
+        this.authOpen = true;
     }
 
-    handleQuoteRequest(event) {
-        const product = (event.detail && event.detail.product)
-            ? event.detail.product
-            : MOCK_PRODUCTS.find(p => p.id === event.currentTarget.dataset.id);
-        if (product) {
-            this.selectedProduct = null;
-            this.quoteProduct = product;
-        }
+    handleQuoteRequest() {
+        this.selectedProduct = null;
+        this.authMode = 'signup-select';
+        this.authOpen = true;
     }
 
     /* ── Modal ── */
@@ -185,10 +186,10 @@ export default class NexusLoginView extends LightningElement {
         this.authOpen = true;
     }
 
-    handleModalAddToCart(event) {
-        const product = event.detail && event.detail.product;
-        if (product) this._addToCart(product);
+    handleModalAddToCart() {
         this.selectedProduct = null;
+        this.authMode = 'signup-select';
+        this.authOpen = true;
     }
 
     handleModalToggleFavorite(event) {
@@ -211,10 +212,10 @@ export default class NexusLoginView extends LightningElement {
     handleQuoteFormClose() { this.quoteProduct = null; }
 
     /* ── Auth ── opens modal directly on this page */
-    handleB2BLogin()    { this.authMode = 'login';         this.authOpen = true; }
-    handleB2BRegister() { this.authMode = 'signup-select'; this.authOpen = true; }
-    handleB2CLogin()    { this.authMode = 'login';         this.authOpen = true; }
-    handleB2CRegister() { this.authMode = 'signup-select'; this.authOpen = true; }
+    handleB2BLogin()    { this.authMode = 'login';      this.authOpen = true; }
+    handleB2BRegister() { this.authMode = 'signup-b2b'; this.authOpen = true; }
+    handleB2CLogin()    { this.authMode = 'login';      this.authOpen = true; }
+    handleB2CRegister() { this.authMode = 'signup-b2c'; this.authOpen = true; }
     handleAuthClose()   { this.authOpen = false; }
 
     /* ── Helpers ── */

@@ -4,7 +4,7 @@ import selfRegisterB2C  from '@salesforce/apex/AuthController.selfRegisterB2C';
 import forgotPassword   from '@salesforce/apex/AuthController.forgotPassword';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
-const PORTAL_HOME = '/ss/s/';
+const PORTAL_HOME = '/ss/s/customportal';
 
 // Modes: 'login' | 'signup-select' | 'forgot-password' | 'signup-b2c' | 'change-password'
 const VALID_MODES = ['login', 'signup-select', 'forgot-password', 'signup-b2c', 'change-password'];

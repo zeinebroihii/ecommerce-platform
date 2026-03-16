@@ -16,7 +16,7 @@
 }
 
 /* ── Wrap ── */
-.nfs-wrap { display: flex; flex-direction: column; gap: 2rem; padding: 1.5rem 0; }
+.nfs-wrap { display: flex; flex-direction: column; gap: 2rem; padding: 0.25rem 0; }
 
 /* ── Header ── */
 .nfs-header    { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }

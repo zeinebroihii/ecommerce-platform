@@ -14,7 +14,7 @@
 }
 
 /* ── Wrap ── */
-.nos-wrap { display: flex; flex-direction: column; gap: 2rem; padding: 1.5rem 0; }
+.nos-wrap { display: flex; flex-direction: column; gap: 2rem; padding: 0.25rem 0; }
 
 /* ── Header ── */
 .nos-header { display: flex; align-items: center; justify-content: space-between; }
