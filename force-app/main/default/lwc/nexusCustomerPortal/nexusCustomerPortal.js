@@ -4,6 +4,25 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 const CART_KEY = 'ecomm_cart';
 
+// Sub-header items pushed to the navbar when portal is active
+// First 7 are visible; rest overflow into MORE dropdown
+const PORTAL_NAV_ITEMS = [
+    { id: 'dashboard',  label: 'Dashboard',   icon: 'utility:home',              scrollId: '' },
+    { id: 'catalog',    label: 'Catalogue',   icon: 'utility:product_workspace', scrollId: '' },
+    { id: 'favorites',  label: 'Favoris',     icon: 'utility:favorite',          scrollId: '' },
+    { id: 'orders',     label: 'Commandes',   icon: 'utility:truck',             scrollId: '' },
+    { id: 'quotations', label: 'Devis',       icon: 'utility:file',              scrollId: '' },
+    { id: 'cart',       label: 'Mon Panier',  icon: 'utility:cart',              scrollId: '' },
+    { id: 'profile',    label: 'Profil',      icon: 'utility:user',              scrollId: '' },
+    // MORE dropdown
+    { id: 'swap',       label: 'Nexus Swap',        icon: 'utility:sync',      scrollId: '' },
+    { id: 'passport',   label: 'Passeport Digital', icon: 'utility:identity',  scrollId: '' },
+    { id: 'timeline',   label: 'Timeline 360°',     icon: 'utility:date_time', scrollId: '' },
+    { id: 'war-room',   label: 'War Room',           icon: 'utility:strategy',  scrollId: '' },
+    { id: 'cases',      label: 'Support',           icon: 'utility:case',      scrollId: '' },
+    { id: 'settings',   label: 'Paramètres',        icon: 'utility:settings',  scrollId: '' },
+];
+
 // ── Catalog mock data (translated from NexusCatalog.tsx) ─────────────────────
 const CATALOG_PRODUCTS = [
     {
@@ -81,6 +100,13 @@ export default class NexusCustomerPortal extends LightningElement {
     @track cart          = [];
     @track _products     = [];
 
+    // detail view state for product overlay
+    @track detailProduct = null;
+
+    get isDetailViewOpen() {
+        return !!this.detailProduct;
+    }
+
     // ── Catalog state ──────────────────────────────────────────────────────────
     @track selectedFamily     = 'All';
     @track selectedColor      = 'All';
@@ -112,6 +138,32 @@ export default class NexusCustomerPortal extends LightningElement {
             const raw = sessionStorage.getItem(CART_KEY);
             if (raw) this.cart = JSON.parse(raw);
         } catch(e) { /* silent */ }
+
+        // ── Navbar sync ──────────────────────────────────────────────────────
+        // Listen for navbar sub-tab clicks (nexusnavviewchange dispatched by nexusNavbar)
+        this._onNavViewChange = (e) => {
+            const { viewId } = e.detail || {};
+            if (viewId) {
+                this.activeTab = viewId;
+                // No need to call _pushNavUpdate here; navbar already updated
+                // its own highlight optimistically
+            }
+        };
+        document.addEventListener('nexusnavviewchange', this._onNavViewChange);
+
+        // Tell navbar: we are a portal, here are our tabs
+        this._pushNavUpdate();
+    }
+
+    disconnectedCallback() {
+        document.removeEventListener('nexusnavviewchange', this._onNavViewChange);
+    }
+
+    /** Broadcast current portal state to the navbar (sub-header + active tab) */
+    _pushNavUpdate() {
+        document.dispatchEvent(new CustomEvent('nexusportalnavupdate', {
+            detail: { subHeaderItems: PORTAL_NAV_ITEMS, activeView: this.activeTab, isPortal: true }
+        }));
     }
 
     // ── Sidebar nav tabs (3 category groups) ──────────────────────────────────
@@ -297,13 +349,13 @@ export default class NexusCustomerPortal extends LightningElement {
     _prioClass(p)   { return this.casePriority === p ? 'ncp-prio ncp-prio-active' : 'ncp-prio'; }
 
     // ── Handlers — Nav ────────────────────────────────────────────────────────
-    handleTabChange(e)    { this.activeTab = e.currentTarget.dataset.id; }
-    handleGoToCatalog()   { this.activeTab = 'catalog'; }
-    handleGoToOrders()    { this.activeTab = 'orders'; }
-    handleGoToInsights()  { this.activeTab = 'cases'; }
-    handleGoToTimeline()  { this.activeTab = 'timeline'; }
-    handleCasesTab()      { this.activeTab = 'cases'; }
-    handleSettingsTab()   { this.activeTab = 'settings'; }
+    handleTabChange(e)    { this.activeTab = e.currentTarget.dataset.id; this._pushNavUpdate(); }
+    handleGoToCatalog()   { this.activeTab = 'catalog';  this._pushNavUpdate(); }
+    handleGoToOrders()    { this.activeTab = 'orders';   this._pushNavUpdate(); }
+    handleGoToInsights()  { this.activeTab = 'cases';    this._pushNavUpdate(); }
+    handleGoToTimeline()  { this.activeTab = 'timeline'; this._pushNavUpdate(); }
+    handleCasesTab()      { this.activeTab = 'cases';    this._pushNavUpdate(); }
+    handleSettingsTab()   { this.activeTab = 'settings'; this._pushNavUpdate(); }
 
     // ── Handlers — Engagement System (drawers) ────────────────────────────────
     handleViewAllActivity() {
@@ -390,6 +442,42 @@ export default class NexusCustomerPortal extends LightningElement {
         }));
     }
 
+    // ── Handlers — Top Deals section ─────────────────────────────────────────
+    handleDealsAddToCartPortal(event) {
+        const product = event.detail && event.detail.product;
+        if (!product) return;
+        this._pushToCart({ ...product, price: product.salePrice });
+        this.dispatchEvent(new ShowToastEvent({
+            title: 'Panier', message: `${product.name} ajouté au panier.`, variant: 'success'
+        }));
+    }
+
+    handleDealsViewDetailsPortal(event) {
+        // when a deal's arrow/button is clicked, open the detail overlay
+        const product = event.detail && event.detail.product;
+        if (product) {
+            // set detail product; keep current tab intact so user stays where they were
+            this.detailProduct = product;
+        }
+    }
+
+    // catalog component events
+    handleAddToCartFromCatalog(event) {
+        const product = event.detail && event.detail.product;
+        if (!product) return;
+        this._pushToCart({ ...product, price: product.price || product.salePrice });
+        this.dispatchEvent(new ShowToastEvent({
+            title: 'Panier', message: `${product.name} ajouté au panier.`, variant: 'success'
+        }));
+    }
+
+    handleToggleFavoriteFromCatalog(event) {
+        const product = event.detail && event.detail.product;
+        if (product) {
+            this._toggleFavoriteById(product.id);
+        }
+    }
+
     _pushToCart(product) {
         const existing = this.cart.find(i => i.productId === product.id);
         if (existing) {
@@ -444,6 +532,30 @@ export default class NexusCustomerPortal extends LightningElement {
     // ── Handlers — Cart (nexusPortalCart child events) ────────────────────────
     handleNavigateFromCart(e) {
         this.activeTab = e.detail.tab;
+        this._pushNavUpdate();
+    }
+
+    // ── Handlers — product detail overlay ─────────────────────────────────────
+    handleDetailClose() {
+        this.detailProduct = null;
+    }
+
+    handleDetailAddToCart(event) {
+        const product = event.detail && event.detail.product;
+        if (product) {
+            this._pushToCart({ ...product, price: product.price || product.salePrice });
+            this.detailProduct = null;
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Panier', message: `${product.name} ajouté au panier.`, variant: 'success'
+            }));
+        }
+    }
+
+    handleDetailToggleFavorite(event) {
+        const product = event.detail && event.detail.product;
+        if (product) {
+            this._toggleFavoriteById(product.id);
+        }
     }
 
     handleCartChanged(e) {

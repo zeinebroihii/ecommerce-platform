@@ -1,39 +1,96 @@
 <template>
     <header class="nn-header">
-        <div class="nn-inner">
 
-            <!-- ── Logo ──────────────────────────────────────────────────── -->
-            <c-nexus-logo
-                variant="emerald"
-                size="md"
-                subtitle="Platform"
-                onlogoclick={goHome}>
-            </c-nexus-logo>
+        <!-- ── Utility Bar ─────────────────────────────────────────────────── -->
+        <div class="nn-utility-bar">
+            <div class="nn-utility-left">
+                <button class="nn-utility-link">Help Center</button>
+                <button class="nn-utility-link">Track Order</button>
+                <button class="nn-utility-link nn-utility-biz">Nexus Business</button>
+            </div>
+            <div class="nn-utility-right">
+                <span class="nn-utility-lang">English / USD</span>
+                <span class="nn-utility-sep">|</span>
+                <span class="nn-status-dot"></span>
+                <span class="nn-status-text">System Status: Optimal</span>
+            </div>
+        </div>
 
-            <!-- ── Desktop nav ────────────────────────────────────────────── -->
-            <nav class="nn-nav">
-                <button class="nn-link" onclick={goHome}>Home</button>
-                <button class="nn-link" onclick={scrollToProducts}>Products</button>
-                <button class="nn-link" onclick={scrollToAbout}>About</button>
-                <button class="nn-link" onclick={scrollToJourney}>Journey</button>
-                <button class="nn-link" onclick={scrollToFaq}>FAQ</button>
-                <template if:true={isAuthenticated}>
-                    <button class="nn-link" onclick={goPortal}>Portal</button>
-                </template>
-                <button class="nn-link nn-link-admin" onclick={goAdmin}>Admin</button>
+        <!-- ── Main Bar ────────────────────────────────────────────────────── -->
+        <div class="nn-main-bar">
 
-                <div class="nn-divider"></div>
+            <!-- Logo -->
+            <div class="nn-logo-wrap" onclick={goHome}>
+                <div class="nn-logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                         fill="none" stroke="#fff" stroke-width="3"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                    </svg>
+                </div>
+                <span class="nn-logo-text">NEXUS</span>
+            </div>
 
-                <!-- Guest actions -->
-                <template if:false={isAuthenticated}>
-                    <button class="nn-link nn-link-quote" onclick={goDevis}>
-                        <span class="nn-link-quote-icon">
-                            <lightning-icon icon-name="utility:file" size="x-small" class="nn-icon-sm"></lightning-icon>
-                        </span>
-                        Request Quote
+            <!-- Search -->
+            <div class="nn-search-wrap">
+                <input type="text" placeholder="Search the Nexus ecosystem..." class="nn-search-input" />
+                <button class="nn-search-btn" aria-label="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Right Actions -->
+            <div class="nn-actions">
+                <template if:true={isPortalMode}>
+                    <!-- Status indicator -->
+                    <div class="nn-status-indicator">
+                        <span class="nn-si-label">STATUS</span>
+                        <div class="nn-si-value">
+                            <span class="nn-si-dot"></span>
+                            <span class="nn-si-text">Active</span>
+                        </div>
+                    </div>
+
+                    <!-- Bell -->
+                    <div class="nn-bell-wrap">
+                        <button class="nn-action-icon" aria-label="Notifications">
+                            <lightning-icon icon-name="utility:notification" size="x-small" class="nn-icon"></lightning-icon>
+                        </button>
+                        <span class="nn-bell-badge">3</span>
+                    </div>
+
+                    <!-- Portal -->
+                    <button class="nn-action-btn" onclick={goPortal}>
+                        <lightning-icon icon-name="utility:user" size="x-small" class="nn-icon"></lightning-icon>
+                        <span class="nn-action-label">Portal</span>
                     </button>
-                    <button class="nn-btn-login" onclick={goLogin}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="nn-login-svg">
+
+                    <!-- Cart -->
+                    <div class="nn-cart-wrap">
+                        <button class="nn-action-btn" onclick={goCart}>
+                            <lightning-icon icon-name="utility:cart" size="x-small" class="nn-icon"></lightning-icon>
+                            <span class="nn-action-label">Cart</span>
+                        </button>
+                        <template if:true={hasCartItems}>
+                            <span class="nn-cart-badge">{cartCount}</span>
+                        </template>
+                    </div>
+
+                    <!-- Logout -->
+                    <button class="nn-logout-btn" onclick={handleLogout} aria-label="Logout">
+                        <lightning-icon icon-name="utility:logout" size="x-small" class="nn-icon-logout"></lightning-icon>
+                    </button>
+                </template>
+
+                <template if:false={isAuthenticated}>
+                    <button class="nn-login-btn" onclick={goLogin}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round" class="nn-login-svg">
                             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
                             <polyline points="10 17 15 12 10 7"/>
                             <line x1="15" y1="12" x2="3" y2="12"/>
@@ -41,36 +98,9 @@
                         Login
                     </button>
                 </template>
+            </div>
 
-                <!-- Authenticated actions -->
-                <template if:true={isAuthenticated}>
-                    <button class="nn-icon-btn" aria-label="Notifications">
-                        <lightning-icon icon-name="utility:notification" size="x-small"></lightning-icon>
-                    </button>
-
-                    <div class="nn-cart-wrap">
-                        <button class="nn-icon-btn" onclick={goCart} aria-label="Cart">
-                            <lightning-icon icon-name="utility:cart" size="x-small"></lightning-icon>
-                        </button>
-                        <template if:true={hasCartItems}>
-                            <span class="nn-cart-badge">{cartCount}</span>
-                        </template>
-                    </div>
-
-                    <div class="nn-user-chip">
-                        <div class="nn-avatar">
-                            <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
-                        </div>
-                        <span class="nn-user-label">{userLabel}</span>
-                    </div>
-
-                    <button class="nn-icon-btn nn-logout" onclick={handleLogout} aria-label="Logout">
-                        <lightning-icon icon-name="utility:logout" size="x-small"></lightning-icon>
-                    </button>
-                </template>
-            </nav>
-
-            <!-- ── Mobile hamburger ──────────────────────────────────────── -->
+            <!-- Mobile Hamburger -->
             <button class="nn-hamburger" onclick={toggleMobile} aria-label="Menu">
                 <span class="nn-ham-line"></span>
                 <span class="nn-ham-line"></span>
@@ -78,26 +108,98 @@
             </button>
         </div>
 
-        <!-- ── Mobile drawer ──────────────────────────────────────────────── -->
+        <!-- ── Sub-Header ──────────────────────────────────────────────────── -->
+        <template if:true={isSubBarVisible}>
+        <div class="nn-sub-bar">
+            <!-- Left: nav items (scrollable) + MORE sits outside to avoid overflow clip -->
+            <div class="nn-sub-nav-wrap">
+                <div class="nn-sub-left">
+                    <template for:each={visibleNavItems} for:item="item">
+                        <button key={item.id}
+                                class={item.cssClass}
+                                data-id={item.id}
+                                data-scroll={item.scrollId}
+                                onclick={handleSubNavClick}>
+                            <template if:true={item.icon}>
+                                <lightning-icon icon-name={item.icon} size="x-small" class="nn-sub-icon"></lightning-icon>
+                            </template>
+                            {item.label}
+                        </button>
+                    </template>
+                </div>
+
+                <!-- MORE dropdown — sibling of nn-sub-left so it is never clipped -->
+                <template if:true={hasMoreItems}>
+                    <div class="nn-more-wrap">
+                        <button class="nn-more-btn" onclick={toggleMoreMenu}>
+                            <span>&#8943; More</span>
+                            <span class="nn-chevron-down">&#9662;</span>
+                        </button>
+                        <template if:true={isMoreMenuOpen}>
+                            <div class="nn-more-dropdown">
+                                <template for:each={moreNavItems} for:item="mitem">
+                                    <button key={mitem.id}
+                                            class="nn-more-item"
+                                            data-id={mitem.id}
+                                            data-scroll={mitem.scrollId}
+                                            onclick={handleSubNavClick}>
+                                        <template if:true={mitem.icon}>
+                                            <lightning-icon icon-name={mitem.icon} size="x-small" class="nn-more-icon"></lightning-icon>
+                                        </template>
+                                        {mitem.label}
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Right: portal action buttons -->
+            <template if:true={isPortalMode}>
+                <div class="nn-sub-right">
+                    <button class="nn-nexusbiz-btn" onclick={handleNexusBiz}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        Nexus Biz
+                    </button>
+                    <button class="nn-quote-btn" onclick={handleQuote}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        Quote
+                    </button>
+                </div>
+            </template>
+        </div>
+        </template>
+
+        <!-- ── Mobile Drawer ────────────────────────────────────────────────── -->
         <template if:true={mobileOpen}>
             <div class="nn-mobile-drawer">
-                <button class="nn-mobile-link" onclick={goHome}>Home</button>
-                <button class="nn-mobile-link" onclick={scrollToProducts}>Products</button>
-                <button class="nn-mobile-link" onclick={scrollToAbout}>About</button>
-                <button class="nn-mobile-link" onclick={scrollToJourney}>Journey</button>
-                <button class="nn-mobile-link" onclick={scrollToFaq}>FAQ</button>
-                <template if:true={isAuthenticated}>
-                    <button class="nn-mobile-link" onclick={goPortal}>Portal</button>
-                </template>
-                <button class="nn-mobile-link" onclick={goAdmin}>Admin</button>
-                <template if:false={isAuthenticated}>
-                    <button class="nn-mobile-link" onclick={goDevis}>Request Quote</button>
-                    <button class="nn-mobile-cta" onclick={goLogin}>Login</button>
+                <template for:each={allNavItems} for:item="item">
+                    <button key={item.id}
+                            class="nn-mobile-link"
+                            data-id={item.id}
+                            data-scroll={item.scrollId}
+                            onclick={handleSubNavClick}>
+                        {item.label}
+                    </button>
                 </template>
                 <template if:true={isAuthenticated}>
                     <button class="nn-mobile-link nn-mobile-logout" onclick={handleLogout}>Logout</button>
                 </template>
+                <template if:false={isAuthenticated}>
+                    <button class="nn-mobile-cta" onclick={goLogin}>Login</button>
+                </template>
             </div>
         </template>
+
     </header>
 </template>

@@ -1,4 +1,4 @@
-/* ── Host override ─────────────────────────────────────────────────────── */
+/* ── Host ───────────────────────────────────────────────────────────────── */
 :host {
     display: block !important;
     width: 100% !important;
@@ -8,253 +8,579 @@
     box-sizing: border-box !important;
 }
 
-/* ── Shell ─────────────────────────────────────────────────────────────── */
+/* ── Shell ──────────────────────────────────────────────────────────────── */
 .nn-header {
     position: sticky;
     top: 0;
-    z-index: 50;
-    background: rgba(255, 255, 255, 0.80);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(226, 232, 240, 0.60);
-    transition: background 0.5s, border-color 0.5s;
+    z-index: 200;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
 }
 
-.nn-inner {
+/* ══════════════════════════════════════════════════════════════════════════
+   UTILITY BAR
+   ══════════════════════════════════════════════════════════════════════════ */
+.nn-utility-bar {
+    background: #020617;
     width: 100%;
-    padding: 0 3rem;
-    height: 5rem;            /* h-20 */
+    padding: 0.25rem 3rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
     box-sizing: border-box;
 }
 
-/* ── Logo ──────────────────────────────────────────────────────────────── */
-/* Styles live in nexusLogo component — only positioning needed here */
-
-/* ── Nav ───────────────────────────────────────────────────────────────── */
-.nn-nav {
-    display: none;
+.nn-utility-left {
+    display: flex;
     align-items: center;
-    gap: 2.5rem;
+    gap: 1.25rem;
 }
 
-@media (min-width: 48rem) {
-    .nn-nav { display: flex; }
-}
-
-.nn-link {
+.nn-utility-link {
     background: none;
     border: none;
     padding: 0;
-    font-size: 0.75rem;
+    font-size: 9px;
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #475569;
+    letter-spacing: 0.15em;
+    color: #64748b;
     cursor: pointer;
     transition: color 0.15s;
-    white-space: nowrap;
 }
+.nn-utility-link:hover { color: #34d399; }
 
-.nn-link:hover         { color: #059669; }  /* emerald on hover */
-
-/* Admin link — matches React: text-sm font-medium, no uppercase */
-.nn-link-admin {
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-transform: none;
-    letter-spacing: 0;
-}
-.nn-link-admin:hover   { color: #6366f1; }  /* indigo for admin */
-
-/* Request Quote link */
-.nn-link-quote {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-transform: none;
-    letter-spacing: 0;
-    color: #475569;
-}
-
-.nn-link-quote:hover { color: #6366f1; }
-
-.nn-link-quote-icon {
-    display: flex;
-    align-items: center;
-    --lwc-colorTextIconDefault: currentColor;
-}
-
-.nn-icon-sm       { --lwc-colorTextIconDefault: currentColor; vertical-align: middle; }
-.nn-icon-white    { --lwc-colorTextIconDefault: #ffffff; }
-
-.nn-divider {
-    width: 1px;
-    height: 1rem;
-    background: #e2e8f0;
-    flex-shrink: 0;
-}
-
-/* ── Login button ──────────────────────────────────────────────────────── */
-.nn-btn-login {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 1.125rem;
-    background: #0f172a;
-    color: #ffffff;
-    border: none;
-    border-radius: 9999px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
-    transition: background 0.15s;
-}
-
-.nn-btn-login:hover { background: #059669; }
-
-.nn-login-svg { flex-shrink: 0; }
-
-/* ── Icon buttons ──────────────────────────────────────────────────────── */
-.nn-icon-btn {
-    background: none;
-    border: none;
-    padding: 0.5rem;
-    color: #94a3b8;
-    cursor: pointer;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.15s;
-    --lwc-colorTextIconDefault: #94a3b8;
-}
-
-.nn-icon-btn:hover {
-    color: #6366f1;
-    --lwc-colorTextIconDefault: #6366f1;
-}
-
-.nn-logout:hover {
-    color: #f43f5e;
-    --lwc-colorTextIconDefault: #f43f5e;
-}
-
-/* ── Cart ──────────────────────────────────────────────────────────────── */
-.nn-cart-wrap {
-    position: relative;
-    display: flex;
-}
-
-.nn-cart-badge {
-    position: absolute;
-    top: -0.25rem;
-    right: -0.25rem;
-    width: 1.25rem;
-    height: 1.25rem;
-    background: #6366f1;
-    color: #ffffff;
-    font-size: 0.625rem;
+/* Nexus Business link — highlighted */
+.nn-utility-biz {
+    color: #10b981;
+    font-size: 9px;
     font-weight: 900;
-    border-radius: 9999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
 }
+.nn-utility-biz:hover { color: #6ee7b7; }
 
-/* ── User chip ─────────────────────────────────────────────────────────── */
-.nn-user-chip {
+.nn-utility-right {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.nn-avatar {
+.nn-utility-lang {
+    font-size: 9px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.05em;
+}
+
+.nn-utility-sep {
+    color: rgba(255,255,255,0.15);
+    font-size: 10px;
+}
+
+.nn-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: #10b981;
+    animation: nn-pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;
+    flex-shrink: 0;
+}
+
+@keyframes nn-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+.nn-status-text {
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #10b981;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MAIN BAR
+   ══════════════════════════════════════════════════════════════════════════ */
+.nn-main-bar {
+    background: #020617;
+    width: 100%;
+    padding: 0.5rem 3rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    box-sizing: border-box;
+}
+
+/* Logo */
+.nn-logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.nn-logo-icon {
     width: 2rem;
     height: 2rem;
-    background: #f1f5f9;
+    background: #059669;
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.nn-logo-text {
+    font-size: 1.125rem;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -0.05em;
+    color: #ffffff;
+}
+
+/* Search */
+.nn-search-wrap {
+    flex: 1;
+    max-width: 36rem;
+    margin: 0 auto;
+    display: none;
+}
+@media (min-width: 48rem) { .nn-search-wrap { display: flex; } }
+
+.nn-search-input {
+    width: 100%;
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-right: none;
+    border-radius: 0.5rem 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #ffffff;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.nn-search-input::placeholder { color: rgba(255,255,255,0.28); }
+.nn-search-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 1px #10b981;
+}
+
+.nn-search-btn {
+    height: 2.25rem;
+    width: 2.75rem;
+    flex-shrink: 0;
+    background: #059669;
+    border: none;
+    border-radius: 0 0.5rem 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.nn-search-btn:hover { background: #047857; }
+
+/* Right actions */
+.nn-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Status indicator */
+.nn-status-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+.nn-si-label {
+    font-size: 7px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #475569;
+    line-height: 1;
+}
+.nn-si-value {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.nn-si-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: #10b981;
+    animation: nn-pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+.nn-si-text {
+    font-size: 9px;
+    font-weight: 900;
+    color: #10b981;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Bell */
+.nn-bell-wrap {
+    position: relative;
+    display: flex;
+}
+.nn-bell-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 14px;
+    height: 14px;
+    background: #10b981;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 900;
     border-radius: 9999px;
     display: flex;
     align-items: center;
     justify-content: center;
-    --lwc-colorTextIconDefault: #94a3b8;
+    border: 1px solid #020617;
+    line-height: 1;
+    pointer-events: none;
 }
 
-.nn-user-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #334155;
-}
-
-/* ── Hamburger ─────────────────────────────────────────────────────────── */
-.nn-hamburger {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+/* Generic icon button */
+.nn-action-icon {
     background: none;
     border: none;
+    padding: 0.3rem;
+    color: #94a3b8;
     cursor: pointer;
-    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    --lwc-colorTextIconDefault: #94a3b8;
+    transition: color 0.15s;
+}
+.nn-action-icon:hover { color: #34d399; --lwc-colorTextIconDefault: #34d399; }
+
+/* Portal / Cart stacked buttons */
+.nn-action-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: #94a3b8;
+    cursor: pointer;
+    --lwc-colorTextIconDefault: #94a3b8;
+    transition: color 0.15s;
+}
+.nn-action-btn:hover { color: #34d399; --lwc-colorTextIconDefault: #34d399; }
+
+.nn-action-label {
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    line-height: 1;
 }
 
-@media (min-width: 48rem) {
-    .nn-hamburger { display: none; }
-}
-
-.nn-ham-line {
-    width: 1.25rem;
-    height: 2px;
-    background: #475569;
+/* Cart badge */
+.nn-cart-wrap { position: relative; display: flex; }
+.nn-cart-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    width: 1rem; height: 1rem;
+    background: #059669;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 900;
     border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #020617;
+    line-height: 1;
+}
+
+/* Logout */
+.nn-logout-btn {
+    width: 2rem; height: 2rem;
+    border-radius: 0.5rem;
+    background: rgba(244,63,94,0.12);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    color: #f43f5e;
+    cursor: pointer;
+    --lwc-colorTextIconDefault: #f43f5e;
     transition: background 0.15s;
 }
+.nn-logout-btn:hover { background: rgba(244,63,94,0.22); }
 
-.nn-hamburger:hover .nn-ham-line { background: #059669; }
+/* Login button */
+.nn-login-btn {
+    display: flex; align-items: center; gap: 0.375rem;
+    padding: 0.375rem 1rem;
+    background: #059669;
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+.nn-login-btn:hover { background: #047857; }
+.nn-login-svg { flex-shrink: 0; }
 
-/* ── Mobile drawer ─────────────────────────────────────────────────────── */
+/* Hamburger */
+.nn-hamburger {
+    display: flex; flex-direction: column; gap: 4px;
+    background: none; border: none; cursor: pointer; padding: 0.5rem;
+    margin-left: auto; flex-shrink: 0;
+}
+@media (min-width: 48rem) { .nn-hamburger { display: none; } }
+.nn-ham-line {
+    width: 1.25rem; height: 2px;
+    background: #64748b; border-radius: 9999px; transition: background 0.15s;
+}
+.nn-hamburger:hover .nn-ham-line { background: #34d399; }
+
+/* lightning-icon color overrides in dark bars */
+.nn-icon        { --lwc-colorTextIconDefault: #94a3b8; }
+.nn-icon-logout { --lwc-colorTextIconDefault: #f43f5e; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SUB-HEADER
+   ══════════════════════════════════════════════════════════════════════════ */
+.nn-sub-bar {
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    width: 100%;
+    padding: 0 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(226,232,240,0.70);
+    box-sizing: border-box;
+    min-height: 2.375rem;
+    gap: 1rem;
+}
+
+/* Wraps scrollable nav + MORE button; overflow visible so dropdown isn't clipped */
+.nn-sub-nav-wrap {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    overflow: visible;
+    position: relative;
+}
+
+.nn-sub-left {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 2.375rem;
+    overflow-x: auto;
+    overflow-y: visible;
+    flex: 1;
+    min-width: 0;
+}
+.nn-sub-left::-webkit-scrollbar { display: none; }
+
+/* Sub nav links */
+.nn-sub-link {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0 0.75rem;
+    height: 100%;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #64748b;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    --lwc-colorTextIconDefault: #94a3b8;
+}
+.nn-sub-link:hover {
+    color: #059669;
+    --lwc-colorTextIconDefault: #059669;
+}
+.nn-sub-link-active {
+    color: #059669;
+    border-bottom-color: #10b981;
+    --lwc-colorTextIconDefault: #059669;
+}
+
+.nn-sub-icon { display: flex; align-items: center; }
+
+/* MORE dropdown */
+.nn-more-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    flex-shrink: 0;
+}
+
+.nn-more-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0 0.75rem;
+    height: 100%;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: color 0.15s;
+}
+.nn-more-btn:hover { color: #059669; }
+
+.nn-chevron-down { font-size: 8px; }
+
+.nn-more-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    min-width: 11rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.625rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    z-index: 300;
+    padding: 0.375rem 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.nn-more-item {
+    background: none;
+    border: none;
+    padding: 0.625rem 1rem;
+    text-align: left;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.12s, color 0.12s;
+    --lwc-colorTextIconDefault: #94a3b8;
+}
+.nn-more-item:hover {
+    background: #f1fdf9;
+    color: #059669;
+    --lwc-colorTextIconDefault: #059669;
+}
+
+.nn-more-icon { display: flex; align-items: center; }
+
+/* Right portal action buttons */
+.nn-sub-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.nn-nexusbiz-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.3rem 0.75rem;
+    background: rgba(16,185,129,0.10);
+    color: #059669;
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 0.375rem;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+.nn-nexusbiz-btn:hover { background: rgba(16,185,129,0.18); border-color: #059669; }
+
+.nn-quote-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.3rem 0.75rem;
+    background: rgba(100,116,139,0.08);
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+.nn-quote-btn:hover { background: #f1f5f9; color: #0f172a; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE DRAWER
+   ══════════════════════════════════════════════════════════════════════════ */
 .nn-mobile-drawer {
+    background: #020617;
     display: flex;
     flex-direction: column;
     padding: 1rem 1.5rem 1.5rem;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid rgba(255,255,255,0.05);
     gap: 0.25rem;
 }
 
 .nn-mobile-link {
-    background: none;
-    border: none;
-    text-align: left;
+    background: none; border: none; text-align: left;
     padding: 0.75rem 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #475569;
-    cursor: pointer;
-    border-radius: 0.5rem;
+    font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em;
+    color: #64748b; cursor: pointer; border-radius: 0.5rem;
     transition: background 0.15s, color 0.15s;
 }
-
-.nn-mobile-link:hover   { background: #f8fafc; color: #059669; }
+.nn-mobile-link:hover { background: rgba(255,255,255,0.05); color: #34d399; }
 .nn-mobile-logout:hover { color: #f43f5e; }
 
 .nn-mobile-cta {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    background: #0f172a;
-    color: #ffffff;
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
+    margin-top: 0.5rem; padding: 0.75rem;
+    background: #059669; color: #fff; border: none; border-radius: 0.75rem;
+    font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em;
+    cursor: pointer; transition: background 0.15s;
 }
-
-.nn-mobile-cta:hover { background: #1e293b; }
+.nn-mobile-cta:hover { background: #047857; }
