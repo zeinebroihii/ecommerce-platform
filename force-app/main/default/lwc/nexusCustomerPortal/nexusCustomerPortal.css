@@ -2,7 +2,7 @@
 /* Fonts (Inter/Space Grotesk/JetBrains Mono) injected via JS connectedCallback */
 .ncp-wrap    { display: flex; min-height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif; }
 .ncp-sidebar { width: 14.5rem; flex-shrink: 0; background: #fff; border-right: 1px solid #f1f5f9; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow: hidden; box-sizing: border-box; }
-.ncp-main    { flex: 1; min-width: 0; padding: 2.5rem; overflow-y: auto; }
+.ncp-main    { flex: 1; min-width: 0; padding: 1rem 2.5rem 2.5rem; overflow-y: auto; }
 @media (max-width: 768px) { .ncp-wrap { flex-direction: column; } .ncp-sidebar { width: 100%; height: auto; position: static; } }
 
 /* ══ Sidebar — Brand header ══════════════════════════════════════════════════ */

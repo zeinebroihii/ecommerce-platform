@@ -6,7 +6,7 @@ import FIRSTNAME_FIELD                          from '@salesforce/schema/User.Fi
 import LASTNAME_FIELD                           from '@salesforce/schema/User.LastName';
 
 const HOME_URL   = '/ss/s/';
-const PORTAL_URL = '/ss/s/';
+const PORTAL_URL = '/ss/s/customportal';
 const LOGIN_URL  = '/ss/s/login';
 const CART_URL   = '/ss/s/panier';
 
@@ -86,9 +86,8 @@ export default class NexusNavbar extends LightningElement {
     // ── Computed ──────────────────────────────────────────────────────────────
 
     get isAuthenticated() {
-        return true; // TODO: restore real auth check before go-live
-        // if (!this.userId || !this._userWireLoaded) return false;
-        // return this._userExists;
+        if (!this.userId || !this._userWireLoaded) return false;
+        return this._userExists;
     }
 
     get hasCartItems()   { return this.cartCount > 0;   }
@@ -169,7 +168,7 @@ export default class NexusNavbar extends LightningElement {
     handleLogout() {
         sessionStorage.removeItem('ecomm_cart');
         sessionStorage.removeItem('pending_devis');
-        window.location.href = '/secur/logout.jsp?retURL=' + encodeURIComponent(this.homeUrl);
+        window.location.href = window.location.origin + '/ss/secur/logout.jsp';
     }
 
     toggleMobile() { this.mobileOpen = !this.mobileOpen; }

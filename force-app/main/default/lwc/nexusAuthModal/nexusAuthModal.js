@@ -27,13 +27,14 @@ export default class NexusAuthModal extends LightningElement {
     @api initialMode = 'login';
 
     /** true when user chose Enterprise → show nexusLeadForm instead of nexusAuthView */
-    @track showLeadForm = false;
+    @track _showLeadForm = false;
 
-    // Reset lead form flag whenever the modal opens fresh
-    // (isOpen change is handled by the template re-rendering via if:true={isOpen})
+    get showLeadForm() {
+        return this._showLeadForm || this.initialMode === 'signup-b2b';
+    }
 
     handleClose() {
-        this.showLeadForm = false;
+        this._showLeadForm = false;
         this.dispatchEvent(new CustomEvent('modalclose', { bubbles: true, composed: true }));
     }
 
@@ -44,6 +45,6 @@ export default class NexusAuthModal extends LightningElement {
 
     // nexusAuthView fires 'signupb2b' → switch to lead form
     handleSignupB2B() {
-        this.showLeadForm = true;
+        this._showLeadForm = true;
     }
 }

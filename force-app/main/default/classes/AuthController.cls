@@ -8,7 +8,7 @@ public without sharing class AuthController {
     public static String loginUser(String username, String password, String startUrl) {
         try {
             ApexPages.PageReference ref = Site.login(username, password,
-                String.isBlank(startUrl) ? '/s/' : startUrl);
+                String.isBlank(startUrl) ? '/ss/s/customportal' : startUrl);
             if (ref != null) return ref.getUrl();
             throw new AuraHandledException('Identifiants incorrects.');
         } catch (AuraHandledException e) {
