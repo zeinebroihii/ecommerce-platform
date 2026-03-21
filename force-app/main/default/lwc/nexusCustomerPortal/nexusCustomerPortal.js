@@ -1,660 +1,1088 @@
-import { LightningElement, wire, track } from 'lwc';
-import getProductsWithStock from '@salesforce/apex/ProductController.getProductsWithStock';
-import getCurrentUserProfile from '@salesforce/apex/AuthController.getCurrentUserProfile';
-import changeUserPassword    from '@salesforce/apex/AuthController.changeUserPassword';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { LightningElement, wire, track } from "lwc";
+import getProductsWithStock from "@salesforce/apex/ProductController.getProductsWithStock";
+import getCurrentUserProfile from "@salesforce/apex/AuthController.getCurrentUserProfile";
+import changeUserPassword from "@salesforce/apex/AuthController.changeUserPassword";
+import verifyAndActivateOrder from "@salesforce/apex/StripePaymentController.verifyAndActivateOrder";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
-const CART_KEY = 'ecomm_cart';
+const CART_KEY = "ecomm_cart";
 
 // Sub-header items pushed to the navbar when portal is active
 // First 7 are visible; rest overflow into MORE dropdown
 const PORTAL_NAV_ITEMS = [
-    { id: 'dashboard',  label: 'Dashboard',   icon: 'utility:home',              scrollId: '' },
-    { id: 'catalog',    label: 'Catalog',     icon: 'utility:product_workspace', scrollId: '' },
-    { id: 'favorites',  label: 'Favorites',   icon: 'utility:favorite',          scrollId: '' },
-    { id: 'orders',     label: 'Orders',      icon: 'utility:truck',             scrollId: '' },
-    { id: 'quotations', label: 'Quotes',      icon: 'utility:file',              scrollId: '' },
-    { id: 'cart',       label: 'My Cart',     icon: 'utility:cart',              scrollId: '' },
-    { id: 'profile',    label: 'Profile',     icon: 'utility:user',              scrollId: '' },
-    // MORE dropdown
-    { id: 'combo-deals',label: 'Combo Deals',       icon: 'utility:zap',       scrollId: '' },
-    { id: 'swap',       label: 'Nexus Swap',        icon: 'utility:sync',      scrollId: '' },
-    { id: 'passport',   label: 'Digital Passport',  icon: 'utility:identity',  scrollId: '' },
-    { id: 'timeline',   label: 'Timeline 360°',     icon: 'utility:date_time', scrollId: '' },
-    { id: 'war-room',   label: 'War Room',           icon: 'utility:strategy',  scrollId: '' },
-    { id: 'cases',      label: 'Support',           icon: 'utility:case',      scrollId: '' },
-    { id: 'settings',   label: 'Settings',           icon: 'utility:settings',  scrollId: '' },
+  { id: "dashboard", label: "Dashboard", icon: "utility:home", scrollId: "" },
+  {
+    id: "catalog",
+    label: "Catalog",
+    icon: "utility:product_workspace",
+    scrollId: ""
+  },
+  {
+    id: "favorites",
+    label: "Favorites",
+    icon: "utility:favorite",
+    scrollId: ""
+  },
+  { id: "orders", label: "Orders", icon: "utility:truck", scrollId: "" },
+  { id: "quotations", label: "Quotes", icon: "utility:file", scrollId: "" },
+  { id: "cart", label: "My Cart", icon: "utility:cart", scrollId: "" },
+  { id: "profile", label: "Profile", icon: "utility:user", scrollId: "" },
+  // MORE dropdown
+  {
+    id: "combo-deals",
+    label: "Combo Deals",
+    icon: "utility:zap",
+    scrollId: ""
+  },
+  { id: "swap", label: "Nexus Swap", icon: "utility:sync", scrollId: "" },
+  {
+    id: "passport",
+    label: "Digital Passport",
+    icon: "utility:identity",
+    scrollId: ""
+  },
+  {
+    id: "timeline",
+    label: "Timeline 360°",
+    icon: "utility:date_time",
+    scrollId: ""
+  },
+  { id: "war-room", label: "War Room", icon: "utility:strategy", scrollId: "" },
+  { id: "cases", label: "Support", icon: "utility:case", scrollId: "" },
+  { id: "settings", label: "Settings", icon: "utility:settings", scrollId: "" }
 ];
 
 function apexToPortalProduct(p) {
-    let features = [];
-    try {
-        const specs = p.specs ? JSON.parse(p.specs) : [];
-        features = specs.map(s => s.key + (s.value ? ': ' + s.value : ''));
-    } catch (e) { /* ignore */ }
-    return {
-        id:          p.productId,
-        name:        p.name        || '',
-        productCode: p.productCode || '',
-        family:      p.family      || '',
-        price:       p.unitPrice   || 0,
-        rating:      p.rating      || 0,
-        reviews:     p.reviews     || 0,
-        image:       p.imageUrl    || '',
-        description: p.description || '',
-        features,
-        isNew:       p.isNew       || false,
-        isPopular:   false,
-        colors:      [],
-        status:      p.availabilityStatus || (p.isOutOfStock ? 'Épuisé' : 'En stock'),
-        stockLevel:  p.quantityAvailable  || 0
-    };
+  let features = [];
+  try {
+    const specs = p.specs ? JSON.parse(p.specs) : [];
+    features = specs.map((s) => s.key + (s.value ? ": " + s.value : ""));
+    // eslint-disable-next-line no-unused-vars
+  } catch (e) {
+    /* ignore */
+  }
+  return {
+    id: p.productId,
+    name: p.name || "",
+    productCode: p.productCode || "",
+    family: p.family || "",
+    price: p.unitPrice || 0,
+    rating: p.rating || 0,
+    reviews: p.reviews || 0,
+    image: p.imageUrl || "",
+    description: p.description || "",
+    features,
+    isNew: p.isNew || false,
+    isPopular: false,
+    colors: [],
+    status: p.availabilityStatus || (p.isOutOfStock ? "Épuisé" : "En stock"),
+    stockLevel: p.quantityAvailable || 0
+  };
 }
 
 export default class NexusCustomerPortal extends LightningElement {
-    @track _userProfile      = {};
-    @track _showPasswordForm = false;
-    @track _oldPassword      = '';
-    @track _newPassword      = '';
-    @track _confirmPassword  = '';
-    @track _pwdError         = '';
-    @track _pwdSuccess       = false;
-    @track _showOldPwd       = false;
-    @track _showNewPwd       = false;
-    @track _showConfirmPwd   = false;
-    @track activeTab         = 'dashboard';
-    @track catalogSearch = '';
-    @track caseStep      = 1;
-    @track casePriority  = 'Medium';
-    @track cart          = [];
-    @track sparksBalance = 1250;
-    @track _products     = [];
+  @track _userProfile = {};
+  @track _showPasswordForm = false;
+  @track _oldPassword = "";
+  @track _newPassword = "";
+  @track _confirmPassword = "";
+  @track _pwdError = "";
+  @track _pwdSuccess = false;
+  @track _showOldPwd = false;
+  @track _showNewPwd = false;
+  @track _showConfirmPwd = false;
+  @track activeTab = "dashboard";
+  @track catalogSearch = "";
+  @track caseStep = 1;
+  @track casePriority = "Medium";
+  @track cart = [];
+  @track sparksBalance = 1250;
+  @track _sparksDiscount = 0; // $ value deducted by Sparks (e.g. 10.00)
+  @track _products = [];
 
-    // detail view state for product overlay
-    @track detailProduct = null;
+  // detail view state for product overlay
+  @track detailProduct = null;
 
-    get isDetailViewOpen() {
-        return !!this.detailProduct;
+  get isDetailViewOpen() {
+    return !!this.detailProduct;
+  }
+
+  // ── Catalog state ──────────────────────────────────────────────────────────
+  @track selectedFamily = "All";
+  @track selectedColor = "All";
+  @track favorites = [];
+  @track _selectedProductId = null;
+  @track _modalActiveColor = null;
+  @track _quoteProductId = null;
+  @track _quoteStep = "form";
+  @track _quoteCompany = "";
+  @track _quoteEmail = "";
+  @track _quoteQty = "10";
+  @track _quoteIndustry = "Technology";
+  @track _quoteMessage = "";
+
+  // ── Custom cart toast ──────────────────────────────────────────────────────
+  @track _cartToastVisible = false;
+  @track _cartToastName = "";
+  @track _cartToastPrice = "";
+  _cartToastTimer = null;
+
+  @wire(getProductsWithStock, { searchTerm: "", category: "" })
+  wiredProducts({ data, error }) {
+    if (data) {
+      this._products = data.map(apexToPortalProduct);
+    } else if (error) {
+      console.error(
+        "[NexusPortal] getProductsWithStock error:",
+        JSON.stringify(error)
+      );
     }
+  }
 
-    // ── Catalog state ──────────────────────────────────────────────────────────
-    @track selectedFamily     = 'All';
-    @track selectedColor      = 'All';
-    @track favorites          = [];
-    @track _selectedProductId = null;
-    @track _modalActiveColor  = null;
-    @track _quoteProductId    = null;
-    @track _quoteStep         = 'form';
-    @track _quoteCompany      = '';
-    @track _quoteEmail        = '';
-    @track _quoteQty          = '10';
-    @track _quoteIndustry     = 'Technology';
-    @track _quoteMessage      = '';
+  // ── Current user profile getters ──────────────────────────────────────────
+  get profileName() {
+    return this._userProfile.name || "";
+  }
+  get profileFirstName() {
+    return this._userProfile.firstName || "";
+  }
+  get profileEmail() {
+    return this._userProfile.email || "";
+  }
+  get profilePhone() {
+    return this._userProfile.phone || "";
+  }
+  get profileAccountName() {
+    return this._userProfile.accountName || this._userProfile.name || "";
+  }
+  get profileStreet() {
+    return this._userProfile.street || "";
+  }
+  get profileCity() {
+    return this._userProfile.city || "";
+  }
+  get profilePostalCode() {
+    return this._userProfile.postalCode || "";
+  }
+  get profileAccountId() {
+    return this._userProfile.accountId || "";
+  }
+  get profileRole() {
+    return this._userProfile.profileName || "Customer";
+  }
+  get profileInitials() {
+    const fn = this._userProfile.firstName || "";
+    const ln = this._userProfile.lastName || "";
+    return (fn.charAt(0) + ln.charAt(0)).toUpperCase() || "U";
+  }
 
-    // ── Custom cart toast ──────────────────────────────────────────────────────
-    @track _cartToastVisible  = false;
-    @track _cartToastName     = '';
-    @track _cartToastPrice    = '';
-    _cartToastTimer           = null;
+  // ── Password change getters ────────────────────────────────────────────────
+  get showPasswordForm() {
+    return this._showPasswordForm;
+  }
+  get pwdToggleLabel() {
+    return this._showPasswordForm ? "Cancel" : "Edit";
+  }
+  get pwdError() {
+    return this._pwdError;
+  }
+  get pwdSuccess() {
+    return this._pwdSuccess;
+  }
+  get showOldPwd() {
+    return this._showOldPwd;
+  }
+  get showNewPwd() {
+    return this._showNewPwd;
+  }
+  get showConfirmPwd() {
+    return this._showConfirmPwd;
+  }
+  get oldPwdType() {
+    return this._showOldPwd ? "text" : "password";
+  }
+  get newPwdType() {
+    return this._showNewPwd ? "text" : "password";
+  }
+  get confirmPwdType() {
+    return this._showConfirmPwd ? "text" : "password";
+  }
 
-    @wire(getProductsWithStock, { searchTerm: '', category: '' })
-    wiredProducts({ data }) {
-        if (data) this._products = data.map(apexToPortalProduct);
+  // ── Password change handlers ───────────────────────────────────────────────
+  handleTogglePasswordForm() {
+    this._showPasswordForm = !this._showPasswordForm;
+    this._pwdError = "";
+    this._pwdSuccess = false;
+    this._oldPassword = this._newPassword = this._confirmPassword = "";
+    this._showOldPwd = this._showNewPwd = this._showConfirmPwd = false;
+  }
+  handleOldPwd(e) {
+    this._oldPassword = e.target.value;
+  }
+  handleNewPwd(e) {
+    this._newPassword = e.target.value;
+  }
+  handleConfirmPwd(e) {
+    this._confirmPassword = e.target.value;
+  }
+  handleToggleOldPwd() {
+    this._showOldPwd = !this._showOldPwd;
+  }
+  handleToggleNewPwd() {
+    this._showNewPwd = !this._showNewPwd;
+  }
+  handleToggleConfirmPwd() {
+    this._showConfirmPwd = !this._showConfirmPwd;
+  }
+
+  handleChangePassword() {
+    this._pwdError = "";
+    this._pwdSuccess = false;
+    if (!this._oldPassword || !this._newPassword || !this._confirmPassword) {
+      this._pwdError = "Please fill in all fields.";
+      return;
     }
-
-
-    // ── Current user profile getters ──────────────────────────────────────────
-    get profileName()        { return this._userProfile.name        || ''; }
-    get profileFirstName()   { return this._userProfile.firstName   || ''; }
-    get profileEmail()       { return this._userProfile.email       || ''; }
-    get profilePhone()       { return this._userProfile.phone       || ''; }
-    get profileAccountName() { return this._userProfile.accountName || this._userProfile.name || ''; }
-    get profileStreet()      { return this._userProfile.street      || ''; }
-    get profileCity()        { return this._userProfile.city        || ''; }
-    get profilePostalCode()  { return this._userProfile.postalCode  || ''; }
-    get profileRole()        { return this._userProfile.profileName || 'Customer'; }
-    get profileInitials() {
-        const fn = this._userProfile.firstName || '';
-        const ln = this._userProfile.lastName  || '';
-        return (fn.charAt(0) + ln.charAt(0)).toUpperCase() || 'U';
+    if (this._newPassword !== this._confirmPassword) {
+      this._pwdError = "Passwords do not match.";
+      return;
     }
+    changeUserPassword({
+      newPassword: this._newPassword,
+      verifyPassword: this._confirmPassword,
+      oldPassword: this._oldPassword
+    })
+      .then(() => {
+        this._showPasswordForm = false;
+        this._oldPassword = this._newPassword = this._confirmPassword = "";
+        this._showOldPwd = this._showNewPwd = this._showConfirmPwd = false;
+        this._pwdSuccess = true;
+      })
+      .catch((err) => {
+        this._pwdError =
+          (err && err.body && err.body.message) || "Error changing password.";
+      });
+  }
 
-    // ── Password change getters ────────────────────────────────────────────────
-    get showPasswordForm()  { return this._showPasswordForm; }
-    get pwdToggleLabel()    { return this._showPasswordForm ? 'Cancel' : 'Edit'; }
-    get pwdError()          { return this._pwdError; }
-    get pwdSuccess()        { return this._pwdSuccess; }
-    get showOldPwd()        { return this._showOldPwd; }
-    get showNewPwd()        { return this._showNewPwd; }
-    get showConfirmPwd()    { return this._showConfirmPwd; }
-    get oldPwdType()        { return this._showOldPwd     ? 'text' : 'password'; }
-    get newPwdType()        { return this._showNewPwd     ? 'text' : 'password'; }
-    get confirmPwdType()    { return this._showConfirmPwd ? 'text' : 'password'; }
+  connectedCallback() {
+    // Load current user profile imperatively (not @wire) so it runs
+    // in the real authenticated session context, not cached guest context
+    getCurrentUserProfile()
+      .then((data) => {
+        if (data) this._userProfile = data;
+      })
+      .catch((err) =>
+        console.error(
+          "[NexusPortal] getUserProfile error:",
+          JSON.stringify(err)
+        )
+      );
 
-    // ── Password change handlers ───────────────────────────────────────────────
-    handleTogglePasswordForm() {
-        this._showPasswordForm = !this._showPasswordForm;
-        this._pwdError    = '';
-        this._pwdSuccess  = false;
-        this._oldPassword = this._newPassword = this._confirmPassword = '';
-        this._showOldPwd  = this._showNewPwd  = this._showConfirmPwd  = false;
-    }
-    handleOldPwd(e)          { this._oldPassword     = e.target.value; }
-    handleNewPwd(e)          { this._newPassword     = e.target.value; }
-    handleConfirmPwd(e)      { this._confirmPassword = e.target.value; }
-    handleToggleOldPwd()     { this._showOldPwd     = !this._showOldPwd; }
-    handleToggleNewPwd()     { this._showNewPwd     = !this._showNewPwd; }
-    handleToggleConfirmPwd() { this._showConfirmPwd = !this._showConfirmPwd; }
-
-    handleChangePassword() {
-        this._pwdError   = '';
-        this._pwdSuccess = false;
-        if (!this._oldPassword || !this._newPassword || !this._confirmPassword) {
-            this._pwdError = 'Please fill in all fields.';
-            return;
-        }
-        if (this._newPassword !== this._confirmPassword) {
-            this._pwdError = 'Passwords do not match.';
-            return;
-        }
-        changeUserPassword({
-            newPassword:    this._newPassword,
-            verifyPassword: this._confirmPassword,
-            oldPassword:    this._oldPassword
-        })
-        .then(() => {
-            this._showPasswordForm = false;
-            this._oldPassword = this._newPassword = this._confirmPassword = '';
-            this._showOldPwd  = this._showNewPwd  = this._showConfirmPwd  = false;
-            this._pwdSuccess  = true;
-        })
-        .catch(err => {
-            this._pwdError = (err && err.body && err.body.message) || 'Error changing password.';
-        });
-    }
-
-    connectedCallback() {
-        // Load current user profile imperatively (not @wire) so it runs
-        // in the real authenticated session context, not cached guest context
-        getCurrentUserProfile()
-            .then(data => { if (data) this._userProfile = data; })
-            .catch(err => console.error('[NexusPortal] getUserProfile error:', JSON.stringify(err)));
-
-        if (!document.querySelector('#nexus-gfonts')) {
-            const link = document.createElement('link');
-            link.id   = 'nexus-gfonts';
-            link.rel  = 'stylesheet';
-            link.href = 'https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap';
-            document.head.appendChild(link);
-        }
-        try {
-            const raw = sessionStorage.getItem(CART_KEY);
-            if (raw) this.cart = JSON.parse(raw);
-        } catch(e) { /* silent */ }
-
-        // ── Navbar sync ──────────────────────────────────────────────────────
-        // Listen for navbar sub-tab clicks (nexusnavviewchange dispatched by nexusNavbar)
-        this._onNavViewChange = (e) => {
-            const { viewId } = e.detail || {};
-            if (viewId) {
-                this.activeTab = viewId;
-                // No need to call _pushNavUpdate here; navbar already updated
-                // its own highlight optimistically
-            }
-        };
-        document.addEventListener('nexusnavviewchange', this._onNavViewChange);
-
-        // Listen for combo builder "Add All to Cart"
-        this._onComboAddAllCart = (e) => {
-            const products = (e.detail && e.detail.products) || [];
-            products.forEach(product => {
-                if (product) this._pushToCart({ ...product, price: product.price || 0 });
-            });
-            if (products.length) {
-                this._showCartToast({ name: `${products.length} product(s) added to cart`, price: null });
-            }
-        };
-        document.addEventListener('nexuscomboaddalltocart', this._onComboAddAllCart);
-
-        // Navigate to catalog when a combo slot is being filled
-        this._onComboNavToCatalog = () => {
-            this.activeTab = 'catalog';
-            this._pushNavUpdate();
-        };
-        document.addEventListener('nexuscombonavtocatalog', this._onComboNavToCatalog);
-
-        // Tell navbar: we are a portal, here are our tabs
-        this._pushNavUpdate();
-    }
-
-    disconnectedCallback() {
-        document.removeEventListener('nexusnavviewchange', this._onNavViewChange);
-        document.removeEventListener('nexuscomboaddalltocart', this._onComboAddAllCart);
-        document.removeEventListener('nexuscombonavtocatalog', this._onComboNavToCatalog);
-    }
-
-    /** Broadcast current portal state to the navbar (sub-header + active tab) */
-    _pushNavUpdate() {
-        document.dispatchEvent(new CustomEvent('nexusportalnavupdate', {
-            detail: { subHeaderItems: PORTAL_NAV_ITEMS, activeView: this.activeTab, isPortal: true }
-        }));
-    }
-
-    // ── Sidebar nav tabs (3 category groups) ──────────────────────────────────
-    _mapTabs(tabs) {
-        return tabs.map(t => ({
-            ...t,
-            cls:         this.activeTab === t.id ? 'ncp-nav-btn ncp-nav-active' : 'ncp-nav-btn',
-            iconVariant: this.activeTab === t.id ? 'inverse' : '',
-            chevronCls:  this.activeTab === t.id ? 'ncp-chevron ncp-chevron-active' : 'ncp-chevron'
-        }));
-    }
-
-    get mainNavTabs() {
-        return this._mapTabs([
-            { id: 'dashboard',  label: 'Dashboard',              icon: 'utility:home',      hasBadge: false },
-            { id: 'catalog',    label: 'Catalog',                icon: 'utility:product_workspace', hasBadge: false },
-            { id: 'favorites',  label: 'My Favorites',           icon: 'utility:favorite',  hasBadge: false },
-            { id: 'orders',     label: 'Orders & Deliveries',    icon: 'utility:truck',     hasBadge: false },
-            { id: 'quotations', label: 'Quotes & Contracts',     icon: 'utility:file',      hasBadge: false },
-            { id: 'cart',       label: 'My Cart',                icon: 'utility:cart',      hasBadge: this.hasCartItems, badge: this.cartCount },
-            { id: 'combo-deals',label: 'Combo Deals',            icon: 'utility:zap',       hasBadge: false },
-        ]);
-    }
-
-    get toolsNavTabs() {
-        return this._mapTabs([
-            { id: 'swap',     label: 'Nexus Swap',        icon: 'utility:sync',      hasBadge: false },
-            { id: 'passport', label: 'Digital Passport',  icon: 'utility:identity',  hasBadge: false },
-            { id: 'timeline', label: 'Timeline 360°',     icon: 'utility:date_time', hasBadge: false },
-            { id: 'war-room', label: 'War Room',          icon: 'utility:strategy',  hasBadge: false },
-        ]);
-    }
-
-    get accountNavTabs() {
-        return this._mapTabs([
-            { id: 'profile',  label: 'Profile',    icon: 'utility:user',     hasBadge: false },
-            { id: 'cases',    label: 'Support',    icon: 'utility:case',     hasBadge: false },
-            { id: 'settings', label: 'Settings',   icon: 'utility:settings', hasBadge: false },
-        ]);
-    }
-
-    // ── Tab visibility ─────────────────────────────────────────────────────────
-    get isDashboard()   { return this.activeTab === 'dashboard'; }
-    get isCatalog()     { return this.activeTab === 'catalog'; }
-    get isComboDeals()  { return this.activeTab === 'combo-deals'; }
-    get isFavorites()  { return this.activeTab === 'favorites'; }
-    get isCart()       { return this.activeTab === 'cart'; }
-    get isOrders()     { return this.activeTab === 'orders'; }
-    get isQuotations() { return this.activeTab === 'quotations'; }
-    get isSwap()       { return this.activeTab === 'swap'; }
-    get isPassport()   { return this.activeTab === 'passport'; }
-    get isTimeline()   { return this.activeTab === 'timeline'; }
-    get isWarRoom()    { return this.activeTab === 'war-room'; }
-    get isProfile()    { return this.activeTab === 'profile'; }
-    get isCases()      { return this.activeTab === 'cases'; }
-    get isSettings()   { return this.activeTab === 'settings'; }
-
-    // ── Cart ───────────────────────────────────────────────────────────────────
-    get cartCount()    { return this.cart.length; }
-    get hasCartItems() { return this.cart.length > 0; }
-    get isCartEmpty()  { return this.cart.length === 0; }
-    get cartSubtotal() {
-        return this.cart.reduce((s, i) => s + (parseFloat(i.unitPrice) || 0), 0).toFixed(2);
-    }
-    get cartTax()   { return (parseFloat(this.cartSubtotal) * 0.2).toFixed(2); }
-    get cartTotal() { return (parseFloat(this.cartSubtotal) * 1.2).toFixed(2); }
-    get cartItems() { return this.cart.map((item, idx) => ({ ...item, idx })); }
-
-    // ── Catalog — Family & Color filter chips ──────────────────────────────────
-    get catalogFamilies() {
-        const sel = this.selectedFamily || 'All';
-        const families = ['All', ...new Set(this._products.map(p => p.family))];
-        return families.map(f => ({
-            id: f, label: f,
-            cls: sel === f ? 'ncat-chip ncat-chip-active' : 'ncat-chip'
-        }));
-    }
-
-    get catalogColors() {
-        const sel  = this.selectedColor || 'All';
-        const cols = ['All', ...new Set(this._products.flatMap(p => (p.colors || []).map(c => c.name)))];
-        return cols.map(c => ({
-            id: c, label: c,
-            cls: sel === c ? 'ncat-chip ncat-chip-active' : 'ncat-chip'
-        }));
-    }
-
-    // ── Catalog — Filtered product list ────────────────────────────────────────
-    get filteredCatalogProducts() {
-        const q      = (this.catalogSearch || '').toLowerCase();
-        const fam    = this.selectedFamily || 'All';
-        const col    = this.selectedColor  || 'All';
-        const favIds = new Set(this.favorites.map(f => f.id));
-
-        return this._products
-            .filter(p => {
-                const mFam    = fam === 'All' || p.family === fam;
-                const mSearch = !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
-                const mColor  = col === 'All' || (p.colors || []).some(c => c.name === col);
-                return mFam && mSearch && mColor;
+    // ── Stripe payment return detection ───────────────────────────────────
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("payment_success") === "1") {
+        const oid = params.get("oid");
+        const sid = params.get("sid");
+        if (oid && sid) {
+          // Clean the URL immediately so a refresh doesn't re-trigger
+          // eslint-disable-next-line no-restricted-globals
+          history.replaceState({}, "", window.location.pathname);
+          verifyAndActivateOrder({ sessionId: sid, orderId: oid })
+            .then(() => {
+              // Clear cart
+              this.cart = [];
+              this._saveCart();
+              // Show success toast
+              this.dispatchEvent(
+                new ShowToastEvent({
+                  title: "Paiement confirmé !",
+                  message: "Votre commande a bien été enregistrée.",
+                  variant: "success"
+                })
+              );
+              // Navigate to orders
+              this.activeTab = "orders";
+              this._pushNavUpdate();
             })
-            .map(p => {
-                const matchedColor = (p.colors || []).find(c => c.name === col);
-                const displayImage = (col !== 'All' && matchedColor) ? matchedColor.image : p.image;
-                const isFav        = favIds.has(p.id);
-                return {
-                    ...p,
-                    displayImage,
-                    isFav,
-                    favBtnCls:    isFav ? 'ncat-fav-btn ncat-fav-active' : 'ncat-fav-btn',
-                    priceDisplay: p.price.toLocaleString('fr-FR') + ' $'
-                };
+            .catch((err) => {
+              console.error(
+                "[NexusPortal] Payment verification error:",
+                JSON.stringify(err)
+              );
+              this.dispatchEvent(
+                new ShowToastEvent({
+                  title: "Erreur de paiement",
+                  message:
+                    (err && err.body && err.body.message) ||
+                    "Impossible de vérifier le paiement.",
+                  variant: "error"
+                })
+              );
             });
+        }
+      } else if (params.get("payment_cancelled") === "1") {
+        // eslint-disable-next-line no-restricted-globals
+        history.replaceState({}, "", window.location.pathname);
+        this.activeTab = "cart";
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Paiement annulé",
+            message: "Votre panier est toujours disponible.",
+            variant: "warning"
+          })
+        );
+      }
+      // eslint-disable-next-line no-unused-vars
+    } catch (e) {
+      /* silent — URLSearchParams not always available */
     }
 
-    // ── Catalog — Favorites tab ────────────────────────────────────────────────
-    get favoriteCatalogProducts() {
-        const favIds = new Set(this.favorites.map(f => f.id));
-        return this._products
-            .filter(p => favIds.has(p.id))
-            .map(p => ({
-                ...p,
-                displayImage: p.image,
-                isFav:        true,
-                favBtnCls:    'ncat-fav-btn ncat-fav-active',
-                priceDisplay: p.price.toLocaleString('fr-FR') + ' $'
-            }));
+    // eslint-disable-next-line @lwc/lwc/no-document-query
+    if (!document.querySelector("#nexus-gfonts")) {
+      const link = document.createElement("link");
+      link.id = "nexus-gfonts";
+      link.rel = "stylesheet";
+      link.href =
+        "https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap";
+      document.head.appendChild(link);
     }
-    get hasFavoriteCatalogProducts() { return this.favoriteCatalogProducts.length > 0; }
-    get noFavoriteCatalogProducts()  { return this.favoriteCatalogProducts.length === 0; }
-
-    // ── Product Detail Modal ───────────────────────────────────────────────────
-    get selectedProduct() {
-        if (!this._selectedProductId) return null;
-        const p = this._products.find(pr => pr.id === this._selectedProductId);
-        if (!p) return null;
-
-        const colors          = p.colors || [];
-        const activeColorName = this._modalActiveColor || (colors[0] ? colors[0].name : null);
-        const activeColorObj  = colors.find(c => c.name === activeColorName) || colors[0];
-        const displayImage    = activeColorObj ? activeColorObj.image : p.image;
-        const isFav           = this.favorites.some(f => f.id === p.id);
-
-        return {
-            ...p,
-            displayImage,
-            isFav,
-            favLabel:  isFav ? 'Favorited' : 'Favorite',
-            favBtnCls: isFav ? 'ncat-modal-fav ncat-modal-fav-active' : 'ncat-modal-fav',
-            hasColors: colors.length > 0,
-            colorDots: colors.map(c => ({
-                key:      c.name,
-                name:     c.name,
-                hex:      c.hex,
-                dotCls:   c.name === activeColorName
-                    ? 'ncat-color-dot ncat-color-dot-active'
-                    : 'ncat-color-dot',
-                dotStyle: 'background-color:' + c.hex + ';'
-            })),
-            priceDisplay: p.price.toLocaleString('fr-FR') + ' $'
-        };
-    }
-    get showProductModal() { return !!this._selectedProductId; }
-
-    // ── B2B Quote Modal ────────────────────────────────────────────────────────
-    get quoteProduct() {
-        if (!this._quoteProductId) return null;
-        return this._products.find(p => p.id === this._quoteProductId) || null;
-    }
-    get showQuoteModal() { return !!this._quoteProductId; }
-    get isQuoteForm()    { return this._quoteStep === 'form'; }
-    get isQuoteSuccess() { return this._quoteStep === 'success'; }
-
-    // ── Cases 2-step ───────────────────────────────────────────────────────────
-    get isCaseStep1()  { return this.caseStep === 1; }
-    get isCaseStep2()  { return this.caseStep === 2; }
-    get caseStepDot1() { return this.caseStep >= 1 ? 'ncp-step-dot ncp-step-active' : 'ncp-step-dot'; }
-    get caseStepDot2() { return this.caseStep >= 2 ? 'ncp-step-dot ncp-step-active ncp-step-wide' : 'ncp-step-dot'; }
-
-    // ── Priority ───────────────────────────────────────────────────────────────
-    get pLow()      { return this._prioClass('Low'); }
-    get pMedium()   { return this._prioClass('Medium'); }
-    get pHigh()     { return this._prioClass('High'); }
-    get pCritical() { return this._prioClass('Critical'); }
-    _prioClass(p)   { return this.casePriority === p ? 'ncp-prio ncp-prio-active' : 'ncp-prio'; }
-
-    // ── Handlers — Nav ────────────────────────────────────────────────────────
-    handleTabChange(e)    { this.activeTab = e.currentTarget.dataset.id; this._pushNavUpdate(); }
-    handleGoToCatalog()   { this.activeTab = 'catalog';  this._pushNavUpdate(); }
-    handleGoToOrders()    { this.activeTab = 'orders';   this._pushNavUpdate(); }
-    handleGoToInsights()  { this.activeTab = 'cases';    this._pushNavUpdate(); }
-    handleGoToTimeline()  { this.activeTab = 'timeline'; this._pushNavUpdate(); }
-    handleCasesTab()      { this.activeTab = 'cases';    this._pushNavUpdate(); }
-    handleSettingsTab()   { this.activeTab = 'settings'; this._pushNavUpdate(); }
-
-    // ── Handlers — Engagement System (drawers) ────────────────────────────────
-    handleViewAllActivity() {
-        this.template.querySelector('c-nexus-engagement-system').openHistory();
+    try {
+      const raw = sessionStorage.getItem(CART_KEY);
+      if (raw) this.cart = JSON.parse(raw);
+      // eslint-disable-next-line no-unused-vars
+    } catch (e) {
+      /* silent */
     }
 
-    handleViewOffer(e) {
-        const btn = e.currentTarget;
-        this.template.querySelector('c-nexus-engagement-system').openOffer({
-            id:       btn.dataset.id,
-            name:     btn.dataset.name,
-            category: btn.dataset.category,
-            price:    btn.dataset.price,
-            image:    btn.dataset.image,
-            reason:   btn.dataset.reason,
+    // ── Navbar sync ──────────────────────────────────────────────────────
+    // Listen for navbar sub-tab clicks (nexusnavviewchange dispatched by nexusNavbar)
+    this._onNavViewChange = (e) => {
+      const { viewId } = e.detail || {};
+      if (viewId) {
+        this.activeTab = viewId;
+        // No need to call _pushNavUpdate here; navbar already updated
+        // its own highlight optimistically
+      }
+    };
+    document.addEventListener("nexusnavviewchange", this._onNavViewChange);
+
+    // Listen for combo builder "Add All to Cart"
+    this._onComboAddAllCart = (e) => {
+      const products = (e.detail && e.detail.products) || [];
+      products.forEach((product) => {
+        if (product)
+          this._pushToCart({ ...product, price: product.price || 0 });
+      });
+      if (products.length) {
+        this._showCartToast({
+          name: `${products.length} product(s) added to cart`,
+          price: null
         });
-    }
+      }
+    };
+    document.addEventListener(
+      "nexuscomboaddalltocart",
+      this._onComboAddAllCart
+    );
 
-    handleEngagementAddToCart(e) {
-        const offer = e.detail.offer;
-        if (!offer) return;
-        this.cart = [...this.cart, {
-            id:        offer.id,
-            name:      offer.name,
-            productId: offer.id,
-            unitPrice: offer.price,
-            imageUrl:  offer.image,
-            family:    offer.category,
-        }];
-        this._saveCart();
-    }
+    // Navigate to catalog when a combo slot is being filled
+    this._onComboNavToCatalog = () => {
+      this.activeTab = "catalog";
+      this._pushNavUpdate();
+    };
+    document.addEventListener(
+      "nexuscombonavtocatalog",
+      this._onComboNavToCatalog
+    );
 
-    // ── Handlers — Catalog filters ────────────────────────────────────────────
-    handleCatalogSearch(e)       { this.catalogSearch  = e.target.value; }
-    handleCatalogFamilyFilter(e) { this.selectedFamily = e.currentTarget.dataset.id; }
-    handleCatalogColorFilter(e)  { this.selectedColor  = e.currentTarget.dataset.id; }
+    // Tell navbar: we are a portal, here are our tabs
+    this._pushNavUpdate();
+  }
 
-    // ── Handlers — Product detail modal ───────────────────────────────────────
-    handleOpenProductDetail(e) {
-        const id = e.currentTarget.dataset.id;
-        this._selectedProductId = id;
-        const p = this._products.find(pr => pr.id === id);
-        this._modalActiveColor = (p && p.colors && p.colors[0]) ? p.colors[0].name : null;
-    }
-    handleCloseProductDetail() {
-        this._selectedProductId = null;
-        this._modalActiveColor  = null;
-    }
-    handleStopPropagation(e) { e.stopPropagation(); }
-    handleModalColorSelect(e) { this._modalActiveColor = e.currentTarget.dataset.color; }
+  disconnectedCallback() {
+    document.removeEventListener("nexusnavviewchange", this._onNavViewChange);
+    document.removeEventListener(
+      "nexuscomboaddalltocart",
+      this._onComboAddAllCart
+    );
+    document.removeEventListener(
+      "nexuscombonavtocatalog",
+      this._onComboNavToCatalog
+    );
+  }
 
-    // ── Handlers — Favorites ──────────────────────────────────────────────────
-    handleToggleFavorite(e)          { this._toggleFavoriteById(e.currentTarget.dataset.id); }
-    handleToggleFavoriteFromModal(e) { this._toggleFavoriteById(e.currentTarget.dataset.id); }
-    _toggleFavoriteById(id) {
-        const product = this._products.find(p => p.id === id);
-        if (!product) return;
-        if (this.favorites.some(f => f.id === id)) {
-            this.favorites = this.favorites.filter(f => f.id !== id);
-        } else {
-            this.favorites = [...this.favorites, product];
+  /** Broadcast current portal state to the navbar (sub-header + active tab) */
+  _pushNavUpdate() {
+    document.dispatchEvent(
+      new CustomEvent("nexusportalnavupdate", {
+        detail: {
+          subHeaderItems: PORTAL_NAV_ITEMS,
+          activeView: this.activeTab,
+          isPortal: true
         }
-    }
+      })
+    );
+  }
 
-    // ── Handlers — Add to cart (catalog & modal) ──────────────────────────────
-    handleAddToCartFromCatalog(e) {
-        const id      = e.currentTarget.dataset.id;
-        const product = this._products.find(p => p.id === id);
-        if (!product) return;
-        this._pushToCart(product);
-        this._showCartToast(product);
-    }
+  // ── Sidebar nav tabs (3 category groups) ──────────────────────────────────
+  _mapTabs(tabs) {
+    return tabs.map((t) => ({
+      ...t,
+      cls:
+        this.activeTab === t.id ? "ncp-nav-btn ncp-nav-active" : "ncp-nav-btn",
+      iconVariant: this.activeTab === t.id ? "inverse" : "",
+      chevronCls:
+        this.activeTab === t.id
+          ? "ncp-chevron ncp-chevron-active"
+          : "ncp-chevron"
+    }));
+  }
 
-    handleAddToCartFromModal() {
-        const product = this._products.find(p => p.id === this._selectedProductId);
-        if (!product) return;
-        this._pushToCart(product);
-        this._selectedProductId = null;
-        this._modalActiveColor  = null;
-        this._showCartToast(product);
-    }
+  get mainNavTabs() {
+    return this._mapTabs([
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: "utility:home",
+        hasBadge: false
+      },
+      {
+        id: "catalog",
+        label: "Catalog",
+        icon: "utility:product_workspace",
+        hasBadge: false
+      },
+      {
+        id: "favorites",
+        label: "My Favorites",
+        icon: "utility:favorite",
+        hasBadge: false
+      },
+      {
+        id: "orders",
+        label: "Orders & Deliveries",
+        icon: "utility:truck",
+        hasBadge: false
+      },
+      {
+        id: "quotations",
+        label: "Quotes & Contracts",
+        icon: "utility:file",
+        hasBadge: false
+      },
+      {
+        id: "cart",
+        label: "My Cart",
+        icon: "utility:cart",
+        hasBadge: this.hasCartItems,
+        badge: this.cartCount
+      },
+      {
+        id: "combo-deals",
+        label: "Combo Deals",
+        icon: "utility:zap",
+        hasBadge: false
+      }
+    ]);
+  }
 
-    // ── Handlers — Top Deals section ─────────────────────────────────────────
-    handleDealsAddToCartPortal(event) {
-        const product = event.detail && event.detail.product;
-        if (!product) return;
-        this._pushToCart({ ...product, price: product.salePrice });
-        this._showCartToast(product);
-    }
+  get toolsNavTabs() {
+    return this._mapTabs([
+      {
+        id: "swap",
+        label: "Nexus Swap",
+        icon: "utility:sync",
+        hasBadge: false
+      },
+      {
+        id: "passport",
+        label: "Digital Passport",
+        icon: "utility:identity",
+        hasBadge: false
+      },
+      {
+        id: "timeline",
+        label: "Timeline 360°",
+        icon: "utility:date_time",
+        hasBadge: false
+      },
+      {
+        id: "war-room",
+        label: "War Room",
+        icon: "utility:strategy",
+        hasBadge: false
+      }
+    ]);
+  }
 
-    handleDealsViewDetailsPortal(event) {
-        // when a deal's arrow/button is clicked, open the detail overlay
-        const product = event.detail && event.detail.product;
-        if (product) {
-            // set detail product; keep current tab intact so user stays where they were
-            this.detailProduct = product;
+  get accountNavTabs() {
+    return this._mapTabs([
+      {
+        id: "profile",
+        label: "Profile",
+        icon: "utility:user",
+        hasBadge: false
+      },
+      { id: "cases", label: "Support", icon: "utility:case", hasBadge: false },
+      {
+        id: "settings",
+        label: "Settings",
+        icon: "utility:settings",
+        hasBadge: false
+      }
+    ]);
+  }
+
+  // ── Tab visibility ─────────────────────────────────────────────────────────
+  get isDashboard() {
+    return this.activeTab === "dashboard";
+  }
+  get isCatalog() {
+    return this.activeTab === "catalog";
+  }
+  get isCatalogOrCheckout() {
+    return this.activeTab === "catalog" || this.activeTab === "checkout";
+  }
+  get isComboDeals() {
+    return this.activeTab === "combo-deals";
+  }
+  get isFavorites() {
+    return this.activeTab === "favorites";
+  }
+  get isCart() {
+    return this.activeTab === "cart";
+  }
+  get isCheckout() {
+    return this.activeTab === "checkout";
+  }
+  get isOrders() {
+    return this.activeTab === "orders";
+  }
+  get isQuotations() {
+    return this.activeTab === "quotations";
+  }
+  get isSwap() {
+    return this.activeTab === "swap";
+  }
+  get isPassport() {
+    return this.activeTab === "passport";
+  }
+  get isTimeline() {
+    return this.activeTab === "timeline";
+  }
+  get isWarRoom() {
+    return this.activeTab === "war-room";
+  }
+  get isProfile() {
+    return this.activeTab === "profile";
+  }
+  get isCases() {
+    return this.activeTab === "cases";
+  }
+  get isSettings() {
+    return this.activeTab === "settings";
+  }
+
+  // ── Cart ───────────────────────────────────────────────────────────────────
+  get cartCount() {
+    return this.cart.length;
+  }
+  get hasCartItems() {
+    return this.cart.length > 0;
+  }
+  get isCartEmpty() {
+    return this.cart.length === 0;
+  }
+  get cartSubtotal() {
+    return this.cart
+      .reduce((s, i) => s + (parseFloat(i.unitPrice) || 0), 0)
+      .toFixed(2);
+  }
+  get cartTax() {
+    return (parseFloat(this.cartSubtotal) * 0.2).toFixed(2);
+  }
+  get cartTotal() {
+    return (parseFloat(this.cartSubtotal) * 1.2).toFixed(2);
+  }
+  get cartItems() {
+    return this.cart.map((item, idx) => ({ ...item, idx }));
+  }
+
+  // ── Catalog — Family & Color filter chips ──────────────────────────────────
+  get catalogFamilies() {
+    const sel = this.selectedFamily || "All";
+    const families = ["All", ...new Set(this._products.map((p) => p.family))];
+    return families.map((f) => ({
+      id: f,
+      label: f,
+      cls: sel === f ? "ncat-chip ncat-chip-active" : "ncat-chip"
+    }));
+  }
+
+  get catalogColors() {
+    const sel = this.selectedColor || "All";
+    const cols = [
+      "All",
+      ...new Set(
+        this._products.flatMap((p) => (p.colors || []).map((c) => c.name))
+      )
+    ];
+    return cols.map((c) => ({
+      id: c,
+      label: c,
+      cls: sel === c ? "ncat-chip ncat-chip-active" : "ncat-chip"
+    }));
+  }
+
+  // ── Catalog — Filtered product list ────────────────────────────────────────
+  get filteredCatalogProducts() {
+    const q = (this.catalogSearch || "").toLowerCase();
+    const fam = this.selectedFamily || "All";
+    const col = this.selectedColor || "All";
+    const favIds = new Set(this.favorites.map((f) => f.id));
+
+    return this._products
+      .filter((p) => {
+        const mFam = fam === "All" || p.family === fam;
+        const mSearch =
+          !q ||
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q);
+        const mColor =
+          col === "All" || (p.colors || []).some((c) => c.name === col);
+        return mFam && mSearch && mColor;
+      })
+      .map((p) => {
+        const matchedColor = (p.colors || []).find((c) => c.name === col);
+        const displayImage =
+          col !== "All" && matchedColor ? matchedColor.image : p.image;
+        const isFav = favIds.has(p.id);
+        return {
+          ...p,
+          displayImage,
+          isFav,
+          favBtnCls: isFav ? "ncat-fav-btn ncat-fav-active" : "ncat-fav-btn",
+          priceDisplay: p.price.toLocaleString("fr-FR") + " $"
+        };
+      });
+  }
+
+  // ── Catalog — Favorites tab ────────────────────────────────────────────────
+  get favoriteCatalogProducts() {
+    const favIds = new Set(this.favorites.map((f) => f.id));
+    return this._products
+      .filter((p) => favIds.has(p.id))
+      .map((p) => ({
+        ...p,
+        displayImage: p.image,
+        isFav: true,
+        favBtnCls: "ncat-fav-btn ncat-fav-active",
+        priceDisplay: p.price.toLocaleString("fr-FR") + " $"
+      }));
+  }
+  get hasFavoriteCatalogProducts() {
+    return this.favoriteCatalogProducts.length > 0;
+  }
+  get noFavoriteCatalogProducts() {
+    return this.favoriteCatalogProducts.length === 0;
+  }
+
+  // ── Product Detail Modal ───────────────────────────────────────────────────
+  get selectedProduct() {
+    if (!this._selectedProductId) return null;
+    const p = this._products.find((pr) => pr.id === this._selectedProductId);
+    if (!p) return null;
+
+    const colors = p.colors || [];
+    const activeColorName =
+      this._modalActiveColor || (colors[0] ? colors[0].name : null);
+    const activeColorObj =
+      colors.find((c) => c.name === activeColorName) || colors[0];
+    const displayImage = activeColorObj ? activeColorObj.image : p.image;
+    const isFav = this.favorites.some((f) => f.id === p.id);
+
+    return {
+      ...p,
+      displayImage,
+      isFav,
+      favLabel: isFav ? "Favorited" : "Favorite",
+      favBtnCls: isFav
+        ? "ncat-modal-fav ncat-modal-fav-active"
+        : "ncat-modal-fav",
+      hasColors: colors.length > 0,
+      colorDots: colors.map((c) => ({
+        key: c.name,
+        name: c.name,
+        hex: c.hex,
+        dotCls:
+          c.name === activeColorName
+            ? "ncat-color-dot ncat-color-dot-active"
+            : "ncat-color-dot",
+        dotStyle: "background-color:" + c.hex + ";"
+      })),
+      priceDisplay: p.price.toLocaleString("fr-FR") + " $"
+    };
+  }
+  get showProductModal() {
+    return !!this._selectedProductId;
+  }
+
+  // ── B2B Quote Modal ────────────────────────────────────────────────────────
+  get quoteProduct() {
+    if (!this._quoteProductId) return null;
+    return this._products.find((p) => p.id === this._quoteProductId) || null;
+  }
+  get showQuoteModal() {
+    return !!this._quoteProductId;
+  }
+  get isQuoteForm() {
+    return this._quoteStep === "form";
+  }
+  get isQuoteSuccess() {
+    return this._quoteStep === "success";
+  }
+
+  // ── Cases 2-step ───────────────────────────────────────────────────────────
+  get isCaseStep1() {
+    return this.caseStep === 1;
+  }
+  get isCaseStep2() {
+    return this.caseStep === 2;
+  }
+  get caseStepDot1() {
+    return this.caseStep >= 1 ? "ncp-step-dot ncp-step-active" : "ncp-step-dot";
+  }
+  get caseStepDot2() {
+    return this.caseStep >= 2
+      ? "ncp-step-dot ncp-step-active ncp-step-wide"
+      : "ncp-step-dot";
+  }
+
+  // ── Priority ───────────────────────────────────────────────────────────────
+  get pLow() {
+    return this._prioClass("Low");
+  }
+  get pMedium() {
+    return this._prioClass("Medium");
+  }
+  get pHigh() {
+    return this._prioClass("High");
+  }
+  get pCritical() {
+    return this._prioClass("Critical");
+  }
+  _prioClass(p) {
+    return this.casePriority === p ? "ncp-prio ncp-prio-active" : "ncp-prio";
+  }
+
+  // ── Handlers — Nav ────────────────────────────────────────────────────────
+  handleTabChange(e) {
+    this.activeTab = e.currentTarget.dataset.id;
+    this._pushNavUpdate();
+  }
+  handleGoToCatalog() {
+    this.activeTab = "catalog";
+    this._pushNavUpdate();
+  }
+  handleGoToOrders() {
+    this.activeTab = "orders";
+    this._pushNavUpdate();
+  }
+  handleGoToInsights() {
+    this.activeTab = "cases";
+    this._pushNavUpdate();
+  }
+  handleGoToTimeline() {
+    this.activeTab = "timeline";
+    this._pushNavUpdate();
+  }
+  handleCasesTab() {
+    this.activeTab = "cases";
+    this._pushNavUpdate();
+  }
+  handleSettingsTab() {
+    this.activeTab = "settings";
+    this._pushNavUpdate();
+  }
+
+  // ── Handlers — Engagement System (drawers) ────────────────────────────────
+  handleViewAllActivity() {
+    this.template.querySelector("c-nexus-engagement-system").openHistory();
+  }
+
+  handleViewOffer(e) {
+    const btn = e.currentTarget;
+    this.template.querySelector("c-nexus-engagement-system").openOffer({
+      id: btn.dataset.id,
+      name: btn.dataset.name,
+      category: btn.dataset.category,
+      price: btn.dataset.price,
+      image: btn.dataset.image,
+      reason: btn.dataset.reason
+    });
+  }
+
+  handleEngagementAddToCart(e) {
+    const offer = e.detail.offer;
+    if (!offer) return;
+    this.cart = [
+      ...this.cart,
+      {
+        id: offer.id,
+        name: offer.name,
+        productId: offer.id,
+        unitPrice: offer.price,
+        imageUrl: offer.image,
+        family: offer.category
+      }
+    ];
+    this._saveCart();
+  }
+
+  // ── Handlers — Catalog filters ────────────────────────────────────────────
+  handleCatalogSearch(e) {
+    this.catalogSearch = e.target.value;
+  }
+  handleCatalogFamilyFilter(e) {
+    this.selectedFamily = e.currentTarget.dataset.id;
+  }
+  handleCatalogColorFilter(e) {
+    this.selectedColor = e.currentTarget.dataset.id;
+  }
+
+  // ── Handlers — Product detail modal ───────────────────────────────────────
+  handleOpenProductDetail(e) {
+    const id = e.currentTarget.dataset.id;
+    this._selectedProductId = id;
+    const p = this._products.find((pr) => pr.id === id);
+    this._modalActiveColor =
+      p && p.colors && p.colors[0] ? p.colors[0].name : null;
+  }
+  handleCloseProductDetail() {
+    this._selectedProductId = null;
+    this._modalActiveColor = null;
+  }
+  handleStopPropagation(e) {
+    e.stopPropagation();
+  }
+  handleModalColorSelect(e) {
+    this._modalActiveColor = e.currentTarget.dataset.color;
+  }
+
+  // ── Handlers — Favorites ──────────────────────────────────────────────────
+  handleToggleFavorite(e) {
+    this._toggleFavoriteById(e.currentTarget.dataset.id);
+  }
+  handleToggleFavoriteFromModal(e) {
+    this._toggleFavoriteById(e.currentTarget.dataset.id);
+  }
+  _toggleFavoriteById(id) {
+    const product = this._products.find((p) => p.id === id);
+    if (!product) return;
+    if (this.favorites.some((f) => f.id === id)) {
+      this.favorites = this.favorites.filter((f) => f.id !== id);
+    } else {
+      this.favorites = [...this.favorites, product];
+    }
+  }
+
+  handleAddToCartFromModal() {
+    const product = this._products.find(
+      (p) => p.id === this._selectedProductId
+    );
+    if (!product) return;
+    this._pushToCart(product);
+    this._selectedProductId = null;
+    this._modalActiveColor = null;
+    this._showCartToast(product);
+  }
+
+  // ── Handlers — Top Deals section ─────────────────────────────────────────
+  handleDealsAddToCartPortal(event) {
+    const product = event.detail && event.detail.product;
+    if (!product) return;
+    this._pushToCart({ ...product, price: product.salePrice });
+    this._showCartToast(product);
+  }
+
+  handleDealsViewDetailsPortal(event) {
+    // when a deal's arrow/button is clicked, open the detail overlay
+    const product = event.detail && event.detail.product;
+    if (product) {
+      // set detail product; keep current tab intact so user stays where they were
+      this.detailProduct = product;
+    }
+  }
+
+  // catalog component events
+  handleAddToCartFromCatalog(event) {
+    const product = event.detail && event.detail.product;
+    if (!product) return;
+    this._pushToCart({ ...product, price: product.price || product.salePrice });
+    this._showCartToast(product);
+  }
+
+  handleToggleFavoriteFromCatalog(event) {
+    const product = event.detail && event.detail.product;
+    if (!product) return;
+    if (this.favorites.some((f) => f.id === product.id)) {
+      this.favorites = this.favorites.filter((f) => f.id !== product.id);
+    } else {
+      this.favorites = [...this.favorites, product];
+    }
+  }
+
+  handleRemoveFavorite(event) {
+    const id = event.detail && event.detail.id;
+    if (id) this.favorites = this.favorites.filter((f) => f.id !== id);
+  }
+
+  _pushToCart(product) {
+    const existing = this.cart.find((i) => i.productId === product.id);
+    if (existing) {
+      this.cart = this.cart.map((i) => {
+        if (i.productId === product.id)
+          return { ...i, quantity: i.quantity + 1 };
+        return i;
+      });
+    } else {
+      this.cart = [
+        ...this.cart,
+        {
+          ...product,
+          itemId: product.id + "_" + Date.now(),
+          productId: product.id,
+          unitPrice: product.price,
+          imageUrl: product.image,
+          quantity: 1
         }
+      ];
     }
+    this._saveCart();
+  }
 
-    // catalog component events
-    handleAddToCartFromCatalog(event) {
-        const product = event.detail && event.detail.product;
-        if (!product) return;
-        this._pushToCart({ ...product, price: product.price || product.salePrice });
-        this._showCartToast(product);
-    }
+  // ── Handlers — Quote modal ────────────────────────────────────────────────
+  _resetQuoteForm() {
+    this._quoteStep = "form";
+    this._quoteCompany = "";
+    this._quoteEmail = "";
+    this._quoteQty = "10";
+    this._quoteIndustry = "Technology";
+    this._quoteMessage = "";
+  }
+  handleOpenQuoteForm(e) {
+    this._quoteProductId = e.currentTarget.dataset.id;
+    this._resetQuoteForm();
+  }
+  handleOpenQuoteFromModal() {
+    this._quoteProductId = this._selectedProductId;
+    this._selectedProductId = null;
+    this._modalActiveColor = null;
+    this._resetQuoteForm();
+  }
+  handleCloseQuoteModal() {
+    this._quoteProductId = null;
+    this._quoteStep = "form";
+  }
+  handleQuoteCompany(e) {
+    this._quoteCompany = e.target.value;
+  }
+  handleQuoteEmail(e) {
+    this._quoteEmail = e.target.value;
+  }
+  handleQuoteQty(e) {
+    this._quoteQty = e.target.value;
+  }
+  handleQuoteIndustry(e) {
+    this._quoteIndustry = e.target.value;
+  }
+  handleQuoteMessage(e) {
+    this._quoteMessage = e.target.value;
+  }
+  handleQuoteSubmit() {
+    this._quoteStep = "success";
+  }
 
-    handleToggleFavoriteFromCatalog(event) {
-        const product = event.detail && event.detail.product;
-        if (!product) return;
-        if (this.favorites.some(f => f.id === product.id)) {
-            this.favorites = this.favorites.filter(f => f.id !== product.id);
-        } else {
-            this.favorites = [...this.favorites, product];
-        }
-    }
+  // ── Handlers — Cases ──────────────────────────────────────────────────────
+  handlePriority(e) {
+    this.casePriority = e.currentTarget.dataset.priority;
+  }
+  handleNextCaseStep() {
+    this.caseStep = 2;
+  }
+  handlePrevCaseStep() {
+    this.caseStep = 1;
+  }
 
-    handleRemoveFavorite(event) {
-        const id = event.detail && event.detail.id;
-        if (id) this.favorites = this.favorites.filter(f => f.id !== id);
+  // ── Handlers — Cart (nexusPortalCart child events) ────────────────────────
+  handleNavigateFromCart(e) {
+    const { tab, appliedSparks } = e.detail || {};
+    this.activeTab = tab;
+    if (appliedSparks > 0) {
+      this.sparksBalance = Math.max(0, this.sparksBalance - appliedSparks);
+      this._sparksDiscount = appliedSparks / 100; // convert points → $
+    } else {
+      this._sparksDiscount = 0;
     }
+    this._pushNavUpdate();
+  }
 
-    _pushToCart(product) {
-        const existing = this.cart.find(i => i.productId === product.id);
-        if (existing) {
-            this.cart = this.cart.map(i =>
-                i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i
-            );
-        } else {
-            this.cart = [...this.cart, {
-                ...product,
-                itemId:    product.id + '_' + Date.now(),
-                productId: product.id,
-                unitPrice: product.price,
-                imageUrl:  product.image,
-                quantity:  1
-            }];
-        }
-        this._saveCart();
-    }
+  get sparksDiscount() {
+    return this._sparksDiscount;
+  }
 
-    // ── Handlers — Quote modal ────────────────────────────────────────────────
-    _resetQuoteForm() {
-        this._quoteStep     = 'form';
-        this._quoteCompany  = '';
-        this._quoteEmail    = '';
-        this._quoteQty      = '10';
-        this._quoteIndustry = 'Technology';
-        this._quoteMessage  = '';
-    }
-    handleOpenQuoteForm(e) {
-        this._quoteProductId = e.currentTarget.dataset.id;
-        this._resetQuoteForm();
-    }
-    handleOpenQuoteFromModal() {
-        this._quoteProductId    = this._selectedProductId;
-        this._selectedProductId = null;
-        this._modalActiveColor  = null;
-        this._resetQuoteForm();
-    }
-    handleCloseQuoteModal()  { this._quoteProductId = null; this._quoteStep = 'form'; }
-    handleQuoteCompany(e)    { this._quoteCompany  = e.target.value; }
-    handleQuoteEmail(e)      { this._quoteEmail    = e.target.value; }
-    handleQuoteQty(e)        { this._quoteQty      = e.target.value; }
-    handleQuoteIndustry(e)   { this._quoteIndustry = e.target.value; }
-    handleQuoteMessage(e)    { this._quoteMessage  = e.target.value; }
-    handleQuoteSubmit()      { this._quoteStep = 'success'; }
+  // ── Handlers — product detail overlay ─────────────────────────────────────
+  handleDetailClose() {
+    this.detailProduct = null;
+  }
 
-    // ── Handlers — Cases ──────────────────────────────────────────────────────
-    handlePriority(e)    { this.casePriority = e.currentTarget.dataset.priority; }
-    handleNextCaseStep() { this.caseStep = 2; }
-    handlePrevCaseStep() { this.caseStep = 1; }
-
-    // ── Handlers — Cart (nexusPortalCart child events) ────────────────────────
-    handleNavigateFromCart(e) {
-        const { tab, appliedSparks } = e.detail || {};
-        this.activeTab = tab;
-        if (appliedSparks > 0) {
-            this.sparksBalance = Math.max(0, this.sparksBalance - appliedSparks);
-        }
-        this._pushNavUpdate();
+  handleDetailAddToCart(event) {
+    const product = event.detail && event.detail.product;
+    if (product) {
+      this._pushToCart({
+        ...product,
+        price: product.price || product.salePrice
+      });
+      this.detailProduct = null;
+      this._showCartToast(product);
     }
+  }
 
-    // ── Handlers — product detail overlay ─────────────────────────────────────
-    handleDetailClose() {
-        this.detailProduct = null;
+  handleDetailToggleFavorite(event) {
+    const product = event.detail && event.detail.product;
+    if (product) {
+      this._toggleFavoriteById(product.id);
     }
+  }
 
-    handleDetailAddToCart(event) {
-        const product = event.detail && event.detail.product;
-        if (product) {
-            this._pushToCart({ ...product, price: product.price || product.salePrice });
-            this.detailProduct = null;
-            this._showCartToast(product);
-        }
-    }
+  handleCartChanged(e) {
+    // Keep sidebar badge in sync when nexusPortalCart removes/updates items
+    this.cart = e.detail.cart || [];
+  }
 
-    handleDetailToggleFavorite(event) {
-        const product = event.detail && event.detail.product;
-        if (product) {
-            this._toggleFavoriteById(product.id);
-        }
-    }
+  _showCartToast(product) {
+    if (this._cartToastTimer) clearTimeout(this._cartToastTimer);
+    this._cartToastName = product.name || "";
+    this._cartToastPrice =
+      product.price != null ? `$${Number(product.price).toLocaleString()}` : "";
+    this._cartToastVisible = true;
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    this._cartToastTimer = setTimeout(() => {
+      this._cartToastVisible = false;
+    }, 3500);
+  }
 
-    handleCartChanged(e) {
-        // Keep sidebar badge in sync when nexusPortalCart removes/updates items
-        this.cart = e.detail.cart || [];
-    }
+  handleCartToastClose() {
+    this._cartToastVisible = false;
+    if (this._cartToastTimer) clearTimeout(this._cartToastTimer);
+  }
 
-    _showCartToast(product) {
-        if (this._cartToastTimer) clearTimeout(this._cartToastTimer);
-        this._cartToastName    = product.name || '';
-        this._cartToastPrice   = product.price != null ? `$${Number(product.price).toLocaleString()}` : '';
-        this._cartToastVisible = true;
-        this._cartToastTimer   = setTimeout(() => { this._cartToastVisible = false; }, 3500);
+  _saveCart() {
+    // eslint-disable-next-line no-unused-vars
+    try {
+      sessionStorage.setItem(CART_KEY, JSON.stringify(this.cart));
+    } catch (e) {
+      /* silent */
     }
-
-    handleCartToastClose() {
-        this._cartToastVisible = false;
-        if (this._cartToastTimer) clearTimeout(this._cartToastTimer);
-    }
-
-    _saveCart() {
-        try { sessionStorage.setItem(CART_KEY, JSON.stringify(this.cart)); } catch(e) { /* silent */ }
-    }
+  }
 }

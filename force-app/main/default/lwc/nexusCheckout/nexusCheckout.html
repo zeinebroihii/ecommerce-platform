@@ -1,0 +1,281 @@
+<template>
+  <div class="nco-root">
+    <!-- ── Top bar ────────────────────────────────────────────────────── -->
+    <div class="nco-topbar">
+      <button class="nco-topbar-back" onclick={handleBackToCart}>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          width="16"
+          height="16"
+        >
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Retour au panier
+      </button>
+      <div class="nco-topbar-secure">
+        <lightning-icon
+          icon-name="utility:shield"
+          size="x-small"
+        ></lightning-icon>
+        <span>SSL · Stripe</span>
+      </div>
+    </div>
+
+    <!-- ── Progress steps ─────────────────────────────────────────────── -->
+    <div class="nco-progress">
+      <div class="nco-progress-step nco-progress-done">
+        <div class="nco-step-circle nco-step-done">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            width="12"
+            height="12"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <span>Panier</span>
+      </div>
+      <div class="nco-progress-line nco-line-done"></div>
+      <div class="nco-progress-step">
+        <div class="nco-step-circle nco-step-active">2</div>
+        <span class="nco-step-label-active">Livraison</span>
+      </div>
+      <div class="nco-progress-line nco-line-active"></div>
+      <div class="nco-progress-step">
+        <div class="nco-step-circle">3</div>
+        <span>Paiement</span>
+      </div>
+    </div>
+
+    <!-- ── Page body ──────────────────────────────────────────────────── -->
+    <div class="nco-page-body">
+      <div class="nco-layout">
+        <!-- LEFT — Cart Summary -->
+        <div class="nco-cart-panel">
+          <div class="nco-panel-header">
+            <svg
+              class="nco-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path
+                d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+              />
+            </svg>
+            <span>Récapitulatif</span>
+            <span class="nco-badge">{itemCountLabel}</span>
+          </div>
+
+          <div class="nco-items-list">
+            <template for:each={cartSummary} for:item="item">
+              <div key={item.key} class="nco-item">
+                <div class="nco-item-img-wrap">
+                  <template if:true={item.imageUrl}>
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      class="nco-item-img"
+                    />
+                  </template>
+                  <template if:false={item.imageUrl}>
+                    <div class="nco-item-img-placeholder">
+                      <lightning-icon
+                        icon-name="utility:product_workspace"
+                        size="small"
+                      ></lightning-icon>
+                    </div>
+                  </template>
+                </div>
+                <div class="nco-item-info">
+                  <span class="nco-item-name">{item.name}</span>
+                  <span class="nco-item-qty">Qté: {item.quantity}</span>
+                </div>
+                <div class="nco-item-price">{item.lineTotal} €</div>
+              </div>
+            </template>
+          </div>
+
+          <div class="nco-totals">
+            <div class="nco-total-row">
+              <span>Sous-total</span>
+              <span>{subtotal} €</span>
+            </div>
+            <div class="nco-total-row">
+              <span>Livraison</span>
+              <span class="nco-shipping">{shippingLabel}</span>
+            </div>
+            <template if:true={hasSparksDiscount}>
+              <div class="nco-total-row nco-sparks-row">
+                <span>✦ Sparks Discount</span>
+                <span class="nco-sparks-disc">{formattedSparksDiscount}</span>
+              </div>
+            </template>
+            <div class="nco-divider"></div>
+            <div class="nco-total-row nco-grand-total">
+              <span>Total</span>
+              <span>{total} €</span>
+            </div>
+          </div>
+
+          <div class="nco-secure-row">
+            <lightning-icon
+              icon-name="utility:shield"
+              size="x-small"
+            ></lightning-icon>
+            <span>Paiement 100% sécurisé par Stripe</span>
+          </div>
+        </div>
+
+        <!-- RIGHT — Shipping Address Form -->
+        <div class="nco-form-panel">
+          <div class="nco-panel-header">
+            <svg
+              class="nco-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>Adresse de livraison</span>
+          </div>
+
+          <template if:true={errorMsg}>
+            <div class="nco-error">
+              <lightning-icon
+                icon-name="utility:error"
+                size="x-small"
+              ></lightning-icon>
+              <span>{errorMsg}</span>
+            </div>
+          </template>
+
+          <div class="nco-form">
+            <div class="nco-field">
+              <label class="nco-label">Rue *</label>
+              <input
+                class="nco-input"
+                type="text"
+                value={street}
+                placeholder="123 Rue de la Paix"
+                oninput={handleStreet}
+              />
+            </div>
+            <div class="nco-row">
+              <div class="nco-field">
+                <label class="nco-label">Ville *</label>
+                <input
+                  class="nco-input"
+                  type="text"
+                  value={city}
+                  placeholder="Paris"
+                  oninput={handleCity}
+                />
+              </div>
+              <div class="nco-field">
+                <label class="nco-label">Région</label>
+                <input
+                  class="nco-input"
+                  type="text"
+                  value={state}
+                  placeholder="Île-de-France"
+                  oninput={handleState}
+                />
+              </div>
+            </div>
+            <div class="nco-row">
+              <div class="nco-field">
+                <label class="nco-label">Code postal</label>
+                <input
+                  class="nco-input"
+                  type="text"
+                  value={zipCode}
+                  placeholder="75001"
+                  oninput={handleZip}
+                />
+              </div>
+              <div class="nco-field">
+                <label class="nco-label">Pays *</label>
+                <input
+                  class="nco-input"
+                  type="text"
+                  value={country}
+                  placeholder="France"
+                  oninput={handleCountry}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="nco-next-step-note">
+            <div class="nco-next-step-title">
+              Étape suivante — Paiement Stripe
+            </div>
+            <p class="nco-next-step-sub">
+              Carte bancaire, Apple Pay, Google Pay et plus — page sécurisée
+              Stripe.
+            </p>
+            <div class="nco-payment-icons">
+              <span class="nco-card-chip">VISA</span>
+              <span class="nco-card-chip">Mastercard</span>
+              <span class="nco-card-chip">Amex</span>
+              <span class="nco-card-chip">Apple Pay</span>
+              <span class="nco-card-chip">Google Pay</span>
+            </div>
+          </div>
+
+          <button
+            class="nco-btn-pay-full"
+            onclick={handleProceedToPayment}
+            disabled={proceedDisabled}
+          >
+            <template if:false={isLoading}>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                width="16"
+                height="16"
+              >
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg>
+              Continuer vers le paiement
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                width="16"
+                height="16"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </template>
+            <template if:true={isLoading}>
+              <lightning-spinner
+                size="x-small"
+                variant="base"
+                alternative-text="Chargement"
+              ></lightning-spinner>
+              Redirection vers Stripe...
+            </template>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomMetadata
+  xmlns="http://soap.sforce.com/2006/04/metadata"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+>
+    <label>Default</label>
+    <protected>false</protected>
+    <values>
+        <field>Publishable_Key__c</field>
+        <value
+      xsi:type="xsd:string"
+    >pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY</value>
+    </values>
+    <values>
+        <field>Secret_Key__c</field>
+        <value
+      xsi:type="xsd:string"
+    >sk_test_REPLACE_WITH_YOUR_STRIPE_SECRET_KEY</value>
+    </values>
+    <values>
+        <field>Shipping_Amount__c</field>
+        <value xsi:type="xsd:double">45.00</value>
+    </values>
+    <values>
+        <field>Free_Shipping_Threshold__c</field>
+        <value xsi:type="xsd:double">5000.00</value>
+    </values>
+</CustomMetadata>
