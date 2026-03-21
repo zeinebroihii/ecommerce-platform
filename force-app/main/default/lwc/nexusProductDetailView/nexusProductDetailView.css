@@ -9,7 +9,7 @@
     z-index: 500;
     background: #ffffff;
     overflow-y: auto;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Poppins', sans-serif;
     animation: npdv-wrap-in 0.25s ease-out;
 }
 @keyframes npdv-wrap-in {

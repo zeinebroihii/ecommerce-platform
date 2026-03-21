@@ -1,4 +1,5 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, wire, track } from 'lwc';
+import getProductsWithStock from '@salesforce/apex/ProductController.getProductsWithStock';
 
 const CATEGORIES = [
     {
@@ -34,137 +35,133 @@ const CATEGORIES = [
     }
 ];
 
-const MOCK_PRODUCTS = [
-    {
-        id: 'ups-1',
-        name: 'CyberPower CP1500PFCLCD PFC Sinewave UPS Systems',
-        productCode: 'CP1500PFCLCD',
-        family: 'Power Protection',
-        category: 'computing',
-        subcategory: 'workstations',
-        brand: 'CyberPower',
-        price: 299,
-        rating: 4.8,
-        reviews: 748,
-        image: 'https://images.unsplash.com/photo-1601524909162-ae8725290836?w=600&h=600&fit=crop',
-        description: 'A rock-solid performer — can keep a gaming rig up even under full load.',
-        features: ['1500VA / 1000W', 'Pure Sinewave', 'LCD Display'],
-        isNew: false,
-        isActive: true,
-        stockLevel: 12,
-        status: 'En stock'
-    },
-    {
-        id: 'gpu-1',
-        name: 'NVIDIA RTX PRO 6000 Blackwell Workstation Edition Graphic Card',
-        productCode: 'RTX-6000-BW',
-        family: 'Graphics',
-        category: 'computing',
-        subcategory: 'workstations',
-        brand: 'NVIDIA',
-        price: 13559,
-        rating: 5.0,
-        reviews: 9,
-        image: 'https://images.unsplash.com/photo-1587831991378-5cb1e2756591?w=600&h=600&fit=crop',
-        description: 'Good packaging from Newegg. Obviously it performs quite well.',
-        features: ['Blackwell Architecture', '48GB GDDR7', 'ECC Memory'],
-        isNew: true,
-        isActive: true,
-        stockLevel: 5,
-        status: 'En stock'
-    },
-    {
-        id: 'nas-1',
-        name: 'Synology 2-bay DiskStation DS725+ (Diskless)',
-        productCode: 'DS725+',
-        family: 'Storage',
-        category: 'computing',
-        subcategory: 'edge-nodes',
-        brand: 'Synology',
-        price: 759,
-        rating: 4.9,
-        reviews: 3,
-        image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&h=600&fit=crop',
-        description: 'As of DSM 7.3 you can now use any name brand drive again. No issues with old Seagate Red drives.',
-        features: ['Dual Core CPU', 'NVMe Support', '2.5GbE Port'],
-        isActive: true,
-        stockLevel: 8,
-        status: 'En stock'
-    },
-    {
-        id: 'gpu-2',
-        name: 'PNY NVIDIA RTX PRO 6000 Blackwell Max-Q 96GB GDDR7 with ECC AI',
-        productCode: 'RTX-6000-96G',
-        family: 'Graphics',
-        category: 'computing',
-        subcategory: 'workstations',
-        brand: 'PNY',
-        price: 13424,
-        rating: 5.0,
-        reviews: 1,
-        image: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=600&h=600&fit=crop',
-        description: '96GB of VRAM and energy efficient. Perfect for large scale AI training and simulations.',
-        features: ['96GB VRAM', 'ECC Support', 'AI Optimized'],
-        isNew: true,
-        isActive: true,
-        stockLevel: 2,
-        status: 'En arrivage'
-    },
-    {
-        id: 'nas-2',
-        name: 'Synology 8-bay DiskStation DS1825+ (Diskless)',
-        productCode: 'DS1825+',
-        family: 'Storage',
-        category: 'computing',
-        subcategory: 'edge-nodes',
-        brand: 'Synology',
-        price: 1299,
-        rating: 4.8,
-        reviews: 4,
-        image: 'https://images.unsplash.com/photo-1600267185393-e158a98703de?w=600&h=600&fit=crop',
-        description: 'High-capacity storage solution for business environments. Scalable and reliable.',
-        features: ['8-Bay', 'Expandable', 'DSM OS'],
-        isActive: true,
-        stockLevel: 3,
-        status: 'En stock'
-    },
-    {
-        id: 'switch-1',
-        name: 'TP-Link TL-SG108-M2 | 8 Port Multi-Gigabit Unmanaged Network Switch',
-        productCode: 'TL-SG108-M2',
-        family: 'Networking',
-        category: 'connectivity',
-        subcategory: 'hubs',
-        brand: 'TP-Link',
-        price: 199,
-        rating: 4.7,
-        reviews: 5,
-        image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&h=600&fit=crop',
-        description: 'Plug and play, no configuration required. Fanless and quiet.',
-        features: ['2.5G Ports', 'Fanless', 'Metal Casing'],
-        isActive: true,
-        stockLevel: 45,
-        status: 'En stock'
-    }
-];
+// Maps Product2.Family to sidebar category id
+const FAMILY_TO_CAT = {
+    'Computing':            'computing',
+    'Graphics':             'computing',
+    'Storage':              'computing',
+    'Power Protection':     'computing',
+    'Connectivity':         'connectivity',
+    'Networking':           'connectivity',
+    'Sensors & Monitoring': 'sensors',
+    'Sustainability':       'sustainability'
+};
+
+function apexToProduct(p) {
+    let features = [];
+    try {
+        const specs = p.specs ? JSON.parse(p.specs) : [];
+        features = specs.map(s => s.key + (s.value ? ': ' + s.value : ''));
+    } catch (e) { /* ignore */ }
+
+    return {
+        id:          p.productId,
+        name:        p.name        || '',
+        productCode: p.productCode || '',
+        family:      p.family      || '',
+        category:    FAMILY_TO_CAT[p.family] || (p.family || '').toLowerCase(),
+        subcategory: p.subcategory || '',
+        brand:       p.brand       || '',
+        price:       p.unitPrice   || 0,
+        rating:      p.rating      || 0,
+        reviews:     p.reviews     || 0,
+        image:       p.imageUrl    || '',
+        description: p.description || '',
+        features,
+        isNew:       p.isNew       || false,
+        isActive:    !p.isOutOfStock,
+        stockLevel:  p.quantityAvailable || 0,
+        status:      p.availabilityStatus || (p.isOutOfStock ? 'Épuisé' : 'En stock'),
+        specs:       p.specs || ''
+    };
+}
 
 const ALL_STATUSES = ['En stock', 'En arrivage', 'Epuisé', 'Sur commande 48h'];
 
 export default class NexusCatalog extends LightningElement {
 
-    @track selectedCategory    = null;
-    @track selectedSubcategory = null;
-    @track expandedCategories  = [];
-    @track searchQuery         = '';
-    @track viewMode            = 'grid';
-    @track priceMax            = 20000;
-    @track sortBy              = 'rating';
-    @track statusFilter        = [];
-    @track brandFilter         = [];
-    @track favoritedIds        = [];
-    @track detailProduct       = null;
-    @track showToast           = false;
+    @track _products             = [];
+    @track selectedCategory      = null;
+    @track selectedSubcategory   = null;
+    @track expandedCategories    = [];
+    @track searchQuery           = '';
+    @track viewMode              = 'grid';
+    @track priceMax              = 20000;
+    @track sortBy                = 'rating';
+    @track statusFilter          = [];
+    @track brandFilter           = [];
+    @track favoritedIds          = [];
+    @track detailProduct         = null;
+    @track showToast             = false;
+    @track _activeComboSlotId    = null;
+    @track _activeComboSlotCat   = null;
     _toastTimer;
+    _onComboSlotActive;
+
+    @wire(getProductsWithStock, { searchTerm: '', category: '' })
+    wiredProducts({ data }) {
+        if (data) this._products = data.map(apexToProduct);
+    }
+
+    // ── Combo builder integration ────────────────────────────────────────────
+
+    connectedCallback() {
+        if (!document.getElementById('nexus-poppins')) {
+            const link = document.createElement('link');
+            link.id  = 'nexus-poppins';
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap';
+            document.head.appendChild(link);
+        }
+        this._onComboSlotActive = (e) => {
+            const { slotId, category, catMap } = e.detail || {};
+            this._activeComboSlotId  = slotId  || null;
+            this._activeComboSlotCat = category || null;
+            // Auto-filter catalog by slot category mapping
+            if (slotId && catMap) {
+                this.selectedCategory    = catMap.cat || null;
+                this.selectedSubcategory = catMap.sub || null;
+                if (catMap.cat && !this.expandedCategories.includes(catMap.cat)) {
+                    this.expandedCategories = [...this.expandedCategories, catMap.cat];
+                }
+            } else if (!slotId) {
+                // Slot deactivated — clear combo filters
+                this.selectedCategory    = null;
+                this.selectedSubcategory = null;
+            }
+        };
+        document.addEventListener('nexuscombobuilderslotactive', this._onComboSlotActive);
+    }
+
+    disconnectedCallback() {
+        document.removeEventListener('nexuscombobuilderslotactive', this._onComboSlotActive);
+    }
+
+    get hasActiveComboSlot() { return !!this._activeComboSlotId; }
+
+    handleRevealComboBuilder() {
+        document.dispatchEvent(new CustomEvent('nexuscomboreveal'));
+    }
+
+    handleAddToCombo(event) {
+        event.stopPropagation();
+        const id      = event.currentTarget.dataset.id;
+        const product = this._products.find(p => p.id === id);
+        if (product && this._activeComboSlotId) {
+            document.dispatchEvent(new CustomEvent('nexuscomboaddproduct', {
+                detail: {
+                    slotId: this._activeComboSlotId,
+                    product: {
+                        id:       product.id,
+                        name:     product.name,
+                        image:    product.image,
+                        price:    product.price,
+                        category: this._activeComboSlotCat || product.category
+                    }
+                }
+            }));
+        }
+    }
 
     // ── Sidebar: categories ──────────────────────────────────────────────────
 
@@ -202,7 +199,7 @@ export default class NexusCatalog extends LightningElement {
         return ALL_STATUSES.map(status => ({
             status,
             isChecked : this.statusFilter.includes(status),
-            count     : MOCK_PRODUCTS.filter(p => p.status === status).length,
+            count     : this._products.filter(p => p.status === status).length,
             checkClass: this.statusFilter.includes(status)
                 ? 'nc2-check nc2-check--active'
                 : 'nc2-check',
@@ -217,11 +214,11 @@ export default class NexusCatalog extends LightningElement {
     // ── Sidebar: brand filter ────────────────────────────────────────────────
 
     get brandItems() {
-        const brands = [...new Set(MOCK_PRODUCTS.map(p => p.brand).filter(Boolean))];
+        const brands = [...new Set(this._products.map(p => p.brand).filter(Boolean))];
         return brands.map(brand => ({
             brand,
             isChecked : this.brandFilter.includes(brand),
-            count     : MOCK_PRODUCTS.filter(p => p.brand === brand).length,
+            count     : this._products.filter(p => p.brand === brand).length,
             checkClass: this.brandFilter.includes(brand)
                 ? 'nc2-check nc2-check--active'
                 : 'nc2-check',
@@ -237,7 +234,7 @@ export default class NexusCatalog extends LightningElement {
 
     get filteredProducts() {
         const q = this.searchQuery.toLowerCase();
-        return MOCK_PRODUCTS
+        return this._products
             .filter(p => {
                 if (this.selectedCategory    && p.category    !== this.selectedCategory)    return false;
                 if (this.selectedSubcategory && p.subcategory !== this.selectedSubcategory) return false;
@@ -319,7 +316,7 @@ export default class NexusCatalog extends LightningElement {
     get breadcrumbAllClass()  { return this.selectedCategory ? 'nc2-bc-item' : 'nc2-bc-item nc2-bc-item--active'; }
 
     get isDetailViewOpen()  { return !!this.detailProduct; }
-    get allProductsList()   { return MOCK_PRODUCTS; }
+    get allProductsList()   { return this._products; }
 
     // ── Handlers: sidebar ────────────────────────────────────────────────────
 
@@ -398,7 +395,7 @@ export default class NexusCatalog extends LightningElement {
 
     handleViewProduct(event) {
         const id = event.currentTarget.dataset.id;
-        this.detailProduct = MOCK_PRODUCTS.find(p => p.id === id) || null;
+        this.detailProduct = this._products.find(p => p.id === id) || null;
         if (this.detailProduct) document.dispatchEvent(new CustomEvent('nexusproductdetailopen'));
     }
 
@@ -408,12 +405,20 @@ export default class NexusCatalog extends LightningElement {
         this.favoritedIds = this.favoritedIds.includes(id)
             ? this.favoritedIds.filter(fid => fid !== id)
             : [...this.favoritedIds, id];
+        const product = this._products.find(p => p.id === id);
+        if (product) {
+            this.dispatchEvent(new CustomEvent('togglefavorite', {
+                detail: { product },
+                bubbles: true,
+                composed: true
+            }));
+        }
     }
 
     handleAddToCart(event) {
         event.stopPropagation();
         const id = event.currentTarget.dataset.id;
-        const product = MOCK_PRODUCTS.find(p => p.id === id);
+        const product = this._products.find(p => p.id === id);
         if (product) {
             this.dispatchEvent(new CustomEvent('addtocart', { detail: { product }, bubbles: true, composed: true }));
             this._showToast();
@@ -445,6 +450,11 @@ export default class NexusCatalog extends LightningElement {
             this.favoritedIds = this.favoritedIds.includes(id)
                 ? this.favoritedIds.filter(fid => fid !== id)
                 : [...this.favoritedIds, id];
+            this.dispatchEvent(new CustomEvent('togglefavorite', {
+                detail: { product: event.detail.product },
+                bubbles: true,
+                composed: true
+            }));
         }
     }
 

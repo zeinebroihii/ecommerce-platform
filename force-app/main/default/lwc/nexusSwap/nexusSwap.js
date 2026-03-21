@@ -26,7 +26,7 @@ const MOCK_SWAP_ITEMS = [
         ownerRating: 3.9, ownerSwapCount: 3,
         ownerReviews: [
             { author: 'Marie L.', stars: 4, text: 'Produit correct, description honnête sur l\'état.', date: 'Fév 2025' },
-            { author: 'Jean D.',  stars: 3, text: 'Échange un peu lent mais s\'est bien passé au final.', date: 'Nov 2024' }
+            { author: 'Jean D.',  stars: 3, text: 'Swap was a bit slow but went well in the end.', date: 'Nov 2024' }
         ]
     },
     {
@@ -34,7 +34,7 @@ const MOCK_SWAP_ITEMS = [
         owner: 'Sophie M.', condition: 'Mint', category: 'Connectivity', co2Saved: 15.1, verified: true,
         ownerRating: 5.0, ownerSwapCount: 21,
         ownerReviews: [
-            { author: 'Jean D.',   stars: 5, text: 'Échange parfait, très professionnel. Le meilleur swap que j\'ai fait !', date: 'Mar 2025' },
+            { author: 'Jean D.',   stars: 5, text: 'Perfect swap, very professional. Best swap I\'ve done!', date: 'Mar 2025' },
             { author: 'Marie L.', stars: 5, text: 'Rapide, fiable, produit impeccable. 5 étoiles sans hésiter.', date: 'Mar 2025' },
             { author: 'Pierre K.', stars: 5, text: 'Transaction exemplaire, je recommande vivement.', date: 'Fév 2025' }
         ]

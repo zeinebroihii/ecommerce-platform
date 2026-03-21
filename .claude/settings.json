@@ -5,7 +5,12 @@
       "Bash(ls -la \"c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc/nexus-crm-&-stock-ai/src/components/\")",
       "Bash(sf org:*)",
       "Read(//tmp/**)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(grep -n \"isDashboard\\\\|isOrders\\\\|isComboDeals\\\\|ncp-main\\\\|</div>$\\\\|if:true={is\" \"c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform\\\\force-app\\\\main\\\\default\\\\lwc\\\\nexusCustomerPortal\\\\nexusCustomerPortal.html\")",
+      "Bash(find \"c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc/nexus-crm-&-stock-ai\" -type f)",
+      "Bash(find \"c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc/nexus-crm-&-stock-ai\" -name \"*.tsx\" -o -name \"App.tsx\" -o -name \"main.tsx\")",
+      "Bash(ls \"c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc/nexus-crm-&-stock-ai/context/\")",
+      "Bash(ls \"c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc/nexus-crm-&-stock-ai/components/\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\MSI\\Desktop\\Salesforces\\ecommerce-platform\\force-app\\main\\default\\lwc"

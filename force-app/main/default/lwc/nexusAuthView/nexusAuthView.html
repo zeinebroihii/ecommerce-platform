@@ -243,7 +243,7 @@
                         <p class="nav-fp-resend-hint">
                             Pas re&ccedil;u &nbsp;&bull;&nbsp;
                             <button type="button" class="nav-inline-link nav-inline-link-emerald" onclick={handleResendForgot}>
-                                Modifier l&rsquo;adresse
+                                Edit address
                             </button>
                         </p>
 
@@ -251,7 +251,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="15 18 9 12 15 6"/>
                             </svg>
-                            &nbsp;Retour &agrave; la connexion
+                            &nbsp;Back to login
                         </button>
                     </template>
 
@@ -282,7 +282,7 @@
                                     </svg>
                                 </span>
                                 <input class="nav-input nav-input-emerald" type="email" data-field="forgotEmail"
-                                    placeholder="Email de r&eacute;cup&eacute;ration" required />
+                                    placeholder="Recovery email" required />
                             </div>
 
                             <template if:true={forgotError}>
@@ -296,7 +296,7 @@
 
                             <button type="submit" class="nav-btn-submit nav-btn-dark" disabled={isLoading}>
                                 <template if:false={isLoading}>
-                                    Envoyer le lien
+                                    Send link
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M5 12h14M12 5l7 7-7 7"/>
                                     </svg>

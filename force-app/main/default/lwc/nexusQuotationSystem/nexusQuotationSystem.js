@@ -74,7 +74,7 @@ const MOCK_QUOTES = [
         ],
         messages: [
             { id: 'm1', sender: 'rep', text: 'Bonjour ! J\'ai mis à jour le devis avec la remise volume de 10% demandée.', time: '10:30' },
-            { id: 'm2', sender: 'user', text: 'Merci Sarah. Pouvez-vous aussi revoir les conditions de maintenance ?', time: '11:15' }
+            { id: 'm2', sender: 'user', text: 'Thank you Sarah. Could you also review the maintenance terms?', time: '11:15' }
         ]
     },
     {
@@ -363,15 +363,15 @@ export default class NexusQuotationSystem extends LightningElement {
         if (!txt) return;
         this._messages = [...this._messages, {
             id: String(++this._msgCounter), sender: 'user', text: txt,
-            time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
         }];
         this._messageInput = '';
         // eslint-disable-next-line @lwc/lwc/no-async-operation
         setTimeout(() => {
             this._messages = [...this._messages, {
                 id: String(++this._msgCounter), sender: 'rep',
-                text: 'Merci pour votre message. Notre équipe commerciale vous répondra dans les meilleurs délais.',
-                time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                text: 'Thank you for your message. Our sales team will get back to you shortly.',
+                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
             }];
         }, 1500);
     }
@@ -400,8 +400,8 @@ export default class NexusQuotationSystem extends LightningElement {
         this._isDeciding = true;
         processQuoteDecision({ quoteId: this._selectedQuoteId, decision: 'Accepted', reason: '' })
             .then(() => { this._isSigning = false; this._signature = ''; return refreshApex(this._quotesWireResult); })
-            .then(() => { this._isDeciding = false; this._selectedQuoteId = null; this._toast('Devis Accepté ✓', 'Votre devis a été accepté. Le contrat est en cours.', 'success'); })
-            .catch(err => { this._isDeciding = false; this._toast('Erreur', err.body?.message || 'Une erreur est survenue.', 'error'); });
+            .then(() => { this._isDeciding = false; this._selectedQuoteId = null; this._toast('Quote Accepted ✓', 'Your quote has been accepted. The contract is being processed.', 'success'); })
+            .catch(err => { this._isDeciding = false; this._toast('Error', err.body?.message || 'An error occurred.', 'error'); });
     }
 
     // ── Handlers: reject ──────────────────────────────────────────────────────
@@ -414,14 +414,14 @@ export default class NexusQuotationSystem extends LightningElement {
             this._updateMockStatus(this._selectedQuoteId, 'Rejected');
             this._showRejectForm = false; this._rejectReason = '';
             this._selectedQuoteId = null;
-            this._toast('Devis Refusé', 'Votre décision a été enregistrée.', 'info');
+            this._toast('Quote Rejected', 'Your decision has been recorded.', 'info');
             return;
         }
         this._isDeciding = true;
         processQuoteDecision({ quoteId: this._selectedQuoteId, decision: 'Rejected', reason: this._rejectReason })
             .then(() => { this._showRejectForm = false; this._rejectReason = ''; return refreshApex(this._quotesWireResult); })
-            .then(() => { this._isDeciding = false; this._selectedQuoteId = null; this._toast('Devis Refusé', 'Votre décision a été enregistrée.', 'info'); })
-            .catch(err => { this._isDeciding = false; this._toast('Erreur', err.body?.message || 'Une erreur est survenue.', 'error'); });
+            .then(() => { this._isDeciding = false; this._selectedQuoteId = null; this._toast('Quote Rejected', 'Your decision has been recorded.', 'info'); })
+            .catch(err => { this._isDeciding = false; this._toast('Error', err.body?.message || 'An error occurred.', 'error'); });
     }
 
     // ── Handlers: new quote form ───────────────────────────────────────────────
@@ -441,7 +441,7 @@ export default class NexusQuotationSystem extends LightningElement {
         this._formSubmitting = true;
         requestQuote({ companyName: this._formCompany, email: this._formEmail, qty: this._formQty, message: this._formMessage })
             .then(() => { this._formSubmitting = false; this._formStep = 'success'; })
-            .catch(err => { this._formSubmitting = false; this._toast('Erreur', err.body?.message || 'Une erreur est survenue.', 'error'); });
+            .catch(err => { this._formSubmitting = false; this._toast('Error', err.body?.message || 'An error occurred.', 'error'); });
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

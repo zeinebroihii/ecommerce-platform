@@ -176,3 +176,145 @@
     color: #94a3b8;
     margin: 0;
 }
+
+/* ══ Nexus Sparks Redemption ════════════════════════════════════════════ */
+.npcs-sparks-wrap {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 1.25rem;
+    padding: 1rem;
+    margin-bottom: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Header */
+.npcs-sparks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.npcs-sparks-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.npcs-sparks-icon-wrap {
+    --sds-c-icon-color-foreground-default: #059669;
+}
+.npcs-sparks-title {
+    font-size: 0.625rem;
+    font-weight: 900;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+.npcs-sparks-avail {
+    font-size: 0.6875rem;
+    font-weight: 900;
+    color: #059669;
+}
+
+/* Applied state */
+.npcs-sparks-applied-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.875rem;
+}
+.npcs-sparks-applied-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #166534;
+}
+.npcs-sparks-remove {
+    background: none;
+    border: none;
+    font-size: 0.625rem;
+    font-weight: 900;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+.npcs-sparks-remove:hover { color: #4f46e5; }
+
+/* Input row */
+.npcs-sparks-input-row {
+    display: flex;
+    gap: 0.5rem;
+}
+.npcs-sparks-input {
+    flex: 1;
+    height: 2.25rem;
+    background: #fff;
+    border: 1px solid #bbf7d0;
+    border-radius: 0.75rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.npcs-sparks-input:focus { border-color: #059669; }
+.npcs-sparks-input--error { border-color: #f43f5e; color: #f43f5e; }
+.npcs-sparks-apply-btn {
+    height: 2.25rem;
+    padding: 0 1rem;
+    background: #059669;
+    color: #fff;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.5625rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.npcs-sparks-apply-btn:hover:not(:disabled) { background: #047857; }
+.npcs-sparks-apply-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Error message */
+.npcs-sparks-error {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #f43f5e;
+    margin: 0;
+    animation: npcs-bounce 0.4s ease;
+}
+@keyframes npcs-bounce {
+    0%, 100% { transform: translateY(0); }
+    40%       { transform: translateY(-3px); }
+}
+
+/* "Apply Maximum" link-button */
+.npcs-sparks-max-btn {
+    background: none;
+    border: none;
+    font-size: 0.5625rem;
+    font-weight: 900;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+    transition: color 0.15s;
+}
+.npcs-sparks-max-btn:hover { color: #047857; }
+
+/* Discount row */
+.npcs-sparks-disc-row {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+}

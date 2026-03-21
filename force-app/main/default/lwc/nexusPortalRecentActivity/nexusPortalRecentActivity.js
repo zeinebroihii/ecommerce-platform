@@ -5,17 +5,17 @@ export default class NexusPortalRecentActivity extends LightningElement {
     @api cardTitle = 'Activités Récentes';
 
     @api activity1Number = '#ORD-2024-001';
-    @api activity1Date   = 'Expédiée le 24 Février 2024';
+    @api activity1Date   = 'Shipped February 24, 2024';
     @api activity1Price  = '$1,240.00';
-    @api activity1Status = 'Livré';
+    @api activity1Status = 'Delivered';
 
     @api activity2Number = '#ORD-2024-002';
-    @api activity2Date   = 'Expédiée le 22 Février 2024';
+    @api activity2Date   = 'Shipped February 22, 2024';
     @api activity2Price  = '$3,200.00';
-    @api activity2Status = 'Livré';
+    @api activity2Status = 'Delivered';
 
     @api activity3Number = '#ORD-2024-003';
-    @api activity3Date   = 'En transit — Livraison le 27 Février';
+    @api activity3Date   = 'In transit — Delivery February 27';
     @api activity3Price  = '$870.00';
     @api activity3Status = 'En transit';
 

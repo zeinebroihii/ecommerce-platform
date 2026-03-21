@@ -99,6 +99,7 @@ export default class NexusAdminDashboard extends NavigationMixin(LightningElemen
 
     async handleConvert(event) {
         const leadId = event.detail.leadId;
+        let convertError = null;
         try {
             await convertLeadFull({
                 leadId,
@@ -107,17 +108,26 @@ export default class NexusAdminDashboard extends NavigationMixin(LightningElemen
                 closeDateStr:    '',
                 stage:           'Qualification'
             });
-            // Create portal user with real password + send credentials email
+        } catch (e) {
+            convertError = e.body ? e.body.message : 'Unknown error';
+        }
+        try {
             await provisionPortalUser({ leadId });
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Succès', message: 'Lead converti. Compte portail créé et identifiants envoyés par email.', variant: 'success'
-            }));
-            this.handleRefresh();
+            if (convertError) {
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Warning', message: 'Partial conversion: ' + convertError, variant: 'warning'
+                }));
+            } else {
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Success', message: 'Lead converted. Credentials sent by email.', variant: 'success'
+                }));
+            }
         } catch (e) {
             this.dispatchEvent(new ShowToastEvent({
-                title: 'Erreur', message: e.body ? e.body.message : 'Erreur inconnue', variant: 'error'
+                title: 'Portal Error', message: e.body ? e.body.message : String(e), variant: 'error'
             }));
         }
+        this.handleRefresh();
     }
 
     async handleLeadDecision(event) {
@@ -132,13 +142,13 @@ export default class NexusAdminDashboard extends NavigationMixin(LightningElemen
                 title: decision === 'Approved' ? 'Lead approuvé' : 'Lead rejeté',
                 message: decision === 'Approved'
                     ? 'Lead approuvé. Les identifiants seront envoyés lors de la conversion.'
-                    : 'Lead rejeté. Email de notification envoyé au lead.',
+                    : 'Lead rejected. Notification email sent to lead.',
                 variant: decision === 'Approved' ? 'success' : 'warning'
             }));
             refreshApex(this.wiredLeadsResult);
         } catch (e) {
             this.dispatchEvent(new ShowToastEvent({
-                title: 'Erreur', message: e.body ? e.body.message : 'Erreur inconnue', variant: 'error'
+                title: 'Error', message: e.body ? e.body.message : 'Unknown error', variant: 'error'
             }));
         }
     }

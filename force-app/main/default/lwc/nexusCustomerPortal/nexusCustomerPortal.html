@@ -95,8 +95,8 @@
                         <div class="ncp-user-online-dot"></div>
                     </div>
                     <div class="ncp-user-info">
-                        <h5 class="ncp-user-name">Marco Ross</h5>
-                        <p class="ncp-user-role">Enterprise Admin</p>
+                        <h5 class="ncp-user-name">{profileName}</h5>
+                        <p class="ncp-user-role">{profileRole}</p>
                     </div>
                     <button class="ncp-settings-btn" onclick={handleSettingsTab}>
                         <lightning-icon icon-name="utility:settings" size="x-small"></lightning-icon>
@@ -155,6 +155,11 @@
                         <div class="ncp-ai-gradient"></div>
                     </section>
 
+                    <!-- Nexus Sparks Banner -->
+                    <div class="ncp-sparks-row">
+                        <c-nexus-sparks sparks-balance={sparksBalance}></c-nexus-sparks>
+                    </div>
+
                     <!-- KPI Grid -->
                     <div class="ncp-kpi-grid">
                         <div class="ncp-kpi-card">
@@ -162,7 +167,7 @@
                                 <lightning-icon icon-name="utility:package" size="small"></lightning-icon>
                             </div>
                             <div class="ncp-kpi-value">12</div>
-                            <div class="ncp-kpi-label">Commandes Actives</div>
+                            <div class="ncp-kpi-label">Active Orders</div>
                         </div>
                         <div class="ncp-kpi-card">
                             <div class="ncp-kpi-icon ncp-kpi-icon-emerald">
@@ -248,7 +253,7 @@
                                 </div>
                                 <div class="ncp-reco-body">
                                     <h4 class="ncp-reco-name">Sensor Pack v2</h4>
-                                    <p class="ncp-reco-reason">Nouveau produit compatible</p>
+                                    <p class="ncp-reco-reason">New compatible product</p>
                                     <div class="ncp-reco-footer">
                                         <span class="ncp-reco-price">800 $</span>
                                         <button class="ncp-reco-btn"
@@ -258,7 +263,7 @@
                                             data-category="IoT"
                                             data-price="800 $"
                                             data-image="https://picsum.photos/seed/iot/800/600"
-                                            data-reason="Nouveau produit compatible avec votre écosystème">Voir l'offre</button>
+                                            data-reason="New product compatible with your ecosystem">Voir l'offre</button>
                                     </div>
                                 </div>
                             </div>
@@ -284,13 +289,13 @@
                                     <div class="ncp-activity-name">Commande Nexus Industrial Sensor X1</div>
                                     <div class="ncp-activity-sub">Il y a 2 heures · TechFlow Inc</div>
                                 </div>
-                                <span class="ncp-status-pill ncp-pill-success">Livré</span>
+                                <span class="ncp-status-pill ncp-pill-success">Delivered</span>
                                 <span class="ncp-row-chevron">&#8250;</span>
                             </div>
                             <div class="ncp-activity-row ncp-activity-row-clickable">
                                 <div class="ncp-activity-icon"><lightning-icon icon-name="utility:file" size="small"></lightning-icon></div>
                                 <div class="ncp-activity-info">
-                                    <div class="ncp-activity-name">Mise à jour Devis QT-2024</div>
+                                    <div class="ncp-activity-name">Quote Update QT-2024</div>
                                     <div class="ncp-activity-sub">Il y a 5 heures · Global Logistics</div>
                                 </div>
                                 <span class="ncp-status-pill ncp-pill-primary">En transit</span>
@@ -299,7 +304,7 @@
                             <div class="ncp-activity-row ncp-activity-row-clickable">
                                 <div class="ncp-activity-icon"><lightning-icon icon-name="utility:chat" size="small"></lightning-icon></div>
                                 <div class="ncp-activity-info">
-                                    <div class="ncp-activity-name">Nouveau message support</div>
+                                    <div class="ncp-activity-name">New support message</div>
                                     <div class="ncp-activity-sub">Hier · Nexus Support</div>
                                 </div>
                                 <span class="ncp-status-pill ncp-pill-primary">Répondu</span>
@@ -332,7 +337,11 @@
             <!-- ─ Favoris ──────────────────────────────────────────────────── -->
             <template if:true={isFavorites}>
                 <div class="ncp-section ncp-fullbleed">
-                    <c-nexus-favorites-system></c-nexus-favorites-system>
+                    <c-nexus-favorites-system
+                        favorites={favorites}
+                        onremovefavorite={handleRemoveFavorite}
+                        onaddtocart={handleDealsAddToCartPortal}>
+                    </c-nexus-favorites-system>
                 </div>
             </template>
 
@@ -340,6 +349,7 @@
             <template if:true={isCart}>
                 <div class="ncp-section">
                     <c-nexus-portal-cart
+                        sparks-balance={sparksBalance}
                         onnavigate={handleNavigateFromCart}
                         oncartchanged={handleCartChanged}
                     ></c-nexus-portal-cart>
@@ -406,11 +416,11 @@
                             </div>
                         </div>
                         <div class="ncp-profile-id">
-                            <span class="ncp-verified-badge">Compte Vérifié</span>
-                            <h2 class="ncp-profile-name">Nexus Global Corp.</h2>
+                            <span class="ncp-verified-badge">Verified Account</span>
+                            <h2 class="ncp-profile-name">{profileAccountName}</h2>
                             <div class="ncp-profile-email-row">
                                 <lightning-icon icon-name="utility:email" size="x-small"></lightning-icon>
-                                <span>contact@nexus-global.com</span>
+                                <span>{profileEmail}</span>
                             </div>
                         </div>
                     </div>
@@ -419,50 +429,104 @@
                     <div class="ncp-profile-grid">
 
                         <div class="ncp-info-card">
-                            <h4 class="ncp-info-title">Informations Générales</h4>
+                            <h4 class="ncp-info-title">General Information</h4>
                             <div class="ncp-field">
-                                <label class="ncp-label">Nom Complet / Entreprise</label>
-                                <input class="ncp-input" type="text" value="Nexus Global Corp." />
+                                <label class="ncp-label">Full Name / Company</label>
+                                <input class="ncp-input" type="text" value={profileAccountName} readonly />
                             </div>
                             <div class="ncp-field">
                                 <label class="ncp-label">Email</label>
-                                <input class="ncp-input" type="email" value="contact@nexus-global.com" />
+                                <input class="ncp-input" type="email" value={profileEmail} readonly />
                             </div>
                             <div class="ncp-field">
-                                <label class="ncp-label">Téléphone</label>
-                                <input class="ncp-input" type="tel" value="+33 1 23 45 67 89" />
+                                <label class="ncp-label">Phone</label>
+                                <input class="ncp-input" type="tel" value={profilePhone} />
                             </div>
                         </div>
 
                         <div class="ncp-info-card">
-                            <h4 class="ncp-info-title">Sécurité</h4>
+                            <h4 class="ncp-info-title">Security</h4>
                             <div class="ncp-security-row">
                                 <div class="ncp-security-icon">
                                     <lightning-icon icon-name="utility:shield" size="small"></lightning-icon>
                                 </div>
                                 <div class="ncp-security-info">
-                                    <div class="ncp-security-label">Mot de passe</div>
-                                    <div class="ncp-security-sub">Dernière modification : il y a 3 mois</div>
+                                    <div class="ncp-security-label">Password</div>
+                                    <div class="ncp-security-sub">Click Edit to change</div>
                                 </div>
-                                <button class="ncp-modify-btn">Modifier</button>
+                                <button class="ncp-modify-btn" onclick={handleTogglePasswordForm}>{pwdToggleLabel}</button>
                             </div>
-                            <button class="ncp-update-btn">Mettre à jour le profil</button>
+
+                            <template if:true={showPasswordForm}>
+                                <div class="ncp-pwd-form">
+                                    <div class="ncp-field">
+                                        <label class="ncp-label">Current Password</label>
+                                        <div class="ncp-input-eye-wrap">
+                                            <input class="ncp-input ncp-input-eye" type={oldPwdType} value={_oldPassword} onchange={handleOldPwd} placeholder="••••••••" />
+                                            <button class="ncp-eye-btn" type="button" onclick={handleToggleOldPwd}>
+                                                <template if:true={showOldPwd}>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                </template>
+                                                <template if:false={showOldPwd}>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                </template>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="ncp-field">
+                                        <label class="ncp-label">New Password</label>
+                                        <div class="ncp-input-eye-wrap">
+                                            <input class="ncp-input ncp-input-eye" type={newPwdType} value={_newPassword} onchange={handleNewPwd} placeholder="••••••••" />
+                                            <button class="ncp-eye-btn" type="button" onclick={handleToggleNewPwd}>
+                                                <template if:true={showNewPwd}>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                </template>
+                                                <template if:false={showNewPwd}>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                </template>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="ncp-field">
+                                        <label class="ncp-label">Confirm New Password</label>
+                                        <div class="ncp-input-eye-wrap">
+                                            <input class="ncp-input ncp-input-eye" type={confirmPwdType} value={_confirmPassword} onchange={handleConfirmPwd} placeholder="••••••••" />
+                                            <button class="ncp-eye-btn" type="button" onclick={handleToggleConfirmPwd}>
+                                                <template if:true={showConfirmPwd}>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                </template>
+                                                <template if:false={showConfirmPwd}>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                </template>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <template if:true={pwdError}>
+                                        <p class="ncp-pwd-error">{pwdError}</p>
+                                    </template>
+                                    <button class="ncp-update-btn" onclick={handleChangePassword}>Update Password</button>
+                                </div>
+                            </template>
+
+                            <template if:true={pwdSuccess}>
+                                <p class="ncp-pwd-success">Password updated successfully!</p>
+                            </template>
                         </div>
 
                         <div class="ncp-info-card ncp-info-full">
-                            <h4 class="ncp-info-title">Localisation</h4>
+                            <h4 class="ncp-info-title">Location</h4>
                             <div class="ncp-location-grid">
                                 <div class="ncp-field">
-                                    <label class="ncp-label">Adresse</label>
-                                    <input class="ncp-input" type="text" value="128 Rue de la Technologie" />
+                                    <label class="ncp-label">Address</label>
+                                    <input class="ncp-input" type="text" value={profileStreet} />
                                 </div>
                                 <div class="ncp-field">
-                                    <label class="ncp-label">Ville</label>
-                                    <input class="ncp-input" type="text" value="Paris" />
+                                    <label class="ncp-label">City</label>
+                                    <input class="ncp-input" type="text" value={profileCity} />
                                 </div>
                                 <div class="ncp-field">
-                                    <label class="ncp-label">Code Postal</label>
-                                    <input class="ncp-input" type="text" value="75008" />
+                                    <label class="ncp-label">Postal Code</label>
+                                    <input class="ncp-input" type="text" value={profilePostalCode} />
                                 </div>
                             </div>
                         </div>
@@ -472,8 +536,8 @@
                     <!-- Reviews received -->
                     <div class="ncp-reviews-section">
                         <div class="ncp-reviews-header">
-                            <h3 class="ncp-reviews-title">Avis Reçus</h3>
-                            <span class="ncp-reviews-count-badge">312 avis au total</span>
+                            <h3 class="ncp-reviews-title">Reviews Received</h3>
+                            <span class="ncp-reviews-count-badge">312 reviews total</span>
                         </div>
 
                         <!-- Score + bars -->
@@ -487,7 +551,7 @@
                                     <span class="ncp-reviews-score-star">&#9733;</span>
                                     <span class="ncp-reviews-score-star">&#9733;</span>
                                 </div>
-                                <span class="ncp-reviews-score-label">Moyenne</span>
+                                <span class="ncp-reviews-score-label">Average</span>
                             </div>
                             <div class="ncp-reviews-bars">
                                 <div class="ncp-reviews-bar-row">
@@ -642,7 +706,7 @@
                         <div class="ncp-settings-icon-wrap">
                             <lightning-icon icon-name="utility:settings" size="large"></lightning-icon>
                         </div>
-                        <h2 class="ncp-settings-title">Paramètres</h2>
+                        <h2 class="ncp-settings-title">Settings</h2>
                         <p class="ncp-settings-sub">Personnalisez votre expérience Nexus.</p>
                     </div>
                 </div>
@@ -698,7 +762,7 @@
                                     </div>
                                     <div class="ncp-quick-tags">
                                         <button class="ncp-quick-tag">Statut Livraison</button>
-                                        <button class="ncp-quick-tag">Retour Produit</button>
+                                        <button class="ncp-quick-tag">Product Return</button>
                                         <button class="ncp-quick-tag">Facturation</button>
                                         <button class="ncp-quick-tag">Garantie</button>
                                     </div>
@@ -759,7 +823,7 @@
                                         <p class="ncp-upload-sub">PDF, JPG, PNG (Max 10MB)</p>
                                     </div>
                                     <div class="ncp-expert-btns">
-                                        <button class="ncp-back-btn" onclick={handlePrevCaseStep}>Retour</button>
+                                        <button class="ncp-back-btn" onclick={handlePrevCaseStep}>Back</button>
                                         <button class="ncp-submit-btn">Soumettre</button>
                                     </div>
                                 </div>
@@ -771,7 +835,7 @@
 
                             <!-- Active Tickets -->
                             <div class="ncp-tickets-card">
-                                <h4 class="ncp-tickets-title">Tickets Actifs</h4>
+                                <h4 class="ncp-tickets-title">Active Tickets</h4>
                                 <div class="ncp-ticket-list">
                                     <div class="ncp-ticket-item">
                                         <div>
@@ -784,7 +848,7 @@
                                     <div class="ncp-ticket-item">
                                         <div>
                                             <div class="ncp-ticket-id">CAS-8842</div>
-                                            <div class="ncp-ticket-subject">Erreur Facturation</div>
+                                            <div class="ncp-ticket-subject">Billing Error</div>
                                             <div class="ncp-ticket-date">12 Fév</div>
                                         </div>
                                         <span class="ncp-tsuccess-badge">Résolu</span>
@@ -823,6 +887,11 @@
                         </div>
                     </div>
                 </div>
+            </template>
+
+            <!-- ── Combo Deals tab ─────────────────────────────────────────── -->
+            <template if:true={isComboDeals}>
+                <c-nexus-combo-deals onaddtocart={handleAddToCartFromCatalog}></c-nexus-combo-deals>
             </template>
 
         </main>
@@ -980,6 +1049,33 @@
         </template>
 
         </template><!-- end if:false={isCatalog} -->
+
+        <!-- ── Nexus Combo Builder panel (always present, overlaid on every tab) ── -->
+        <c-nexus-combo-builder is-combo-page={isComboDeals}></c-nexus-combo-builder>
+
+        <!-- ── Custom Cart Toast ── -->
+        <template if:true={_cartToastVisible}>
+            <div class="ncp-cart-toast">
+                <div class="ncp-cart-toast-left">
+                    <div class="ncp-cart-toast-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+                        </svg>
+                    </div>
+                    <div class="ncp-cart-toast-body">
+                        <span class="ncp-cart-toast-label">Ajouté au panier</span>
+                        <span class="ncp-cart-toast-name">{_cartToastName}</span>
+                        <template if:true={_cartToastPrice}>
+                            <span class="ncp-cart-toast-price">{_cartToastPrice}</span>
+                        </template>
+                    </div>
+                </div>
+                <button class="ncp-cart-toast-close" onclick={handleCartToastClose}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <div class="ncp-cart-toast-bar"></div>
+            </div>
+        </template>
 
     </div>
 </template>

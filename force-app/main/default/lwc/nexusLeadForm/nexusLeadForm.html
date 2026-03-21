@@ -9,7 +9,7 @@
                 </div>
                 <h2 class="nlf-success-title">Application Received!</h2>
                 <p class="nlf-success-body">
-                    Merci pour votre confiance. Notre équipe analyse votre profil.
+                    Thank you for your trust. Our team is reviewing your profile.
                     Vos identifiants d'accès vous seront envoyés par email sous 24h.
                 </p>
             </div>
@@ -41,28 +41,28 @@
                                 </select>
                             </div>
                             <div class="nlf-field">
-                                <label class="nlf-label">Prénom *</label>
+                                <label class="nlf-label">First Name *</label>
                                 <div class="nlf-input-wrap">
                                     <lightning-icon icon-name="utility:user" size="x-small" class="nlf-icon"></lightning-icon>
                                     <input class="nlf-input" placeholder="Jean" required onchange={handleFirstName} />
                                 </div>
                             </div>
                             <div class="nlf-field">
-                                <label class="nlf-label">Nom *</label>
+                                <label class="nlf-label">Last Name *</label>
                                 <div class="nlf-input-wrap">
                                     <lightning-icon icon-name="utility:user" size="x-small" class="nlf-icon"></lightning-icon>
                                     <input class="nlf-input" placeholder="Dupont" required onchange={handleLastName} />
                                 </div>
                             </div>
                             <div class="nlf-field">
-                                <label class="nlf-label">Email Professionnel *</label>
+                                <label class="nlf-label">Professional Email *</label>
                                 <div class="nlf-input-wrap">
                                     <lightning-icon icon-name="utility:email" size="x-small" class="nlf-icon"></lightning-icon>
-                                    <input class="nlf-input" type="email" placeholder="jean.dupont@entreprise.com" required onchange={handleEmail} />
+                                    <input class="nlf-input" type="email" placeholder="john.doe@company.com" required onchange={handleEmail} />
                                 </div>
                             </div>
                             <div class="nlf-field">
-                                <label class="nlf-label">Téléphone *</label>
+                                <label class="nlf-label">Phone *</label>
                                 <div class="nlf-input-wrap">
                                     <lightning-icon icon-name="utility:call" size="x-small" class="nlf-icon"></lightning-icon>
                                     <input class="nlf-input" type="tel" placeholder="+33 6 00 00 00 00" required onchange={handlePhone} />
@@ -78,7 +78,7 @@
                         </div>
                         <div class="nlf-footer-right">
                             <button class="nlf-btn-next" onclick={handleNext}>
-                                Suivant &rarr;
+                                Next &rarr;
                             </button>
                         </div>
                     </div>
@@ -89,7 +89,7 @@
                     <div class="nlf-body">
                         <div class="nlf-grid">
                             <div class="nlf-field">
-                                <label class="nlf-label">Nom de l'entreprise *</label>
+                                <label class="nlf-label">Company Name *</label>
                                 <div class="nlf-input-wrap">
                                     <lightning-icon icon-name="utility:company" size="x-small" class="nlf-icon"></lightning-icon>
                                     <input class="nlf-input" placeholder="Nexus Systems" required onchange={handleCompanyName} />
@@ -105,7 +105,7 @@
                                 </select>
                             </div>
                             <div class="nlf-field">
-                                <label class="nlf-label">Nombre de salariés *</label>
+                                <label class="nlf-label">Number of Employees *</label>
                                 <div class="nlf-input-wrap">
                                     <lightning-icon icon-name="utility:people" size="x-small" class="nlf-icon"></lightning-icon>
                                     <input class="nlf-input" type="number" placeholder="500" required onchange={handleEmployeeCount} />
@@ -143,7 +143,7 @@
                                 </div>
                             </div>
                             <div class="nlf-field">
-                                <label class="nlf-label">Ville *</label>
+                                <label class="nlf-label">City *</label>
                                 <div class="nlf-input-wrap">
                                     <lightning-icon icon-name="utility:location" size="x-small" class="nlf-icon"></lightning-icon>
                                     <input class="nlf-input" placeholder="Paris" required onchange={handleCity} />
@@ -165,7 +165,7 @@
                             </div>
                         </div>
                         <div class="nlf-footer-both">
-                            <button class="nlf-btn-back" onclick={handleBack}>&larr; Précédent</button>
+                            <button class="nlf-btn-back" onclick={handleBack}>&larr; Previous</button>
                             <button class="nlf-btn-submit" onclick={handleSubmit} disabled={isLoading}>
                                 <template if:false={isLoading}>Finaliser l'inscription ✓</template>
                                 <template if:true={isLoading}>Envoi en cours…</template>

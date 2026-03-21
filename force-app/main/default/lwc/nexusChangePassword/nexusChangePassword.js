@@ -82,7 +82,7 @@ export default class NexusChangePassword extends LightningElement {
         const confirmPwd = this.template.querySelector('[data-field="confirmPassword"]').value;
 
         if (newPwd !== confirmPwd) {
-            this.errorMsg  = 'Les mots de passe ne correspondent pas.';
+            this.errorMsg  = 'Passwords do not match.';
             this.isLoading = false;
             return;
         }

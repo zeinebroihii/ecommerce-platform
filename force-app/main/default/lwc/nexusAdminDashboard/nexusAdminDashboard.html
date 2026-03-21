@@ -12,7 +12,7 @@
                     <lightning-icon icon-name="utility:refresh" size="x-small"></lightning-icon>
                     &nbsp;Actualiser
                 </button>
-                <button class="nad-btn-primary">Nouveau Prospect</button>
+                <button class="nad-btn-primary">New Lead</button>
             </div>
         </div>
 
@@ -37,7 +37,7 @@
                     </div>
                     <span class="nad-pill nad-pill-blue">{newLeadsLabel}</span>
                 </div>
-                <div class="nad-kpi-label">Prospects Actifs</div>
+                <div class="nad-kpi-label">Active Leads</div>
                 <div class="nad-kpi-value">{totalLeads}</div>
                 <div class="nad-kpi-blob nad-blob-blue"></div>
             </div>
@@ -69,7 +69,7 @@
             </div>
 
             <template if:true={isEmptyContacts}>
-                <div class="nad-empty-cards">Aucun contact pour le moment.</div>
+                <div class="nad-empty-cards">No contacts yet.</div>
             </template>
 
             <template if:true={hasContacts}>
@@ -133,17 +133,14 @@
             </div>
 
             <template if:false={hasPendingLeads}>
-                <div class="nad-empty-cards">Aucun lead en attente de décision.</div>
+                <div class="nad-empty-cards">No leads pending decision.</div>
             </template>
 
             <template if:true={hasPendingLeads}>
                 <div class="nad-pending-list">
                     <template for:each={pendingLeads} for:item="lead">
                         <div key={lead.leadId} class="nad-pending-row">
-                            <!-- Initials avatar -->
                             <div class="nad-pending-avatar">{lead.initials}</div>
-
-                            <!-- Company + details -->
                             <div class="nad-pending-info">
                                 <div class="nad-pending-company">{lead.company}</div>
                                 <div class="nad-pending-meta">
@@ -154,8 +151,6 @@
                                     <div class="nad-pending-reason">{lead.aiReason}</div>
                                 </template>
                             </div>
-
-                            <!-- AI Score badge -->
                             <div class="nad-score-wrap">
                                 <div class={lead.scoreClass}>
                                     <span class="nad-score-num">{lead.score}</span>
@@ -164,8 +159,6 @@
                                 </div>
                                 <div class="nad-score-lbl">Score IA</div>
                             </div>
-
-                            <!-- Approve / Reject -->
                             <div class="nad-decision-btns">
                                 <button
                                     class="nad-btn-approve"
@@ -202,7 +195,7 @@
             </div>
 
             <template if:true={isEmptyList}>
-                <div class="nad-empty-cards">Aucun prospect actif pour le moment.</div>
+                <div class="nad-empty-cards">No active leads yet.</div>
             </template>
 
             <template if:true={hasLeads}>

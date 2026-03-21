@@ -25,7 +25,7 @@ export default class NexusPrecisionLocator extends LightningElement {
             this._singleLead = data;
             this._error = null;
         } else if (error) {
-            this._error = error.body ? error.body.message : 'Erreur de chargement';
+            this._error = error.body ? error.body.message : 'Loading error';
         }
     }
 
