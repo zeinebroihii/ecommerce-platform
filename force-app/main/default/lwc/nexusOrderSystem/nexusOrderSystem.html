@@ -1,267 +1,346 @@
 <template>
-<div class="nos-wrap">
-
+  <div class="nos-wrap">
     <!-- ══ Header ══════════════════════════════════════════════════════════════ -->
     <div class="nos-header">
-        <h2 class="nos-title">Order Tracking</h2>
-        <span class="nos-badge">Real-time Delivery</span>
+      <h2 class="nos-title">Order Tracking</h2>
+      <span class="nos-badge">Real-time Delivery</span>
     </div>
 
     <!-- ══ Main Grid ════════════════════════════════════════════════════════════ -->
     <div class="nos-grid">
-
-        <!-- ── Left: Order Cards ──────────────────────────────────────────────── -->
-        <div class="nos-orders-col">
-            <template for:each={orders} for:item="order">
-                <div key={order.id} class="nos-card">
-                    <div class="nos-card-inner">
-
-                        <!-- Card Left -->
-                        <div class="nos-card-left">
-                            <div class="nos-card-id-row">
-                                <div class="nos-pkg-icon">
-                                    <lightning-icon icon-name="utility:package" size="small" variant="inverse"></lightning-icon>
-                                </div>
-                                <div>
-                                    <div class="nos-order-id">{order.id}</div>
-                                    <div class="nos-order-date">{order.date}</div>
-                                </div>
-                            </div>
-                            <div class="nos-stats-grid">
-                                <div class="nos-stat-tile">
-                                    <div class="nos-stat-label">Total</div>
-                                    <div class="nos-stat-val">{order.formattedTotal}</div>
-                                </div>
-                                <div class="nos-stat-tile">
-                                    <div class="nos-stat-label">Items</div>
-                                    <div class="nos-stat-val">{order.items}</div>
-                                </div>
-                            </div>
-                            <button class="nos-track-btn" data-id={order.id} onclick={handleOpenDetail}>
-                                Track Order Details
-                            </button>
-                        </div>
-
-                        <!-- Card Right -->
-                        <div class="nos-card-right">
-                            <div class="nos-status-row">
-                                <div class="nos-status-left">
-                                    <span class={order.dotCls}></span>
-                                    <span class="nos-status-text">{order.status}</span>
-                                </div>
-                                <div class="nos-eta-block">
-                                    <span class="nos-eta-label">Estimated Arrival</span>
-                                    <span class="nos-eta-val">{order.eta}</span>
-                                </div>
-                            </div>
-                            <div class="nos-progress-wrap">
-                                <div class="nos-progress-bg">
-                                    <div class={order.barCls} style={order.progressStyle}></div>
-                                </div>
-                                <div class="nos-progress-labels">
-                                    <span>Shipped</span>
-                                    <span>In Transit</span>
-                                    <span>Delivery</span>
-                                </div>
-                            </div>
-                            <div class="nos-location-row">
-                                <lightning-icon icon-name="utility:location" size="x-small" class="nos-loc-icon"></lightning-icon>
-                                <span class="nos-location-text">Current position : <strong>{order.location}</strong></span>
-                            </div>
-                        </div>
-
-                    </div>
+      <!-- ── Left: Order Cards ──────────────────────────────────────────────── -->
+      <div class="nos-orders-col">
+        <template for:each={orders} for:item="order">
+          <div key={order.id} class="nos-card">
+            <div class="nos-card-inner">
+              <!-- Card Left -->
+              <div class="nos-card-left">
+                <div class="nos-card-id-row">
+                  <div class="nos-pkg-icon">
+                    <lightning-icon
+                      icon-name="utility:package"
+                      size="small"
+                      variant="inverse"
+                    ></lightning-icon>
+                  </div>
+                  <div>
+                    <div class="nos-order-id">{order.id}</div>
+                    <div class="nos-order-date">{order.date}</div>
+                  </div>
                 </div>
-            </template>
+                <div class="nos-stats-grid">
+                  <div class="nos-stat-tile">
+                    <div class="nos-stat-label">Total</div>
+                    <div class="nos-stat-val">{order.formattedTotal}</div>
+                  </div>
+                  <div class="nos-stat-tile">
+                    <div class="nos-stat-label">Items</div>
+                    <div class="nos-stat-val">{order.items}</div>
+                  </div>
+                </div>
+                <button
+                  class="nos-track-btn"
+                  data-id={order.id}
+                  onclick={handleOpenDetail}
+                >
+                  Track Order Details
+                </button>
+              </div>
+
+              <!-- Card Right -->
+              <div class="nos-card-right">
+                <div class="nos-status-row">
+                  <div class="nos-status-left">
+                    <span class={order.dotCls}></span>
+                    <span class="nos-status-text">{order.status}</span>
+                  </div>
+                  <div class="nos-eta-block">
+                    <span class="nos-eta-label">Estimated Arrival</span>
+                    <span class="nos-eta-val">{order.eta}</span>
+                  </div>
+                </div>
+                <div class="nos-progress-wrap">
+                  <div class="nos-progress-bg">
+                    <div class={order.barCls} style={order.progressStyle}></div>
+                  </div>
+                  <div class="nos-progress-labels">
+                    <span>Shipped</span>
+                    <span>In Transit</span>
+                    <span>Delivery</span>
+                  </div>
+                </div>
+                <div class="nos-location-row">
+                  <lightning-icon
+                    icon-name="utility:location"
+                    size="x-small"
+                    class="nos-loc-icon"
+                  ></lightning-icon>
+                  <span class="nos-location-text"
+                    >Current position : <strong>{order.location}</strong></span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- ── Right: Live Tracking + AI Card ─────────────────────────────────── -->
+      <div class="nos-side-col">
+        <!-- Live Tracking Map -->
+        <div class="nos-map-card">
+          <div class="nos-map-img">
+            <img
+              src="https://picsum.photos/seed/map/800/1200"
+              alt="Live Map"
+              class="nos-map-bg"
+            />
+          </div>
+          <div class="nos-map-overlay"></div>
+          <div class="nos-map-content">
+            <div class="nos-map-top">
+              <div class="nos-live-badge">
+                <span class="nos-live-text">Live Tracking</span>
+              </div>
+              <span class="nos-live-dot"></span>
+            </div>
+            <div class="nos-map-bottom">
+              <div class="nos-last-update">
+                <div class="nos-update-head">Last Update</div>
+                <div class="nos-update-body">
+                  <div class="nos-truck-icon">
+                    <lightning-icon
+                      icon-name="utility:truck"
+                      size="small"
+                      variant="inverse"
+                    ></lightning-icon>
+                  </div>
+                  <div>
+                    <div class="nos-update-text">
+                      Left the distribution center
+                    </div>
+                    <div class="nos-update-time">12 minutes ago</div>
+                  </div>
+                </div>
+              </div>
+              <button class="nos-fullmap-btn" onclick={handleOpenFullMap}>
+                Open Full Screen Map
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- ── Right: Live Tracking + AI Card ─────────────────────────────────── -->
-        <div class="nos-side-col">
-
-            <!-- Live Tracking Map -->
-            <div class="nos-map-card">
-                <div class="nos-map-img">
-                    <img src="https://picsum.photos/seed/map/800/1200" alt="Live Map" class="nos-map-bg" />
-                </div>
-                <div class="nos-map-overlay"></div>
-                <div class="nos-map-content">
-                    <div class="nos-map-top">
-                        <div class="nos-live-badge">
-                            <span class="nos-live-text">Live Tracking</span>
-                        </div>
-                        <span class="nos-live-dot"></span>
-                    </div>
-                    <div class="nos-map-bottom">
-                        <div class="nos-last-update">
-                            <div class="nos-update-head">Last Update</div>
-                            <div class="nos-update-body">
-                                <div class="nos-truck-icon">
-                                    <lightning-icon icon-name="utility:truck" size="small" variant="inverse"></lightning-icon>
-                                </div>
-                                <div>
-                                    <div class="nos-update-text">Left the distribution center</div>
-                                    <div class="nos-update-time">12 minutes ago</div>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="nos-fullmap-btn" onclick={handleOpenFullMap}>
-                            Open Full Screen Map
-                        </button>
-                    </div>
-                </div>
+        <!-- AI Logistics Card -->
+        <div class="nos-ai-card">
+          <div class="nos-ai-inner">
+            <div class="nos-ai-header">
+              <lightning-icon
+                icon-name="utility:einstein"
+                size="small"
+                variant="inverse"
+              ></lightning-icon>
+              <span class="nos-ai-title">Nexus AI Logistics</span>
             </div>
-
-            <!-- AI Logistics Card -->
-            <div class="nos-ai-card">
-                <div class="nos-ai-inner">
-                    <div class="nos-ai-header">
-                        <lightning-icon icon-name="utility:einstein" size="small" variant="inverse"></lightning-icon>
-                        <span class="nos-ai-title">Nexus AI Logistics</span>
-                    </div>
-                    <p class="nos-ai-text">"Your order ORD-2024-001 is 2 hours ahead of schedule thanks to route optimization via Agentforce."</p>
-                </div>
-                <div class="nos-ai-glow"></div>
-            </div>
-
+            <p class="nos-ai-text">
+              "Your order ORD-2024-001 is 2 hours ahead of schedule thanks to
+              route optimization via Agentforce."
+            </p>
+          </div>
+          <div class="nos-ai-glow"></div>
         </div>
+      </div>
     </div>
 
     <!-- ══ Order Detail Modal ════════════════════════════════════════════════════ -->
     <template if:true={showDetailModal}>
-        <div class="nos-overlay" onclick={handleCloseDetail}>
-            <div class="nos-modal" onclick={handleStopProp}>
-
-                <!-- Modal Header -->
-                <div class="nos-modal-header">
-                    <div class="nos-modal-header-left">
-                        <div class="nos-modal-pkg-icon">
-                            <lightning-icon icon-name="utility:package" size="small" variant="inverse"></lightning-icon>
-                        </div>
-                        <div>
-                            <h3 class="nos-modal-id">{selectedOrder.id}</h3>
-                            <p class="nos-modal-sub">Order Details &amp; History</p>
-                        </div>
-                    </div>
-                    <button class="nos-modal-close" onclick={handleCloseDetail}>✕</button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="nos-modal-body">
-
-                    <!-- Info Row -->
-                    <div class="nos-info-grid">
-                        <div class="nos-info-block">
-                            <div class="nos-info-label">Shipping Address</div>
-                            <div class="nos-info-val">{selectedOrder.shippingAddress}</div>
-                        </div>
-                        <div class="nos-info-block">
-                            <div class="nos-info-label">Tracking Number</div>
-                            <div class="nos-tracking-val">{selectedOrder.trackingNumber}</div>
-                        </div>
-                        <div class="nos-info-block">
-                            <div class="nos-info-label">Carrier</div>
-                            <div class="nos-info-val">{selectedOrder.carrier}</div>
-                        </div>
-                    </div>
-
-                    <!-- Two columns: history + items -->
-                    <div class="nos-detail-cols">
-
-                        <!-- Tracking History -->
-                        <div class="nos-history-col">
-                            <div class="nos-section-title">
-                                <lightning-icon icon-name="utility:clock" size="x-small" class="nos-section-icon"></lightning-icon>
-                                Tracking History
-                            </div>
-                            <div class="nos-timeline">
-                                <template for:each={selectedOrder.history} for:item="ev">
-                                    <div key={ev.time} class="nos-event">
-                                        <div class={ev.dotCls}>
-                                            <template if:true={ev.isFirst}>
-                                                <span class="nos-evt-inner-dot"></span>
-                                            </template>
-                                        </div>
-                                        <div class="nos-event-body">
-                                            <div class="nos-event-top">
-                                                <span class={ev.statusCls}>{ev.status}</span>
-                                                <span class="nos-event-time">{ev.time}</span>
-                                            </div>
-                                            <div class="nos-event-loc">{ev.location}</div>
-                                            <div class="nos-event-desc">{ev.description}</div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-
-                        <!-- Items -->
-                        <div class="nos-items-col">
-                            <div class="nos-section-title">
-                                <lightning-icon icon-name="utility:package" size="x-small" class="nos-section-icon"></lightning-icon>
-                                Items in this order
-                            </div>
-                            <div class="nos-items-list">
-                                <template for:each={selectedOrder.products} for:item="item">
-                                    <div key={item.id} class="nos-item-row">
-                                        <div class="nos-item-img-wrap">
-                                            <img src={item.image} alt={item.name} class="nos-item-img" />
-                                        </div>
-                                        <div class="nos-item-info">
-                                            <div class="nos-item-name">{item.name}</div>
-                                            <div class="nos-item-qty">Qty: {item.quantity}</div>
-                                        </div>
-                                        <div class="nos-item-price">{item.lineTotal}</div>
-                                    </div>
-                                </template>
-                                <div class="nos-items-total-row">
-                                    <span class="nos-items-total-label">Total Amount</span>
-                                    <span class="nos-items-total-val">{selectedOrder.formattedTotal}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="nos-modal-footer">
-                    <button class="nos-outline-btn" onclick={handleCloseDetail}>Close</button>
-                    <button class="nos-primary-btn" onclick={handleDownloadInvoice}>Download Invoice</button>
-                </div>
-
+      <div class="nos-overlay" onclick={handleCloseDetail}>
+        <div class="nos-modal" onclick={handleStopProp}>
+          <!-- Modal Header -->
+          <div class="nos-modal-header">
+            <div class="nos-modal-header-left">
+              <div class="nos-modal-pkg-icon">
+                <lightning-icon
+                  icon-name="utility:package"
+                  size="small"
+                  variant="inverse"
+                ></lightning-icon>
+              </div>
+              <div>
+                <h3 class="nos-modal-id">{selectedOrder.id}</h3>
+                <p class="nos-modal-sub">Order Details &amp; History</p>
+              </div>
             </div>
+            <button class="nos-modal-close" onclick={handleCloseDetail}>
+              ✕
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="nos-modal-body">
+            <!-- Info Row -->
+            <div class="nos-info-grid">
+              <div class="nos-info-block">
+                <div class="nos-info-label">Shipping Address</div>
+                <div class="nos-info-val">{selectedOrder.shippingAddress}</div>
+              </div>
+              <div class="nos-info-block">
+                <div class="nos-info-label">Tracking Number</div>
+                <div class="nos-tracking-val">
+                  {selectedOrder.trackingNumber}
+                </div>
+              </div>
+              <div class="nos-info-block">
+                <div class="nos-info-label">Carrier</div>
+                <div class="nos-info-val">{selectedOrder.carrier}</div>
+              </div>
+            </div>
+
+            <!-- Two columns: history + items -->
+            <div class="nos-detail-cols">
+              <!-- Tracking History -->
+              <div class="nos-history-col">
+                <div class="nos-section-title">
+                  <lightning-icon
+                    icon-name="utility:clock"
+                    size="x-small"
+                    class="nos-section-icon"
+                  ></lightning-icon>
+                  Tracking History
+                </div>
+                <div class="nos-timeline">
+                  <template for:each={selectedOrder.history} for:item="ev">
+                    <div key={ev.time} class="nos-event">
+                      <div class={ev.dotCls}>
+                        <template if:true={ev.isFirst}>
+                          <span class="nos-evt-inner-dot"></span>
+                        </template>
+                      </div>
+                      <div class="nos-event-body">
+                        <div class="nos-event-top">
+                          <span class={ev.statusCls}>{ev.status}</span>
+                          <span class="nos-event-time">{ev.time}</span>
+                        </div>
+                        <div class="nos-event-loc">{ev.location}</div>
+                        <div class="nos-event-desc">{ev.description}</div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Items -->
+              <div class="nos-items-col">
+                <div class="nos-section-title">
+                  <lightning-icon
+                    icon-name="utility:package"
+                    size="x-small"
+                    class="nos-section-icon"
+                  ></lightning-icon>
+                  Items in this order
+                </div>
+                <div class="nos-items-list">
+                  <template for:each={selectedOrder.products} for:item="item">
+                    <div key={item.id} class="nos-item-row">
+                      <div class="nos-item-img-wrap">
+                        <template if:true={item.image}>
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            class="nos-item-img"
+                          />
+                        </template>
+                        <template if:false={item.image}>
+                          <lightning-icon
+                            icon-name="utility:product_workspace"
+                            size="small"
+                          ></lightning-icon>
+                        </template>
+                      </div>
+                      <div class="nos-item-info">
+                        <div class="nos-item-name">{item.name}</div>
+                        <div class="nos-item-qty">Qty: {item.quantity}</div>
+                      </div>
+                      <div class="nos-item-price">{item.lineTotal}</div>
+                    </div>
+                  </template>
+                  <!-- Shipping row -->
+                  <div class="nos-items-fee-row">
+                    <span class="nos-items-fee-label">Shipping</span>
+                    <span class="nos-items-fee-val"
+                      >{selectedOrder.formattedShipping}</span
+                    >
+                  </div>
+                  <!-- Sparks discount row (only if applied) -->
+                  <template if:true={selectedOrder.hasSparksDiscount}>
+                    <div class="nos-items-fee-row nos-sparks-row">
+                      <span class="nos-items-fee-label">✦ Sparks Discount</span>
+                      <span class="nos-sparks-val"
+                        >{selectedOrder.formattedSparksDiscount}</span
+                      >
+                    </div>
+                  </template>
+                  <div class="nos-items-total-row">
+                    <span class="nos-items-total-label">Total Paid</span>
+                    <span class="nos-items-total-val"
+                      >{selectedOrder.formattedTotal}</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="nos-modal-footer">
+            <button class="nos-outline-btn" onclick={handleCloseDetail}>
+              Close
+            </button>
+            <button class="nos-primary-btn" onclick={handleDownloadInvoice}>
+              Download Invoice
+            </button>
+          </div>
         </div>
+      </div>
     </template>
 
     <!-- ══ Full Screen Map Modal ═════════════════════════════════════════════════ -->
     <template if:true={showFullMap}>
-        <div class="nos-fullmap-overlay">
-            <button class="nos-fullmap-close" onclick={handleCloseFullMap}>✕</button>
-            <img src="https://picsum.photos/seed/fullmap/1920/1080" alt="Full Map" class="nos-fullmap-img" />
-            <div class="nos-fullmap-tint"></div>
-            <div class="nos-fullmap-info">
-                <div class="nos-fullmap-info-header">
-                    <div class="nos-fullmap-truck">
-                        <lightning-icon icon-name="utility:truck" size="small" variant="inverse"></lightning-icon>
-                    </div>
-                    <div>
-                        <div class="nos-fullmap-order-id">ORD-2024-001</div>
-                        <div class="nos-fullmap-order-sub">Live Tracking Active</div>
-                    </div>
-                </div>
-                <div class="nos-fullmap-stats">
-                    <div class="nos-fullmap-stat">
-                        <span class="nos-pulse-dot nos-dot-emerald"></span>
-                        <span>Speed : 85 km/h</span>
-                    </div>
-                    <div class="nos-fullmap-stat">
-                        <span class="nos-pulse-dot nos-dot-indigo"></span>
-                        <span>Destination : Paris, France</span>
-                    </div>
-                </div>
+      <div class="nos-fullmap-overlay">
+        <button class="nos-fullmap-close" onclick={handleCloseFullMap}>
+          ✕
+        </button>
+        <img
+          src="https://picsum.photos/seed/fullmap/1920/1080"
+          alt="Full Map"
+          class="nos-fullmap-img"
+        />
+        <div class="nos-fullmap-tint"></div>
+        <div class="nos-fullmap-info">
+          <div class="nos-fullmap-info-header">
+            <div class="nos-fullmap-truck">
+              <lightning-icon
+                icon-name="utility:truck"
+                size="small"
+                variant="inverse"
+              ></lightning-icon>
             </div>
+            <div>
+              <div class="nos-fullmap-order-id">ORD-2024-001</div>
+              <div class="nos-fullmap-order-sub">Live Tracking Active</div>
+            </div>
+          </div>
+          <div class="nos-fullmap-stats">
+            <div class="nos-fullmap-stat">
+              <span class="nos-pulse-dot nos-dot-emerald"></span>
+              <span>Speed : 85 km/h</span>
+            </div>
+            <div class="nos-fullmap-stat">
+              <span class="nos-pulse-dot nos-dot-indigo"></span>
+              <span>Destination : Paris, France</span>
+            </div>
+          </div>
         </div>
+      </div>
     </template>
-
-</div>
+  </div>
 </template>
