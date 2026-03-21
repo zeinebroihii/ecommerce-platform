@@ -2,11 +2,11 @@ import { LightningElement, track, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 const ACTIVITIES = [
-    { id: '001', title: 'Commande Nexus Industrial Sensor X1', time: 'Il y a 2 heures', client: 'TechFlow Inc',     status: 'Livré',     type: 'success'   },
-    { id: '002', title: 'Mise à jour Devis QT-2024',           time: 'Il y a 5 heures', client: 'Global Logistics', status: 'En transit', type: 'primary'   },
-    { id: '003', title: 'Nouveau message support',             time: 'Hier',            client: 'Nexus Support',    status: 'Répondu',    type: 'primary'   },
+    { id: '001', title: 'Nexus Industrial Sensor X1 Order',    time: '2 hours ago',     client: 'TechFlow Inc',     status: 'Delivered',  type: 'success'   },
+    { id: '002', title: 'Quote Update QT-2024',                time: '5 hours ago',     client: 'Global Logistics', status: 'En transit', type: 'primary'   },
+    { id: '003', title: 'New support message',                 time: 'Yesterday',       client: 'Nexus Support',    status: 'Replied',    type: 'primary'   },
     { id: '004', title: 'Paiement reçu INV-452',               time: 'Hier',            client: 'Finance Dept',     status: 'Complété',   type: 'success'   },
-    { id: '005', title: 'Alerte maintenance prédictive',        time: 'Il y a 2 jours',  client: 'Actif #452',       status: 'Urgent',     type: 'warning'   },
+    { id: '005', title: 'Predictive maintenance alert',         time: '2 days ago',      client: 'Active #452',      status: 'Urgent',     type: 'warning'   },
 ];
 
 const BADGE_CLASSES = {
@@ -68,8 +68,8 @@ export default class NexusEngagementSystem extends LightningElement {
         // Notify parent to add the item to the shared cart
         this.dispatchEvent(new CustomEvent('addtocart', { detail: { offer } }));
         this.dispatchEvent(new ShowToastEvent({
-            title:   'Panier',
-            message: `${offer.name} ajouté au panier.`,
+            title:   'Cart',
+            message: `${offer.name} added to cart.`,
             variant: 'success',
         }));
     }

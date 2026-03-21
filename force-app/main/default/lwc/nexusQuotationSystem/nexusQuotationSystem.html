@@ -31,7 +31,7 @@
                 <div class="nqs-empty-icon-wrap">
                     <lightning-icon icon-name="utility:contract" size="large"></lightning-icon>
                 </div>
-                <h3 class="nqs-empty-title">Aucun devis trouvé</h3>
+                <h3 class="nqs-empty-title">No quotes found</h3>
                 <p class="nqs-empty-sub">Vos devis et contrats apparaîtront ici dès leur création.</p>
                 <button class="nqs-new-btn" onclick={handleOpenNewForm}>Faire une demande</button>
             </div>
@@ -93,7 +93,7 @@
                                 <span class="nqs-version-chip">{selectedQuote.versionLabel}</span>
                             </div>
                             <p class="nqs-modal-meta">
-                                {selectedQuote.opportunityName} &nbsp;·&nbsp; Expire : {selectedQuote.displayDate}
+                                {selectedQuote.opportunityName} &nbsp;·&nbsp; Expires: {selectedQuote.displayDate}
                             </p>
                         </div>
                     </div>
@@ -187,7 +187,7 @@
                                     <!-- Fallback: plain description (Salesforce real data) -->
                                     <template if:false={selectedQuoteHasProducts}>
                                         <div class="nqs-detail-card">
-                                            <div class="nqs-detail-card-title">Détails du Devis</div>
+                                            <div class="nqs-detail-card-title">Quote Details</div>
                                             <div class="nqs-detail-card-body">
                                                 <div class="nqs-detail-row">
                                                     <span class="nqs-detail-label">Référence</span>
@@ -329,13 +329,13 @@
                                             <div class="nqs-history-content">
                                                 <div class="nqs-history-label">Statut actuel</div>
                                                 <div class="nqs-history-status">{selectedQuote.status}</div>
-                                                <div class="nqs-history-date">Expire : {selectedQuote.displayDate}</div>
+                                                <div class="nqs-history-date">Expires: {selectedQuote.displayDate}</div>
                                             </div>
                                         </div>
                                         <div class="nqs-history-item">
                                             <div class="nqs-history-dot"></div>
                                             <div class="nqs-history-content">
-                                                <div class="nqs-history-label">Montant total</div>
+                                                <div class="nqs-history-label">Total Amount</div>
                                                 <div class="nqs-history-status">{selectedQuote.displayTotal}</div>
                                             </div>
                                         </div>
@@ -363,7 +363,7 @@
                                                     </div>
                                                     <div class="nqs-vh-card-right">
                                                         <div class="nqs-vh-total-block">
-                                                            <div class="nqs-detail-label">Montant</div>
+                                                            <div class="nqs-detail-label">Amount</div>
                                                             <div class="nqs-vh-total">{v.displayTotal}</div>
                                                         </div>
                                                         <div class="nqs-vh-actions">
@@ -413,8 +413,8 @@
                                 onchange={handleRejectReason}
                             ></textarea>
                             <div class="nqs-reject-actions">
-                                <button class="nqs-confirm-reject-btn" onclick={handleConfirmReject} disabled={decideDisabled}>Confirmer le refus</button>
-                                <button class="nqs-cancel-btn" onclick={handleCancelReject}>Annuler</button>
+                                <button class="nqs-confirm-reject-btn" onclick={handleConfirmReject} disabled={decideDisabled}>Confirm Rejection</button>
+                                <button class="nqs-cancel-btn" onclick={handleCancelReject}>Cancel</button>
                             </div>
                         </div>
                     </div>
@@ -458,9 +458,9 @@
                     </div>
                     <div class="nqs-sign-actions">
                         <button class="nqs-confirm-sign-btn" disabled={signDisabled} onclick={handleConfirmSign}>
-                            ✓ Confirmer &amp; Signer
+                            ✓ Confirm &amp; Sign
                         </button>
-                        <button class="nqs-cancel-btn nqs-cancel-outline" onclick={handleCancelSign}>Annuler</button>
+                        <button class="nqs-cancel-btn nqs-cancel-outline" onclick={handleCancelSign}>Cancel</button>
                     </div>
                     <p class="nqs-sign-legal">Signature sécurisée conforme aux normes eIDAS.</p>
                 </div>
@@ -481,7 +481,7 @@
                                 <lightning-icon icon-name="utility:company" size="small" variant="inverse"></lightning-icon>
                             </div>
                             <div>
-                                <h3 class="nqs-form-title">Demande de Devis B2B</h3>
+                                <h3 class="nqs-form-title">B2B Quote Request</h3>
                                 <p class="nqs-form-sub">Nexus Enterprise Solutions</p>
                             </div>
                         </div>
@@ -490,14 +490,14 @@
                     <form class="nqs-form-body" onsubmit={handleFormSubmit}>
                         <div class="nqs-form-row">
                             <div class="nqs-form-field">
-                                <label class="nqs-form-label">Nom de la Société</label>
+                                <label class="nqs-form-label">Company Name</label>
                                 <div class="nqs-form-input-wrap">
                                     <lightning-icon icon-name="utility:company" size="x-small" class="nqs-input-icon"></lightning-icon>
                                     <input required type="text" class="nqs-form-input" placeholder="Nexus Corp" value={formCompany} onchange={handleFormCompany} />
                                 </div>
                             </div>
                             <div class="nqs-form-field">
-                                <label class="nqs-form-label">Email Professionnel</label>
+                                <label class="nqs-form-label">Professional Email</label>
                                 <div class="nqs-form-input-wrap">
                                     <lightning-icon icon-name="utility:email" size="x-small" class="nqs-input-icon"></lightning-icon>
                                     <input required type="email" class="nqs-form-input" placeholder="ceo@nexus.com" value={formEmail} onchange={handleFormEmail} />
@@ -505,7 +505,7 @@
                             </div>
                         </div>
                         <div class="nqs-form-field">
-                            <label class="nqs-form-label">Quantité estimée</label>
+                            <label class="nqs-form-label">Estimated Quantity</label>
                             <div class="nqs-form-input-wrap nqs-form-input-wrap-sm">
                                 <lightning-icon icon-name="utility:number_input" size="x-small" class="nqs-input-icon"></lightning-icon>
                                 <input type="number" min="1" class="nqs-form-input" placeholder="10" value={formQty} onchange={handleFormQty} />
@@ -527,13 +527,13 @@
                         <div class="nqs-success-icon-wrap">
                             <lightning-icon icon-name="utility:success" size="large" variant="success"></lightning-icon>
                         </div>
-                        <h3 class="nqs-success-title">Demande Reçue !</h3>
+                        <h3 class="nqs-success-title">Request Received!</h3>
                         <p class="nqs-success-msg">
                             Notre équipe a bien reçu votre demande. Un conseiller dédié vous contactera à
                             <span class="nqs-success-email">{formEmail}</span>
                             dans les 2 heures ouvrées.
                         </p>
-                        <button class="nqs-submit-btn" onclick={handleCloseNewForm}>Retour au Portail</button>
+                        <button class="nqs-submit-btn" onclick={handleCloseNewForm}>Back to Portal</button>
                     </div>
                 </template>
 

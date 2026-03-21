@@ -11,7 +11,7 @@
     --nfs-emerald:  #10b981;
     --nfs-amber:    #f59e0b;
     --nfs-rose:     #f43f5e;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Poppins', system-ui, sans-serif;
     display: block;
 }
 
@@ -100,6 +100,14 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
+@keyframes heart-pop {
+    0%   { transform: translateX(0) scale(1); }
+    30%  { transform: translateX(0) scale(1.5); }
+    55%  { transform: translateX(0) scale(0.85); }
+    75%  { transform: translateX(0) scale(1.2); }
+    100% { transform: translateX(0) scale(1); }
+}
+
 /* Heart button — slides in from right on hover */
 .nfs-heart-btn {
     position: absolute; top: 1rem; right: 1rem;
@@ -111,6 +119,7 @@
 .nfs-card:hover .nfs-heart-btn { transform: translateX(0); }
 .nfs-heart-active { background: var(--nfs-rose); }
 .nfs-heart-btn:hover { transform: translateX(0) scale(1.1) !important; }
+.nfs-heart-btn:active { animation: heart-pop 0.38s cubic-bezier(0.34,1.56,0.64,1) forwards !important; }
 
 /* MSRP price box — slides up from bottom on hover */
 .nfs-price-hover {

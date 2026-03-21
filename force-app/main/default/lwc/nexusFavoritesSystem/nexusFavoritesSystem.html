@@ -28,7 +28,7 @@
     <!-- ══ Product Grid ══════════════════════════════════════════════════════════ -->
     <template if:false={isEmpty}>
         <div class="nfs-grid">
-            <template for:each={favorites} for:item="p">
+            <template for:each={favoritesEnriched} for:item="p">
                 <div key={p.id} class="nfs-card">
 
                     <!-- Image area -->

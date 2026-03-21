@@ -71,7 +71,7 @@
     letter-spacing: -0.04em;
     line-height: 1;
     margin: 0;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 .nes-panel-subtitle {
     font-size: 0.5625rem;
@@ -188,7 +188,7 @@
     letter-spacing: 0.12em;
     cursor: pointer;
     transition: background 0.15s;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 .nes-close-panel-btn:hover { background: #1e293b; }
 
@@ -277,7 +277,7 @@
     letter-spacing: -0.04em;
     line-height: 1;
     margin: 0 0 1rem;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 .nes-offer-reason {
     font-size: 0.875rem;
@@ -348,7 +348,7 @@
     cursor: pointer;
     transition: background 0.15s, transform 0.1s;
     box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 .nes-add-cart-btn:hover  { background: #4338ca; transform: translateY(-1px); }
 .nes-add-cart-btn:active { transform: scale(0.97); }
@@ -366,7 +366,7 @@
     letter-spacing: 0.1em;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 .nes-save-later-btn:hover { background: #0f172a; color: #fff; }
 

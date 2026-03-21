@@ -26,6 +26,65 @@
             </div>
         </div>
 
+        <!-- ── Nexus Sparks Redemption ─────────────────────────── -->
+        <template if:true={hasSparks}>
+            <div class="npcs-sparks-wrap">
+
+                <!-- Header row -->
+                <div class="npcs-sparks-header">
+                    <div class="npcs-sparks-left">
+                        <span class="npcs-sparks-icon-wrap">
+                            <lightning-icon icon-name="utility:sparkles" size="x-small"></lightning-icon>
+                        </span>
+                        <span class="npcs-sparks-title">Nexus Sparks</span>
+                    </div>
+                    <span class="npcs-sparks-avail">{_balance} Available</span>
+                </div>
+
+                <!-- Applied state -->
+                <template if:true={sparksApplied}>
+                    <div class="npcs-sparks-applied-row">
+                        <span class="npcs-sparks-applied-label">Applied: {appliedLabel}</span>
+                        <button class="npcs-sparks-remove" onclick={handleRemoveSparks}>Remove</button>
+                    </div>
+                </template>
+
+                <!-- Input state -->
+                <template if:false={sparksApplied}>
+                    <div class="npcs-sparks-input-row">
+                        <input
+                            type="number"
+                            class={inputClass}
+                            value={sparksInput}
+                            placeholder="Amount..."
+                            oninput={handleSparksInput}
+                        />
+                        <button
+                            class="npcs-sparks-apply-btn"
+                            disabled={applyDisabled}
+                            onclick={handleApplySparks}>
+                            Apply
+                        </button>
+                    </div>
+                    <template if:true={showError}>
+                        <p class="npcs-sparks-error">&#9888; Only {_balance} Sparks available.</p>
+                    </template>
+                    <button class="npcs-sparks-max-btn" onclick={handleApplyMax}>
+                        Apply Maximum ({maxRedeemableLabel} Sparks)
+                    </button>
+                </template>
+
+            </div>
+        </template>
+
+        <!-- Sparks discount row (only when applied) -->
+        <template if:true={sparksApplied}>
+            <div class="npcs-row npcs-sparks-disc-row">
+                <span class="npcs-key">Sparks Discount</span>
+                <span class="npcs-val npcs-val--green">{formattedSparksDisc}</span>
+            </div>
+        </template>
+
         <!-- Total block -->
         <div class="npcs-divider"></div>
         <div class="npcs-total-block">

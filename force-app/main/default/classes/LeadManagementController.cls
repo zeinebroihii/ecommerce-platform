@@ -587,17 +587,11 @@ public without sharing class LeadManagementController {
             return existing[0].Username;
         }
 
-        // Find the Community profile (try common names)
-        List<Profile> profiles = [
-            SELECT Id FROM Profile
-            WHERE Name IN (
-                'Customer Community Plus Login User',
-                'Customer Community Plus User',
-                'Customer Community User',
-                'Customer Community Login User'
-            )
-            LIMIT 1
-        ];
+        // Find the Community profile — priority order to avoid license limits
+        List<Profile> profiles = [SELECT Id FROM Profile WHERE Name = 'Customer Community Plus Login User' LIMIT 1];
+        if (profiles.isEmpty()) profiles = [SELECT Id FROM Profile WHERE Name = 'Customer Community Plus User' LIMIT 1];
+        if (profiles.isEmpty()) profiles = [SELECT Id FROM Profile WHERE Name = 'Customer Community User' LIMIT 1];
+        if (profiles.isEmpty()) profiles = [SELECT Id FROM Profile WHERE Name = 'Customer Community Login User' LIMIT 1];
         if (profiles.isEmpty()) {
             throw new AuraHandledException(
                 'Aucun profil communauté trouvé. Veuillez vérifier la configuration Experience Cloud.'
@@ -657,7 +651,7 @@ public without sharing class LeadManagementController {
             String msg = e.getMessage();
             if (msg.contains('DUPLICATE_USERNAME')) {
                 // Username taken — append a suffix and retry
-                u.Username = c.Email + '.nexus';
+                u.Username = c.Email + '.nx' + String.valueOf(Math.abs(Crypto.getRandomInteger()));
                 try {
                     insert u;
                 } catch (DmlException e2) {
@@ -668,14 +662,23 @@ public without sharing class LeadManagementController {
             }
         }
 
-        // Send Salesforce native set-password email — contains a direct token link
-        // so the customer can set their password in one click (no ForgotPassword roundabout)
-        try { System.resetPassword(u.Id, true); } catch (Exception e) { System.debug('resetPassword: ' + e.getMessage()); }
-
-        // Also send our branded welcome email (informational: confirms account + login URL)
-        sendPortalWelcomeEmail(c.Email, fn, ln, c.Salutation);
+        // Send branded welcome email with temp password in @future (after User DML)
+        String tempPwd = generateTempPassword();
+        sendPortalUserEmailsAsync(u.Id, u.Username, c.Email, fn, ln, tempPwd);
 
         return u.Username;
+    }
+
+    // ── InvocableMethod so a Flow can call provisionPortalUser ───────────────
+    @InvocableMethod(label='Provision Portal User' description='Creates portal user and sends credentials email for a converted lead')
+    public static void provisionPortalUserFromFlow(List<Id> leadIds) {
+        for (Id leadId : leadIds) {
+            try {
+                provisionPortalUser(leadId);
+            } catch (Exception e) {
+                System.debug('provisionPortalUserFromFlow error for ' + leadId + ': ' + e.getMessage());
+            }
+        }
     }
 
     // ── Provision portal user for a CONVERTED lead + send real credentials ────
@@ -703,10 +706,10 @@ public without sharing class LeadManagementController {
         List<User> existing = [SELECT Id, Username FROM User
                                WHERE ContactId = :l.ConvertedContactId AND IsActive = true LIMIT 1];
         if (!existing.isEmpty()) {
-            // User already provisioned — resend set-password link via native Salesforce email
+            // User already provisioned — resend with a new temp password
             Contact cx = [SELECT Id, FirstName, LastName, Email FROM Contact WHERE Id = :l.ConvertedContactId LIMIT 1];
-            try { System.resetPassword(existing[0].Id, true); } catch (Exception ignored) {}
-            sendPortalWelcomeEmail(cx.Email, cx.FirstName, cx.LastName, null);
+            String newTempPwd = generateTempPassword();
+            sendPortalUserEmailsAsync(existing[0].Id, existing[0].Username, cx.Email, cx.FirstName, cx.LastName != null ? cx.LastName : '', newTempPwd);
             return existing[0].Username;
         }
 
@@ -725,17 +728,11 @@ public without sharing class LeadManagementController {
         }
         Contact c = cList[0];
 
-        // 4. Community profile
-        List<Profile> profiles = [
-            SELECT Id FROM Profile
-            WHERE Name IN (
-                'Customer Community Plus Login User',
-                'Customer Community Plus User',
-                'Customer Community User',
-                'Customer Community Login User'
-            )
-            LIMIT 1
-        ];
+        // 4. Community profile — query in priority order to avoid license limits
+        List<Profile> profiles = [SELECT Id FROM Profile WHERE Name = 'Customer Community Plus Login User' LIMIT 1];
+        if (profiles.isEmpty()) profiles = [SELECT Id FROM Profile WHERE Name = 'Customer Community Plus User' LIMIT 1];
+        if (profiles.isEmpty()) profiles = [SELECT Id FROM Profile WHERE Name = 'Customer Community User' LIMIT 1];
+        if (profiles.isEmpty()) profiles = [SELECT Id FROM Profile WHERE Name = 'Customer Community Login User' LIMIT 1];
         if (profiles.isEmpty()) {
             throw new AuraHandledException(
                 'Aucun profil communauté trouvé. Vérifiez la configuration Experience Cloud.'
@@ -793,7 +790,7 @@ public without sharing class LeadManagementController {
         } catch (DmlException e) {
             String msg = e.getMessage();
             if (msg.contains('DUPLICATE_USERNAME')) {
-                u.Username = c.Email + '.nexus';
+                u.Username = c.Email + '.nx' + String.valueOf(Math.abs(Crypto.getRandomInteger()));
                 try { insert u; } catch (DmlException e2) {
                     throw new AuraHandledException('Erreur création compte : ' + e2.getMessage());
                 }
@@ -803,25 +800,26 @@ public without sharing class LeadManagementController {
         }
 
         // 9 & 10. Send emails in a @future context — Salesforce restricts Messaging.sendEmail
-        //         and System.resetPassword immediately after User DML in the same transaction.
-        sendPortalUserEmailsAsync(u.Id, c.Email, fn, c.LastName != null ? c.LastName : '');
+        //         and System.setPassword immediately after User DML in the same transaction.
+        String tempPwd = generateTempPassword();
+        sendPortalUserEmailsAsync(u.Id, u.Username, c.Email, fn, c.LastName != null ? c.LastName : '', tempPwd);
 
         return u.Username;
     }
 
     // ── Post-User-insert emails — must run in a separate transaction (@future) ──
     @future(callout=false)
-    private static void sendPortalUserEmailsAsync(String userId, String email, String firstName, String lastName) {
-        // Native SF reset-password email (one-click set-password link)
+    private static void sendPortalUserEmailsAsync(String userId, String username, String email, String firstName, String lastName, String tempPwd) {
+        // Set the temp password so the user can login immediately
         try {
-            System.resetPassword(userId, true);
-            System.debug('resetPassword sent OK for userId=' + userId);
+            System.setPassword(userId, tempPwd);
+            System.debug('setPassword OK for userId=' + userId);
         } catch (Exception e) {
-            System.debug('resetPassword FAILED: ' + e.getMessage());
+            System.debug('setPassword FAILED: ' + e.getMessage());
         }
-        // Branded Nexus welcome email
+        // Branded Nexus welcome email with credentials
         try {
-            sendPortalWelcomeEmail(email, firstName, lastName, null);
+            sendPortalWelcomeEmail(email, firstName, lastName, username, tempPwd);
             System.debug('Portal welcome email sent OK to ' + email);
         } catch (Exception e) {
             System.debug('sendPortalWelcomeEmail FAILED: ' + e.getMessage());
@@ -848,32 +846,25 @@ public without sharing class LeadManagementController {
 
     // ── Branded welcome email sent after portal user creation ─────────────────
     private static void sendPortalWelcomeEmail(
-        String email, String firstName, String lastName, String salutation
+        String email, String firstName, String lastName, String username, String tempPwd
     ) {
-        String loginUrl = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/login';
-        String greeting = (salutation == 'Mr.') ? 'Cher' : 'Ch\u00e8re';
+        String loginUrl = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/';
         String fullName = (firstName + ' ' + lastName).trim();
 
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         mail.setToAddresses(new List<String>{ email });
-        mail.setSubject('Bienvenue sur Nexus \u2014 Votre espace est pr\u00eat !');
-        mail.setHtmlBody(buildPortalWelcomeHtml(greeting, fullName, email, loginUrl, loginUrl));
+        mail.setSubject('Bienvenue sur Nexus \u2014 Vos identifiants de connexion');
+        mail.setHtmlBody(buildPortalWelcomeHtml(fullName, username, tempPwd, loginUrl));
         mail.setSaveAsActivity(false);
 
-        // Use OrgWideEmailAddress to bypass unverified domain restriction
-        List<OrgWideEmailAddress> owas = [SELECT Id FROM OrgWideEmailAddress LIMIT 1];
-        if (!owas.isEmpty()) {
-            mail.setOrgWideEmailAddressId(owas[0].Id);
-        } else {
-            mail.setSenderDisplayName('Nexus Platform');
-        }
+        mail.setSenderDisplayName('Nexus Platform');
 
         Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
     }
 
     // ── Welcome email HTML ────────────────────────────────────────────────────
     private static String buildPortalWelcomeHtml(
-        String greeting, String fullName, String email, String loginUrl, String pwdUrl
+        String fullName, String username, String tempPwd, String loginUrl
     ) {
         return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>'
             + '<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">'
@@ -881,7 +872,7 @@ public without sharing class LeadManagementController {
             + '<tr><td align="center">'
             + '<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(15,23,42,0.08);">'
 
-            // ── Top accent line ──
+            // ── Top accent ──
             + '<tr><td style="height:4px;background:linear-gradient(90deg,#059669,#10b981,#0ea5e9);"></td></tr>'
 
             // ── Dark header ──
@@ -892,32 +883,33 @@ public without sharing class LeadManagementController {
             + '<div style="font-size:10px;color:#6ee7b7;letter-spacing:3px;font-weight:600;margin-bottom:24px;">INTELLIGENCE PLATFORM</div>'
             + '<div style="width:60px;height:60px;background:linear-gradient(135deg,#059669,#10b981);border-radius:50%;margin:0 auto 16px;font-size:26px;line-height:60px;text-align:center;color:#fff;">&#x1F389;</div>'
             + '<h1 style="margin:0;font-size:24px;font-weight:700;color:#f9fafb;">Bienvenue sur Nexus !</h1>'
-            + '<p style="margin:10px 0 0;font-size:14px;color:#94a3b8;">' + greeting + ' <strong style="color:#6ee7b7;">' + fullName + '</strong>, votre espace est pr\u00eat.</p>'
+            + '<p style="margin:10px 0 0;font-size:14px;color:#94a3b8;">Cher(e) <strong style="color:#6ee7b7;">' + fullName + '</strong>, votre espace est pr\u00eat.</p>'
             + '</td></tr>'
 
-            // ── White body ──
+            // ── Body ──
             + '<tr><td style="background:#ffffff;padding:36px 48px;">'
             + '<p style="color:#475569;line-height:1.75;font-size:14px;margin:0 0 24px;">'
-            + 'Votre demande a \u00e9t\u00e9 valid\u00e9e et votre espace personnel sur la plateforme <strong style="color:#0f172a;">Nexus</strong> est d\u00e9sormais actif.</p>'
+            + 'Votre demande a \u00e9t\u00e9 valid\u00e9e. Voici vos identifiants pour acc\u00e9der \u00e0 la plateforme <strong style="color:#0f172a;">Nexus</strong> :</p>'
 
-            // ── Login info ──
+            // ── Credentials box ──
             + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin:0 0 20px;">'
-            + '<div style="font-size:10px;color:#10b981;letter-spacing:3px;font-weight:700;margin-bottom:12px;">&#128274; IDENTIFIANT DE CONNEXION</div>'
-            + '<div style="font-size:15px;color:#0f172a;font-family:\'Courier New\',monospace;background:#ffffff;padding:12px 16px;border-radius:8px;border:1px solid #e2e8f0;">' + email + '</div>'
+            + '<div style="font-size:10px;color:#10b981;letter-spacing:3px;font-weight:700;margin-bottom:16px;">&#128274; VOS IDENTIFIANTS</div>'
+            + '<div style="margin-bottom:12px;">'
+            + '<div style="font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px;">IDENTIFIANT</div>'
+            + '<div style="font-size:14px;color:#0f172a;font-family:\'Courier New\',monospace;background:#fff;padding:10px 14px;border-radius:8px;border:1px solid #e2e8f0;">' + username + '</div>'
             + '</div>'
-
-            // ── Set password section ──
-            + '<div style="background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:12px;padding:20px 24px;margin:0 0 28px;">'
-            + '<div style="font-size:11px;font-weight:700;color:#065f46;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">Premi\u00e8re connexion — D\u00e9finissez votre mot de passe</div>'
-            + '<p style="margin:0 0 14px;color:#047857;font-size:14px;line-height:1.6;">'
-            + 'Cliquez sur le bouton ci-dessous pour d\u00e9finir votre mot de passe et acc\u00e9der \u00e0 votre espace Nexus :</p>'
-            + '<div style="text-align:center;">'
-            + '<a href="' + pwdUrl + '" style="background:#059669;color:#fff;text-decoration:none;padding:11px 28px;border-radius:8px;font-weight:700;font-size:13px;display:inline-block;">'
-            + 'D\u00e9finir mon mot de passe &rarr;</a>'
+            + '<div>'
+            + '<div style="font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px;">MOT DE PASSE TEMPORAIRE</div>'
+            + '<div style="font-size:16px;color:#059669;font-family:\'Courier New\',monospace;font-weight:700;background:#fff;padding:10px 14px;border-radius:8px;border:1.5px solid #6ee7b7;letter-spacing:2px;">' + tempPwd + '</div>'
             + '</div>'
             + '</div>'
 
-            // ── Main CTA ──
+            // ── Warning ──
+            + '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin:0 0 24px;">'
+            + '<p style="margin:0;color:#92400e;font-size:13px;">&#9888; Pensez \u00e0 changer votre mot de passe temporaire lors de votre premi\u00e8re connexion depuis votre espace portail.</p>'
+            + '</div>'
+
+            // ── CTA ──
             + '<div style="text-align:center;margin:0 0 28px;">'
             + '<a href="' + loginUrl + '" style="background:linear-gradient(135deg,#059669,#0ea5e9);color:#fff;'
             + 'text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;">'
@@ -925,8 +917,7 @@ public without sharing class LeadManagementController {
             + '</div>'
 
             + '<div style="border-top:1px solid #e2e8f0;padding-top:20px;">'
-            + '<p style="color:#94a3b8;font-size:13px;text-align:center;margin:0;">'
-            + 'Des questions ? Notre \u00e9quipe support est disponible pour vous aider.</p>'
+            + '<p style="color:#94a3b8;font-size:13px;text-align:center;margin:0;">Des questions ? Notre \u00e9quipe support est disponible pour vous aider.</p>'
             + '</div>'
             + '</td></tr>'
 

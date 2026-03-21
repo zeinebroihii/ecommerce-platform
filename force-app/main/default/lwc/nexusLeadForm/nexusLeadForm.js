@@ -30,7 +30,7 @@ export default class NexusLeadForm extends LightningElement {
     get isStep2()     { return this.step === 2; }
     get isSubmitted() { return this.submitted; }
     get stepLabel()   { return `Étape ${this.step} / 2`; }
-    get stepTitle()   { return this.step === 1 ? 'Informations Personnelles' : 'Votre Entreprise'; }
+    get stepTitle()   { return this.step === 1 ? 'Personal Information' : 'Your Company'; }
     get stepDesc()    { return this.step === 1
         ? 'Dites-nous qui vous êtes pour personnaliser votre expérience.'
         : 'Parlez-nous de votre structure pour adapter nos offres.'; }
@@ -92,7 +92,7 @@ export default class NexusLeadForm extends LightningElement {
             this.submitted = true;
         } catch (e) {
             this.dispatchEvent(new ShowToastEvent({
-                title: 'Erreur', message: e.body.message, variant: 'error'
+                title: 'Error', message: e.body.message, variant: 'error'
             }));
         } finally {
             this.isLoading = false;

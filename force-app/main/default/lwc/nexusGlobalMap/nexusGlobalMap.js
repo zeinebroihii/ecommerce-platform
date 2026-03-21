@@ -14,7 +14,7 @@ export default class NexusGlobalMap extends LightningElement {
             this._leads = data;
             this._error = null;
         } else if (error) {
-            this._error = error.body ? error.body.message : 'Erreur de chargement';
+            this._error = error.body ? error.body.message : 'Loading error';
         }
     }
 

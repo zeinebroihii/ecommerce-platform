@@ -68,7 +68,7 @@ export default class NexusLeadDecision extends LightningElement {
     get decisionLabel() {
         const d = this.decision;
         if (!d || d === 'Pending') return 'En attente';
-        return d === 'Approved' ? 'Approuvé' : 'Rejeté';
+        return d === 'Approved' ? 'Approved' : 'Rejected';
     }
 
     get decisionBadgeClass() {

@@ -1,11 +1,11 @@
 import { LightningElement, track } from 'lwc';
 
 const MESSAGES = [
-    'Alerte : Stock critique (1 unité restante)',
-    'Nouveau bid de Global Tech Corp : +5,000€',
+    'Alert: Critical stock (1 unit remaining)',
+    'New bid from Global Tech Corp: +5,000€',
     'Euro Systems Ltd demande une révision du discount',
     'Nexus AI : Probabilité de vente immédiate 94%',
-    'Attention : APAC Innovations perd du terrain',
+    'Warning: APAC Innovations is losing ground',
     'Strategist SM a rejoint la War Room #1',
 ];
 
@@ -81,7 +81,7 @@ export default class NexusWarRoom extends LightningElement {
     }
 
     handlePlaceBid() {
-        const ts = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+        const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
         const entry = {
             id: Date.now().toString(36),
             timestamp: ts,
@@ -127,7 +127,7 @@ export default class NexusWarRoom extends LightningElement {
     }
 
     _addLog() {
-        const ts = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+        const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
         const entry = {
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
             timestamp: ts,

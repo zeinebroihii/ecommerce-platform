@@ -19,7 +19,7 @@
             <!-- Cases list (left) -->
             <div class="nsb-cases-col">
                 <template if:true={isEmpty}>
-                    <div class="nsb-empty">Aucun cas pour le moment.</div>
+                    <div class="nsb-empty">No cases yet.</div>
                 </template>
                 <template if:true={hasCases}>
                     <template for:each={filteredCases} for:item="c">

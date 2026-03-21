@@ -1,9 +1,10 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 
 const CART_KEY = 'ecomm_cart';
 
 export default class NexusPortalCart extends LightningElement {
 
+    @api sparksBalance = 1250;
     @track cartItems = [];
     @track showQuoteModal      = false;
     @track isGeneratingQuote   = false;
@@ -79,10 +80,11 @@ export default class NexusPortalCart extends LightningElement {
     }
 
     // ── summary events ─────────────────────────────────────────────
-    handlePlaceOrder() {
+    handlePlaceOrder(e) {
+        const appliedSparks = (e && e.detail && e.detail.appliedSparks) || 0;
         this.dispatchEvent(new CustomEvent('navigate', {
             bubbles: true,
-            detail: { tab: 'orders' }
+            detail: { tab: 'orders', appliedSparks }
         }));
     }
 

@@ -1,6 +1,6 @@
 /* ── Wrapper ── */
 .ns-wrap {
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;

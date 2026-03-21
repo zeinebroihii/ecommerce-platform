@@ -1,0 +1,85 @@
+<template>
+    <div class="ncd-wrap">
+
+        <!-- Header -->
+        <div class="ncd-header">
+            <div class="ncd-header-left">
+                <div class="ncd-header-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="ncd-title">Nexus Combo Builder</h3>
+                    <p class="ncd-subtitle">Build your dream setup with exclusive bundle savings</p>
+                </div>
+            </div>
+            <button class="ncd-explore-btn">Explore All Combos</button>
+        </div>
+
+        <!-- Combo Cards Grid -->
+        <div class="ncd-grid">
+            <template for:each={comboDeals} for:item="deal">
+                <div key={deal.id} class="ncd-card">
+
+                    <!-- Card Header -->
+                    <div class="ncd-card-header">
+                        <div>
+                            <h4 class="ncd-brand">{deal.brand}</h4>
+                            <p class="ncd-deal-title">{deal.title}</p>
+                            <p class="ncd-deal-savings">Save ${deal.savingsFormatted} on this bundle</p>
+                        </div>
+                        <button class="ncd-more-btn">
+                            More options
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="ncd-products-wrap">
+                        <div class="ncd-products-grid">
+                            <template for:each={deal.productsWithIndex} for:item="prod">
+                                <div key={prod.id} class="ncd-product-item">
+                                    <div class="ncd-product-img-wrap">
+                                        <img src={prod.image} alt={prod.name} class="ncd-product-img" referrerpolicy="no-referrer" />
+                                    </div>
+                                    <div class="ncd-product-info">
+                                        <p class="ncd-product-name">{prod.name}</p>
+                                        <p class="ncd-product-price">{prod.priceFormatted}</p>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <!-- Plus icon in center -->
+                        <div class="ncd-plus-center">
+                            <div class="ncd-plus-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price + Actions -->
+                    <div class="ncd-price-row">
+                        <span class="ncd-equals">=</span>
+                        <span class="ncd-price">{deal.priceFormatted}</span>
+                        <span class="ncd-original-price">{deal.originalPriceFormatted}</span>
+                    </div>
+
+                    <div class="ncd-card-actions">
+                        <button class="ncd-build-btn" data-combo-id={deal.id} onclick={handleBuildWithIt}>
+                            Build with it
+                        </button>
+                        <button class="ncd-cart-btn" data-combo-id={deal.id} onclick={handleAddToCart}>
+                            Add to cart
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Decorative glow -->
+                    <div class="ncd-card-glow"></div>
+                </div>
+            </template>
+        </div>
+
+    </div>
+</template>

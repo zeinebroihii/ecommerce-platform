@@ -24,7 +24,7 @@ export default class NexusLogo extends LightningElement {
             const link = document.createElement('link');
             link.id   = 'nexus-logo-font';
             link.rel  = 'stylesheet';
-            link.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@900&display=swap';
+            link.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&display=swap';
             document.head.appendChild(link);
         }
     }

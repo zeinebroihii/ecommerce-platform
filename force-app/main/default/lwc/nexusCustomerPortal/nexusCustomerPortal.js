@@ -1,5 +1,7 @@
 import { LightningElement, wire, track } from 'lwc';
 import getProductsWithStock from '@salesforce/apex/ProductController.getProductsWithStock';
+import getCurrentUserProfile from '@salesforce/apex/AuthController.getCurrentUserProfile';
+import changeUserPassword    from '@salesforce/apex/AuthController.changeUserPassword';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 const CART_KEY = 'ecomm_cart';
@@ -8,96 +10,64 @@ const CART_KEY = 'ecomm_cart';
 // First 7 are visible; rest overflow into MORE dropdown
 const PORTAL_NAV_ITEMS = [
     { id: 'dashboard',  label: 'Dashboard',   icon: 'utility:home',              scrollId: '' },
-    { id: 'catalog',    label: 'Catalogue',   icon: 'utility:product_workspace', scrollId: '' },
-    { id: 'favorites',  label: 'Favoris',     icon: 'utility:favorite',          scrollId: '' },
-    { id: 'orders',     label: 'Commandes',   icon: 'utility:truck',             scrollId: '' },
-    { id: 'quotations', label: 'Devis',       icon: 'utility:file',              scrollId: '' },
-    { id: 'cart',       label: 'Mon Panier',  icon: 'utility:cart',              scrollId: '' },
-    { id: 'profile',    label: 'Profil',      icon: 'utility:user',              scrollId: '' },
+    { id: 'catalog',    label: 'Catalog',     icon: 'utility:product_workspace', scrollId: '' },
+    { id: 'favorites',  label: 'Favorites',   icon: 'utility:favorite',          scrollId: '' },
+    { id: 'orders',     label: 'Orders',      icon: 'utility:truck',             scrollId: '' },
+    { id: 'quotations', label: 'Quotes',      icon: 'utility:file',              scrollId: '' },
+    { id: 'cart',       label: 'My Cart',     icon: 'utility:cart',              scrollId: '' },
+    { id: 'profile',    label: 'Profile',     icon: 'utility:user',              scrollId: '' },
     // MORE dropdown
+    { id: 'combo-deals',label: 'Combo Deals',       icon: 'utility:zap',       scrollId: '' },
     { id: 'swap',       label: 'Nexus Swap',        icon: 'utility:sync',      scrollId: '' },
-    { id: 'passport',   label: 'Passeport Digital', icon: 'utility:identity',  scrollId: '' },
+    { id: 'passport',   label: 'Digital Passport',  icon: 'utility:identity',  scrollId: '' },
     { id: 'timeline',   label: 'Timeline 360°',     icon: 'utility:date_time', scrollId: '' },
     { id: 'war-room',   label: 'War Room',           icon: 'utility:strategy',  scrollId: '' },
     { id: 'cases',      label: 'Support',           icon: 'utility:case',      scrollId: '' },
-    { id: 'settings',   label: 'Paramètres',        icon: 'utility:settings',  scrollId: '' },
+    { id: 'settings',   label: 'Settings',           icon: 'utility:settings',  scrollId: '' },
 ];
 
-// ── Catalog mock data (translated from NexusCatalog.tsx) ─────────────────────
-const CATALOG_PRODUCTS = [
-    {
-        id: 'pc-1', name: 'Nexus Pro-Station G1', productCode: 'PC-G1',
-        family: 'Computing', price: 2499, rating: 5.0, reviews: 156,
-        image: 'https://picsum.photos/seed/pc-black/800/800',
-        description: 'The ultimate workstation for high-performance computing. Available in three distinct finishes.',
-        features: ['RTX 5090 Ready', '128GB DDR5', 'Liquid Cooled'],
-        isNew: true, isPopular: false,
-        colors: [
-            { name: 'Black', hex: '#000000', image: 'https://picsum.photos/seed/pc-black/800/800' },
-            { name: 'White', hex: '#ffffff', image: 'https://picsum.photos/seed/pc-white/800/800' },
-            { name: 'Gray',  hex: '#64748b', image: 'https://picsum.photos/seed/pc-gray/800/800' }
-        ]
-    },
-    {
-        id: '1', name: 'Nexus Core Hub v3', productCode: 'NX-100',
-        family: 'Central Systems', price: 1299, rating: 4.9, reviews: 128,
-        image: 'https://picsum.photos/seed/hub/800/800',
-        description: 'The ultimate central intelligence unit for your industrial ecosystem. Powered by Nexus Neural Engine.',
-        features: ['AI-Driven Optimization', 'Real-time Analytics', 'Quantum Encryption'],
-        isNew: false, isPopular: false,
-        colors: [
-            { name: 'Titanium', hex: '#475569', image: 'https://picsum.photos/seed/hub/800/800' },
-            { name: 'Midnight', hex: '#0f172a', image: 'https://picsum.photos/seed/hub-dark/800/800' }
-        ]
-    },
-    {
-        id: '2', name: 'Neural Sensor Pack', productCode: 'NX-200',
-        family: 'Sensors', price: 499, rating: 4.8, reviews: 85,
-        image: 'https://picsum.photos/seed/sensor/800/800',
-        description: 'High-precision environmental sensors with edge-computing capabilities for instant data processing.',
-        features: ['Ultra-low Latency', 'Self-Calibrating', 'IP68 Rated'],
-        isNew: false, isPopular: true, colors: []
-    },
-    {
-        id: '3', name: 'Quantum Link Bridge', productCode: 'NX-300',
-        family: 'Connectivity', price: 899, rating: 5.0, reviews: 42,
-        image: 'https://picsum.photos/seed/bridge/800/800',
-        description: 'Seamlessly bridge your legacy systems with the Nexus ecosystem using our quantum-secure gateway.',
-        features: ['Legacy Support', 'Zero-Trust Security', 'Auto-Scaling'],
-        isNew: false, isPopular: false, colors: []
-    },
-    {
-        id: '4', name: 'Nexus Vision Pro', productCode: 'NX-400',
-        family: 'Monitoring', price: 1599, rating: 4.7, reviews: 210,
-        image: 'https://picsum.photos/seed/vision/800/800',
-        description: 'Advanced visual monitoring system with integrated AI for anomaly detection and predictive maintenance.',
-        features: ['8K Resolution', 'Night Vision', 'Object Tracking'],
-        isNew: true, isPopular: false, colors: []
-    },
-    {
-        id: '5', name: 'Eco-Pulse Monitor', productCode: 'NX-500',
-        family: 'Sustainability', price: 299, rating: 4.9, reviews: 67,
-        image: 'https://picsum.photos/seed/pulse/800/800',
-        description: 'Track your carbon footprint and energy efficiency in real-time with the Eco-Pulse ecosystem.',
-        features: ['CO2 Tracking', 'Energy Insights', 'Auto-Reporting'],
-        isNew: false, isPopular: true, colors: []
-    },
-    {
-        id: '6', name: 'Nexus Edge Node', productCode: 'NX-600',
-        family: 'Computing', price: 749, rating: 4.6, reviews: 54,
-        image: 'https://picsum.photos/seed/node/800/800',
-        description: 'Decentralized computing nodes for distributed intelligence across your entire network.',
-        features: ['Edge AI', 'Dynamic Mesh', 'Hot-Swappable'],
-        isNew: false, isPopular: false, colors: []
-    }
-];
+function apexToPortalProduct(p) {
+    let features = [];
+    try {
+        const specs = p.specs ? JSON.parse(p.specs) : [];
+        features = specs.map(s => s.key + (s.value ? ': ' + s.value : ''));
+    } catch (e) { /* ignore */ }
+    return {
+        id:          p.productId,
+        name:        p.name        || '',
+        productCode: p.productCode || '',
+        family:      p.family      || '',
+        price:       p.unitPrice   || 0,
+        rating:      p.rating      || 0,
+        reviews:     p.reviews     || 0,
+        image:       p.imageUrl    || '',
+        description: p.description || '',
+        features,
+        isNew:       p.isNew       || false,
+        isPopular:   false,
+        colors:      [],
+        status:      p.availabilityStatus || (p.isOutOfStock ? 'Épuisé' : 'En stock'),
+        stockLevel:  p.quantityAvailable  || 0
+    };
+}
 
 export default class NexusCustomerPortal extends LightningElement {
-    @track activeTab     = 'dashboard';
+    @track _userProfile      = {};
+    @track _showPasswordForm = false;
+    @track _oldPassword      = '';
+    @track _newPassword      = '';
+    @track _confirmPassword  = '';
+    @track _pwdError         = '';
+    @track _pwdSuccess       = false;
+    @track _showOldPwd       = false;
+    @track _showNewPwd       = false;
+    @track _showConfirmPwd   = false;
+    @track activeTab         = 'dashboard';
     @track catalogSearch = '';
     @track caseStep      = 1;
     @track casePriority  = 'Medium';
     @track cart          = [];
+    @track sparksBalance = 1250;
     @track _products     = [];
 
     // detail view state for product overlay
@@ -121,17 +91,100 @@ export default class NexusCustomerPortal extends LightningElement {
     @track _quoteIndustry     = 'Technology';
     @track _quoteMessage      = '';
 
+    // ── Custom cart toast ──────────────────────────────────────────────────────
+    @track _cartToastVisible  = false;
+    @track _cartToastName     = '';
+    @track _cartToastPrice    = '';
+    _cartToastTimer           = null;
+
     @wire(getProductsWithStock, { searchTerm: '', category: '' })
     wiredProducts({ data }) {
-        if (data) this._products = data;
+        if (data) this._products = data.map(apexToPortalProduct);
+    }
+
+
+    // ── Current user profile getters ──────────────────────────────────────────
+    get profileName()        { return this._userProfile.name        || ''; }
+    get profileFirstName()   { return this._userProfile.firstName   || ''; }
+    get profileEmail()       { return this._userProfile.email       || ''; }
+    get profilePhone()       { return this._userProfile.phone       || ''; }
+    get profileAccountName() { return this._userProfile.accountName || this._userProfile.name || ''; }
+    get profileStreet()      { return this._userProfile.street      || ''; }
+    get profileCity()        { return this._userProfile.city        || ''; }
+    get profilePostalCode()  { return this._userProfile.postalCode  || ''; }
+    get profileRole()        { return this._userProfile.profileName || 'Customer'; }
+    get profileInitials() {
+        const fn = this._userProfile.firstName || '';
+        const ln = this._userProfile.lastName  || '';
+        return (fn.charAt(0) + ln.charAt(0)).toUpperCase() || 'U';
+    }
+
+    // ── Password change getters ────────────────────────────────────────────────
+    get showPasswordForm()  { return this._showPasswordForm; }
+    get pwdToggleLabel()    { return this._showPasswordForm ? 'Cancel' : 'Edit'; }
+    get pwdError()          { return this._pwdError; }
+    get pwdSuccess()        { return this._pwdSuccess; }
+    get showOldPwd()        { return this._showOldPwd; }
+    get showNewPwd()        { return this._showNewPwd; }
+    get showConfirmPwd()    { return this._showConfirmPwd; }
+    get oldPwdType()        { return this._showOldPwd     ? 'text' : 'password'; }
+    get newPwdType()        { return this._showNewPwd     ? 'text' : 'password'; }
+    get confirmPwdType()    { return this._showConfirmPwd ? 'text' : 'password'; }
+
+    // ── Password change handlers ───────────────────────────────────────────────
+    handleTogglePasswordForm() {
+        this._showPasswordForm = !this._showPasswordForm;
+        this._pwdError    = '';
+        this._pwdSuccess  = false;
+        this._oldPassword = this._newPassword = this._confirmPassword = '';
+        this._showOldPwd  = this._showNewPwd  = this._showConfirmPwd  = false;
+    }
+    handleOldPwd(e)          { this._oldPassword     = e.target.value; }
+    handleNewPwd(e)          { this._newPassword     = e.target.value; }
+    handleConfirmPwd(e)      { this._confirmPassword = e.target.value; }
+    handleToggleOldPwd()     { this._showOldPwd     = !this._showOldPwd; }
+    handleToggleNewPwd()     { this._showNewPwd     = !this._showNewPwd; }
+    handleToggleConfirmPwd() { this._showConfirmPwd = !this._showConfirmPwd; }
+
+    handleChangePassword() {
+        this._pwdError   = '';
+        this._pwdSuccess = false;
+        if (!this._oldPassword || !this._newPassword || !this._confirmPassword) {
+            this._pwdError = 'Please fill in all fields.';
+            return;
+        }
+        if (this._newPassword !== this._confirmPassword) {
+            this._pwdError = 'Passwords do not match.';
+            return;
+        }
+        changeUserPassword({
+            newPassword:    this._newPassword,
+            verifyPassword: this._confirmPassword,
+            oldPassword:    this._oldPassword
+        })
+        .then(() => {
+            this._showPasswordForm = false;
+            this._oldPassword = this._newPassword = this._confirmPassword = '';
+            this._showOldPwd  = this._showNewPwd  = this._showConfirmPwd  = false;
+            this._pwdSuccess  = true;
+        })
+        .catch(err => {
+            this._pwdError = (err && err.body && err.body.message) || 'Error changing password.';
+        });
     }
 
     connectedCallback() {
+        // Load current user profile imperatively (not @wire) so it runs
+        // in the real authenticated session context, not cached guest context
+        getCurrentUserProfile()
+            .then(data => { if (data) this._userProfile = data; })
+            .catch(err => console.error('[NexusPortal] getUserProfile error:', JSON.stringify(err)));
+
         if (!document.querySelector('#nexus-gfonts')) {
             const link = document.createElement('link');
             link.id   = 'nexus-gfonts';
             link.rel  = 'stylesheet';
-            link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap';
+            link.href = 'https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap';
             document.head.appendChild(link);
         }
         try {
@@ -151,12 +204,33 @@ export default class NexusCustomerPortal extends LightningElement {
         };
         document.addEventListener('nexusnavviewchange', this._onNavViewChange);
 
+        // Listen for combo builder "Add All to Cart"
+        this._onComboAddAllCart = (e) => {
+            const products = (e.detail && e.detail.products) || [];
+            products.forEach(product => {
+                if (product) this._pushToCart({ ...product, price: product.price || 0 });
+            });
+            if (products.length) {
+                this._showCartToast({ name: `${products.length} product(s) added to cart`, price: null });
+            }
+        };
+        document.addEventListener('nexuscomboaddalltocart', this._onComboAddAllCart);
+
+        // Navigate to catalog when a combo slot is being filled
+        this._onComboNavToCatalog = () => {
+            this.activeTab = 'catalog';
+            this._pushNavUpdate();
+        };
+        document.addEventListener('nexuscombonavtocatalog', this._onComboNavToCatalog);
+
         // Tell navbar: we are a portal, here are our tabs
         this._pushNavUpdate();
     }
 
     disconnectedCallback() {
         document.removeEventListener('nexusnavviewchange', this._onNavViewChange);
+        document.removeEventListener('nexuscomboaddalltocart', this._onComboAddAllCart);
+        document.removeEventListener('nexuscombonavtocatalog', this._onComboNavToCatalog);
     }
 
     /** Broadcast current portal state to the navbar (sub-header + active tab) */
@@ -179,18 +253,19 @@ export default class NexusCustomerPortal extends LightningElement {
     get mainNavTabs() {
         return this._mapTabs([
             { id: 'dashboard',  label: 'Dashboard',              icon: 'utility:home',      hasBadge: false },
-            { id: 'catalog',    label: 'Catalogue',              icon: 'utility:product_workspace', hasBadge: false },
-            { id: 'favorites',  label: 'Mes Favoris',            icon: 'utility:favorite',  hasBadge: false },
-            { id: 'orders',     label: 'Commandes & Livraisons', icon: 'utility:truck',     hasBadge: false },
-            { id: 'quotations', label: 'Devis & Contrats',       icon: 'utility:file',      hasBadge: false },
-            { id: 'cart',       label: 'Mon Panier',             icon: 'utility:cart',      hasBadge: this.hasCartItems, badge: this.cartCount },
+            { id: 'catalog',    label: 'Catalog',                icon: 'utility:product_workspace', hasBadge: false },
+            { id: 'favorites',  label: 'My Favorites',           icon: 'utility:favorite',  hasBadge: false },
+            { id: 'orders',     label: 'Orders & Deliveries',    icon: 'utility:truck',     hasBadge: false },
+            { id: 'quotations', label: 'Quotes & Contracts',     icon: 'utility:file',      hasBadge: false },
+            { id: 'cart',       label: 'My Cart',                icon: 'utility:cart',      hasBadge: this.hasCartItems, badge: this.cartCount },
+            { id: 'combo-deals',label: 'Combo Deals',            icon: 'utility:zap',       hasBadge: false },
         ]);
     }
 
     get toolsNavTabs() {
         return this._mapTabs([
             { id: 'swap',     label: 'Nexus Swap',        icon: 'utility:sync',      hasBadge: false },
-            { id: 'passport', label: 'Passeport Digital', icon: 'utility:identity',  hasBadge: false },
+            { id: 'passport', label: 'Digital Passport',  icon: 'utility:identity',  hasBadge: false },
             { id: 'timeline', label: 'Timeline 360°',     icon: 'utility:date_time', hasBadge: false },
             { id: 'war-room', label: 'War Room',          icon: 'utility:strategy',  hasBadge: false },
         ]);
@@ -198,15 +273,16 @@ export default class NexusCustomerPortal extends LightningElement {
 
     get accountNavTabs() {
         return this._mapTabs([
-            { id: 'profile',  label: 'Profil',     icon: 'utility:user',     hasBadge: false },
+            { id: 'profile',  label: 'Profile',    icon: 'utility:user',     hasBadge: false },
             { id: 'cases',    label: 'Support',    icon: 'utility:case',     hasBadge: false },
-            { id: 'settings', label: 'Paramètres', icon: 'utility:settings', hasBadge: false },
+            { id: 'settings', label: 'Settings',   icon: 'utility:settings', hasBadge: false },
         ]);
     }
 
     // ── Tab visibility ─────────────────────────────────────────────────────────
-    get isDashboard()  { return this.activeTab === 'dashboard'; }
-    get isCatalog()    { return this.activeTab === 'catalog'; }
+    get isDashboard()   { return this.activeTab === 'dashboard'; }
+    get isCatalog()     { return this.activeTab === 'catalog'; }
+    get isComboDeals()  { return this.activeTab === 'combo-deals'; }
     get isFavorites()  { return this.activeTab === 'favorites'; }
     get isCart()       { return this.activeTab === 'cart'; }
     get isOrders()     { return this.activeTab === 'orders'; }
@@ -233,7 +309,7 @@ export default class NexusCustomerPortal extends LightningElement {
     // ── Catalog — Family & Color filter chips ──────────────────────────────────
     get catalogFamilies() {
         const sel = this.selectedFamily || 'All';
-        const families = ['All', ...new Set(CATALOG_PRODUCTS.map(p => p.family))];
+        const families = ['All', ...new Set(this._products.map(p => p.family))];
         return families.map(f => ({
             id: f, label: f,
             cls: sel === f ? 'ncat-chip ncat-chip-active' : 'ncat-chip'
@@ -242,7 +318,7 @@ export default class NexusCustomerPortal extends LightningElement {
 
     get catalogColors() {
         const sel  = this.selectedColor || 'All';
-        const cols = ['All', ...new Set(CATALOG_PRODUCTS.flatMap(p => (p.colors || []).map(c => c.name)))];
+        const cols = ['All', ...new Set(this._products.flatMap(p => (p.colors || []).map(c => c.name)))];
         return cols.map(c => ({
             id: c, label: c,
             cls: sel === c ? 'ncat-chip ncat-chip-active' : 'ncat-chip'
@@ -256,7 +332,7 @@ export default class NexusCustomerPortal extends LightningElement {
         const col    = this.selectedColor  || 'All';
         const favIds = new Set(this.favorites.map(f => f.id));
 
-        return CATALOG_PRODUCTS
+        return this._products
             .filter(p => {
                 const mFam    = fam === 'All' || p.family === fam;
                 const mSearch = !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
@@ -280,7 +356,7 @@ export default class NexusCustomerPortal extends LightningElement {
     // ── Catalog — Favorites tab ────────────────────────────────────────────────
     get favoriteCatalogProducts() {
         const favIds = new Set(this.favorites.map(f => f.id));
-        return CATALOG_PRODUCTS
+        return this._products
             .filter(p => favIds.has(p.id))
             .map(p => ({
                 ...p,
@@ -296,7 +372,7 @@ export default class NexusCustomerPortal extends LightningElement {
     // ── Product Detail Modal ───────────────────────────────────────────────────
     get selectedProduct() {
         if (!this._selectedProductId) return null;
-        const p = CATALOG_PRODUCTS.find(pr => pr.id === this._selectedProductId);
+        const p = this._products.find(pr => pr.id === this._selectedProductId);
         if (!p) return null;
 
         const colors          = p.colors || [];
@@ -329,7 +405,7 @@ export default class NexusCustomerPortal extends LightningElement {
     // ── B2B Quote Modal ────────────────────────────────────────────────────────
     get quoteProduct() {
         if (!this._quoteProductId) return null;
-        return CATALOG_PRODUCTS.find(p => p.id === this._quoteProductId) || null;
+        return this._products.find(p => p.id === this._quoteProductId) || null;
     }
     get showQuoteModal() { return !!this._quoteProductId; }
     get isQuoteForm()    { return this._quoteStep === 'form'; }
@@ -397,7 +473,7 @@ export default class NexusCustomerPortal extends LightningElement {
     handleOpenProductDetail(e) {
         const id = e.currentTarget.dataset.id;
         this._selectedProductId = id;
-        const p = CATALOG_PRODUCTS.find(pr => pr.id === id);
+        const p = this._products.find(pr => pr.id === id);
         this._modalActiveColor = (p && p.colors && p.colors[0]) ? p.colors[0].name : null;
     }
     handleCloseProductDetail() {
@@ -411,7 +487,7 @@ export default class NexusCustomerPortal extends LightningElement {
     handleToggleFavorite(e)          { this._toggleFavoriteById(e.currentTarget.dataset.id); }
     handleToggleFavoriteFromModal(e) { this._toggleFavoriteById(e.currentTarget.dataset.id); }
     _toggleFavoriteById(id) {
-        const product = CATALOG_PRODUCTS.find(p => p.id === id);
+        const product = this._products.find(p => p.id === id);
         if (!product) return;
         if (this.favorites.some(f => f.id === id)) {
             this.favorites = this.favorites.filter(f => f.id !== id);
@@ -423,23 +499,19 @@ export default class NexusCustomerPortal extends LightningElement {
     // ── Handlers — Add to cart (catalog & modal) ──────────────────────────────
     handleAddToCartFromCatalog(e) {
         const id      = e.currentTarget.dataset.id;
-        const product = CATALOG_PRODUCTS.find(p => p.id === id);
+        const product = this._products.find(p => p.id === id);
         if (!product) return;
         this._pushToCart(product);
-        this.dispatchEvent(new ShowToastEvent({
-            title: 'Panier', message: `${product.name} ajouté au panier.`, variant: 'success'
-        }));
+        this._showCartToast(product);
     }
 
     handleAddToCartFromModal() {
-        const product = CATALOG_PRODUCTS.find(p => p.id === this._selectedProductId);
+        const product = this._products.find(p => p.id === this._selectedProductId);
         if (!product) return;
         this._pushToCart(product);
         this._selectedProductId = null;
         this._modalActiveColor  = null;
-        this.dispatchEvent(new ShowToastEvent({
-            title: 'Panier', message: `${product.name} ajouté au panier.`, variant: 'success'
-        }));
+        this._showCartToast(product);
     }
 
     // ── Handlers — Top Deals section ─────────────────────────────────────────
@@ -447,9 +519,7 @@ export default class NexusCustomerPortal extends LightningElement {
         const product = event.detail && event.detail.product;
         if (!product) return;
         this._pushToCart({ ...product, price: product.salePrice });
-        this.dispatchEvent(new ShowToastEvent({
-            title: 'Panier', message: `${product.name} ajouté au panier.`, variant: 'success'
-        }));
+        this._showCartToast(product);
     }
 
     handleDealsViewDetailsPortal(event) {
@@ -466,16 +536,22 @@ export default class NexusCustomerPortal extends LightningElement {
         const product = event.detail && event.detail.product;
         if (!product) return;
         this._pushToCart({ ...product, price: product.price || product.salePrice });
-        this.dispatchEvent(new ShowToastEvent({
-            title: 'Panier', message: `${product.name} ajouté au panier.`, variant: 'success'
-        }));
+        this._showCartToast(product);
     }
 
     handleToggleFavoriteFromCatalog(event) {
         const product = event.detail && event.detail.product;
-        if (product) {
-            this._toggleFavoriteById(product.id);
+        if (!product) return;
+        if (this.favorites.some(f => f.id === product.id)) {
+            this.favorites = this.favorites.filter(f => f.id !== product.id);
+        } else {
+            this.favorites = [...this.favorites, product];
         }
+    }
+
+    handleRemoveFavorite(event) {
+        const id = event.detail && event.detail.id;
+        if (id) this.favorites = this.favorites.filter(f => f.id !== id);
     }
 
     _pushToCart(product) {
@@ -531,7 +607,11 @@ export default class NexusCustomerPortal extends LightningElement {
 
     // ── Handlers — Cart (nexusPortalCart child events) ────────────────────────
     handleNavigateFromCart(e) {
-        this.activeTab = e.detail.tab;
+        const { tab, appliedSparks } = e.detail || {};
+        this.activeTab = tab;
+        if (appliedSparks > 0) {
+            this.sparksBalance = Math.max(0, this.sparksBalance - appliedSparks);
+        }
         this._pushNavUpdate();
     }
 
@@ -545,9 +625,7 @@ export default class NexusCustomerPortal extends LightningElement {
         if (product) {
             this._pushToCart({ ...product, price: product.price || product.salePrice });
             this.detailProduct = null;
-            this.dispatchEvent(new ShowToastEvent({
-                title: 'Panier', message: `${product.name} ajouté au panier.`, variant: 'success'
-            }));
+            this._showCartToast(product);
         }
     }
 
@@ -561,6 +639,19 @@ export default class NexusCustomerPortal extends LightningElement {
     handleCartChanged(e) {
         // Keep sidebar badge in sync when nexusPortalCart removes/updates items
         this.cart = e.detail.cart || [];
+    }
+
+    _showCartToast(product) {
+        if (this._cartToastTimer) clearTimeout(this._cartToastTimer);
+        this._cartToastName    = product.name || '';
+        this._cartToastPrice   = product.price != null ? `$${Number(product.price).toLocaleString()}` : '';
+        this._cartToastVisible = true;
+        this._cartToastTimer   = setTimeout(() => { this._cartToastVisible = false; }, 3500);
+    }
+
+    handleCartToastClose() {
+        this._cartToastVisible = false;
+        if (this._cartToastTimer) clearTimeout(this._cartToastTimer);
     }
 
     _saveCart() {

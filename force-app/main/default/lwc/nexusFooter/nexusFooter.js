@@ -3,7 +3,7 @@ import { LightningElement, track } from 'lwc';
 export default class NexusFooter extends LightningElement {
 
     socials   = ['Twitter', 'LinkedIn', 'GitHub'];
-    solutions = ['Gestion de Stock', 'Analyse Prédictive', 'IoT Intégration', 'Support AI'];
+    solutions = ['Stock Management', 'Predictive Analytics', 'IoT Integration', 'AI Support'];
     company   = ['À Propos', 'Carrières', 'Partenaires', 'Contact'];
 
     @track newsletterEmail = '';

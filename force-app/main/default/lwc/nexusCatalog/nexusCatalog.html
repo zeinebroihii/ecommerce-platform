@@ -171,6 +171,15 @@
                         <template if:false={showBreadcrumbCategory}>
                             <span class="nc2-bc-item nc2-bc-item--active">All Products</span>
                         </template>
+                        <!-- Reveal Combo Builder button (shown when a slot is being filled) -->
+                        <template if:true={hasActiveComboSlot}>
+                            <button class="nc2-reveal-combo-btn" onclick={handleRevealComboBuilder}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                </svg>
+                                Reveal Combo Builder
+                            </button>
+                        </template>
                         <template if:true={showBreadcrumbCategory}>
                             <span class="nc2-bc-item">All Products</span>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -258,6 +267,7 @@
 
                                     <!-- Overlay actions -->
                                     <div class="nc2-card-overlay">
+                                        <!-- Default actions (fav + cart) -->
                                         <div class="nc2-card-actions">
                                             <button class={p.favBtnClass}
                                                     data-id={p.id}
@@ -276,6 +286,19 @@
                                                 </svg>
                                             </button>
                                         </div>
+
+                                        <!-- Add to Nexus Build — prominent pill at bottom of image, combo mode only -->
+                                        <template if:true={hasActiveComboSlot}>
+                                            <button class="nc2-card-combo-pill"
+                                                    data-id={p.id}
+                                                    onclick={handleAddToCombo}
+                                                    title="Add to Nexus Build">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                                </svg>
+                                                Add to Nexus Build
+                                            </button>
+                                        </template>
                                     </div>
 
                                     <!-- NEW badge -->
@@ -309,13 +332,24 @@
                                     <!-- Price -->
                                     <div class="nc2-price-row">
                                         <span class="nc2-price">{p.priceFormatted}</span>
-                                        <span class="nc2-price-cents">.99</span>
                                     </div>
                                     <span class="nc2-price-origin">from United States</span>
 
                                     <!-- Description -->
                                     <p class="nc2-card-desc">"{p.description}"</p>
                                 </div>
+
+                                <!-- Add to Nexus Build bottom bar (shown when a combo slot is active) -->
+                                <template if:true={hasActiveComboSlot}>
+                                    <button class="nc2-add-nexus-bar"
+                                            data-id={p.id}
+                                            onclick={handleAddToCombo}>
+                                        <span>Add to Nexus Build</span>
+                                        <div class="nc2-add-nexus-bar-icon">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        </div>
+                                    </button>
+                                </template>
 
                             </div>
                         </template>

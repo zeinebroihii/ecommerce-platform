@@ -2,10 +2,10 @@ import { LightningElement, api } from 'lwc';
 
 export default class NexusPortalActiveOrders extends LightningElement {
 
-    @api cardTitle    = 'Commandes Actives';
+    @api cardTitle    = 'Active Orders';
 
     @api ordersCount  = '12';
-    @api ordersLabel  = 'Commandes en cours';
+    @api ordersLabel  = 'Ongoing Orders';
 
     @api savingsAmount = '$2,450';
     @api savingsLabel  = 'Économies Réalisées';

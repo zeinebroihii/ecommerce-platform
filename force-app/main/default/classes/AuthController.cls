@@ -139,4 +139,70 @@ public without sharing class AuthController {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    /**
+     * Returns the current logged-in portal user's profile data:
+     * name, email, phone, address (from Contact), account name.
+     * Uses UserInfo static methods for core fields (always accessible).
+     */
+    @AuraEnabled
+    public static Map<String, String> getCurrentUserProfile() {
+        try {
+            // UserInfo static methods are always accessible regardless of FLS
+            Map<String, String> profile = new Map<String, String>();
+            profile.put('name',        UserInfo.getName()       != null ? UserInfo.getName()       : '');
+            profile.put('email',       UserInfo.getUserEmail()  != null ? UserInfo.getUserEmail()  : '');
+            profile.put('profileName', UserInfo.getProfileId()  != null ? UserInfo.getProfileId()  : '');
+            profile.put('firstName',   '');
+            profile.put('lastName',    '');
+            profile.put('phone',       '');
+            profile.put('title',       '');
+            profile.put('accountName', '');
+            profile.put('street',      '');
+            profile.put('city',        '');
+            profile.put('postalCode',  '');
+            profile.put('country',     '');
+
+            // Resolve Profile name from Id
+            try {
+                Id profId = UserInfo.getProfileId();
+                Profile p = [SELECT Name FROM Profile WHERE Id = :profId LIMIT 1];
+                profile.put('profileName', p.Name != null ? p.Name : '');
+            } catch (Exception ex) { /* keep profileId as fallback */ }
+
+            // Enrich with User fields
+            try {
+                Id userId = UserInfo.getUserId();
+                User u = [SELECT FirstName, LastName, Phone, Title, ContactId
+                          FROM User WHERE Id = :userId LIMIT 1];
+                profile.put('firstName', u.FirstName != null ? u.FirstName : '');
+                profile.put('lastName',  u.LastName  != null ? u.LastName  : '');
+                profile.put('phone',     u.Phone     != null ? u.Phone     : '');
+                profile.put('title',     u.Title     != null ? u.Title     : '');
+
+                // Enrich with Contact + Account fields
+                if (u.ContactId != null) {
+                    Contact c = [SELECT Phone, AccountId,
+                                        MailingStreet, MailingCity, MailingPostalCode, MailingCountry,
+                                        Account.Name
+                                 FROM Contact WHERE Id = :u.ContactId LIMIT 1];
+
+                    if (String.isBlank(profile.get('phone')) && c.Phone != null) {
+                        profile.put('phone', c.Phone);
+                    }
+                    profile.put('street',     c.MailingStreet     != null ? c.MailingStreet     : '');
+                    profile.put('city',       c.MailingCity       != null ? c.MailingCity       : '');
+                    profile.put('postalCode', c.MailingPostalCode != null ? c.MailingPostalCode : '');
+                    profile.put('country',    c.MailingCountry    != null ? c.MailingCountry    : '');
+                    if (c.AccountId != null && c.Account != null && c.Account.Name != null) {
+                        profile.put('accountName', c.Account.Name);
+                    }
+                }
+            } catch (Exception ex) { /* User/Contact query failed — core fields already set */ }
+
+            return profile;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }
