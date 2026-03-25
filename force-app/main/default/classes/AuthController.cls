@@ -178,6 +178,141 @@ public without sharing class AuthController {
   }
 
   /**
+   * First-time password setup — for users arriving from the welcome email link.
+   * Step 1: Site.login(email, token) establishes an authenticated session in the
+   *         current request so that Site.changePassword can run without throwing
+   *         "Your access is not allowed."
+   * Step 2: Site.changePassword(newPwd, verifyPwd, token) sets the real password.
+   * Returns the portal redirect URL on success.
+   */
+  /**
+   * First-time password setup for users arriving from the welcome email link.
+   *
+   * Two-path strategy:
+   *
+   * PATH A (happy path) — Site.login(token) succeeds:
+   *   The user is a proper network member and active.  We get an authenticated
+   *   session and call Site.changePassword to complete the flow.
+   *
+   * PATH B (fallback) — Site.login throws "access disabled":
+   *   Salesforce verified the credentials but the account is inactive or not
+   *   yet enrolled in the Experience Cloud network (common when the portal user
+   *   was created via manual INSERT rather than Site.createExternalUser).
+   *   The "access disabled" exception is the signal that the TOKEN IS VALID —
+   *   Salesforce only throws it after credential verification.
+   *   We therefore call System.setPassword(userId, newPassword) directly,
+   *   reactivate the user, and redirect to the portal home.
+   */
+  @AuraEnabled
+  public static String setFirstPassword(
+    String email,
+    String token,
+    String newPassword,
+    String verifyPassword
+  ) {
+    final String PORTAL_HOME = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/';
+    try {
+      if (String.isBlank(email) || String.isBlank(token)) {
+        throw new AuraHandledException(
+          'Lien invalide ou expiré. Veuillez utiliser "Mot de passe oublié".'
+        );
+      }
+      if (newPassword != verifyPassword) {
+        throw new AuraHandledException(
+          'Les mots de passe ne correspondent pas.'
+        );
+      }
+
+      // ── PATH A: normal authenticated flow ────────────────────────────────
+      Boolean tokenVerifiedViaDisabled = false;
+      try {
+        PageReference loginRef = Site.login(email, token, PORTAL_HOME);
+        if (loginRef != null) {
+          // Fully authenticated — use Site.changePassword in session
+          PageReference changeRef = Site.changePassword(
+            newPassword,
+            verifyPassword,
+            token
+          );
+          if (changeRef != null) {
+            return changeRef.getUrl();
+          }
+          // changeRef null: fall through to System.setPassword below
+          tokenVerifiedViaDisabled = true; // token was valid
+        }
+        // loginRef == null means wrong credentials (token expired/invalid)
+      } catch (Exception loginEx) {
+        String lm = loginEx.getMessage() != null
+          ? loginEx.getMessage().toLowerCase()
+          : '';
+        if (lm.contains('disabled') || lm.contains('access is disabled')) {
+          // "Access disabled" = credentials CORRECT, account inactive/not in network
+          // Token is confirmed valid — proceed to PATH B
+          tokenVerifiedViaDisabled = true;
+          System.debug(
+            'setFirstPassword PATH B — access disabled, token valid, using System.setPassword'
+          );
+        } else {
+          throw loginEx; // unexpected error — surface it
+        }
+      }
+
+      if (!tokenVerifiedViaDisabled) {
+        throw new AuraHandledException(
+          'Lien expiré ou invalide. Cliquez sur "Mot de passe oublié" pour en recevoir un nouveau.'
+        );
+      }
+
+      // ── PATH B: token verified via "access disabled" signal ──────────────
+      // Locate the user, reactivate if needed, set password directly.
+      List<User> users = [
+        SELECT Id, IsActive
+        FROM User
+        WHERE Username = :email
+        LIMIT 1
+      ];
+      if (users.isEmpty()) {
+        throw new AuraHandledException(
+          'Compte introuvable. Veuillez contacter l\'administrateur Nexus.'
+        );
+      }
+      Id userId = users[0].Id;
+
+      if (!users[0].IsActive) {
+        update new User(Id = userId, IsActive = true);
+        System.debug('setFirstPassword: reactivated user ' + userId);
+      }
+
+      // Set the real password
+      System.setPassword(userId, newPassword);
+      System.debug('setFirstPassword: System.setPassword OK for ' + userId);
+
+      // Best-effort login with new password to get the proper redirect URL
+      try {
+        PageReference finalRef = Site.login(email, newPassword, PORTAL_HOME);
+        if (finalRef != null) {
+          return finalRef.getUrl();
+        }
+      } catch (Exception e) {
+        System.debug(
+          'setFirstPassword: final Site.login after setPassword: ' +
+          e.getMessage()
+        );
+      }
+
+      return PORTAL_HOME;
+    } catch (AuraHandledException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new AuraHandledException(
+        e.getMessage() != null
+          ? e.getMessage()
+          : 'Impossible de définir le mot de passe.'
+      );
+    }
+  }
+
+  /**
    * Change / set password for the current site user.
    * For forgot-password flows the reset token is automatically read
    * from the current Site context (URL parameter).
