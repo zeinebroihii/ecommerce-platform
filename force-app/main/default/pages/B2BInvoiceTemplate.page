@@ -1,0 +1,368 @@
+<!-- B2BInvoiceTemplate.page — Nexus B2B Contract Invoice PDF -->
+<apex:page
+  controller="B2BInvoiceController"
+  renderAs="pdf"
+  showHeader="false"
+  sidebar="false"
+  standardStylesheets="false"
+>
+  <head>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        color: #1e293b;
+        margin: 0;
+        padding: 0;
+      }
+      .header {
+        background: #0f172a;
+        padding: 28px 36px;
+        overflow: hidden;
+      }
+      .brand-box {
+        float: left;
+      }
+      .logo-sq {
+        width: 40px;
+        height: 40px;
+        background: #4f46e5;
+        border-radius: 8px;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+      .brand-name {
+        color: #fff;
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        vertical-align: middle;
+      }
+      .brand-sub {
+        color: #94a3b8;
+        font-size: 9px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+      .invoice-tag {
+        float: right;
+        text-align: right;
+        color: #94a3b8;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-top: 4px;
+      }
+      .invoice-tag .ref {
+        color: #fff;
+        font-size: 16px;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        display: block;
+        margin-top: 2px;
+      }
+      .meta {
+        padding: 24px 36px 0;
+        overflow: hidden;
+      }
+      .meta-left {
+        float: left;
+        width: 48%;
+      }
+      .meta-right {
+        float: right;
+        width: 48%;
+        text-align: right;
+      }
+      .meta-label {
+        font-size: 8px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 3px;
+      }
+      .meta-value {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 12px;
+      }
+      .meta-value.small {
+        font-size: 11px;
+        font-weight: 400;
+        color: #475569;
+      }
+      .section-title {
+        padding: 18px 36px 8px;
+        font-size: 9px;
+        font-weight: 900;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        border-bottom: 1px solid #e2e8f0;
+        margin: 0 36px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+      }
+      .items-table {
+        margin: 0 36px;
+        width: calc(100% - 72px);
+      }
+      .items-table th {
+        background: #f8fafc;
+        font-size: 8px;
+        font-weight: 900;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0;
+      }
+      .items-table th.right {
+        text-align: right;
+      }
+      .items-table td {
+        padding: 9px 10px;
+        font-size: 11px;
+        color: #1e293b;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: top;
+      }
+      .items-table td.right {
+        text-align: right;
+        font-weight: 700;
+        color: #4f46e5;
+      }
+      .items-table td.center {
+        text-align: center;
+      }
+      .family {
+        font-size: 9px;
+        color: #94a3b8;
+        font-weight: 400;
+      }
+      .totals {
+        margin: 0 36px;
+        padding: 12px 0;
+      }
+      .totals table {
+        width: 280px;
+        margin-left: auto;
+      }
+      .totals td {
+        padding: 4px 8px;
+        font-size: 11px;
+        color: #475569;
+      }
+      .totals td.label {
+        text-align: right;
+      }
+      .totals td.val {
+        text-align: right;
+        font-weight: 600;
+        color: #1e293b;
+      }
+      .totals .grand td {
+        font-size: 13px;
+        font-weight: 900;
+        color: #4f46e5;
+        border-top: 2px solid #4f46e5;
+        padding-top: 8px;
+      }
+      .sign-box {
+        margin: 20px 36px 0;
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        padding: 16px 20px;
+        overflow: hidden;
+      }
+      .sign-title {
+        font-size: 9px;
+        font-weight: 900;
+        color: #0369a1;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+      }
+      .sign-row {
+        overflow: hidden;
+        margin-bottom: 6px;
+      }
+      .sign-label {
+        float: left;
+        font-size: 9px;
+        color: #64748b;
+        width: 110px;
+      }
+      .sign-val {
+        float: left;
+        font-size: 10px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .sign-badge {
+        display: inline-block;
+        background: #0f172a;
+        color: #fff;
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        padding: 2px 8px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        margin-top: 8px;
+      }
+      .eidas {
+        font-size: 8px;
+        color: #94a3b8;
+        margin-top: 8px;
+      }
+      .footer {
+        margin-top: 24px;
+        padding: 14px 36px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        overflow: hidden;
+      }
+      .footer-left {
+        float: left;
+        font-size: 8px;
+        color: #94a3b8;
+      }
+      .footer-right {
+        float: right;
+        font-size: 8px;
+        color: #94a3b8;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <div class="header">
+      <div class="brand-box">
+        <span class="logo-sq"></span>
+        <span class="brand-name">NEXUS</span>
+        <div class="brand-sub">B2B Commerce Platform</div>
+      </div>
+      <div class="invoice-tag">
+        Facture Contrat
+        <span class="ref">{!invoiceRef}</span>
+      </div>
+    </div>
+
+    <!-- META -->
+    <div class="meta">
+      <div class="meta-left">
+        <div class="meta-label">Facturé à</div>
+        <div class="meta-value">{!accountName}</div>
+        <div class="meta-label">Modalités de paiement</div>
+        <div class="meta-value small">{!paymentTerms}</div>
+      </div>
+      <div class="meta-right">
+        <div class="meta-label">Date de facture</div>
+        <div class="meta-value">{!invoiceDate}</div>
+        <div class="meta-label">Référence devis</div>
+        <div class="meta-value small">{!quote.Name}</div>
+      </div>
+    </div>
+
+    <!-- LINE ITEMS -->
+    <div class="section-title">Détail des prestations</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Produit / Service</th>
+          <th class="right">Qté</th>
+          <th class="right">Prix unit. HT</th>
+          <th class="right">Remise</th>
+          <th class="right">Total HT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <apex:repeat value="{!lineItems}" var="li">
+          <tr>
+            <td>
+              {!li.ProductName__c}
+              <apex:outputText rendered="{!NOT(ISNULL(li.ProductFamily__c))}">
+                <br /><span class="family">{!li.ProductFamily__c}</span>
+              </apex:outputText>
+            </td>
+            <td class="center">{!li.Quantity__c}</td>
+            <td class="right">{!li.UnitPrice__c} €</td>
+            <td class="center">
+              <apex:outputText
+                value="{!li.Discount__c} %"
+                rendered="{!li.Discount__c > 0}"
+              />
+              <apex:outputText value="—" rendered="{!li.Discount__c <= 0}" />
+            </td>
+            <td class="right">{!li.NetTotal__c} €</td>
+          </tr>
+        </apex:repeat>
+      </tbody>
+    </table>
+
+    <!-- TOTALS -->
+    <div class="totals">
+      <table>
+        <tr>
+          <td class="label">Sous-total HT</td>
+          <td class="val">{!subtotal} €</td>
+        </tr>
+        <apex:outputText rendered="{!discount > 0}">
+          <tr>
+            <td class="label">Remise volume ({!discount}%)</td>
+            <td class="val">- {!grandTotal} €</td>
+          </tr>
+        </apex:outputText>
+        <tr class="grand">
+          <td class="label">TOTAL HT</td>
+          <td class="val">{!grandTotal} €</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- DIGITAL SIGNATURE BLOCK -->
+    <div class="sign-box">
+      <div class="sign-title">Signature électronique — eIDAS</div>
+      <div class="sign-row">
+        <span class="sign-label">Signataire :</span>
+        <span class="sign-val">{!signerName}</span>
+      </div>
+      <div class="sign-row">
+        <span class="sign-label">Email :</span>
+        <span class="sign-val">{!signerEmail}</span>
+      </div>
+      <div class="sign-row">
+        <span class="sign-label">Signé le :</span>
+        <span class="sign-val">{!signedAt}</span>
+      </div>
+      <div class="sign-row">
+        <span class="sign-label">Référence contrat :</span>
+        <span class="sign-val">{!invoiceRef}</span>
+      </div>
+      <span class="sign-badge">✓ Signé électroniquement</span>
+      <div class="eidas">
+        Ce document a valeur légale conformément au Règlement (UE) n°910/2014
+        (eIDAS). La signature électronique qualifiée est reconnue dans tous les
+        États membres de l'UE.
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-left">
+        Nexus B2B Commerce Platform · Document généré automatiquement
+      </div>
+      <div class="footer-right">{!invoiceRef} · {!invoiceDate}</div>
+    </div>
+  </body>
+</apex:page>

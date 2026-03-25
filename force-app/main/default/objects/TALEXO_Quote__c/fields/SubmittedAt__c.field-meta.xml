@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SubmittedAt__c</fullName>
+    <label>Submitted to Negotiation At</label>
+    <type>DateTime</type>
+    <description
+  >Timestamp when the quote was submitted to the external negotiation platform.</description>
+</CustomField>

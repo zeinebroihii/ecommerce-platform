@@ -1,5 +1,6 @@
 import { LightningElement, wire, track } from "lwc";
 import getMyOrders from "@salesforce/apex/OrderManagementController.getMyOrders";
+import getInvoiceHtml from "@salesforce/apex/OrderManagementController.getInvoiceHtml";
 
 const MOCK_ORDERS = [
   {
@@ -102,14 +103,72 @@ const STATUS_MAP = {
   Activated: { label: "Processing", progress: 30 },
   Shipped: { label: "In Transit", progress: 65 },
   Delivered: { label: "Delivered", progress: 100 },
+  Completed: { label: "Delivered", progress: 100 },
   Cancelled: { label: "Cancelled", progress: 0 }
 };
+
+function buildTrackingHistory(
+  o,
+  statusLabel,
+  orderDate,
+  shippedDate,
+  deliveredDate
+) {
+  const addr = o.shippingAddress || "—";
+  const city = addr !== "—" ? addr : "Distribution Center";
+
+  // Step always present: Processing
+  const stepProcessing = {
+    status: "Processing",
+    location: addr,
+    time: orderDate || "—",
+    description: "Order placed and payment confirmed."
+  };
+
+  if (statusLabel === "Processing" || statusLabel === "Cancelled") {
+    return [stepProcessing];
+  }
+
+  const stepShipped = {
+    status: "In Transit",
+    location: city,
+    time: shippedDate || "—",
+    description: "Package shipped and in transit to your location."
+  };
+
+  if (statusLabel === "In Transit") {
+    return [stepShipped, stepProcessing];
+  }
+
+  // Delivered / Completed
+  const stepOutForDelivery = {
+    status: "Out for Delivery",
+    location: city,
+    time: deliveredDate || "—",
+    description: "Package is with the local courier."
+  };
+  const stepDelivered = {
+    status: "Delivered",
+    location: addr,
+    time: deliveredDate || "—",
+    description: "Package delivered and signed for."
+  };
+
+  return [stepDelivered, stepOutForDelivery, stepShipped, stepProcessing];
+}
 
 function mapSfOrder(o) {
   const s = STATUS_MAP[o.status] || {
     label: o.status || "Processing",
     progress: 25
   };
+  const history = buildTrackingHistory(
+    o,
+    s.label,
+    o.orderDate || null,
+    o.shippedDate || null,
+    o.deliveredDate || null
+  );
   return {
     id: o.orderNumber,
     _sfId: o.orderId,
@@ -118,7 +177,12 @@ function mapSfOrder(o) {
     formattedTotal: o.formattedTotal || o.totalAmount + " €",
     status: s.label,
     progress: s.progress,
-    eta: s.label === "Delivered" ? "Delivered" : "Being processed",
+    eta:
+      s.label === "Delivered"
+        ? "Delivered"
+        : s.label === "In Transit"
+          ? o.shippedDate || "In Transit"
+          : "Processing",
     location: o.shippingAddress || "—",
     items: o.itemCount || 0,
     trackingNumber: o.orderNumber,
@@ -128,14 +192,7 @@ function mapSfOrder(o) {
     hasSparksDiscount: o.hasSparksDiscount || false,
     formattedSparksDiscount: o.formattedSparksDiscount || null,
     isReal: true,
-    history: [
-      {
-        status: s.label,
-        location: o.shippingAddress || "—",
-        time: o.orderDate || "—",
-        description: "Order placed and payment confirmed."
-      }
-    ],
+    history,
     products: (o.lineItems || []).map((li, idx) => ({
       id: "li_" + idx,
       name: li.productName || "—",
@@ -234,14 +291,36 @@ export default class NexusOrderSystem extends LightningElement {
     this._showFullMap = false;
   }
   handleDownloadInvoice() {
-    this.dispatchEvent(
-      new CustomEvent("toast", {
-        detail: {
-          title: "Invoice",
-          message: "Generating invoice PDF...",
-          variant: "info"
-        }
-      })
+    const orderId = this.selectedOrder?._sfId;
+    if (!orderId) {
+      return;
+    }
+
+    // Open window immediately (user-gesture context) to avoid popup blocker
+    const win = window.open("", "_blank");
+    if (!win) {
+      return;
+    }
+    win.document.write(
+      "<html><body style='font-family:Arial;text-align:center;padding:60px;'><p>Generating invoice\u2026</p></body></html>"
     );
+
+    getInvoiceHtml({ orderId })
+      .then((html) => {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      })
+      .catch((err) => {
+        const msg = err?.body?.message || err?.message || JSON.stringify(err);
+        console.error("[NexusOrderSystem] invoice error:", msg);
+        win.document.open();
+        win.document.write(
+          "<html><body style='font-family:Arial;padding:40px;color:#dc2626;'><h2>Invoice Error</h2><pre style='white-space:pre-wrap;font-size:13px;'>" +
+            msg +
+            "</pre></body></html>"
+        );
+        win.document.close();
+      });
   }
 }

@@ -22,7 +22,29 @@
       "Bash(find \"c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform\\\\force-app\\\\main\\\\default\\\\lwc\\\\nexus-crm-&-stock-ai\\\\src\\\\components\" -type f)",
       "Bash(find \"c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform\\\\force-app\\\\main\\\\default\\\\lwc\\\\nexus-crm-&-stock-ai\\\\src\\\\components\\\\ui\" -type f)",
       "Bash(find \"c:/Users/MSI/Desktop/Salesforces/nexus-crm-&-stock-ai\" -type f)",
-      "Bash(find c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc -name *.tsx)"
+      "Bash(find c:/Users/MSI/Desktop/Salesforces/ecommerce-platform/force-app/main/default/lwc -name *.tsx)",
+      "Bash(xargs grep:*)",
+      "Bash(sf apex:*)",
+      "Bash(npx eslint:*)",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy start --source-dir ''force-app/main/default/pages/InvoiceTemplate.page'' --source-dir ''force-app/main/default/classes/InvoiceController.cls'' --source-dir ''force-app/main/default/classes/InvoiceService.cls'' --source-dir ''force-app/main/default/classes/OrderManagementController.cls'' --source-dir ''force-app/main/default/lwc/nexusOrderSystem'' 2>&1 | Select-String -Pattern ''Succeeded|Failed|Problem|Error|State|Name'' | Select-Object -Last 25\")",
+      "Bash(Out-String)",
+      "Bash(Select-String -Pattern \"Problem|Error|error|Syntax\" -AllMatches)",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy start --source-dir ''force-app/main/default/pages/InvoiceTemplate.page'' --source-dir ''force-app/main/default/classes/InvoiceController.cls'' --source-dir ''force-app/main/default/classes/InvoiceService.cls'' --source-dir ''force-app/main/default/classes/OrderManagementController.cls'' --source-dir ''force-app/main/default/lwc/nexusOrderSystem'' 2>&1\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy report --job-id 0Afg5000005N4ODCA0 2>&1\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy start --source-dir ''force-app/main/default/pages/InvoiceTemplate.page'' --source-dir ''force-app/main/default/classes/InvoiceController.cls'' --source-dir ''force-app/main/default/classes/InvoiceService.cls'' --source-dir ''force-app/main/default/classes/OrderManagementController.cls'' --source-dir ''force-app/main/default/lwc/nexusOrderSystem'' 2>&1 | Select-String -Pattern ''Succeeded|Failed|Problem|State|Changed|Created'' | Select-Object -Last 20\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy start --source-dir ''force-app/main/default/lwc/nexusOrderSystem'' 2>&1 | Select-String -Pattern ''Succeeded|Failed|Problem|State|Changed'' | Select-Object -Last 10\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy start --source-dir ''force-app/main/default/classes/OrderManagementController.cls'' --source-dir ''force-app/main/default/lwc/nexusOrderSystem'' 2>&1 | Select-String -Pattern ''Succeeded|Failed|Problem|Changed|Created'' | Select-Object -Last 15\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy start --source-dir ''force-app/main/default/flows/OrderShippedInvoice.flow-meta.xml'' 2>&1 | Select-String -Pattern ''Succeeded|Failed|Problem|Changed|Created'' | Select-Object -Last 10\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy start --source-dir ''force-app/main/default/classes/InvoiceService.cls'' --source-dir ''force-app/main/default/classes/OrderManagementController.cls'' --source-dir ''force-app/main/default/lwc/nexusOrderSystem'' 2>&1 | Select-String -Pattern ''Succeeded|Failed|Problem|Changed|Created'' | Select-Object -Last 15\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf project deploy start --source-dir ''force-app/main/default/classes/InvoiceService.cls'' --source-dir ''force-app/main/default/classes/OrderManagementController.cls'' --source-dir ''force-app/main/default/lwc/nexusOrderSystem'' 2>&1 | Select-String -Pattern ''Succeeded|Failed|Problem|Changed'' | Select-Object -Last 12\")",
+      "Bash(\"C:\\\\Program Files\\\\sf\\\\bin\\\\sf.cmd\" data query --query \"SELECT Id, DeveloperName, Label FROM AppDefinition ORDER BY Label\" --target-org nexus-dev)",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform && sf data query --query \"\"SELECT Id FROM TALEXO_Quote__c LIMIT 1\"\" 2>&1\")",
+      "Bash(powershell -Command \"Set-Location ''c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform''; sf data query --query ''SELECT Id, DeveloperName FROM FieldDefinition WHERE EntityDefinitionId = \\\\''TALEXO_Quote__c\\\\'''' --use-tooling-api --json 2>&1 | Select-Object -First 40\")",
+      "Bash(cmd /c \"c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform\\\\scripts\\\\run_tooling.bat\")",
+      "Bash(cmd /c \"c:\\\\Users\\\\MSI\\\\Desktop\\\\Salesforces\\\\ecommerce-platform\\\\scripts\\\\run_tooling2.bat\")",
+      "Bash(powershell -Command \":*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''status''''\\)\\); [print\\(f[''''filePath''''],f[''''state'''']\\) for f in d.get\\(''''result'''',{}\\).get\\(''''files'''',[]\\)]\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(e\\) for e in d.get\\(''''result'''',{}\\).get\\(''''details'''',{}\\).get\\(''''componentFailures'''',[]\\)]\")"
     ]
   }
 }

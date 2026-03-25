@@ -1,220 +1,281 @@
 <template>
-    <div class="nad-wrap">
-
-        <!-- ── Header ── -->
-        <div class="nad-header">
-            <div>
-                <h2 class="nad-title">CRM Dashboard</h2>
-                <p class="nad-subtitle">Gérez vos prospects et optimisez vos conversions.</p>
-            </div>
-            <div class="nad-actions">
-                <button class="nad-btn-ghost" onclick={handleRefresh}>
-                    <lightning-icon icon-name="utility:refresh" size="x-small"></lightning-icon>
-                    &nbsp;Actualiser
-                </button>
-                <button class="nad-btn-primary">New Lead</button>
-            </div>
-        </div>
-
-        <!-- ── KPI Cards ── -->
-        <div class="nad-kpi-grid">
-            <div class="nad-kpi-card">
-                <div class="nad-kpi-row">
-                    <div class="nad-icon nad-icon-indigo">
-                        <lightning-icon icon-name="utility:trending" size="small"></lightning-icon>
-                    </div>
-                    <span class="nad-pill nad-pill-emerald">+12.5%</span>
-                </div>
-                <div class="nad-kpi-label">Pipeline Total</div>
-                <div class="nad-kpi-value">$147,000</div>
-                <div class="nad-kpi-blob nad-blob-indigo"></div>
-            </div>
-
-            <div class="nad-kpi-card">
-                <div class="nad-kpi-row">
-                    <div class="nad-icon nad-icon-blue">
-                        <lightning-icon icon-name="utility:people" size="small"></lightning-icon>
-                    </div>
-                    <span class="nad-pill nad-pill-blue">{newLeadsLabel}</span>
-                </div>
-                <div class="nad-kpi-label">Active Leads</div>
-                <div class="nad-kpi-value">{totalLeads}</div>
-                <div class="nad-kpi-blob nad-blob-blue"></div>
-            </div>
-
-            <div class="nad-kpi-card">
-                <div class="nad-kpi-row">
-                    <div class="nad-icon nad-icon-emerald">
-                        <lightning-icon icon-name="utility:metrics" size="small"></lightning-icon>
-                    </div>
-                    <span class="nad-pill nad-pill-slate">Objectif: 85%</span>
-                </div>
-                <div class="nad-kpi-label">Taux de Conversion</div>
-                <div class="nad-kpi-value">72.4%</div>
-                <div class="nad-kpi-blob nad-blob-emerald"></div>
-            </div>
-        </div>
-
-        <!-- ── Contact Directory ── -->
-        <div class="nad-leads-section">
-            <div class="nad-leads-toolbar">
-                <div class="nad-leads-title-row">
-                    <h3 class="nad-leads-title">Contact Directory</h3>
-                    <span class="nad-leads-badge">{totalContactsLabel}</span>
-                </div>
-                <div class="nad-search-wrap">
-                    <lightning-icon icon-name="utility:search" size="x-small" class="nad-search-icon"></lightning-icon>
-                    <input class="nad-search" placeholder="Rechercher un contact..." onkeyup={handleContactSearch} />
-                </div>
-            </div>
-
-            <template if:true={isEmptyContacts}>
-                <div class="nad-empty-cards">No contacts yet.</div>
-            </template>
-
-            <template if:true={hasContacts}>
-                <div class="nad-cards-grid">
-                    <template for:each={filteredContacts} for:item="contact">
-                        <c-nexus-contact-card
-                            key={contact.contactId}
-                            contact-id={contact.contactId}
-                            contact-name={contact.fullName}
-                            account={contact.account}
-                            email={contact.email}
-                            phone={contact.phone}
-                            title={contact.title}
-                            department={contact.department}
-                            initials={contact.initials}
-                            onprofileclick={handleProfileClick}
-                            onmessageclick={handleMessageClick}
-                        ></c-nexus-contact-card>
-                    </template>
-                </div>
-            </template>
-        </div>
-
-        <!-- ── Contact Profile Modal ── -->
-        <template if:true={showProfile}>
-            <c-nexus-contact-profile
-                contact-id={selectedContact.contactId}
-                contact-name={selectedContact.fullName}
-                account={selectedContact.account}
-                email={selectedContact.email}
-                phone={selectedContact.phone}
-                title={selectedContact.title}
-                department={selectedContact.department}
-                initials={selectedContact.initials}
-                onclose={handleCloseProfile}
-            ></c-nexus-contact-profile>
-        </template>
-
-        <!-- ── Contact Message Modal ── -->
-        <template if:true={showMessage}>
-            <c-nexus-contact-message
-                contact-id={selectedContact.contactId}
-                contact-name={selectedContact.fullName}
-                initials={selectedContact.initials}
-                onclose={handleCloseMessage}
-            ></c-nexus-contact-message>
-        </template>
-
-        <!-- ══ Leads B2B en attente (AI-scored, pending admin decision) ══ -->
-        <div class="nad-leads-section nad-pending-section">
-            <div class="nad-leads-toolbar">
-                <div class="nad-leads-title-row">
-                    <div class="nad-pending-title-wrap">
-                        <div class="nad-pending-icon">
-                            <lightning-icon icon-name="utility:groups" size="x-small"></lightning-icon>
-                        </div>
-                        <h3 class="nad-leads-title">Leads B2B en attente</h3>
-                    </div>
-                    <span class="nad-leads-badge nad-badge-amber">{pendingLeadsLabel}</span>
-                </div>
-            </div>
-
-            <template if:false={hasPendingLeads}>
-                <div class="nad-empty-cards">No leads pending decision.</div>
-            </template>
-
-            <template if:true={hasPendingLeads}>
-                <div class="nad-pending-list">
-                    <template for:each={pendingLeads} for:item="lead">
-                        <div key={lead.leadId} class="nad-pending-row">
-                            <div class="nad-pending-avatar">{lead.initials}</div>
-                            <div class="nad-pending-info">
-                                <div class="nad-pending-company">{lead.company}</div>
-                                <div class="nad-pending-meta">
-                                    <span class="nad-intent-badge">{lead.intent}</span>
-                                    <span class="nad-pending-sub">{lead.email}</span>
-                                </div>
-                                <template if:true={lead.aiReason}>
-                                    <div class="nad-pending-reason">{lead.aiReason}</div>
-                                </template>
-                            </div>
-                            <div class="nad-score-wrap">
-                                <div class={lead.scoreClass}>
-                                    <span class="nad-score-num">{lead.score}</span>
-                                    <span class="nad-score-sep">/</span>
-                                    <span class="nad-score-max">100</span>
-                                </div>
-                                <div class="nad-score-lbl">Score IA</div>
-                            </div>
-                            <div class="nad-decision-btns">
-                                <button
-                                    class="nad-btn-approve"
-                                    data-id={lead.leadId}
-                                    data-decision="Approved"
-                                    onclick={handleLeadDecision}>
-                                    Approuver ✓
-                                </button>
-                                <button
-                                    class="nad-btn-reject"
-                                    data-id={lead.leadId}
-                                    data-decision="Rejected"
-                                    onclick={handleLeadDecision}>
-                                    Rejeter ✕
-                                </button>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </template>
-        </div>
-
-        <!-- ── Lead Management Cards ── -->
-        <div class="nad-leads-section">
-            <div class="nad-leads-toolbar">
-                <div class="nad-leads-title-row">
-                    <h3 class="nad-leads-title">Lead Management</h3>
-                    <span class="nad-leads-badge">{totalLeadsLabel}</span>
-                </div>
-                <div class="nad-search-wrap">
-                    <lightning-icon icon-name="utility:search" size="x-small" class="nad-search-icon"></lightning-icon>
-                    <input class="nad-search" placeholder="Rechercher un prospect..." onkeyup={handleSearch} />
-                </div>
-            </div>
-
-            <template if:true={isEmptyList}>
-                <div class="nad-empty-cards">No active leads yet.</div>
-            </template>
-
-            <template if:true={hasLeads}>
-                <div class="nad-cards-grid">
-                    <template for:each={filteredLeads} for:item="lead">
-                        <c-nexus-lead-card
-                            key={lead.leadId}
-                            lead-id={lead.leadId}
-                            lead-name={lead.name}
-                            company={lead.company}
-                            initials={lead.initials}
-                            score={lead.score}
-                            onviewlead={handleViewLead}
-                            onconvertlead={handleConvert}
-                        ></c-nexus-lead-card>
-                    </template>
-                </div>
-            </template>
-        </div>
-
+  <div class="nad-wrap">
+    <!-- ── Tab Bar ── -->
+    <div class="nad-tab-bar">
+      <button class={tabCrmClass} data-tab="crm" onclick={handleTabClick}>
+        <lightning-icon
+          icon-name="utility:people"
+          size="x-small"
+        ></lightning-icon>
+        &nbsp;CRM Dashboard
+      </button>
+      <button class={tabQuoteClass} data-tab="quotes" onclick={handleTabClick}>
+        <lightning-icon
+          icon-name="utility:contract_alt"
+          size="x-small"
+        ></lightning-icon>
+        &nbsp;Quote Builder
+      </button>
     </div>
+
+    <!-- ── Quote Builder Tab ── -->
+    <template if:true={isQuotes}>
+      <c-nexus-quote-builder></c-nexus-quote-builder>
+    </template>
+
+    <!-- ── CRM Tab ── -->
+    <template if:true={isCrm}>
+      <!-- ── Header ── -->
+      <div class="nad-header">
+        <div>
+          <h2 class="nad-title">CRM Dashboard</h2>
+          <p class="nad-subtitle">
+            Gérez vos prospects et optimisez vos conversions.
+          </p>
+        </div>
+        <div class="nad-actions">
+          <button class="nad-btn-ghost" onclick={handleRefresh}>
+            <lightning-icon
+              icon-name="utility:refresh"
+              size="x-small"
+            ></lightning-icon>
+            &nbsp;Actualiser
+          </button>
+          <button class="nad-btn-primary">New Lead</button>
+        </div>
+      </div>
+
+      <!-- ── KPI Cards ── -->
+      <div class="nad-kpi-grid">
+        <div class="nad-kpi-card">
+          <div class="nad-kpi-row">
+            <div class="nad-icon nad-icon-indigo">
+              <lightning-icon
+                icon-name="utility:trending"
+                size="small"
+              ></lightning-icon>
+            </div>
+            <span class="nad-pill nad-pill-emerald">+12.5%</span>
+          </div>
+          <div class="nad-kpi-label">Pipeline Total</div>
+          <div class="nad-kpi-value">$147,000</div>
+          <div class="nad-kpi-blob nad-blob-indigo"></div>
+        </div>
+
+        <div class="nad-kpi-card">
+          <div class="nad-kpi-row">
+            <div class="nad-icon nad-icon-blue">
+              <lightning-icon
+                icon-name="utility:people"
+                size="small"
+              ></lightning-icon>
+            </div>
+            <span class="nad-pill nad-pill-blue">{newLeadsLabel}</span>
+          </div>
+          <div class="nad-kpi-label">Active Leads</div>
+          <div class="nad-kpi-value">{totalLeads}</div>
+          <div class="nad-kpi-blob nad-blob-blue"></div>
+        </div>
+
+        <div class="nad-kpi-card">
+          <div class="nad-kpi-row">
+            <div class="nad-icon nad-icon-emerald">
+              <lightning-icon
+                icon-name="utility:metrics"
+                size="small"
+              ></lightning-icon>
+            </div>
+            <span class="nad-pill nad-pill-slate">Objectif: 85%</span>
+          </div>
+          <div class="nad-kpi-label">Taux de Conversion</div>
+          <div class="nad-kpi-value">72.4%</div>
+          <div class="nad-kpi-blob nad-blob-emerald"></div>
+        </div>
+      </div>
+
+      <!-- ── Contact Directory ── -->
+      <div class="nad-leads-section">
+        <div class="nad-leads-toolbar">
+          <div class="nad-leads-title-row">
+            <h3 class="nad-leads-title">Contact Directory</h3>
+            <span class="nad-leads-badge">{totalContactsLabel}</span>
+          </div>
+          <div class="nad-search-wrap">
+            <lightning-icon
+              icon-name="utility:search"
+              size="x-small"
+              class="nad-search-icon"
+            ></lightning-icon>
+            <input
+              class="nad-search"
+              placeholder="Rechercher un contact..."
+              onkeyup={handleContactSearch}
+            />
+          </div>
+        </div>
+
+        <template if:true={isEmptyContacts}>
+          <div class="nad-empty-cards">No contacts yet.</div>
+        </template>
+
+        <template if:true={hasContacts}>
+          <div class="nad-cards-grid">
+            <template for:each={filteredContacts} for:item="contact">
+              <c-nexus-contact-card
+                key={contact.contactId}
+                contact-id={contact.contactId}
+                contact-name={contact.fullName}
+                account={contact.account}
+                email={contact.email}
+                phone={contact.phone}
+                title={contact.title}
+                department={contact.department}
+                initials={contact.initials}
+                onprofileclick={handleProfileClick}
+                onmessageclick={handleMessageClick}
+              ></c-nexus-contact-card>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- ── Contact Profile Modal ── -->
+      <template if:true={showProfile}>
+        <c-nexus-contact-profile
+          contact-id={selectedContact.contactId}
+          contact-name={selectedContact.fullName}
+          account={selectedContact.account}
+          email={selectedContact.email}
+          phone={selectedContact.phone}
+          title={selectedContact.title}
+          department={selectedContact.department}
+          initials={selectedContact.initials}
+          onclose={handleCloseProfile}
+        ></c-nexus-contact-profile>
+      </template>
+
+      <!-- ── Contact Message Modal ── -->
+      <template if:true={showMessage}>
+        <c-nexus-contact-message
+          contact-id={selectedContact.contactId}
+          contact-name={selectedContact.fullName}
+          initials={selectedContact.initials}
+          onclose={handleCloseMessage}
+        ></c-nexus-contact-message>
+      </template>
+
+      <!-- ══ Leads B2B en attente (AI-scored, pending admin decision) ══ -->
+      <div class="nad-leads-section nad-pending-section">
+        <div class="nad-leads-toolbar">
+          <div class="nad-leads-title-row">
+            <div class="nad-pending-title-wrap">
+              <div class="nad-pending-icon">
+                <lightning-icon
+                  icon-name="utility:groups"
+                  size="x-small"
+                ></lightning-icon>
+              </div>
+              <h3 class="nad-leads-title">Leads B2B en attente</h3>
+            </div>
+            <span class="nad-leads-badge nad-badge-amber"
+              >{pendingLeadsLabel}</span
+            >
+          </div>
+        </div>
+
+        <template if:false={hasPendingLeads}>
+          <div class="nad-empty-cards">No leads pending decision.</div>
+        </template>
+
+        <template if:true={hasPendingLeads}>
+          <div class="nad-pending-list">
+            <template for:each={pendingLeads} for:item="lead">
+              <div key={lead.leadId} class="nad-pending-row">
+                <div class="nad-pending-avatar">{lead.initials}</div>
+                <div class="nad-pending-info">
+                  <div class="nad-pending-company">{lead.company}</div>
+                  <div class="nad-pending-meta">
+                    <span class="nad-intent-badge">{lead.intent}</span>
+                    <span class="nad-pending-sub">{lead.email}</span>
+                  </div>
+                  <template if:true={lead.aiReason}>
+                    <div class="nad-pending-reason">{lead.aiReason}</div>
+                  </template>
+                </div>
+                <div class="nad-score-wrap">
+                  <div class={lead.scoreClass}>
+                    <span class="nad-score-num">{lead.score}</span>
+                    <span class="nad-score-sep">/</span>
+                    <span class="nad-score-max">100</span>
+                  </div>
+                  <div class="nad-score-lbl">Score IA</div>
+                </div>
+                <div class="nad-decision-btns">
+                  <button
+                    class="nad-btn-approve"
+                    data-id={lead.leadId}
+                    data-decision="Approved"
+                    onclick={handleLeadDecision}
+                  >
+                    Approuver ✓
+                  </button>
+                  <button
+                    class="nad-btn-reject"
+                    data-id={lead.leadId}
+                    data-decision="Rejected"
+                    onclick={handleLeadDecision}
+                  >
+                    Rejeter ✕
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- ── Lead Management Cards ── -->
+      <div class="nad-leads-section">
+        <div class="nad-leads-toolbar">
+          <div class="nad-leads-title-row">
+            <h3 class="nad-leads-title">Lead Management</h3>
+            <span class="nad-leads-badge">{totalLeadsLabel}</span>
+          </div>
+          <div class="nad-search-wrap">
+            <lightning-icon
+              icon-name="utility:search"
+              size="x-small"
+              class="nad-search-icon"
+            ></lightning-icon>
+            <input
+              class="nad-search"
+              placeholder="Rechercher un prospect..."
+              onkeyup={handleSearch}
+            />
+          </div>
+        </div>
+
+        <template if:true={isEmptyList}>
+          <div class="nad-empty-cards">No active leads yet.</div>
+        </template>
+
+        <template if:true={hasLeads}>
+          <div class="nad-cards-grid">
+            <template for:each={filteredLeads} for:item="lead">
+              <c-nexus-lead-card
+                key={lead.leadId}
+                lead-id={lead.leadId}
+                lead-name={lead.name}
+                company={lead.company}
+                initials={lead.initials}
+                score={lead.score}
+                onviewlead={handleViewLead}
+                onconvertlead={handleConvert}
+              ></c-nexus-lead-card>
+            </template>
+          </div>
+        </template>
+      </div> </template
+    ><!-- end isCrm -->
+  </div>
 </template>

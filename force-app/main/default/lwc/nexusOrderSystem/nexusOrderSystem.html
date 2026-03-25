@@ -209,7 +209,7 @@
                 </div>
                 <div class="nos-timeline">
                   <template for:each={selectedOrder.history} for:item="ev">
-                    <div key={ev.time} class="nos-event">
+                    <div key={ev.status} class="nos-event">
                       <div class={ev.dotCls}>
                         <template if:true={ev.isFirst}>
                           <span class="nos-evt-inner-dot"></span>

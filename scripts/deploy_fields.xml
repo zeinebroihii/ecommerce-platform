@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>TALEXO_Quote__c.Status__c</members>
+        <members>TALEXO_Quote__c.GrandTotal__c</members>
+        <members>TALEXO_Quote__c.NegotiationStatus__c</members>
+        <members>TALEXO_Quote__c.Opportunity__c</members>
+        <members>TALEXO_Quote__c.ExpirationDate__c</members>
+        <members>TALEXO_Quote__c.PaymentTerms__c</members>
+        <members>TALEXO_Quote__c.BulkDiscount__c</members>
+        <members>TALEXO_Quote__c.IsPrimary__c</members>
+        <members>TALEXO_Quote__c.VersionNumber__c</members>
+        <members>TALEXO_Quote__c.AcceptanceProbability__c</members>
+        <members>TALEXO_Quote__c.AIReason__c</members>
+        <members>TALEXO_Quote__c.Description__c</members>
+        <members>TALEXO_Quote__c.FinalNegotiatedPrice__c</members>
+        <members>TALEXO_Quote__c.SubmittedAt__c</members>
+        <members>NexusQuoteLineItem__c.Quote__c</members>
+        <members>NexusQuoteLineItem__c.ProductName__c</members>
+        <members>NexusQuoteLineItem__c.ProductFamily__c</members>
+        <members>NexusQuoteLineItem__c.Quantity__c</members>
+        <members>NexusQuoteLineItem__c.ListPrice__c</members>
+        <members>NexusQuoteLineItem__c.UnitPrice__c</members>
+        <members>NexusQuoteLineItem__c.Discount__c</members>
+        <members>NexusQuoteLineItem__c.NetTotal__c</members>
+        <name>CustomField</name>
+    </types>
+    <version>65.0</version>
+</Package>

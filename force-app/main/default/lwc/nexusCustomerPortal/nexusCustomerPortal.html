@@ -174,63 +174,66 @@
         <!-- ─ Dashboard ──────────────────────────────────────────────────── -->
         <template if:true={isDashboard}>
           <div class="ncp-section ncp-dash-section">
-            <!-- AI Hero Banner -->
-            <section class="ncp-ai-banner">
-              <div class="ncp-ai-inner">
-                <div class="ncp-ai-left">
-                  <div class="ncp-ai-badge">
-                    <lightning-icon
-                      icon-name="utility:sparkles"
-                      size="x-small"
-                    ></lightning-icon>
-                    <span>Nexus AI Intelligence</span>
+            <!-- AI Hero Banner + Sparks side by side -->
+            <div class="ncp-banner-sparks-row">
+              <section class="ncp-ai-banner">
+                <div class="ncp-ai-inner">
+                  <div class="ncp-ai-left">
+                    <div class="ncp-ai-badge">
+                      <lightning-icon
+                        icon-name="utility:sparkles"
+                        size="x-small"
+                      ></lightning-icon>
+                      <span>Nexus AI Intelligence</span>
+                    </div>
+                    <h2 class="ncp-ai-title">
+                      YOUR <span class="ncp-ai-accent">INTELLIGENT</span> PORTAL
+                    </h2>
+                    <p class="ncp-ai-desc">
+                      Nexus AI has analysed your account. Discover your
+                      consumption forecasts and personalised recommendations.
+                    </p>
+                    <div class="ncp-ai-btns">
+                      <button class="ncp-ai-cta" onclick={handleGoToInsights}>
+                        View Insights
+                      </button>
+                      <button
+                        class="ncp-ai-cta-secondary"
+                        onclick={handleGoToTimeline}
+                      >
+                        Timeline 360°
+                      </button>
+                    </div>
                   </div>
-                  <h2 class="ncp-ai-title">
-                    VOTRE PORTAIL <span class="ncp-ai-accent">INTELLIGENT</span>
-                  </h2>
-                  <p class="ncp-ai-desc">
-                    Nexus AI a analysé votre compte. Découvrez vos prévisions de
-                    consommation et vos recommandations personnalisées.
-                  </p>
-                  <div class="ncp-ai-btns">
-                    <button class="ncp-ai-cta" onclick={handleGoToInsights}>
-                      Voir les Insights
-                    </button>
-                    <button
-                      class="ncp-ai-cta-secondary"
-                      onclick={handleGoToTimeline}
-                    >
-                      Timeline 360°
-                    </button>
+                  <div class="ncp-ai-stats">
+                    <div class="ncp-stat-mini">
+                      <div class="ncp-stat-value ncp-stat-emerald">98%</div>
+                      <div class="ncp-stat-label">Health Score</div>
+                    </div>
+                    <div class="ncp-stat-mini">
+                      <div class="ncp-stat-value ncp-stat-indigo">15%</div>
+                      <div class="ncp-stat-label">AI Savings</div>
+                    </div>
+                    <div class="ncp-stat-mini">
+                      <div class="ncp-stat-value ncp-stat-amber">+12%</div>
+                      <div class="ncp-stat-label">Forecast Usage</div>
+                    </div>
+                    <div class="ncp-stat-mini">
+                      <div class="ncp-stat-value ncp-stat-emerald">100%</div>
+                      <div class="ncp-stat-label">SLA Status</div>
+                    </div>
                   </div>
                 </div>
-                <div class="ncp-ai-stats">
-                  <div class="ncp-stat-mini">
-                    <div class="ncp-stat-value ncp-stat-emerald">98%</div>
-                    <div class="ncp-stat-label">Score Santé</div>
-                  </div>
-                  <div class="ncp-stat-mini">
-                    <div class="ncp-stat-value ncp-stat-indigo">15%</div>
-                    <div class="ncp-stat-label">Économies AI</div>
-                  </div>
-                  <div class="ncp-stat-mini">
-                    <div class="ncp-stat-value ncp-stat-amber">+12%</div>
-                    <div class="ncp-stat-label">Usage Prévu</div>
-                  </div>
-                  <div class="ncp-stat-mini">
-                    <div class="ncp-stat-value ncp-stat-emerald">100%</div>
-                    <div class="ncp-stat-label">SLA Status</div>
-                  </div>
-                </div>
-              </div>
-              <div class="ncp-ai-glow"></div>
-              <div class="ncp-ai-gradient"></div>
-            </section>
+                <div class="ncp-ai-glow"></div>
+                <div class="ncp-ai-gradient"></div>
+              </section>
 
-            <!-- Nexus Sparks Banner -->
-            <div class="ncp-sparks-row">
-              <c-nexus-sparks sparks-balance={sparksBalance}></c-nexus-sparks>
+              <!-- Nexus Sparks Banner -->
+              <div class="ncp-sparks-row">
+                <c-nexus-sparks sparks-balance={sparksBalance}></c-nexus-sparks>
+              </div>
             </div>
+            <!-- end ncp-banner-sparks-row -->
 
             <!-- KPI Grid -->
             <div class="ncp-kpi-grid">
@@ -495,6 +498,7 @@
           <div class="ncp-section">
             <c-nexus-portal-cart
               sparks-balance={sparksBalance}
+              is-b2-c={isB2C}
               onnavigate={handleNavigateFromCart}
               oncartchanged={handleCartChanged}
             ></c-nexus-portal-cart>
@@ -508,11 +512,13 @@
           </div>
         </template>
 
-        <!-- ─ Devis ────────────────────────────────────────────────────── -->
-        <template if:true={isQuotations}>
-          <div class="ncp-section ncp-fullbleed">
-            <c-nexus-quotation-system></c-nexus-quotation-system>
-          </div>
+        <!-- ─ Devis (B2B only) ─────────────────────────────────────────── -->
+        <template if:true={isB2B}>
+          <template if:true={isQuotations}>
+            <div class="ncp-section ncp-fullbleed">
+              <c-nexus-quotation-system></c-nexus-quotation-system>
+            </div>
+          </template>
         </template>
 
         <!-- ─ Eco Swap ─────────────────────────────────────────────────── -->
@@ -1401,166 +1407,170 @@
                   <span>Add to Cart</span>
                 </button>
               </div>
-              <button
-                class="ncat-modal-quote-full"
-                onclick={handleOpenQuoteFromModal}
-              >
-                <lightning-icon
-                  icon-name="utility:file"
-                  size="x-small"
-                ></lightning-icon>
-                <span>Request B2B Quote</span>
-              </button>
+              <template if:true={isB2B}>
+                <button
+                  class="ncat-modal-quote-full"
+                  onclick={handleOpenQuoteFromModal}
+                >
+                  <lightning-icon
+                    icon-name="utility:file"
+                    size="x-small"
+                  ></lightning-icon>
+                  <span>Request B2B Quote</span>
+                </button>
+              </template>
             </div>
           </div>
         </div>
       </template>
 
-      <!-- ══ B2B Quote Modal ════════════════════════════════════════════════ -->
-      <template if:true={showQuoteModal}>
-        <div class="ncat-modal-overlay" onclick={handleCloseQuoteModal}>
-          <div class="ncat-quote-panel" onclick={handleStopPropagation}>
-            <!-- Form step -->
-            <template if:true={isQuoteForm}>
-              <div class="ncat-quote-header">
-                <div class="ncat-quote-header-left">
-                  <div class="ncat-quote-header-icon">
-                    <lightning-icon
-                      icon-name="utility:company"
-                      size="small"
-                      variant="inverse"
-                    ></lightning-icon>
-                  </div>
-                  <div>
-                    <h3 class="ncat-quote-title">B2B Quote Request</h3>
-                    <p class="ncat-quote-subtitle">
-                      Enterprise Solutions Division
-                    </p>
-                  </div>
-                </div>
-                <button
-                  class="ncat-quote-close-btn"
-                  onclick={handleCloseQuoteModal}
-                >
-                  <lightning-icon
-                    icon-name="utility:close"
-                    size="x-small"
-                  ></lightning-icon>
-                </button>
-              </div>
-              <div class="ncat-quote-body">
-                <template if:true={quoteProduct}>
-                  <div class="ncat-quote-product-row">
-                    <img
-                      src={quoteProduct.image}
-                      alt={quoteProduct.name}
-                      class="ncat-quote-product-img"
-                    />
+      <!-- ══ B2B Quote Modal (B2B only) ════════════════════════════════════ -->
+      <template if:true={isB2B}>
+        <template if:true={showQuoteModal}>
+          <div class="ncat-modal-overlay" onclick={handleCloseQuoteModal}>
+            <div class="ncat-quote-panel" onclick={handleStopPropagation}>
+              <!-- Form step -->
+              <template if:true={isQuoteForm}>
+                <div class="ncat-quote-header">
+                  <div class="ncat-quote-header-left">
+                    <div class="ncat-quote-header-icon">
+                      <lightning-icon
+                        icon-name="utility:company"
+                        size="small"
+                        variant="inverse"
+                      ></lightning-icon>
+                    </div>
                     <div>
-                      <div class="ncat-quote-product-name">
-                        {quoteProduct.name}
-                      </div>
-                      <div class="ncat-quote-product-code">
-                        Product ID: {quoteProduct.productCode}
-                      </div>
+                      <h3 class="ncat-quote-title">B2B Quote Request</h3>
+                      <p class="ncat-quote-subtitle">
+                        Enterprise Solutions Division
+                      </p>
                     </div>
                   </div>
-                </template>
-                <div class="ncat-quote-form-row">
-                  <div class="ncat-qfield">
-                    <label class="ncat-qlabel">Company Name</label>
-                    <input
-                      class="ncat-qinput"
-                      type="text"
-                      placeholder="e.g. Nexus Corp"
-                      value={_quoteCompany}
-                      onchange={handleQuoteCompany}
-                    />
-                  </div>
-                  <div class="ncat-qfield">
-                    <label class="ncat-qlabel">Business Email</label>
-                    <input
-                      class="ncat-qinput"
-                      type="email"
-                      placeholder="name@company.com"
-                      value={_quoteEmail}
-                      onchange={handleQuoteEmail}
-                    />
-                  </div>
+                  <button
+                    class="ncat-quote-close-btn"
+                    onclick={handleCloseQuoteModal}
+                  >
+                    <lightning-icon
+                      icon-name="utility:close"
+                      size="x-small"
+                    ></lightning-icon>
+                  </button>
                 </div>
-                <div class="ncat-quote-form-row">
-                  <div class="ncat-qfield">
-                    <label class="ncat-qlabel">Estimated Quantity</label>
-                    <input
-                      class="ncat-qinput"
-                      type="number"
-                      min="1"
-                      value={_quoteQty}
-                      onchange={handleQuoteQty}
-                    />
+                <div class="ncat-quote-body">
+                  <template if:true={quoteProduct}>
+                    <div class="ncat-quote-product-row">
+                      <img
+                        src={quoteProduct.image}
+                        alt={quoteProduct.name}
+                        class="ncat-quote-product-img"
+                      />
+                      <div>
+                        <div class="ncat-quote-product-name">
+                          {quoteProduct.name}
+                        </div>
+                        <div class="ncat-quote-product-code">
+                          Product ID: {quoteProduct.productCode}
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                  <div class="ncat-quote-form-row">
+                    <div class="ncat-qfield">
+                      <label class="ncat-qlabel">Company Name</label>
+                      <input
+                        class="ncat-qinput"
+                        type="text"
+                        placeholder="e.g. Nexus Corp"
+                        value={_quoteCompany}
+                        onchange={handleQuoteCompany}
+                      />
+                    </div>
+                    <div class="ncat-qfield">
+                      <label class="ncat-qlabel">Business Email</label>
+                      <input
+                        class="ncat-qinput"
+                        type="email"
+                        placeholder="name@company.com"
+                        value={_quoteEmail}
+                        onchange={handleQuoteEmail}
+                      />
+                    </div>
+                  </div>
+                  <div class="ncat-quote-form-row">
+                    <div class="ncat-qfield">
+                      <label class="ncat-qlabel">Estimated Quantity</label>
+                      <input
+                        class="ncat-qinput"
+                        type="number"
+                        min="1"
+                        value={_quoteQty}
+                        onchange={handleQuoteQty}
+                      />
+                    </div>
+                    <div class="ncat-qfield">
+                      <label class="ncat-qlabel">Industry</label>
+                      <select
+                        class="ncat-qinput ncat-qselect"
+                        onchange={handleQuoteIndustry}
+                      >
+                        <option value="Technology">Technology</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Logistics">Logistics</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
                   </div>
                   <div class="ncat-qfield">
-                    <label class="ncat-qlabel">Industry</label>
-                    <select
-                      class="ncat-qinput ncat-qselect"
-                      onchange={handleQuoteIndustry}
-                    >
-                      <option value="Technology">Technology</option>
-                      <option value="Manufacturing">Manufacturing</option>
-                      <option value="Healthcare">Healthcare</option>
-                      <option value="Logistics">Logistics</option>
-                      <option value="Other">Other</option>
-                    </select>
+                    <label class="ncat-qlabel">Specific Requirements</label>
+                    <textarea
+                      class="ncat-qtextarea"
+                      rows="3"
+                      placeholder="Tell us about your project..."
+                      onchange={handleQuoteMessage}
+                    ></textarea>
                   </div>
+                  <button
+                    class="ncat-quote-submit-btn"
+                    onclick={handleQuoteSubmit}
+                  >
+                    <lightning-icon
+                      icon-name="utility:send"
+                      size="x-small"
+                      variant="inverse"
+                    ></lightning-icon>
+                    <span>Submit Quote Request</span>
+                  </button>
                 </div>
-                <div class="ncat-qfield">
-                  <label class="ncat-qlabel">Specific Requirements</label>
-                  <textarea
-                    class="ncat-qtextarea"
-                    rows="3"
-                    placeholder="Tell us about your project..."
-                    onchange={handleQuoteMessage}
-                  ></textarea>
-                </div>
-                <button
-                  class="ncat-quote-submit-btn"
-                  onclick={handleQuoteSubmit}
-                >
-                  <lightning-icon
-                    icon-name="utility:send"
-                    size="x-small"
-                    variant="inverse"
-                  ></lightning-icon>
-                  <span>Submit Quote Request</span>
-                </button>
-              </div>
-            </template>
+              </template>
 
-            <!-- Success step -->
-            <template if:true={isQuoteSuccess}>
-              <div class="ncat-quote-success">
-                <div class="ncat-quote-success-icon">
-                  <lightning-icon
-                    icon-name="utility:success"
-                    size="large"
-                  ></lightning-icon>
+              <!-- Success step -->
+              <template if:true={isQuoteSuccess}>
+                <div class="ncat-quote-success">
+                  <div class="ncat-quote-success-icon">
+                    <lightning-icon
+                      icon-name="utility:success"
+                      size="large"
+                    ></lightning-icon>
+                  </div>
+                  <h3 class="ncat-quote-success-title">Request Received</h3>
+                  <p class="ncat-quote-success-msg">
+                    Our Enterprise team has received your request. A dedicated
+                    account manager will contact you within 2 business hours.
+                  </p>
+                  <button
+                    class="ncat-quote-submit-btn"
+                    onclick={handleCloseQuoteModal}
+                  >
+                    Back to Catalog
+                  </button>
                 </div>
-                <h3 class="ncat-quote-success-title">Request Received</h3>
-                <p class="ncat-quote-success-msg">
-                  Our Enterprise team has received your request. A dedicated
-                  account manager will contact you within 2 business hours.
-                </p>
-                <button
-                  class="ncat-quote-submit-btn"
-                  onclick={handleCloseQuoteModal}
-                >
-                  Back to Catalog
-                </button>
-              </div>
-            </template>
+              </template>
+            </div>
           </div>
-        </div>
-      </template> </template
+        </template> </template
+      ><!-- end isB2B quote modal --> </template
     ><!-- end if:false={isCatalog} -->
 
     <!-- ── Nexus Combo Builder panel (always present, overlaid on every tab) ── -->
