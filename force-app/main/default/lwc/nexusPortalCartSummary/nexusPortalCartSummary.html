@@ -1,127 +1,138 @@
 <template>
+  <!-- ── Summary card ───────────────────────────────────────────── -->
+  <div class="npcs-card">
+    <!-- "• SUMMARY" header -->
+    <div class="npcs-header">
+      <span class="npcs-dot"></span>
+      <span class="npcs-header-label">Summary</span>
+    </div>
 
-    <!-- ── Summary card ───────────────────────────────────────────── -->
-    <div class="npcs-card">
-
-        <!-- "• SUMMARY" header -->
-        <div class="npcs-header">
-            <span class="npcs-dot"></span>
-            <span class="npcs-header-label">Summary</span>
-        </div>
-
-        <!-- Rows -->
-        <div class="npcs-rows">
-            <div class="npcs-row">
-                <span class="npcs-key">Subtotal</span>
-                <span class="npcs-val">{formattedSubtotal}</span>
-            </div>
-            <div class="npcs-row">
-                <span class="npcs-key">Shipping</span>
-                <template if:true={isFreeShipping}>
-                    <span class="npcs-val npcs-val--green">Free</span>
-                </template>
-                <template if:false={isFreeShipping}>
-                    <span class="npcs-val">$45.00</span>
-                </template>
-            </div>
-        </div>
-
-        <!-- ── Nexus Sparks Redemption ─────────────────────────── -->
-        <template if:true={hasSparks}>
-            <div class="npcs-sparks-wrap">
-
-                <!-- Header row -->
-                <div class="npcs-sparks-header">
-                    <div class="npcs-sparks-left">
-                        <span class="npcs-sparks-icon-wrap">
-                            <lightning-icon icon-name="utility:sparkles" size="x-small"></lightning-icon>
-                        </span>
-                        <span class="npcs-sparks-title">Nexus Sparks</span>
-                    </div>
-                    <span class="npcs-sparks-avail">{_balance} Available</span>
-                </div>
-
-                <!-- Applied state -->
-                <template if:true={sparksApplied}>
-                    <div class="npcs-sparks-applied-row">
-                        <span class="npcs-sparks-applied-label">Applied: {appliedLabel}</span>
-                        <button class="npcs-sparks-remove" onclick={handleRemoveSparks}>Remove</button>
-                    </div>
-                </template>
-
-                <!-- Input state -->
-                <template if:false={sparksApplied}>
-                    <div class="npcs-sparks-input-row">
-                        <input
-                            type="number"
-                            class={inputClass}
-                            value={sparksInput}
-                            placeholder="Amount..."
-                            oninput={handleSparksInput}
-                        />
-                        <button
-                            class="npcs-sparks-apply-btn"
-                            disabled={applyDisabled}
-                            onclick={handleApplySparks}>
-                            Apply
-                        </button>
-                    </div>
-                    <template if:true={showError}>
-                        <p class="npcs-sparks-error">&#9888; Only {_balance} Sparks available.</p>
-                    </template>
-                    <button class="npcs-sparks-max-btn" onclick={handleApplyMax}>
-                        Apply Maximum ({maxRedeemableLabel} Sparks)
-                    </button>
-                </template>
-
-            </div>
+    <!-- Rows -->
+    <div class="npcs-rows">
+      <div class="npcs-row">
+        <span class="npcs-key">Subtotal</span>
+        <span class="npcs-val">{formattedSubtotal}</span>
+      </div>
+      <div class="npcs-row">
+        <span class="npcs-key">Shipping</span>
+        <template if:true={isFreeShipping}>
+          <span class="npcs-val npcs-val--green">Free</span>
         </template>
+        <template if:false={isFreeShipping}>
+          <span class="npcs-val">$45.00</span>
+        </template>
+      </div>
+    </div>
 
-        <!-- Sparks discount row (only when applied) -->
+    <!-- ── Nexus Sparks Redemption ─────────────────────────── -->
+    <template if:true={hasSparks}>
+      <div class="npcs-sparks-wrap">
+        <!-- Header row -->
+        <div class="npcs-sparks-header">
+          <div class="npcs-sparks-left">
+            <span class="npcs-sparks-icon-wrap">
+              <lightning-icon
+                icon-name="utility:sparkles"
+                size="x-small"
+              ></lightning-icon>
+            </span>
+            <span class="npcs-sparks-title">Nexus Sparks</span>
+          </div>
+          <span class="npcs-sparks-avail">{_balance} Available</span>
+        </div>
+
+        <!-- Applied state -->
         <template if:true={sparksApplied}>
-            <div class="npcs-row npcs-sparks-disc-row">
-                <span class="npcs-key">Sparks Discount</span>
-                <span class="npcs-val npcs-val--green">{formattedSparksDisc}</span>
-            </div>
+          <div class="npcs-sparks-applied-row">
+            <span class="npcs-sparks-applied-label"
+              >Applied: {appliedLabel}</span
+            >
+            <button class="npcs-sparks-remove" onclick={handleRemoveSparks}>
+              Remove
+            </button>
+          </div>
         </template>
 
-        <!-- Total block -->
-        <div class="npcs-divider"></div>
-        <div class="npcs-total-block">
-            <div class="npcs-total-left">
-                <span class="npcs-total-label">Total to pay</span>
-                <span class="npcs-total-sub">VAT Included</span>
-            </div>
-            <span class="npcs-total-amount">{formattedTotal}</span>
-        </div>
-
-        <!-- Actions -->
-        <div class="npcs-actions">
-            <button class="npcs-btn-order" onclick={handlePlaceOrder}>
-                Place Order
+        <!-- Input state -->
+        <template if:false={sparksApplied}>
+          <div class="npcs-sparks-input-row">
+            <input
+              type="number"
+              class={inputClass}
+              value={sparksInput}
+              placeholder="Amount..."
+              oninput={handleSparksInput}
+            />
+            <button
+              class="npcs-sparks-apply-btn"
+              disabled={applyDisabled}
+              onclick={handleApplySparks}
+            >
+              Apply
             </button>
-            <button class="npcs-btn-quote" onclick={handleRequestQuote}>
-                Request Formal Quote
-            </button>
-        </div>
+          </div>
+          <template if:true={showError}>
+            <p class="npcs-sparks-error">
+              &#9888; Only {_balance} Sparks available.
+            </p>
+          </template>
+          <button class="npcs-sparks-max-btn" onclick={handleApplyMax}>
+            Apply Maximum ({maxRedeemableLabel} Sparks)
+          </button>
+        </template>
+      </div>
+    </template>
 
-        <!-- Secure SSL badge -->
-        <div class="npcs-secure">
-            <lightning-icon icon-name="utility:shield" size="x-small"></lightning-icon>
-            <span>Secure SSL Payment</span>
-        </div>
+    <!-- Sparks discount row (only when applied) -->
+    <template if:true={sparksApplied}>
+      <div class="npcs-row npcs-sparks-disc-row">
+        <span class="npcs-key">Sparks Discount</span>
+        <span class="npcs-val npcs-val--green">{formattedSparksDisc}</span>
+      </div>
+    </template>
 
+    <!-- Total block -->
+    <div class="npcs-divider"></div>
+    <div class="npcs-total-block">
+      <div class="npcs-total-left">
+        <span class="npcs-total-label">Total to pay</span>
+        <span class="npcs-total-sub">VAT Included</span>
+      </div>
+      <span class="npcs-total-amount">{formattedTotal}</span>
     </div>
 
-    <!-- ── Express Delivery card ───────────────────────────────────── -->
-    <div class="npcs-delivery-card">
-        <div class="npcs-delivery-icon">
-            <lightning-icon icon-name="utility:truck" size="small"></lightning-icon>
-        </div>
-        <div>
-            <div class="npcs-delivery-title">Express Delivery</div>
-            <p class="npcs-delivery-sub">Order in the next 2h for same-day shipping.</p>
-        </div>
+    <!-- Actions -->
+    <div class="npcs-actions">
+      <button class="npcs-btn-order" onclick={handlePlaceOrder}>
+        Place Order
+      </button>
+      <template if:false={isB2C}>
+        <button class="npcs-btn-quote" onclick={handleRequestQuote}>
+          Request Formal Quote
+        </button>
+      </template>
     </div>
 
+    <!-- Secure SSL badge -->
+    <div class="npcs-secure">
+      <lightning-icon
+        icon-name="utility:shield"
+        size="x-small"
+      ></lightning-icon>
+      <span>Secure SSL Payment</span>
+    </div>
+  </div>
+
+  <!-- ── Express Delivery card ───────────────────────────────────── -->
+  <div class="npcs-delivery-card">
+    <div class="npcs-delivery-icon">
+      <lightning-icon icon-name="utility:truck" size="small"></lightning-icon>
+    </div>
+    <div>
+      <div class="npcs-delivery-title">Express Delivery</div>
+      <p class="npcs-delivery-sub">
+        Order in the next 2h for same-day shipping.
+      </p>
+    </div>
+  </div>
 </template>

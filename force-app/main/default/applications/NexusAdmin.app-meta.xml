@@ -1,13 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
     <defaultLandingTab>NexusAdminHome</defaultLandingTab>
-    <description>Nexus Admin — Lead Pipeline &amp; CRM Control Center</description>
+    <description
+  >Nexus Admin — Lead Pipeline &amp; CRM Control Center</description>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
-    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavPersonalizationDisabled>true</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>Nexus Admin</label>
     <navType>Standard</navType>
     <tabs>NexusAdminHome</tabs>
+    <tabs>NexusQuoteBuilder</tabs>
     <tabs>standard-Lead</tabs>
     <tabs>standard-Opportunity</tabs>
     <tabs>standard-Account</tabs>

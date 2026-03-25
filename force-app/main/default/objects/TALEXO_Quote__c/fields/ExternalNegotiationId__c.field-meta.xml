@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ExternalNegotiationId__c</fullName>
+    <label>External Negotiation ID</label>
+    <type>Text</type>
+    <length>255</length>
+    <unique>false</unique>
+    <externalId>true</externalId>
+    <description
+  >ID returned by the external negotiation platform after quote submission (Option A versioning).</description>
+</CustomField>

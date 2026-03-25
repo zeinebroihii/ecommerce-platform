@@ -1,0 +1,1391 @@
+/**
+ * NexusQuoteController
+ *
+ * Apex controller for the nexusQuoteBuilder LWC (admin / sales-rep side).
+ * Provides:
+ *   • Product catalogue lookup
+ *   • Quote generation delegation → QuoteGenerationService
+ *   • All-quotes list for admin dashboard
+ *   • Per-opportunity quote list
+ *   • Re-score trigger (manual AI refresh)
+ *   • Submit to external negotiation platform
+ */
+public without sharing class NexusQuoteController {
+  // ── Wrappers ──────────────────────────────────────────────────────────────
+
+  public class ProductWrapper {
+    @AuraEnabled
+    public Id productId;
+    @AuraEnabled
+    public String name;
+    @AuraEnabled
+    public String family;
+    @AuraEnabled
+    public String imageUrl;
+    @AuraEnabled
+    public Decimal price;
+    @AuraEnabled
+    public String availabilityStatus;
+  }
+
+  public class QuoteDetailWrapper {
+    @AuraEnabled
+    public Id quoteId;
+    @AuraEnabled
+    public String name;
+    @AuraEnabled
+    public String status;
+    @AuraEnabled
+    public String negotiationStatus;
+    @AuraEnabled
+    public Decimal grandTotal;
+    @AuraEnabled
+    public Decimal finalNegotiatedPrice;
+    @AuraEnabled
+    public String formattedTotal;
+    @AuraEnabled
+    public String formattedFinalPrice;
+    @AuraEnabled
+    public String expirationDate;
+    @AuraEnabled
+    public String paymentTerms;
+    @AuraEnabled
+    public Decimal bulkDiscount;
+    @AuraEnabled
+    public Integer versionNumber;
+    @AuraEnabled
+    public Integer acceptanceProbability;
+    @AuraEnabled
+    public String aiReason;
+    @AuraEnabled
+    public Boolean isPrimary;
+    @AuraEnabled
+    public Boolean isRequested;
+    @AuraEnabled
+    public String requestedAt;
+    @AuraEnabled
+    public String opportunityName;
+    @AuraEnabled
+    public String accountName;
+    @AuraEnabled
+    public Id opportunityId;
+    @AuraEnabled
+    public String customerEmail;
+    @AuraEnabled
+    public String probStyle;
+    @AuraEnabled
+    public String probColorCls;
+    @AuraEnabled
+    public List<LineItemWrapper> lineItems;
+  }
+
+  public class LineItemWrapper {
+    @AuraEnabled
+    public Id lineItemId;
+    @AuraEnabled
+    public String productName;
+    @AuraEnabled
+    public String productFamily;
+    @AuraEnabled
+    public Integer quantity;
+    @AuraEnabled
+    public Decimal listPrice;
+    @AuraEnabled
+    public Decimal unitPrice;
+    @AuraEnabled
+    public Decimal discount;
+    @AuraEnabled
+    public Decimal netTotal;
+    @AuraEnabled
+    public String formattedNetTotal;
+  }
+
+  // ── Product catalogue ─────────────────────────────────────────────────────
+
+  @AuraEnabled(cacheable=true)
+  public static List<ProductWrapper> getProducts(String searchTerm) {
+    String likeStr = String.isNotBlank(searchTerm)
+      ? '%' + searchTerm + '%'
+      : '%';
+    List<ProductWrapper> result = new List<ProductWrapper>();
+    for (Product2 p : [
+      SELECT Id, Name, Family, Image_URL__c, Price__c, AvailabilityStatus__c
+      FROM Product2
+      WHERE IsActive = TRUE AND Name LIKE :likeStr
+      ORDER BY Name ASC
+      LIMIT 50
+    ]) {
+      ProductWrapper w = new ProductWrapper();
+      w.productId = p.Id;
+      w.name = p.Name;
+      w.family = p.Family;
+      w.imageUrl = p.Image_URL__c;
+      w.price = p.Price__c;
+      w.availabilityStatus = p.AvailabilityStatus__c;
+      result.add(w);
+    }
+    return result;
+  }
+
+  // ── Quote generation (delegates to service) ───────────────────────────────
+
+  @AuraEnabled
+  public static QuoteGenerationService.GenerateResult createQuote(
+    String requestJSON
+  ) {
+    return QuoteGenerationService.generateQuote(requestJSON);
+  }
+
+  // ── All quotes (admin dashboard) ──────────────────────────────────────────
+
+  @AuraEnabled(cacheable=true)
+  public static List<QuoteDetailWrapper> getAllQuotes() {
+    return toWrapperList(
+      [
+        SELECT
+          Id,
+          Name,
+          Status__c,
+          NegotiationStatus__c,
+          GrandTotal__c,
+          FinalNegotiatedPrice__c,
+          ExpirationDate__c,
+          PaymentTerms__c,
+          BulkDiscount__c,
+          VersionNumber__c,
+          AcceptanceProbability__c,
+          AIReason__c,
+          IsPrimary__c,
+          CreatedDate,
+          Opportunity__c,
+          Opportunity__r.Name,
+          Opportunity__r.Account.Name,
+          Opportunity__r.AccountId,
+          (
+            SELECT
+              Id,
+              ProductName__c,
+              ProductFamily__c,
+              Quantity__c,
+              ListPrice__c,
+              UnitPrice__c,
+              Discount__c,
+              NetTotal__c
+            FROM NexusQuoteLineItems__r
+          )
+        FROM TALEXO_Quote__c
+        WHERE Status__c != 'Requested'
+        ORDER BY CreatedDate DESC
+        LIMIT 100
+      ]
+    );
+  }
+
+  // ── Customer quote requests (Status = Requested) ───────────────────────────
+
+  @AuraEnabled(cacheable=true)
+  public static List<QuoteDetailWrapper> getQuoteRequests() {
+    return toWrapperList(
+      [
+        SELECT
+          Id,
+          Name,
+          Status__c,
+          NegotiationStatus__c,
+          GrandTotal__c,
+          FinalNegotiatedPrice__c,
+          ExpirationDate__c,
+          PaymentTerms__c,
+          BulkDiscount__c,
+          VersionNumber__c,
+          AcceptanceProbability__c,
+          AIReason__c,
+          IsPrimary__c,
+          CreatedDate,
+          Opportunity__c,
+          Opportunity__r.Name,
+          Opportunity__r.Account.Name,
+          Opportunity__r.AccountId,
+          (
+            SELECT
+              Id,
+              ProductName__c,
+              ProductFamily__c,
+              Quantity__c,
+              ListPrice__c,
+              UnitPrice__c,
+              Discount__c,
+              NetTotal__c
+            FROM NexusQuoteLineItems__r
+          )
+        FROM TALEXO_Quote__c
+        WHERE Status__c = 'Requested'
+        ORDER BY CreatedDate DESC
+        LIMIT 50
+      ]
+    );
+  }
+
+  // ── Admin: send official quote to customer ─────────────────────────────────
+
+  @AuraEnabled
+  public static void sendToCustomer(Id quoteId) {
+    TALEXO_Quote__c q = [
+      SELECT
+        Id,
+        Name,
+        GrandTotal__c,
+        ExpirationDate__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        Opportunity__r.Account.Name,
+        BulkDiscount__c,
+        PaymentTerms__c
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+
+    // Find the customer portal user for this account
+    List<User> custUsers = [
+      SELECT Id, Email
+      FROM User
+      WHERE
+        AccountId = :q.Opportunity__r.AccountId
+        AND IsActive = TRUE
+        AND UserType = 'PowerCustomerSuccess'
+      LIMIT 1
+    ];
+
+    if (!custUsers.isEmpty() && String.isNotBlank(custUsers[0].Email)) {
+      QuoteController.sendQuoteToCustomer(
+        quoteId,
+        custUsers[0].Email,
+        null,
+        null,
+        null
+      );
+    } else {
+      // No portal user found — update status + advance opp stage
+      update new TALEXO_Quote__c(Id = quoteId, Status__c = 'Presented');
+      if (q.Opportunity__c != null) {
+        update new Opportunity(
+          Id = q.Opportunity__c,
+          StageName = 'Proposal/Price Quote'
+        );
+      }
+    }
+  }
+
+  // ── Per-opportunity quotes ────────────────────────────────────────────────
+
+  @AuraEnabled(cacheable=true)
+  public static List<QuoteDetailWrapper> getOpportunityQuotes(
+    Id opportunityId
+  ) {
+    return toWrapperList(
+      [
+        SELECT
+          Id,
+          Name,
+          Status__c,
+          NegotiationStatus__c,
+          GrandTotal__c,
+          FinalNegotiatedPrice__c,
+          ExpirationDate__c,
+          PaymentTerms__c,
+          BulkDiscount__c,
+          VersionNumber__c,
+          AcceptanceProbability__c,
+          AIReason__c,
+          IsPrimary__c,
+          Opportunity__r.Name,
+          Opportunity__r.Account.Name,
+          (
+            SELECT
+              Id,
+              ProductName__c,
+              ProductFamily__c,
+              Quantity__c,
+              ListPrice__c,
+              UnitPrice__c,
+              Discount__c,
+              NetTotal__c
+            FROM NexusQuoteLineItems__r
+          )
+        FROM TALEXO_Quote__c
+        WHERE Opportunity__c = :opportunityId
+        ORDER BY VersionNumber__c DESC, CreatedDate DESC
+      ]
+    );
+  }
+
+  // ── Re-score quote (manual trigger) ──────────────────────────────────────
+
+  @AuraEnabled
+  public static void rescoreQuote(Id quoteId) {
+    QuoteAIScoringAction.ScoreInput inp = new QuoteAIScoringAction.ScoreInput();
+    inp.quoteId = quoteId;
+    QuoteAIScoringAction.scoreQuote(
+      new List<QuoteAIScoringAction.ScoreInput>{ inp }
+    );
+  }
+
+  // ── CPQ Edit: inline edits input classes ─────────────────────────────────
+
+  public class VersionEditInput {
+    public Decimal bulkDiscount;
+    public String paymentTerms;
+    public String expirationDate; // 'YYYY-MM-DD'
+    public List<LineEditInput> lineItems;
+  }
+
+  public class LineEditInput {
+    public String lineItemId;
+    public String productName;
+    public String productFamily;
+    public Integer quantity;
+    public Decimal listPrice;
+    public Decimal unitPrice;
+    public Decimal discount;
+    public Decimal netTotal;
+  }
+
+  // ── CPQ: create a new version from inline edits (Scenario 5 revised) ─────
+
+  @AuraEnabled
+  public static QuoteDetailWrapper createVersionFromEdits(
+    Id sourceQuoteId,
+    String editsJSON
+  ) {
+    VersionEditInput edits = (VersionEditInput) JSON.deserialize(
+      editsJSON,
+      VersionEditInput.class
+    );
+
+    TALEXO_Quote__c original = [
+      SELECT Id, Opportunity__c, VersionNumber__c
+      FROM TALEXO_Quote__c
+      WHERE Id = :sourceQuoteId
+      LIMIT 1
+    ];
+
+    Integer newVer = original.VersionNumber__c != null
+      ? Integer.valueOf(original.VersionNumber__c) + 1
+      : 2;
+
+    // Demote all existing primaries for this opportunity
+    List<TALEXO_Quote__c> primaries = [
+      SELECT Id
+      FROM TALEXO_Quote__c
+      WHERE Opportunity__c = :original.Opportunity__c AND IsPrimary__c = TRUE
+    ];
+    for (TALEXO_Quote__c p : primaries)
+      p.IsPrimary__c = false;
+    if (!primaries.isEmpty())
+      update primaries;
+
+    // Parse expiration date
+    Date expDate = String.isNotBlank(edits.expirationDate)
+      ? Date.valueOf(edits.expirationDate)
+      : Date.today().addDays(30);
+
+    // Grand total from edited line items
+    Decimal grandTotal = 0;
+    if (edits.lineItems != null) {
+      for (LineEditInput li : edits.lineItems) {
+        grandTotal += (li.netTotal != null ? li.netTotal : 0);
+      }
+    }
+
+    // Create new quote version
+    TALEXO_Quote__c newQ = new TALEXO_Quote__c(
+      Opportunity__c = original.Opportunity__c,
+      Status__c = 'Draft',
+      GrandTotal__c = grandTotal,
+      ExpirationDate__c = expDate,
+      PaymentTerms__c = edits.paymentTerms,
+      BulkDiscount__c = edits.bulkDiscount,
+      IsPrimary__c = true,
+      VersionNumber__c = newVer,
+      NegotiationStatus__c = 'Draft',
+      Description__c = 'Version ' +
+        newVer +
+        ' — révisée depuis v' +
+        (newVer - 1)
+    );
+    insert newQ;
+
+    // Create edited line items
+    List<NexusQuoteLineItem__c> items = new List<NexusQuoteLineItem__c>();
+    if (edits.lineItems != null) {
+      for (LineEditInput li : edits.lineItems) {
+        Integer qty = li.quantity != null ? li.quantity : 1;
+        Decimal price = li.unitPrice != null ? li.unitPrice : 0;
+        items.add(
+          new NexusQuoteLineItem__c(
+            Quote__c = newQ.Id,
+            ProductName__c = li.productName,
+            ProductFamily__c = li.productFamily,
+            Quantity__c = qty,
+            ListPrice__c = li.listPrice != null ? li.listPrice : price,
+            UnitPrice__c = price,
+            Discount__c = li.discount != null ? li.discount : 0,
+            NetTotal__c = li.netTotal != null ? li.netTotal : (price * qty)
+          )
+        );
+      }
+    }
+    if (!items.isEmpty())
+      insert items;
+
+    // Re-score the new version
+    QuoteAIScoringAction.ScoreInput inp = new QuoteAIScoringAction.ScoreInput();
+    inp.quoteId = newQ.Id;
+    QuoteAIScoringAction.scoreQuote(
+      new List<QuoteAIScoringAction.ScoreInput>{ inp }
+    );
+
+    return toWrapper(
+      [
+        SELECT
+          Id,
+          Name,
+          Status__c,
+          NegotiationStatus__c,
+          GrandTotal__c,
+          FinalNegotiatedPrice__c,
+          ExpirationDate__c,
+          PaymentTerms__c,
+          BulkDiscount__c,
+          VersionNumber__c,
+          AcceptanceProbability__c,
+          AIReason__c,
+          IsPrimary__c,
+          CreatedDate,
+          Opportunity__c,
+          Opportunity__r.Name,
+          Opportunity__r.Account.Name,
+          Opportunity__r.AccountId,
+          (
+            SELECT
+              Id,
+              ProductName__c,
+              ProductFamily__c,
+              Quantity__c,
+              ListPrice__c,
+              UnitPrice__c,
+              Discount__c,
+              NetTotal__c
+            FROM NexusQuoteLineItems__r
+          )
+        FROM TALEXO_Quote__c
+        WHERE Id = :newQ.Id
+        LIMIT 1
+      ]
+    );
+  }
+
+  // ── Admin: create a new version of an existing quote (Scenario 5) ────────
+
+  @AuraEnabled
+  public static QuoteDetailWrapper createNewVersion(Id quoteId) {
+    TALEXO_Quote__c original = [
+      SELECT
+        Id,
+        Opportunity__c,
+        GrandTotal__c,
+        ExpirationDate__c,
+        PaymentTerms__c,
+        BulkDiscount__c,
+        VersionNumber__c,
+        (
+          SELECT
+            ProductName__c,
+            ProductFamily__c,
+            Quantity__c,
+            ListPrice__c,
+            UnitPrice__c,
+            Discount__c,
+            NetTotal__c,
+            Product__c
+          FROM NexusQuoteLineItems__r
+        )
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+
+    Integer newVer = original.VersionNumber__c != null
+      ? Integer.valueOf(original.VersionNumber__c) + 1
+      : 2;
+
+    // Demote all existing primary quotes for this opportunity
+    List<TALEXO_Quote__c> primaries = [
+      SELECT Id
+      FROM TALEXO_Quote__c
+      WHERE Opportunity__c = :original.Opportunity__c AND IsPrimary__c = TRUE
+    ];
+    for (TALEXO_Quote__c p : primaries)
+      p.IsPrimary__c = false;
+    if (!primaries.isEmpty())
+      update primaries;
+
+    // Clone quote as new Draft version
+    TALEXO_Quote__c newQ = new TALEXO_Quote__c(
+      Opportunity__c = original.Opportunity__c,
+      Status__c = 'Draft',
+      GrandTotal__c = original.GrandTotal__c,
+      ExpirationDate__c = Date.today().addDays(30),
+      PaymentTerms__c = original.PaymentTerms__c,
+      BulkDiscount__c = original.BulkDiscount__c,
+      IsPrimary__c = true,
+      VersionNumber__c = newVer,
+      NegotiationStatus__c = 'Draft',
+      Description__c = 'Version ' + newVer + ' — revised from v' + (newVer - 1)
+    );
+    insert newQ;
+
+    // Clone all line items
+    List<NexusQuoteLineItem__c> items = new List<NexusQuoteLineItem__c>();
+    for (NexusQuoteLineItem__c li : original.NexusQuoteLineItems__r) {
+      items.add(
+        new NexusQuoteLineItem__c(
+          Quote__c = newQ.Id,
+          Product__c = li.Product__c,
+          ProductName__c = li.ProductName__c,
+          ProductFamily__c = li.ProductFamily__c,
+          Quantity__c = li.Quantity__c,
+          ListPrice__c = li.ListPrice__c,
+          UnitPrice__c = li.UnitPrice__c,
+          Discount__c = li.Discount__c,
+          NetTotal__c = li.NetTotal__c
+        )
+      );
+    }
+    if (!items.isEmpty())
+      insert items;
+
+    // Re-score the new version
+    QuoteAIScoringAction.ScoreInput inp = new QuoteAIScoringAction.ScoreInput();
+    inp.quoteId = newQ.Id;
+    QuoteAIScoringAction.scoreQuote(
+      new List<QuoteAIScoringAction.ScoreInput>{ inp }
+    );
+
+    return toWrapper(
+      [
+        SELECT
+          Id,
+          Name,
+          Status__c,
+          NegotiationStatus__c,
+          GrandTotal__c,
+          FinalNegotiatedPrice__c,
+          ExpirationDate__c,
+          PaymentTerms__c,
+          BulkDiscount__c,
+          VersionNumber__c,
+          AcceptanceProbability__c,
+          AIReason__c,
+          IsPrimary__c,
+          CreatedDate,
+          Opportunity__c,
+          Opportunity__r.Name,
+          Opportunity__r.Account.Name,
+          Opportunity__r.AccountId,
+          (
+            SELECT
+              Id,
+              ProductName__c,
+              ProductFamily__c,
+              Quantity__c,
+              ListPrice__c,
+              UnitPrice__c,
+              Discount__c,
+              NetTotal__c
+            FROM NexusQuoteLineItems__r
+          )
+        FROM TALEXO_Quote__c
+        WHERE Id = :newQ.Id
+        LIMIT 1
+      ]
+    );
+  }
+
+  // ── Scenario 2a: Admin generates formal contract + sends to customer ────────
+
+  @AuraEnabled
+  public static Id generateAndSendContract(Id quoteId) {
+    TALEXO_Quote__c q = [
+      SELECT
+        Id,
+        Name,
+        Status__c,
+        GrandTotal__c,
+        NegotiationStatus__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        PaymentTerms__c,
+        BulkDiscount__c
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (q.Status__c != 'Accepted') {
+      throw new AuraHandledException(
+        'Seuls les devis acceptés peuvent générer un contrat.'
+      );
+    }
+    // Guard: prevent duplicate contracts (NegStatus=Final means contract already generated)
+    if (q.NegotiationStatus__c == 'Final') {
+      List<Contract> existing = [
+        SELECT Id
+        FROM Contract
+        WHERE AccountId = :q.Opportunity__r.AccountId AND StartDate = TODAY
+        ORDER BY CreatedDate DESC
+        LIMIT 1
+      ];
+      if (!existing.isEmpty())
+        return existing[0].Id;
+    }
+
+    // Create contract as Draft (org requires Draft → Activated two-step DML)
+    Contract c = new Contract(
+      AccountId = q.Opportunity__r.AccountId,
+      StartDate = Date.today(),
+      ContractTerm = 12,
+      Status = 'Draft',
+      Description = 'Contrat B2B — ' +
+        q.Name +
+        ' | ' +
+        (q.PaymentTerms__c != null ? q.PaymentTerms__c : 'Net 30'),
+      SpecialTerms = q.PaymentTerms__c
+    );
+    insert c;
+    // Activate the contract (requires separate DML after insert)
+    update new Contract(Id = c.Id, Status = 'Activated');
+
+    // Signal to portal that contract is awaiting customer signature
+    update new TALEXO_Quote__c(Id = quoteId, NegotiationStatus__c = 'Final');
+
+    // Advance opportunity to Value Proposition (contract in hand, awaiting signature)
+    update new Opportunity(
+      Id = q.Opportunity__c,
+      StageName = 'Value Proposition'
+    );
+
+    // Send the formal contract document email to the customer
+    sendContractEmailAsync(quoteId, c.Id);
+
+    return c.Id;
+  }
+
+  // ── Scenario 2b: Customer signs the formal contract in the portal ──────────
+
+  // ── Dev/test only: reset quote status ────────────────────────────────────
+  @AuraEnabled
+  public static void devResetQuoteStatus(Id quoteId, String status) {
+    update new TALEXO_Quote__c(Id = quoteId, Status__c = status);
+  }
+
+  // ── Dev/test only: simulate invoice email and return result ───────────────
+  @AuraEnabled
+  public static String devTestInvoiceEmail(Id quoteId, String toEmail) {
+    try {
+      TALEXO_Quote__c q = [
+        SELECT
+          Id,
+          Name,
+          GrandTotal__c,
+          BulkDiscount__c,
+          PaymentTerms__c,
+          Opportunity__r.AccountId,
+          Opportunity__r.Account.Name,
+          (
+            SELECT ProductName__c, Quantity__c, UnitPrice__c, NetTotal__c
+            FROM NexusQuoteLineItems__r
+          )
+        FROM TALEXO_Quote__c
+        WHERE Id = :quoteId
+        LIMIT 1
+      ];
+      String resolvedEmail = toEmail;
+      if (String.isBlank(resolvedEmail)) {
+        List<User> custUsers = [
+          SELECT Email
+          FROM User
+          WHERE
+            AccountId = :q.Opportunity__r.AccountId
+            AND IsActive = TRUE
+            AND UserType = 'PowerCustomerSuccess'
+          LIMIT 1
+        ];
+        resolvedEmail = custUsers.isEmpty() ? null : custUsers[0].Email;
+      }
+      if (String.isBlank(resolvedEmail))
+        return 'FAIL: no email resolved. AccountId=' +
+          q.Opportunity__r.AccountId;
+
+      Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+      mail.setToAddresses(new List<String>{ resolvedEmail });
+      mail.setSubject('TEST — Nexus Invoice · ' + q.Name);
+      mail.setHtmlBody(
+        '<p>Test invoice for <strong>' +
+          q.Name +
+          '</strong> | Total: ' +
+          q.GrandTotal__c +
+          ' | Lines: ' +
+          q.NexusQuoteLineItems__r.size() +
+          '</p>'
+      );
+      mail.setSaveAsActivity(false);
+      Messaging.SendEmailResult[] results = Messaging.sendEmail(
+        new List<Messaging.SingleEmailMessage>{ mail }
+      );
+      if (results[0].isSuccess())
+        return 'OK: email sent to ' + resolvedEmail;
+      return 'FAIL: ' + results[0].getErrors()[0].getMessage();
+    } catch (Exception ex) {
+      return 'EXCEPTION: ' +
+        ex.getTypeName() +
+        ': ' +
+        ex.getMessage() +
+        ' | ' +
+        ex.getStackTraceString();
+    }
+  }
+
+  @AuraEnabled
+  public static void finalizeContractSign(Id quoteId) {
+    TALEXO_Quote__c q = [
+      SELECT
+        Id,
+        Name,
+        Status__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        Opportunity__r.OwnerId,
+        Opportunity__r.Owner.Email,
+        Opportunity__r.Account.Name
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (q.Status__c != 'Accepted') {
+      throw new AuraHandledException(
+        'Le devis doit être accepté avant de signer le contrat.'
+      );
+    }
+
+    update new TALEXO_Quote__c(
+      Id = quoteId,
+      Status__c = 'Signed',
+      NegotiationStatus__c = 'Final'
+    );
+    update new Opportunity(Id = q.Opportunity__c, StageName = 'Closed Won');
+
+    // Capture signing user info now (can't use UserInfo in @future)
+    User signer = [
+      SELECT Name, Email
+      FROM User
+      WHERE Id = :UserInfo.getUserId()
+      LIMIT 1
+    ];
+    String signedAt = DateTime.now().format('dd/MM/yyyy HH:mm') + ' UTC';
+
+    // Send B2B invoice PDF to customer
+    sendB2BInvoiceAsync(
+      quoteId,
+      'CTR-' + String.valueOf(q.Id).right(6).toUpperCase(),
+      signer.Email,
+      signer.Name,
+      signedAt
+    );
+
+    // Notify the opportunity owner (sales rep)
+    if (String.isNotBlank(q.Opportunity__r.Owner.Email)) {
+      sendContractSignedNotification(
+        q.Opportunity__r.Owner.Email,
+        q.Opportunity__r.Account.Name,
+        q.Name
+      );
+    }
+  }
+
+  // ── @future: formal HTML contract email to customer ───────────────────────
+
+  @future
+  private static void sendContractEmailAsync(Id quoteId, Id contractId) {
+    try {
+      TALEXO_Quote__c q = [
+        SELECT
+          Id,
+          Name,
+          GrandTotal__c,
+          BulkDiscount__c,
+          PaymentTerms__c,
+          Opportunity__r.AccountId,
+          Opportunity__r.Account.Name,
+          (
+            SELECT ProductName__c, Quantity__c, UnitPrice__c, NetTotal__c
+            FROM NexusQuoteLineItems__r
+          )
+        FROM TALEXO_Quote__c
+        WHERE Id = :quoteId
+        LIMIT 1
+      ];
+
+      List<User> custUsers = [
+        SELECT Email
+        FROM User
+        WHERE
+          AccountId = :q.Opportunity__r.AccountId
+          AND IsActive = TRUE
+          AND UserType = 'PowerCustomerSuccess'
+        LIMIT 1
+      ];
+      if (custUsers.isEmpty() || String.isBlank(custUsers[0].Email))
+        return;
+
+      String accName = q.Opportunity__r.Account.Name;
+      String terms = q.PaymentTerms__c != null ? q.PaymentTerms__c : 'Net 30';
+      Decimal disc = q.BulkDiscount__c != null ? q.BulkDiscount__c : 0;
+      Decimal grand = q.GrandTotal__c != null ? q.GrandTotal__c : 0;
+      String ctrRef =
+        'CTR-' + String.valueOf(contractId).right(6).toUpperCase();
+      String dateStr = Date.today().format();
+      String portalUrl = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/mes-offres';
+
+      String rows = '';
+      for (NexusQuoteLineItem__c li : q.NexusQuoteLineItems__r) {
+        Integer qty = li.Quantity__c != null
+          ? Integer.valueOf(li.Quantity__c)
+          : 1;
+        Decimal unit = li.UnitPrice__c != null ? li.UnitPrice__c : 0;
+        Decimal net = li.NetTotal__c != null ? li.NetTotal__c : (unit * qty);
+        rows +=
+          '<tr style="border-bottom:1px solid #f1f5f9;">' +
+          '<td style="padding:10px 12px;font-size:12px;font-weight:700;color:#0f172a;">' +
+          li.ProductName__c +
+          '</td>' +
+          '<td style="padding:10px 12px;font-size:12px;text-align:center;">' +
+          qty +
+          '</td>' +
+          '<td style="padding:10px 12px;font-size:12px;text-align:right;font-weight:700;color:#4f46e5;">' +
+          net.setScale(2) +
+          ' €</td>' +
+          '</tr>';
+      }
+
+      String html =
+        '<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#f8fafc;padding:24px;">' +
+        '<div style="background:#0f172a;padding:32px;border-radius:12px 12px 0 0;overflow:hidden;">' +
+        '<div style="float:left;">' +
+        '<span style="display:inline-block;width:44px;height:44px;background:#4f46e5;border-radius:8px;text-align:center;line-height:44px;font-size:22px;font-weight:900;color:#fff;vertical-align:middle;margin-right:12px;">N</span>' +
+        '<span style="font-size:18px;font-weight:900;color:#fff;vertical-align:middle;">NEXUS COMMERCE</span>' +
+        '</div>' +
+        '<div style="float:right;text-align:right;">' +
+        '<div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:0.08em;">CONTRAT B2B</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#818cf8;margin-top:4px;">' +
+        ctrRef +
+        '</div>' +
+        '<div style="font-size:10px;color:#94a3b8;margin-top:2px;">' +
+        dateStr +
+        '</div>' +
+        '</div><div style="clear:both;"></div></div>' +
+        '<div style="height:4px;background:#4f46e5;"></div>' +
+        '<div style="height:2px;background:#10b981;"></div>' +
+        '<div style="background:#fff;padding:32px;">' +
+        '<p style="font-size:14px;color:#334155;margin:0 0 8px;">Cher(e) <strong>' +
+        accName +
+        '</strong>,</p>' +
+        '<p style="font-size:13px;color:#64748b;margin:0 0 20px;">Suite à l\'acceptation du devis <strong>' +
+        q.Name +
+        '</strong>, voici votre contrat B2B officiel. ' +
+        'Votre signature électronique est requise pour finaliser cet engagement.</p>' +
+        '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:24px;overflow:hidden;">' +
+        '<div style="float:left;width:33%"><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Référence</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#4f46e5;">' +
+        ctrRef +
+        '</div></div>' +
+        '<div style="float:left;width:33%"><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Démarrage</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#0f172a;">' +
+        dateStr +
+        '</div></div>' +
+        '<div style="float:left;width:33%"><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Durée</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#10b981;">12 mois</div></div>' +
+        '<div style="clear:both;"></div></div>' +
+        '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;">' +
+        '<thead><tr style="background:#0f172a;">' +
+        '<th style="padding:8px 12px;font-size:9px;color:#94a3b8;text-align:left;font-weight:700;text-transform:uppercase;">Produit</th>' +
+        '<th style="padding:8px 12px;font-size:9px;color:#94a3b8;text-align:center;font-weight:700;text-transform:uppercase;">Qté</th>' +
+        '<th style="padding:8px 12px;font-size:9px;color:#94a3b8;text-align:right;font-weight:700;text-transform:uppercase;">Montant</th>' +
+        '</tr></thead><tbody>' +
+        rows +
+        '</tbody>' +
+        '<tfoot><tr style="border-top:2px solid #0f172a;">' +
+        '<td colspan="2" style="padding:10px 12px;text-align:right;font-size:13px;font-weight:900;color:#0f172a;">Total Contrat TTC</td>' +
+        '<td style="padding:10px 12px;text-align:right;font-size:20px;font-weight:900;color:#4f46e5;">' +
+        grand.setScale(2) +
+        ' €</td></tr></tfoot>' +
+        '</table>' +
+        '<div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;padding:14px 18px;margin-bottom:20px;">' +
+        '<p style="font-size:11px;color:#6b21a8;font-weight:700;margin:0 0 4px;text-transform:uppercase;">Conditions commerciales</p>' +
+        '<p style="font-size:12px;color:#374151;margin:0;">Paiement : <strong>' +
+        terms +
+        '</strong> &nbsp;·&nbsp; Remise volume : <strong>' +
+        disc.toPlainString() +
+        '%</strong> incluse</p>' +
+        '</div>' +
+        '<div style="background:#f8fafc;border-left:3px solid #4f46e5;padding:12px 16px;margin-bottom:24px;">' +
+        '<p style="font-size:11px;color:#64748b;margin:0;line-height:1.6;">' +
+        'Ce contrat engage les deux parties pour 12 mois à compter de la signature. ' +
+        'Résiliation possible avec 30 jours de préavis. ' +
+        'Document légalement contraignant selon la réglementation eIDAS.</p>' +
+        '</div>' +
+        '<div style="text-align:center;margin:28px 0;">' +
+        '<a href="' +
+        portalUrl +
+        '" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;text-decoration:none;' +
+        'padding:18px 48px;border-radius:12px;font-weight:800;font-size:1rem;display:inline-block;">' +
+        '✎ Signer le contrat dans mon espace client</a>' +
+        '</div>' +
+        '<p style="color:#94a3b8;font-size:11px;text-align:center;">Questions ? <a href="mailto:support@nexus-commerce.com" style="color:#4f46e5;">support@nexus-commerce.com</a></p>' +
+        '</div>' +
+        '<div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:14px 32px;border-radius:0 0 12px 12px;text-align:center;">' +
+        '<p style="font-size:9px;color:#94a3b8;margin:0;">Nexus Commerce · 12 Innovation Drive, Paris 75001 · nexus-commerce.com</p>' +
+        '<p style="font-size:9px;color:#94a3b8;margin:4px 0 0;">Signature électronique conforme aux normes eIDAS</p>' +
+        '</div></div>';
+
+      Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+      mail.setToAddresses(new List<String>{ custUsers[0].Email });
+      mail.setSubject(
+        'Nexus — Votre Contrat B2B à Signer · ' + q.Name + ' · ' + ctrRef
+      );
+      mail.setHtmlBody(html);
+      mail.setSaveAsActivity(false);
+      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    } catch (Exception ex) {
+      System.debug(
+        LoggingLevel.ERROR,
+        'sendContractEmailAsync error: ' + ex.getMessage()
+      );
+    }
+  }
+
+  // ── @future: notify sales rep that customer signed the contract ──────────
+
+  @future
+  private static void sendContractSignedNotification(
+    String ownerEmail,
+    String accName,
+    String quoteName
+  ) {
+    try {
+      Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+      mail.setToAddresses(new List<String>{ ownerEmail });
+      mail.setSubject('Nexus — Contrat Signé ✓ : ' + accName);
+      mail.setPlainTextBody(
+        'Bonjour,\n\n' +
+          accName +
+          ' a signé électroniquement le contrat B2B ' +
+          quoteName +
+          '.\n\n' +
+          'L\'opportunité est passée en Closed Won. La facture a été envoyée au client.\n\n' +
+          'Cordialement,\nNexus Platform'
+      );
+      mail.setSaveAsActivity(false);
+      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    } catch (Exception ex) {
+      System.debug(
+        LoggingLevel.ERROR,
+        'sendContractSignedNotification error: ' + ex.getMessage()
+      );
+    }
+  }
+
+  // ── Scenario 1: Convert accepted quote → Order + immediate B2B invoice ───
+
+  @AuraEnabled
+  public static Id convertToOrder(Id quoteId) {
+    TALEXO_Quote__c q = [
+      SELECT
+        Id,
+        Name,
+        Status__c,
+        GrandTotal__c,
+        Opportunity__c,
+        Opportunity__r.AccountId
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (q.Status__c != 'Accepted' && q.Status__c != 'Signed') {
+      throw new AuraHandledException(
+        'Only Accepted or Signed quotes can be converted to orders.'
+      );
+    }
+
+    Order ord = new Order(
+      AccountId = q.Opportunity__r.AccountId,
+      Status = 'Draft',
+      EffectiveDate = Date.today(),
+      Description = 'Commande B2B générée depuis le devis ' + q.Name
+    );
+    insert ord;
+
+    update new Opportunity(Id = q.Opportunity__c, StageName = 'Closed Won');
+    update new TALEXO_Quote__c(
+      Id = quoteId,
+      Status__c = 'Signed',
+      NegotiationStatus__c = 'Final'
+    );
+
+    // Send B2B invoice email immediately (no OrderItems needed — reads quote lines)
+    sendB2BInvoiceAsync(
+      quoteId,
+      'CMD-' + String.valueOf(ord.Id).right(6).toUpperCase(),
+      null,
+      null,
+      null
+    );
+
+    return ord.Id;
+  }
+
+  // ── Scenario 2: Convert accepted quote → Contract (long-term partnership) ─
+
+  @AuraEnabled
+  public static Id convertToContract(Id quoteId) {
+    TALEXO_Quote__c q = [
+      SELECT
+        Id,
+        Name,
+        Status__c,
+        GrandTotal__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        PaymentTerms__c,
+        BulkDiscount__c
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (q.Status__c != 'Accepted' && q.Status__c != 'Signed') {
+      throw new AuraHandledException(
+        'Only Accepted or Signed quotes can be converted to contracts.'
+      );
+    }
+
+    // Create standard Salesforce Contract (12-month B2B engagement)
+    Contract c = new Contract(
+      AccountId = q.Opportunity__r.AccountId,
+      StartDate = Date.today(),
+      ContractTerm = 12,
+      Status = 'Activated',
+      Description = 'Contrat B2B — ' +
+        q.Name +
+        ' | ' +
+        (q.PaymentTerms__c != null ? q.PaymentTerms__c : 'Net 30') +
+        ' | Remise volume : ' +
+        (q.BulkDiscount__c != null ? q.BulkDiscount__c : 0) +
+        '%',
+      SpecialTerms = q.PaymentTerms__c
+    );
+    insert c;
+
+    update new Opportunity(Id = q.Opportunity__c, StageName = 'Closed Won');
+    update new TALEXO_Quote__c(
+      Id = quoteId,
+      Status__c = 'Signed',
+      NegotiationStatus__c = 'Final'
+    );
+
+    // Send B2B invoice email for the first order under this contract
+    sendB2BInvoiceAsync(
+      quoteId,
+      'CTR-' + String.valueOf(c.Id).right(6).toUpperCase(),
+      null,
+      null,
+      null
+    );
+
+    return c.Id;
+  }
+
+  // ── B2B Invoice: @future email using NexusQuoteLineItem__c (no OrderItems) ─
+
+  @future
+  private static void sendB2BInvoiceAsync(
+    Id quoteId,
+    String docRef,
+    String customerEmail,
+    String signerName,
+    String signedAt
+  ) {
+    try {
+      TALEXO_Quote__c q = [
+        SELECT
+          Id,
+          Name,
+          GrandTotal__c,
+          BulkDiscount__c,
+          PaymentTerms__c,
+          Opportunity__r.AccountId,
+          Opportunity__r.Account.Name,
+          (
+            SELECT
+              ProductName__c,
+              ProductFamily__c,
+              Quantity__c,
+              UnitPrice__c,
+              NetTotal__c
+            FROM NexusQuoteLineItems__r
+          )
+        FROM TALEXO_Quote__c
+        WHERE Id = :quoteId
+        LIMIT 1
+      ];
+
+      // Use passed-in email; fall back to portal user lookup
+      String toEmail = customerEmail;
+      if (String.isBlank(toEmail)) {
+        List<User> custUsers = [
+          SELECT Email
+          FROM User
+          WHERE
+            AccountId = :q.Opportunity__r.AccountId
+            AND IsActive = TRUE
+            AND UserType = 'PowerCustomerSuccess'
+          LIMIT 1
+        ];
+        if (custUsers.isEmpty() || String.isBlank(custUsers[0].Email))
+          return;
+        toEmail = custUsers[0].Email;
+      }
+
+      String accName = q.Opportunity__r.Account.Name;
+      String dateStr = Date.today().format();
+      String terms = q.PaymentTerms__c != null ? q.PaymentTerms__c : 'Net 30';
+      Decimal discount = q.BulkDiscount__c != null ? q.BulkDiscount__c : 0;
+      Decimal grand = q.GrandTotal__c != null ? q.GrandTotal__c : 0;
+
+      // Build line item rows
+      String itemRows = '';
+      for (NexusQuoteLineItem__c li : q.NexusQuoteLineItems__r) {
+        Integer qty = li.Quantity__c != null
+          ? Integer.valueOf(li.Quantity__c)
+          : 1;
+        Decimal unit = li.UnitPrice__c != null ? li.UnitPrice__c : 0;
+        Decimal net = li.NetTotal__c != null ? li.NetTotal__c : (unit * qty);
+        itemRows +=
+          '<tr style="border-bottom:1px solid #f1f5f9;">' +
+          '<td style="padding:10px 12px;font-size:12px;font-weight:700;color:#0f172a;">' +
+          li.ProductName__c +
+          '<br/><span style="font-size:10px;color:#94a3b8;font-weight:400;">' +
+          (li.ProductFamily__c != null ? li.ProductFamily__c : '') +
+          '</span></td>' +
+          '<td style="padding:10px 12px;font-size:12px;text-align:center;">' +
+          qty +
+          '</td>' +
+          '<td style="padding:10px 12px;font-size:12px;text-align:right;">' +
+          unit.setScale(2) +
+          ' €</td>' +
+          '<td style="padding:10px 12px;font-size:12px;text-align:right;font-weight:700;color:#0f172a;">' +
+          net.setScale(2) +
+          ' €</td>' +
+          '</tr>';
+      }
+
+      String html =
+        '<div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;background:#f8fafc;padding:24px;">' +
+        // Header
+        '<div style="background:#0f172a;padding:28px 32px;border-radius:12px 12px 0 0;overflow:hidden;">' +
+        '<div style="float:left;">' +
+        '<span style="display:inline-block;width:40px;height:40px;background:#4f46e5;border-radius:8px;' +
+        'text-align:center;line-height:40px;font-size:20px;font-weight:900;color:#fff;' +
+        'vertical-align:middle;margin-right:10px;">N</span>' +
+        '<span style="font-size:16px;font-weight:900;color:#fff;vertical-align:middle;">NEXUS COMMERCE</span>' +
+        '</div>' +
+        '<div style="float:right;text-align:right;">' +
+        '<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.08em;">FACTURE B2B</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#818cf8;margin-top:4px;">' +
+        docRef +
+        '</div>' +
+        '<div style="font-size:9px;color:#94a3b8;margin-top:2px;">' +
+        dateStr +
+        '</div>' +
+        '</div><div style="clear:both;"></div></div>' +
+        '<div style="height:4px;background:#4f46e5;"></div>' +
+        '<div style="height:2px;background:#10b981;"></div>' +
+        // Body
+        '<div style="background:#fff;padding:28px 32px;">' +
+        '<p style="font-size:13px;color:#64748b;margin:0 0 12px;">Bonjour <strong style="color:#0f172a;">' +
+        accName +
+        '</strong>,</p>' +
+        '<p style="font-size:13px;color:#64748b;margin:0 0 20px;">Voici votre facture suite à l\'acceptation du devis ' +
+        '<strong>' +
+        q.Name +
+        '</strong>.</p>' +
+        // Meta row
+        '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;margin-bottom:24px;overflow:hidden;">' +
+        '<div style="float:left;width:33%"><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Référence</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#4f46e5;">' +
+        docRef +
+        '</div></div>' +
+        '<div style="float:left;width:33%"><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Devis</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#0f172a;">' +
+        q.Name +
+        '</div></div>' +
+        '<div style="float:left;width:33%"><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Conditions</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#10b981;">' +
+        terms +
+        '</div></div>' +
+        '<div style="clear:both;"></div></div>' +
+        // Table
+        '<table style="width:100%;border-collapse:collapse;margin-bottom:8px;">' +
+        '<thead><tr style="background:#0f172a;">' +
+        '<th style="padding:10px 12px;font-size:9px;color:#94a3b8;text-align:left;font-weight:700;text-transform:uppercase;">Produit</th>' +
+        '<th style="padding:10px 12px;font-size:9px;color:#94a3b8;text-align:center;font-weight:700;text-transform:uppercase;">Qté</th>' +
+        '<th style="padding:10px 12px;font-size:9px;color:#94a3b8;text-align:right;font-weight:700;text-transform:uppercase;">Prix net</th>' +
+        '<th style="padding:10px 12px;font-size:9px;color:#94a3b8;text-align:right;font-weight:700;text-transform:uppercase;">Total</th>' +
+        '</tr></thead><tbody>' +
+        itemRows +
+        '</tbody>' +
+        '<tfoot>' +
+        '<tr><td colspan="3" style="padding:6px 12px;text-align:right;color:#10b981;font-size:11px;">Remise volume (' +
+        discount.toPlainString() +
+        '%) — incluse dans les prix</td>' +
+        '<td style="padding:6px 12px;text-align:right;font-weight:700;font-size:11px;color:#10b981;">✓</td></tr>' +
+        '<tr style="border-top:2px solid #0f172a;">' +
+        '<td colspan="3" style="padding:10px 12px;text-align:right;font-size:14px;font-weight:900;color:#0f172a;">Total TTC</td>' +
+        '<td style="padding:10px 12px;text-align:right;font-size:20px;font-weight:900;color:#4f46e5;">' +
+        grand.setScale(2) +
+        ' €</td></tr>' +
+        '</tfoot></table>' +
+        '<p style="color:#94a3b8;font-size:11px;margin-top:20px;">' +
+        'Questions ? <a href="mailto:support@nexus-commerce.com" style="color:#4f46e5;">support@nexus-commerce.com</a></p>' +
+        '</div>' +
+        // Footer
+        '<div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:14px 32px;border-radius:0 0 12px 12px;">' +
+        '<p style="font-size:9px;color:#94a3b8;margin:0;text-align:center;">' +
+        'Nexus Commerce · 12 Innovation Drive, Paris 75001 · nexus-commerce.com</p>' +
+        '</div></div>';
+
+      // Generate PDF attachment from B2BInvoiceTemplate VF page
+      PageReference pdfPage = Page.B2BInvoiceTemplate;
+      pdfPage.getParameters().put('quoteId', quoteId);
+      pdfPage.getParameters()
+        .put('signerName', signerName != null ? signerName : '');
+      pdfPage.getParameters().put('signerEmail', toEmail);
+      pdfPage.getParameters()
+        .put(
+          'signedAt',
+          signedAt != null
+            ? signedAt
+            : DateTime.now().format('dd/MM/yyyy HH:mm') + ' UTC'
+        );
+      Blob pdfBlob = pdfPage.getContentAsPDF();
+
+      Messaging.EmailFileAttachment attach = new Messaging.EmailFileAttachment();
+      attach.setFileName('Nexus_Contrat_' + q.Name + '.pdf');
+      attach.setBody(pdfBlob);
+      attach.setContentType('application/pdf');
+
+      Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+      mail.setToAddresses(new List<String>{ toEmail });
+      mail.setSubject(
+        'Nexus — Votre Contrat B2B Signé · ' + q.Name + ' · ' + docRef
+      );
+      mail.setHtmlBody(html);
+      mail.setFileAttachments(
+        new List<Messaging.EmailFileAttachment>{ attach }
+      );
+      mail.setSaveAsActivity(false);
+      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    } catch (Exception ex) {
+      System.debug(
+        LoggingLevel.ERROR,
+        'NexusQuoteController.sendB2BInvoiceAsync error: ' + ex.getMessage()
+      );
+    }
+  }
+
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  private static List<QuoteDetailWrapper> toWrapperList(
+    List<TALEXO_Quote__c> quotes
+  ) {
+    List<QuoteDetailWrapper> result = new List<QuoteDetailWrapper>();
+    for (TALEXO_Quote__c q : quotes) {
+      result.add(toWrapper(q));
+    }
+    return result;
+  }
+
+  private static QuoteDetailWrapper toWrapper(TALEXO_Quote__c q) {
+    QuoteDetailWrapper w = new QuoteDetailWrapper();
+    w.quoteId = q.Id;
+    w.name = q.Name;
+    w.status = q.Status__c;
+    w.negotiationStatus = q.NegotiationStatus__c;
+    w.grandTotal = q.GrandTotal__c;
+    w.finalNegotiatedPrice = q.FinalNegotiatedPrice__c;
+    w.formattedTotal = q.GrandTotal__c != null
+      ? q.GrandTotal__c.setScale(2).toPlainString() + ' €'
+      : '—';
+    w.formattedFinalPrice = q.FinalNegotiatedPrice__c != null
+      ? q.FinalNegotiatedPrice__c.setScale(2).toPlainString() + ' €'
+      : null;
+    w.expirationDate = q.ExpirationDate__c != null
+      ? q.ExpirationDate__c.format()
+      : null;
+    w.paymentTerms = q.PaymentTerms__c;
+    w.bulkDiscount = q.BulkDiscount__c;
+    w.versionNumber = q.VersionNumber__c != null
+      ? Integer.valueOf(q.VersionNumber__c)
+      : 1;
+    w.acceptanceProbability = q.AcceptanceProbability__c != null
+      ? Integer.valueOf(q.AcceptanceProbability__c)
+      : null;
+    w.aiReason = q.AIReason__c;
+    w.isPrimary = q.IsPrimary__c;
+    w.opportunityName = q.Opportunity__r?.Name;
+    w.accountName = q.Opportunity__r?.Account?.Name;
+    w.opportunityId = q.Opportunity__c;
+    w.isRequested = q.Status__c == 'Requested';
+    w.requestedAt = q.CreatedDate != null
+      ? q.CreatedDate.format('dd/MM/yyyy HH:mm')
+      : null;
+
+    // UI helpers for AI probability display
+    Integer prob = w.acceptanceProbability != null
+      ? w.acceptanceProbability
+      : 0;
+    w.probStyle = 'width:' + prob + '%';
+    w.probColorCls = prob >= 80
+      ? 'prob-high'
+      : prob >= 60 ? 'prob-mid' : 'prob-low';
+
+    w.lineItems = new List<LineItemWrapper>();
+    for (NexusQuoteLineItem__c li : q.NexusQuoteLineItems__r) {
+      LineItemWrapper lw = new LineItemWrapper();
+      lw.lineItemId = li.Id;
+      lw.productName = li.ProductName__c;
+      lw.productFamily = li.ProductFamily__c;
+      lw.quantity = li.Quantity__c != null
+        ? Integer.valueOf(li.Quantity__c)
+        : 0;
+      lw.listPrice = li.ListPrice__c;
+      lw.unitPrice = li.UnitPrice__c;
+      lw.discount = li.Discount__c;
+      lw.netTotal = li.NetTotal__c;
+      lw.formattedNetTotal = li.NetTotal__c != null
+        ? li.NetTotal__c.setScale(2).toPlainString() + ' €'
+        : '—';
+      w.lineItems.add(lw);
+    }
+    return w;
+  }
+}

@@ -1,0 +1,920 @@
+<template>
+  <div class="nqb-wrap">
+    <!-- ═══════════════════ HEADER ═══════════════════════════════════════════ -->
+    <div class="nqb-header">
+      <div class="nqb-header-left">
+        <div class="nqb-icon-box">
+          <lightning-icon
+            icon-name="utility:einstein"
+            size="small"
+            variant="inverse"
+          ></lightning-icon>
+        </div>
+        <div>
+          <h2 class="nqb-title">Nexus B2B Quote Builder</h2>
+          <p class="nqb-sub">
+            CPQ-style quotes · 10% bulk discount · Net 30 · AI scoring ·
+            Versioning inline
+          </p>
+        </div>
+      </div>
+      <div class="nqb-header-actions">
+        <template if:true={isListView}>
+          <button class="nqb-btn-requests" onclick={handleOpenRequests}>
+            <lightning-icon
+              icon-name="utility:inbox"
+              size="x-small"
+              variant="inverse"
+            ></lightning-icon>
+            &nbsp;Requests
+            <template if:true={hasRequests}>
+              <span class={requestBadgeCls}>{requestCount}</span>
+            </template>
+          </button>
+          <button class="nqb-btn-primary" onclick={handleOpenBuilder}>
+            + New Quote
+          </button>
+        </template>
+        <template if:true={isRequestsView}>
+          <button class="nqb-btn-ghost" onclick={handleBackToList}>
+            ← All Quotes
+          </button>
+        </template>
+        <template if:false={isListView}>
+          <template if:false={isRequestsView}>
+            <button class="nqb-btn-ghost" onclick={handleBackToList}>
+              ← Back to Quotes
+            </button>
+          </template>
+        </template>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ REQUESTS VIEW ═══════════════════════════════════ -->
+    <template if:true={isRequestsView}>
+      <div class="nqb-requests">
+        <div class="nqb-requests-header">
+          <h3 class="nqb-section-title">Demandes de devis clients</h3>
+          <p class="nqb-requests-sub">
+            Soumises via le portail. Examinez chaque demande et construisez un
+            devis officiel.
+          </p>
+        </div>
+
+        <template if:true={requestsLoading}>
+          <div class="nqb-loading">
+            <lightning-spinner
+              size="small"
+              alternative-text="Chargement..."
+            ></lightning-spinner>
+          </div>
+        </template>
+
+        <template if:true={noRequests}>
+          <div class="nqb-empty">
+            <div class="nqb-empty-icon">
+              <lightning-icon
+                icon-name="utility:inbox"
+                size="large"
+              ></lightning-icon>
+            </div>
+            <h3 class="nqb-empty-title">Aucune demande en attente</h3>
+            <p class="nqb-empty-sub">
+              Les demandes soumises par les clients via le portail apparaîtront
+              ici.
+            </p>
+          </div>
+        </template>
+
+        <template if:true={hasRequests}>
+          <div class="nqb-req-list">
+            <template for:each={requests} for:item="r">
+              <div key={r.quoteId} class="nqb-req-card">
+                <div class="nqb-req-top">
+                  <div class="nqb-req-identity">
+                    <div class="nqb-req-avatar">
+                      <lightning-icon
+                        icon-name="utility:person_account"
+                        size="x-small"
+                        variant="inverse"
+                      ></lightning-icon>
+                    </div>
+                    <div>
+                      <div class="nqb-req-account">{r.accountName}</div>
+                      <div class="nqb-req-meta">
+                        Reçu le {r.requestedAt} &nbsp;·&nbsp; {r.name}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="nqb-req-total">{r.formattedTotal}</div>
+                </div>
+
+                <!-- Requested products -->
+                <template if:true={r.lineItems.length}>
+                  <div class="nqb-req-products">
+                    <template for:each={r.lineItems} for:item="li">
+                      <div key={li.lineItemId} class="nqb-req-product-row">
+                        <span class="nqb-req-prod-name">{li.productName}</span>
+                        <span class="nqb-req-prod-qty">×{li.quantity}</span>
+                        <span class="nqb-req-prod-price">{li.listPrice} €</span>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- AI score if available -->
+                <template if:true={r.acceptanceProbability}>
+                  <div class="nqb-req-ai">
+                    <lightning-icon
+                      icon-name="utility:einstein"
+                      size="x-small"
+                      class="nqb-einstein-icon"
+                    ></lightning-icon>
+                    <span
+                      >Probabilité IA :
+                      <strong>{r.acceptanceProbability}%</strong></span
+                    >
+                  </div>
+                </template>
+
+                <div class="nqb-req-actions">
+                  <button
+                    class="nqb-btn-build"
+                    data-id={r.quoteId}
+                    onclick={handleBuildFromRequest}
+                  >
+                    <lightning-icon
+                      icon-name="utility:edit"
+                      size="x-small"
+                      variant="inverse"
+                    ></lightning-icon>
+                    &nbsp;Construire le Devis Officiel
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- ═══════════════════ LIST VIEW ════════════════════════════════════════ -->
+    <template if:true={isListView}>
+      <!-- Empty state -->
+      <template if:true={noQuotes}>
+        <div class="nqb-empty">
+          <div class="nqb-empty-icon">
+            <lightning-icon
+              icon-name="utility:file"
+              size="large"
+            ></lightning-icon>
+          </div>
+          <h3 class="nqb-empty-title">No quotes yet</h3>
+          <p class="nqb-empty-sub">
+            Build your first B2B quote with product selection, AI scoring, and
+            negotiation integration.
+          </p>
+          <button class="nqb-btn-primary" onclick={handleOpenBuilder}>
+            + Create First Quote
+          </button>
+        </div>
+      </template>
+
+      <!-- Quote cards -->
+      <template if:true={hasQuotes}>
+        <div class="nqb-quote-list">
+          <template for:each={quotes} for:item="q">
+            <div key={q.quoteId} class="nqb-quote-card">
+              <!-- Card top row -->
+              <div class="nqb-qcard-top">
+                <div class="nqb-qcard-identity">
+                  <div class="nqb-qcard-icon">
+                    <lightning-icon
+                      icon-name="utility:file"
+                      size="x-small"
+                      variant="inverse"
+                    ></lightning-icon>
+                  </div>
+                  <div>
+                    <div class="nqb-qcard-name">{q.name}</div>
+                    <div class="nqb-qcard-meta">
+                      {q.accountName} &nbsp;·&nbsp; {q.versionLabel}
+                    </div>
+                  </div>
+                </div>
+                <div class="nqb-qcard-badges">
+                  <span class={q.statusBadgeCls}>{q.status}</span>
+                  <span class={q.negBadgeCls}>{q.negotiationStatus}</span>
+                  <template if:true={q.isPrimary}>
+                    <span class="nqb-primary-chip">PRIMARY</span>
+                  </template>
+                </div>
+              </div>
+
+              <!-- AI probability bar -->
+              <div class="nqb-prob-row">
+                <div class="nqb-prob-labels">
+                  <span class="nqb-prob-label">
+                    <lightning-icon
+                      icon-name="utility:einstein"
+                      size="x-small"
+                      class="nqb-einstein-icon"
+                    ></lightning-icon>
+                    AI Acceptance Probability
+                  </span>
+                  <span class="nqb-prob-val">{q.acceptanceProbability}%</span>
+                </div>
+                <div class="nqb-prob-track">
+                  <div class={q.probColorCls} style={q.probStyle}></div>
+                </div>
+                <p class="nqb-ai-reason">{q.aiReason}</p>
+              </div>
+
+              <!-- Financial row -->
+              <div class="nqb-qcard-finance">
+                <div class="nqb-finance-cell">
+                  <div class="nqb-finance-label">Grand Total</div>
+                  <div class="nqb-finance-val">{q.formattedTotal}</div>
+                </div>
+                <template if:true={q.formattedFinalPrice}>
+                  <div class="nqb-finance-cell">
+                    <div class="nqb-finance-label">Final Negotiated</div>
+                    <div class="nqb-finance-val nqb-finance-final">
+                      {q.formattedFinalPrice}
+                    </div>
+                  </div>
+                </template>
+                <div class="nqb-finance-cell">
+                  <div class="nqb-finance-label">Payment</div>
+                  <div class="nqb-finance-val nqb-finance-terms">
+                    {q.paymentTerms}
+                  </div>
+                </div>
+                <div class="nqb-finance-cell">
+                  <div class="nqb-finance-label">Discount</div>
+                  <div class="nqb-finance-val nqb-finance-discount">
+                    {q.bulkDiscount}%
+                  </div>
+                </div>
+                <div class="nqb-finance-cell">
+                  <div class="nqb-finance-label">Expires</div>
+                  <div class="nqb-finance-val">{q.expirationDate}</div>
+                </div>
+              </div>
+
+              <!-- Card actions -->
+              <div class="nqb-qcard-actions">
+                <button
+                  class="nqb-btn-sm"
+                  data-id={q.quoteId}
+                  onclick={handleOpenDetail}
+                >
+                  View Details
+                </button>
+                <span class="nqb-agentforce-badge">
+                  <lightning-icon
+                    icon-name="utility:einstein"
+                    size="x-small"
+                    class="nqb-af-icon"
+                  ></lightning-icon>
+                  Scored by Agentforce
+                </span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+    </template>
+
+    <!-- ═══════════════════ BUILDER VIEW ═════════════════════════════════════ -->
+    <template if:true={isBuilderView}>
+      <div class="nqb-builder">
+        <!-- CPQ notice banner -->
+        <div class="nqb-cpq-banner">
+          <lightning-icon
+            icon-name="utility:info"
+            size="x-small"
+            class="nqb-info-icon"
+          ></lightning-icon>
+          <span>
+            <strong>CPQ Mode:</strong> Select products, set quantities — 10%
+            bulk discount and Net 30 terms are applied automatically. When
+            Salesforce CPQ (SBQQ) is installed, this builder calls
+            <code>SBQQ.QuoteAPI.calculate()</code> for pricing rules.
+          </span>
+        </div>
+
+        <div class="nqb-builder-body">
+          <!-- LEFT: Product Catalogue -->
+          <div class="nqb-catalogue">
+            <div class="nqb-section-header">
+              <h3 class="nqb-section-title">Product Catalogue</h3>
+              <div class="nqb-search-wrap">
+                <lightning-icon
+                  icon-name="utility:search"
+                  size="x-small"
+                  class="nqb-search-icon"
+                ></lightning-icon>
+                <input
+                  type="text"
+                  class="nqb-search-input"
+                  placeholder="Search products..."
+                  value={_productSearch}
+                  onchange={handleProductSearch}
+                />
+              </div>
+            </div>
+
+            <template if:true={productLoading}>
+              <div class="nqb-loading">
+                <lightning-spinner
+                  size="small"
+                  alternative-text="Loading..."
+                ></lightning-spinner>
+              </div>
+            </template>
+
+            <template if:false={productLoading}>
+              <div class="nqb-product-grid">
+                <template for:each={products} for:item="p">
+                  <div key={p.productId} class="nqb-prod-card">
+                    <template if:true={p.imageUrl}>
+                      <img src={p.imageUrl} alt={p.name} class="nqb-prod-img" />
+                    </template>
+                    <template if:false={p.imageUrl}>
+                      <div class="nqb-prod-img-placeholder">
+                        <lightning-icon
+                          icon-name="utility:product"
+                          size="medium"
+                        ></lightning-icon>
+                      </div>
+                    </template>
+                    <div class="nqb-prod-info">
+                      <div class="nqb-prod-name">{p.name}</div>
+                      <div class="nqb-prod-family">{p.family}</div>
+                      <div class="nqb-prod-price">{p.price} €</div>
+                    </div>
+                    <button
+                      class="nqb-add-btn"
+                      data-id={p.productId}
+                      onclick={handleAddProduct}
+                    >
+                      {p.addLabel}
+                    </button>
+                  </div>
+                </template>
+                <template if:false={hasProducts}>
+                  <div class="nqb-no-products">No products found.</div>
+                </template>
+              </div>
+            </template>
+          </div>
+
+          <!-- RIGHT: Cart + Preview -->
+          <div class="nqb-cart-panel">
+            <!-- Cart items -->
+            <div class="nqb-section-header">
+              <h3 class="nqb-section-title">
+                Quote Lines
+                <span class="nqb-cart-count">{cartCount}</span>
+              </h3>
+            </div>
+
+            <template if:true={cartEmpty}>
+              <div class="nqb-cart-empty">
+                <lightning-icon
+                  icon-name="utility:cart"
+                  size="medium"
+                ></lightning-icon>
+                <p>Add products from the catalogue to build your quote.</p>
+              </div>
+            </template>
+
+            <template if:true={hasCartItems}>
+              <div class="nqb-cart-items">
+                <template for:each={cartItems} for:item="item">
+                  <div key={item.key} class="nqb-cart-row">
+                    <div class="nqb-cart-product">
+                      <div class="nqb-cart-prod-name">{item.productName}</div>
+                      <div class="nqb-cart-prod-family">
+                        {item.productFamily}
+                      </div>
+                    </div>
+                    <div class="nqb-cart-controls">
+                      <div class="nqb-qty-wrap">
+                        <label class="nqb-qty-label">Qty</label>
+                        <input
+                          type="number"
+                          min="1"
+                          class="nqb-qty-input"
+                          value={item.quantity}
+                          data-id={item.productId}
+                          onchange={handleQtyChange}
+                        />
+                      </div>
+                      <div class="nqb-cart-prices">
+                        <div class="nqb-cart-list-price">{item.listPrice}</div>
+                        <div class="nqb-cart-net">Net: {item.netLineTotal}</div>
+                      </div>
+                      <button
+                        class="nqb-remove-btn"
+                        data-id={item.productId}
+                        onclick={handleRemoveFromCart}
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+
+              <!-- Pricing summary -->
+              <div class="nqb-price-summary">
+                <div class="nqb-price-row">
+                  <span class="nqb-price-label">Subtotal</span>
+                  <span class="nqb-price-val">{formattedSubtotal}</span>
+                </div>
+                <div class="nqb-price-row nqb-discount-row">
+                  <span class="nqb-price-label">
+                    <lightning-icon
+                      icon-name="utility:discount"
+                      size="x-small"
+                      class="nqb-discount-icon"
+                    ></lightning-icon>
+                    Bulk Discount ({bulkDiscountLabel})
+                  </span>
+                  <span class="nqb-discount-val"
+                    >−{formattedDiscountAmount}</span
+                  >
+                </div>
+                <div class="nqb-price-row nqb-terms-row">
+                  <span class="nqb-price-label">Payment Terms</span>
+                  <span class="nqb-terms-chip">{paymentTermsLabel}</span>
+                </div>
+                <div class="nqb-total-row">
+                  <span class="nqb-total-label">Grand Total</span>
+                  <span class="nqb-total-val">{formattedGrandTotal}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- Generate button -->
+            <div class="nqb-generate-wrap">
+              <button
+                class="nqb-btn-generate"
+                onclick={handleGenerateQuote}
+                disabled={cartEmpty}
+              >
+                <lightning-icon
+                  icon-name="utility:einstein"
+                  size="x-small"
+                  variant="inverse"
+                  class="nqb-gen-icon"
+                ></lightning-icon>
+                {generateLabel}
+              </button>
+              <p class="nqb-gen-hint">
+                Le score de probabilité sera calculé par Agentforce après
+                génération.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ═══════════════════ GENERATED RESULT VIEW ═════════════════════════════ -->
+    <template if:true={isGeneratedView}>
+      <div class="nqb-generated">
+        <!-- Success header -->
+        <div class="nqb-gen-success-header">
+          <div class="nqb-gen-success-icon">
+            <lightning-icon
+              icon-name="utility:success"
+              size="medium"
+              variant="success"
+            ></lightning-icon>
+          </div>
+          <div>
+            <h3 class="nqb-gen-title">
+              Quote Generated — {generated.quoteName}
+            </h3>
+            <p class="nqb-gen-sub">
+              Payment: {generated.paymentTerms} &nbsp;·&nbsp; Bulk Discount:
+              {generated.bulkDiscount}%
+            </p>
+          </div>
+        </div>
+
+        <!-- Financial cards -->
+        <div class="nqb-gen-finance-row">
+          <div class="nqb-gen-fin-card">
+            <div class="nqb-gen-fin-label">List Total</div>
+            <div class="nqb-gen-fin-val">{generated.subtotal} €</div>
+          </div>
+          <div class="nqb-gen-fin-card nqb-gen-fin-card-discount">
+            <div class="nqb-gen-fin-label">Bulk Discount</div>
+            <div class="nqb-gen-fin-val nqb-gen-fin-red">
+              −{generated.discountAmount} €
+            </div>
+          </div>
+          <div class="nqb-gen-fin-card nqb-gen-fin-card-total">
+            <div class="nqb-gen-fin-label">Grand Total</div>
+            <div class="nqb-gen-fin-val nqb-gen-fin-blue">
+              {generated.grandTotal} €
+            </div>
+          </div>
+        </div>
+
+        <!-- AI insights dark card -->
+        <div class="nqb-ai-panel">
+          <div class="nqb-ai-panel-header">
+            <lightning-icon
+              icon-name="utility:einstein"
+              size="small"
+              class="nqb-ai-panel-icon"
+            ></lightning-icon>
+            <span class="nqb-ai-panel-title"
+              >Nexus AI — Acceptance Probability</span
+            >
+          </div>
+          <div class="nqb-ai-prob-row">
+            <span class="nqb-ai-prob-num">{aiProbLabel}</span>
+            <span class="nqb-ai-prob-desc"
+              >estimated acceptance probability</span
+            >
+          </div>
+          <div class="nqb-ai-bar-track">
+            <div class={aiProbColorCls} style={aiProbStyle}></div>
+          </div>
+          <p class="nqb-ai-reason-text">{generated.aiReason}</p>
+          <div class="nqb-agentforce-source">
+            <lightning-icon
+              icon-name="utility:einstein"
+              size="x-small"
+              class="nqb-af-icon"
+            ></lightning-icon>
+            <span
+              >Analysé et scoré par
+              <strong>Nexus Quote Analyst</strong> (Agentforce)</span
+            >
+          </div>
+        </div>
+
+        <!-- Send to Customer -->
+        <div class="nqb-send-section">
+          <h4 class="nqb-neg-title">Étape 2 — Envoyer au client</h4>
+          <p class="nqb-neg-desc">
+            Envoie le devis au portail client par email. Le client pourra le
+            consulter, le comparer et l'accepter ou le négocier.
+          </p>
+          <button
+            class="nqb-btn-send-customer"
+            data-id={generated.quoteId}
+            onclick={handleSendToCustomer}
+            disabled={sending}
+          >
+            <lightning-icon
+              icon-name="utility:send"
+              size="x-small"
+              variant="inverse"
+              class="nqb-upload-icon"
+            ></lightning-icon>
+            &nbsp;{sendingLabel}
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- ═══════════════════ DETAIL VIEW ══════════════════════════════════════ -->
+    <template if:true={isDetailView}>
+      <template if:true={selectedQuote}>
+        <div class="nqb-detail">
+          <!-- Detail header -->
+          <div class="nqb-detail-header">
+            <div>
+              <h3 class="nqb-detail-name">{selectedQuote.name}</h3>
+              <p class="nqb-detail-meta">
+                {selectedQuote.accountName} &nbsp;·&nbsp;
+                {selectedQuote.opportunityName} &nbsp;·&nbsp;
+                {selectedQuote.versionLabel}
+              </p>
+            </div>
+            <span class={selectedQuote.negBadgeCls}
+              >{selectedQuote.negotiationStatus}</span
+            >
+          </div>
+
+          <!-- AI panel -->
+          <div class="nqb-ai-panel">
+            <div class="nqb-ai-panel-header">
+              <lightning-icon
+                icon-name="utility:einstein"
+                size="small"
+                class="nqb-ai-panel-icon"
+              ></lightning-icon>
+              <span class="nqb-ai-panel-title"
+                >AI Acceptance Probability —
+                {selectedQuote.acceptanceProbability}%</span
+              >
+            </div>
+            <div class="nqb-ai-bar-track">
+              <div
+                class={selectedQuote.probColorCls}
+                style={selectedQuote.probStyle}
+              ></div>
+            </div>
+            <p class="nqb-ai-reason-text">{selectedQuote.aiReason}</p>
+            <div class="nqb-agentforce-source">
+              <lightning-icon
+                icon-name="utility:einstein"
+                size="x-small"
+                class="nqb-af-icon"
+              ></lightning-icon>
+              <span
+                >Scoré par
+                <strong>Nexus Quote Analyst</strong> (Agentforce)</span
+              >
+            </div>
+          </div>
+
+          <!-- Financial summary -->
+          <div class="nqb-detail-finance">
+            <div class="nqb-df-cell">
+              <div class="nqb-finance-label">Grand Total</div>
+              <div class="nqb-finance-val">{selectedQuote.formattedTotal}</div>
+            </div>
+            <template if:true={selectedQuote.formattedFinalPrice}>
+              <div class="nqb-df-cell">
+                <div class="nqb-finance-label">Final Negotiated Price</div>
+                <div class="nqb-finance-val nqb-finance-final">
+                  {selectedQuote.formattedFinalPrice}
+                </div>
+              </div>
+            </template>
+            <div class="nqb-df-cell">
+              <div class="nqb-finance-label">Payment Terms</div>
+              <div class="nqb-finance-val">{selectedQuote.paymentTerms}</div>
+            </div>
+            <div class="nqb-df-cell">
+              <div class="nqb-finance-label">Discount</div>
+              <div class="nqb-finance-val nqb-finance-discount">
+                {selectedQuote.bulkDiscount}%
+              </div>
+            </div>
+            <div class="nqb-df-cell">
+              <div class="nqb-finance-label">Version</div>
+              <div class="nqb-finance-val">{selectedQuote.versionLabel}</div>
+            </div>
+          </div>
+
+          <!-- Line items table -->
+          <div class="nqb-line-items">
+            <h4 class="nqb-section-title">Quote Line Items</h4>
+            <table class="nqb-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th class="nqb-th-center">Qty</th>
+                  <th class="nqb-th-right">List Price</th>
+                  <th class="nqb-th-right">Discount</th>
+                  <th class="nqb-th-right">Unit Price</th>
+                  <th class="nqb-th-right">Net Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={selectedQuote.lineItems} for:item="li">
+                  <tr key={li.lineItemId}>
+                    <td>
+                      <div class="nqb-li-name">{li.productName}</div>
+                      <div class="nqb-li-family">{li.productFamily}</div>
+                    </td>
+                    <td class="nqb-td-center">{li.quantity}</td>
+                    <td class="nqb-td-right">{li.listPrice} €</td>
+                    <td class="nqb-td-right nqb-td-discount">{li.discount}%</td>
+                    <td class="nqb-td-right">{li.unitPrice} €</td>
+                    <td class="nqb-td-right nqb-td-net">
+                      {li.formattedNetTotal}
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Submit action -->
+          <div class="nqb-detail-actions">
+            <button
+              class="nqb-btn-send-customer"
+              data-id={selectedQuote.quoteId}
+              onclick={handleSendToCustomer}
+              disabled={sending}
+            >
+              <lightning-icon
+                icon-name="utility:send"
+                size="x-small"
+                variant="inverse"
+              ></lightning-icon>
+              &nbsp;{sendingLabel}
+            </button>
+            <!-- Scenario 5: Open inline CPQ editor to create a revised version -->
+            <button
+              class="nqb-btn-sm"
+              data-id={selectedQuote.quoteId}
+              onclick={handleOpenEditVersion}
+              title="Réviser ce devis : modifiez lignes, remise et conditions pour créer une nouvelle version"
+            >
+              <lightning-icon
+                icon-name="utility:edit"
+                size="x-small"
+              ></lightning-icon>
+              &nbsp;✏️ Réviser (Nouvelle Version)
+            </button>
+
+            <!-- Scenario 7a: Convert to Order — simple one-time purchase -->
+            <template if:true={canConvertToOrder}>
+              <button
+                class="nqb-btn-primary"
+                data-id={selectedQuote.quoteId}
+                onclick={handleConvertToOrder}
+                disabled={converting}
+                title="Scenario 1 — Achat simple : crée une Commande Salesforce + envoie la facture B2B au client"
+              >
+                <lightning-icon
+                  icon-name="utility:checkin"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+                &nbsp;{convertLabel}
+              </button>
+            </template>
+
+            <!-- Scenario 2: Generate formal contract + send to customer for e-signature -->
+            <template if:true={canGenerateContract}>
+              <button
+                class="nqb-btn-submit-large"
+                data-id={selectedQuote.quoteId}
+                onclick={handleGenerateAndSendContract}
+                disabled={generatingContract}
+                title="Scénario 2 — Partenariat B2B : génère le contrat 12 mois, l'envoie au client par email, et attend sa signature électronique dans le portail"
+              >
+                <lightning-icon
+                  icon-name="utility:contract_line_outcome"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+                &nbsp;{generateContractLabel}
+              </button>
+            </template>
+          </div>
+        </div>
+      </template>
+    </template>
+
+    <!-- ═══════════════════ EDIT VERSION VIEW ════════════════════════════════ -->
+    <template if:true={isEditVersionView}>
+      <div class="nqb-edit-version">
+        <div class="nqb-ev-header">
+          <div class="nqb-ev-icon-box">
+            <lightning-icon
+              icon-name="utility:edit"
+              size="x-small"
+              variant="inverse"
+            ></lightning-icon>
+          </div>
+          <div>
+            <h3 class="nqb-section-title">
+              Réviser le devis — Nouvelle version
+            </h3>
+            <p class="nqb-ev-sub">
+              Ajustez quantités, prix et remises. Une nouvelle version (v+1)
+              sera créée et re-scorée par l'IA.
+            </p>
+          </div>
+        </div>
+
+        <!-- Editable line items table -->
+        <div class="nqb-ev-table-wrap">
+          <table class="nqb-table nqb-ev-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th class="nqb-th-center">Qté</th>
+                <th class="nqb-th-right">Prix liste (€)</th>
+                <th class="nqb-th-right">Remise (%)</th>
+                <th class="nqb-th-right">Prix net (€)</th>
+                <th class="nqb-th-right">Total ligne</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={editLineItems} for:item="li">
+                <tr key={li.key}>
+                  <td>
+                    <div class="nqb-li-name">{li.productName}</div>
+                    <div class="nqb-li-family">{li.productFamily}</div>
+                  </td>
+                  <td class="nqb-td-center">
+                    <input
+                      type="number"
+                      min="1"
+                      class="nqb-ev-input nqb-ev-qty"
+                      value={li.quantity}
+                      data-key={li.key}
+                      onchange={handleEditLineQty}
+                    />
+                  </td>
+                  <td class="nqb-td-right">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="nqb-ev-input nqb-ev-price"
+                      value={li.listPrice}
+                      data-key={li.key}
+                      onchange={handleEditLinePrice}
+                    />
+                  </td>
+                  <td class="nqb-td-right">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.5"
+                      class="nqb-ev-input nqb-ev-disc"
+                      value={li.discount}
+                      data-key={li.key}
+                      onchange={handleEditLineDiscount}
+                    />
+                  </td>
+                  <td class="nqb-td-right nqb-td-net">{li.unitPrice} €</td>
+                  <td class="nqb-td-right nqb-td-net">{li.netTotal} €</td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Conditions -->
+        <div class="nqb-ev-conditions">
+          <div class="nqb-ev-field">
+            <label class="nqb-ev-label">Remise volume globale (%)</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              class="nqb-ev-input-lg"
+              value={editDiscount}
+              onchange={handleEditDiscount}
+            />
+          </div>
+          <div class="nqb-ev-field">
+            <label class="nqb-ev-label">Conditions de paiement</label>
+            <select
+              class="nqb-ev-select"
+              value={editPaymentTerms}
+              onchange={handleEditPaymentTerms}
+            >
+              <option value="Net 30">Net 30</option>
+              <option value="Net 45">Net 45</option>
+              <option value="Net 60">Net 60</option>
+              <option value="Net 90">Net 90</option>
+              <option value="Immediate">Immediate</option>
+            </select>
+          </div>
+          <div class="nqb-ev-field">
+            <label class="nqb-ev-label">Valide jusqu'au</label>
+            <input
+              type="date"
+              class="nqb-ev-input-lg"
+              value={editExpiration}
+              onchange={handleEditExpiration}
+            />
+          </div>
+        </div>
+
+        <!-- Revised total preview -->
+        <div class="nqb-ev-total-row">
+          <span class="nqb-ev-total-label">Total révisé</span>
+          <span class="nqb-ev-total-val">{editGrandTotalFormatted}</span>
+        </div>
+
+        <!-- Save action -->
+        <div class="nqb-ev-actions">
+          <button
+            class="nqb-btn-generate"
+            onclick={handleSaveVersion}
+            disabled={savingVersion}
+          >
+            <lightning-icon
+              icon-name="utility:save"
+              size="x-small"
+              variant="inverse"
+            ></lightning-icon>
+            &nbsp;{saveVersionLabel}
+          </button>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>65.0</apiVersion>
-    <description>When an Order status changes to Shipped, generates and emails a PDF invoice.</description>
-    <label>Order Shipped - Generate Invoice</label>
+    <description
+  >When an Order status changes to Shipped, Delivered, or Completed, generates and emails a PDF invoice.</description>
+    <label>Order Status - Generate Invoice</label>
     <processType>AutoLaunchedFlow</processType>
     <status>Active</status>
 
@@ -17,13 +18,28 @@
         <connector>
             <targetReference>Generate_Invoice</targetReference>
         </connector>
-        <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
-        <filterLogic>and</filterLogic>
+        <doesRequireRecordChangedToMeetCriteria
+    >true</doesRequireRecordChangedToMeetCriteria>
+        <filterLogic>1 OR 2 OR 3</filterLogic>
         <filters>
             <field>Status</field>
             <operator>EqualTo</operator>
             <value>
                 <stringValue>Shipped</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Delivered</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Completed</stringValue>
             </value>
         </filters>
         <object>Order</object>

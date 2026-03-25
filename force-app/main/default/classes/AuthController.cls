@@ -1,8 +1,4 @@
 public without sharing class AuthController {
-  /**
-   * Authenticate a user on the Experience Cloud site.
-   * Returns the redirect URL on success, throws AuraHandledException on failure.
-   */
   @AuraEnabled
   public static String loginUser(
     String username,
@@ -303,16 +299,42 @@ public without sharing class AuthController {
           if (c.AccountId != null) {
             profile.put('accountId', String.valueOf(c.AccountId));
           }
-          if (
-            c.AccountId != null &&
-            c.Account != null &&
-            c.Account.Name != null
-          ) {
-            profile.put('accountName', c.Account.Name);
+          if (c.AccountId != null && c.Account != null) {
+            if (c.Account.Name != null) {
+              profile.put('accountName', c.Account.Name);
+            }
+
+            // Detect B2C:
+            // Path 1 (standard Account): selfRegisterB2C appends ' (B2C)' to name
+            // Path 2 (Person Account):   selfRegisterB2C creates a PersonAccount
+            String acctName = c.Account.Name != null ? c.Account.Name : '';
+            Boolean isB2CUser = acctName.endsWith('(B2C)');
+
+            if (!isB2CUser) {
+              try {
+                // Dynamic SOQL so the class compiles even when Person Accounts
+                // are disabled in the org (IsPersonAccount doesn't exist then)
+                SObject acct = Database.query(
+                  'SELECT IsPersonAccount FROM Account WHERE Id = \'' +
+                    String.escapeSingleQuotes(String.valueOf(c.AccountId)) +
+                    '\' LIMIT 1'
+                );
+                isB2CUser = (Boolean) acct.get('IsPersonAccount');
+              } catch (Exception pae) {
+                /* Person Accounts not enabled — keep isB2CUser = false */
+              }
+            }
+
+            profile.put('customerType', isB2CUser ? 'B2C' : 'B2B');
           }
         }
       } catch (Exception ex) {
         /* User/Contact query failed — core fields already set */
+      }
+
+      // Ensure customerType always has a value (default B2B if account query failed)
+      if (!profile.containsKey('customerType')) {
+        profile.put('customerType', 'B2B');
       }
 
       return profile;

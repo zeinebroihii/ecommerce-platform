@@ -175,6 +175,12 @@ export default class NexusCustomerPortal extends LightningElement {
     const ln = this._userProfile.lastName || "";
     return (fn.charAt(0) + ln.charAt(0)).toUpperCase() || "U";
   }
+  get isB2C() {
+    return this._userProfile.customerType === "B2C";
+  }
+  get isB2B() {
+    return this._userProfile.customerType === "B2B";
+  }
 
   // ── Password change getters ────────────────────────────────────────────────
   get showPasswordForm() {
@@ -268,7 +274,11 @@ export default class NexusCustomerPortal extends LightningElement {
     // in the real authenticated session context, not cached guest context
     getCurrentUserProfile()
       .then((data) => {
-        if (data) this._userProfile = data;
+        if (data) {
+          this._userProfile = data;
+          // Re-push nav now that we know the customer type (B2B vs B2C)
+          this._pushNavUpdate();
+        }
       })
       .catch((err) =>
         console.error(
@@ -413,10 +423,13 @@ export default class NexusCustomerPortal extends LightningElement {
 
   /** Broadcast current portal state to the navbar (sub-header + active tab) */
   _pushNavUpdate() {
+    const navItems = this.isB2C
+      ? PORTAL_NAV_ITEMS.filter((i) => i.id !== "quotations")
+      : PORTAL_NAV_ITEMS;
     document.dispatchEvent(
       new CustomEvent("nexusportalnavupdate", {
         detail: {
-          subHeaderItems: PORTAL_NAV_ITEMS,
+          subHeaderItems: navItems,
           activeView: this.activeTab,
           isPortal: true
         }
@@ -464,12 +477,16 @@ export default class NexusCustomerPortal extends LightningElement {
         icon: "utility:truck",
         hasBadge: false
       },
-      {
-        id: "quotations",
-        label: "Quotes & Contracts",
-        icon: "utility:file",
-        hasBadge: false
-      },
+      ...(this.isB2C
+        ? []
+        : [
+            {
+              id: "quotations",
+              label: "Quotes & Contracts",
+              icon: "utility:file",
+              hasBadge: false
+            }
+          ]),
       {
         id: "cart",
         label: "My Cart",
@@ -1078,10 +1095,9 @@ export default class NexusCustomerPortal extends LightningElement {
   }
 
   _saveCart() {
-    // eslint-disable-next-line no-unused-vars
     try {
       sessionStorage.setItem(CART_KEY, JSON.stringify(this.cart));
-    } catch (e) {
+    } catch {
       /* silent */
     }
   }

@@ -1,15 +1,18 @@
 import { LightningElement, api, track } from "lwc";
+import requestQuoteFromCart from "@salesforce/apex/QuoteController.requestQuoteFromCart";
 
 const CART_KEY = "ecomm_cart";
 
 export default class NexusPortalCart extends LightningElement {
   @api sparksBalance = 1250;
+  @api isB2C = false;
   @track cartItems = [];
   @track showQuoteModal = false;
   @track isGeneratingQuote = false;
   @track showQuoteResult = false;
-  @track quoteDiscount = 0;
-  @track quoteProbability = 0;
+  @track quoteError = null;
+  @track generatedQuoteName = "";
+  @track generatedQuoteId = null;
 
   // ── lifecycle ──────────────────────────────────────────────────
   connectedCallback() {
@@ -36,8 +39,8 @@ export default class NexusPortalCart extends LightningElement {
       .toFixed(2);
   }
 
-  get quoteDiscountLabel() {
-    return this.quoteDiscount + "%";
+  get hasError() {
+    return !!this.quoteError;
   }
 
   // ── private helpers ────────────────────────────────────────────
@@ -58,7 +61,6 @@ export default class NexusPortalCart extends LightningElement {
     } catch (e) {
       /* quota */
     }
-    // Notify parent so the sidebar badge stays in sync
     this.dispatchEvent(
       new CustomEvent("cartchanged", {
         bubbles: true,
@@ -99,25 +101,48 @@ export default class NexusPortalCart extends LightningElement {
     this.showQuoteModal = true;
     this.isGeneratingQuote = true;
     this.showQuoteResult = false;
+    this.quoteError = null;
 
-    // Simulate Salesforce Flow / quote generation (3 s)
-    // eslint-disable-next-line @lwc/lwc/no-async-operation
-    setTimeout(() => {
-      this.isGeneratingQuote = false;
-      this.showQuoteResult = true;
-      this.quoteDiscount = Math.floor(Math.random() * 10) + 5; // 5–14 %
-      this.quoteProbability = Math.floor(Math.random() * 25) + 70; // 70–94 %
+    // Build cart payload for Apex
+    const cartPayload = this.cartItems.map((item) => ({
+      productId: item.productId || null,
+      name: item.name,
+      family: item.family || null,
+      quantity: parseInt(item.quantity, 10) || 1,
+      unitPrice: parseFloat(String(item.unitPrice).replace(/[^0-9.]/g, "")) || 0
+    }));
 
-      // Clear the cart once the quote is generated
-      this.cartItems = [];
-      this._saveCart();
-    }, 3000);
+    requestQuoteFromCart({ cartJSON: JSON.stringify(cartPayload) })
+      .then((quoteId) => {
+        this.isGeneratingQuote = false;
+        this.showQuoteResult = true;
+        this.generatedQuoteId = quoteId;
+        // Clear the cart once quote is submitted
+        this.cartItems = [];
+        this._saveCart();
+      })
+      .catch((err) => {
+        this.isGeneratingQuote = false;
+        this.quoteError = err.body ? err.body.message : "An error occurred.";
+        this.showQuoteResult = true;
+      });
   }
 
   handleCloseModal() {
     this.showQuoteModal = false;
     this.isGeneratingQuote = false;
     this.showQuoteResult = false;
+    this.quoteError = null;
+  }
+
+  handleGoToQuotes() {
+    this.handleCloseModal();
+    this.dispatchEvent(
+      new CustomEvent("navigate", {
+        bubbles: true,
+        detail: { tab: "quotations" }
+      })
+    );
   }
 
   handleGoCatalog() {
