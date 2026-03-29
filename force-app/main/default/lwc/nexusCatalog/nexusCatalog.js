@@ -88,6 +88,36 @@ function apexToProduct(p) {
 }
 
 const ALL_STATUSES = ["En stock", "En arrivage", "Epuisé", "Sur commande 48h"];
+const BROWSE_KEY = "nexus_browse_history";
+const BROWSE_MAX = 20; // max entries kept
+
+function loadBrowseHistory() {
+  try {
+    return JSON.parse(sessionStorage.getItem(BROWSE_KEY) || "[]");
+    // eslint-disable-next-line no-unused-vars
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveBrowseEvent(product) {
+  const history = loadBrowseHistory();
+  // avoid duplicate consecutive views of the same product
+  const filtered = history.filter((h) => h.productId !== product.id);
+  filtered.unshift({
+    productId: product.id,
+    name: product.name,
+    family: product.family,
+    subcategory: product.subcategory,
+    brand: product.brand,
+    price: product.price,
+    viewedAt: Date.now()
+  });
+  sessionStorage.setItem(
+    BROWSE_KEY,
+    JSON.stringify(filtered.slice(0, BROWSE_MAX))
+  );
+}
 
 export default class NexusCatalog extends LightningElement {
   @track _products = [];
@@ -548,8 +578,18 @@ export default class NexusCatalog extends LightningElement {
   handleViewProduct(event) {
     const id = event.currentTarget.dataset.id;
     this.detailProduct = this._products.find((p) => p.id === id) || null;
-    if (this.detailProduct)
-      document.dispatchEvent(new CustomEvent("nexusproductdetailopen"));
+    if (this.detailProduct) {
+      saveBrowseEvent(this.detailProduct);
+      document.dispatchEvent(
+        new CustomEvent("nexusproductdetailopen", {
+          detail: {
+            productId: this.detailProduct.id,
+            productName: this.detailProduct.name,
+            productFamily: this.detailProduct.family
+          }
+        })
+      );
+    }
   }
 
   handleToggleFavorite(event) {
@@ -598,7 +638,15 @@ export default class NexusCatalog extends LightningElement {
       // eslint-disable-next-line @lwc/lwc/no-async-operation
       setTimeout(() => {
         this.detailProduct = product;
-        document.dispatchEvent(new CustomEvent("nexusproductdetailopen"));
+        document.dispatchEvent(
+          new CustomEvent("nexusproductdetailopen", {
+            detail: {
+              productId: product.id,
+              productName: product.name,
+              productFamily: product.family
+            }
+          })
+        );
       }, 0);
     }
   }

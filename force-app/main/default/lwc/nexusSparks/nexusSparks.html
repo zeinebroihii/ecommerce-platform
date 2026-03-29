@@ -1,85 +1,37 @@
 <template>
-
-    <!-- ── Dashboard Banner ───────────────────────────────────────────────── -->
-    <section class="nsparks-banner" onclick={handleBannerClick}>
-        <div class="nsparks-inner">
-
-            <div class="nsparks-top-row">
-                <div class="nsparks-icon-wrap">
-                    <lightning-icon icon-name="utility:sparkles" size="small"></lightning-icon>
-                </div>
-                <span class="nsparks-loyalty-pill">Loyalty</span>
-            </div>
-
-            <div class="nsparks-body">
-                <h3 class="nsparks-title">Nexus <span class="nsparks-accent">Sparks</span></h3>
-                <div class="nsparks-bal-row">
-                    <span class="nsparks-bal-num">{sparksBalance}</span>
-                    <span class="nsparks-bal-unit">Sparks</span>
-                </div>
-            </div>
-
-            <div class="nsparks-footer-row">
-                <div>
-                    <div class="nsparks-val-label">Value</div>
-                    <div class="nsparks-val-amount">{formattedValue}</div>
-                </div>
-                <button class="nsparks-ignite-btn" onclick={handleIgniteClick}>Ignite</button>
-            </div>
-
+  <!-- ── Dashboard Banner ───────────────────────────────────────────────── -->
+  <section class="nsparks-banner">
+    <div class="nsparks-inner">
+      <div class="nsparks-top-row">
+        <div class="nsparks-icon-wrap">
+          <lightning-icon
+            icon-name="utility:sparkles"
+            size="small"
+          ></lightning-icon>
         </div>
-        <div class="nsparks-glow-orb"></div>
-    </section>
+        <span class="nsparks-loyalty-pill">Loyalty</span>
+      </div>
 
-    <!-- ── Info Modal ─────────────────────────────────────────────────────── -->
-    <template if:true={_showModal}>
-        <div class="nsparks-overlay" onclick={handleOverlayClick}>
-            <div class="nsparks-modal" onclick={stopProp}>
-
-                <h3 class="nsparks-modal-title">Nexus <span class="nsparks-accent">Sparks</span></h3>
-                <p class="nsparks-modal-sub">Your loyalty, amplified by intelligence.</p>
-
-                <div class="nsparks-modal-rows">
-
-                    <div class="nsparks-modal-row">
-                        <span class="nsparks-row-icon">
-                            <lightning-icon icon-name="utility:currency" size="x-small"></lightning-icon>
-                        </span>
-                        <p class="nsparks-row-text">100 Sparks = $1.00 — Apply at checkout to reduce your total instantly.</p>
-                    </div>
-
-                    <div class="nsparks-modal-row">
-                        <span class="nsparks-row-icon nsparks-row-icon--amber">
-                            <lightning-icon icon-name="utility:clock" size="x-small"></lightning-icon>
-                        </span>
-                        <p class="nsparks-row-text"><strong>30-day maturation</strong> — Points activate 30 days after your purchase to prevent buy-and-return fraud.</p>
-                    </div>
-
-                    <div class="nsparks-modal-row">
-                        <span class="nsparks-row-icon nsparks-row-icon--rose">
-                            <lightning-icon icon-name="utility:date_time" size="x-small"></lightning-icon>
-                        </span>
-                        <p class="nsparks-row-text"><strong>90-day expiry</strong> — New purchases reset your expiration window. Stay active to keep earning!</p>
-                    </div>
-
-                </div>
-
-                <!-- Balance Summary Card -->
-                <div class="nsparks-modal-balance-card">
-                    <div>
-                        <div class="nsparks-mbc-label">Current Balance</div>
-                        <div class="nsparks-mbc-sparks">{sparksBalance} Sparks</div>
-                    </div>
-                    <div class="nsparks-mbc-right">
-                        <div class="nsparks-mbc-label">Value</div>
-                        <div class="nsparks-mbc-usd">{formattedValue}</div>
-                    </div>
-                </div>
-
-                <button class="nsparks-modal-close-btn" onclick={closeModal}>Close</button>
-
-            </div>
+      <div class="nsparks-body">
+        <h3 class="nsparks-title">
+          Nexus <span class="nsparks-accent">Sparks</span>
+        </h3>
+        <div class="nsparks-bal-row">
+          <span class="nsparks-bal-num">{sparksBalance}</span>
+          <span class="nsparks-bal-unit">Sparks</span>
         </div>
-    </template>
+      </div>
 
+      <div class="nsparks-footer-row">
+        <div>
+          <div class="nsparks-val-label">Value</div>
+          <div class="nsparks-val-amount">{formattedValue}</div>
+        </div>
+        <button class="nsparks-ignite-btn" onclick={handleIgniteClick}>
+          Ignite
+        </button>
+      </div>
+    </div>
+    <div class="nsparks-glow-orb"></div>
+  </section>
 </template>

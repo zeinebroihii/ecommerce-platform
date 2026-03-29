@@ -1,391 +1,485 @@
 /* ══ Overlay (full-screen, fixed) ════════════════════════════════════════════ */
 .nes-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    display: flex;
-    justify-content: flex-end;
-    pointer-events: none;
-    background: transparent;
-    transition: background 0.3s ease;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+  background: transparent;
+  transition: background 0.3s ease;
 }
 .nes-overlay-visible {
-    pointer-events: all;
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(4px);
+  pointer-events: all;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
 }
 .nes-backdrop {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    cursor: default;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  cursor: default;
 }
 
 /* ══ Sliding Panel ════════════════════════════════════════════════════════════ */
 .nes-panel {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 28rem;
-    background: #fff;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    box-shadow: -20px 0 60px rgba(0, 0, 0, 0.15);
-    transform: translateX(100%);
-    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    overflow: hidden;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 28rem;
+  background: #fff;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
 }
 .nes-panel-open {
-    transform: translateX(0);
+  transform: translateX(0);
 }
 
 /* ══ Panel Header ═════════════════════════════════════════════════════════════ */
 .nes-panel-header {
-    padding: 2.5rem;
-    border-bottom: 1px solid #f1f5f9;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    background: #fff;
-    flex-shrink: 0;
+  padding: 2.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  flex-shrink: 0;
 }
 .nes-panel-icon {
-    width: 3rem;
-    height: 3rem;
-    background: #0f172a;
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+  width: 3rem;
+  height: 3rem;
+  background: #0f172a;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
 }
-.nes-panel-title-wrap { flex: 1; }
+.nes-panel-title-wrap {
+  flex: 1;
+}
 .nes-panel-title {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: #0f172a;
-    text-transform: uppercase;
-    font-style: italic;
-    letter-spacing: -0.04em;
-    line-height: 1;
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #0f172a;
+  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
 }
 .nes-panel-subtitle {
-    font-size: 0.5625rem;
-    font-weight: 900;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin: 0.25rem 0 0;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin: 0.25rem 0 0;
 }
 .nes-close-btn {
-    width: 2.5rem;
-    height: 2.5rem;
-    background: #f8fafc;
-    border: none;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #94a3b8;
-    transition: color 0.15s, background 0.15s;
-    flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #f8fafc;
+  border: none;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #94a3b8;
+  transition:
+    color 0.15s,
+    background 0.15s;
+  flex-shrink: 0;
 }
-.nes-close-btn:hover { background: #f1f5f9; color: #0f172a; }
+.nes-close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
 
 /* ══ Panel Body ═══════════════════════════════════════════════════════════════ */
 .nes-panel-body {
-    flex: 1;
-    overflow-y: auto;
+  flex: 1;
+  overflow-y: auto;
 }
 
 /* ══ Activity Row ═════════════════════════════════════════════════════════════ */
 .nes-act-row {
-    padding: 1.5rem 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    border-bottom: 1px solid #f8fafc;
-    cursor: pointer;
-    transition: background 0.15s;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  border-bottom: 1px solid #f8fafc;
+  cursor: default;
+  transition: background 0.15s;
 }
-.nes-act-row:hover { background: #fafafa; }
-.nes-act-num {
-    width: 3rem;
-    height: 3rem;
-    background: #f8fafc;
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6875rem;
-    font-weight: 900;
-    color: #94a3b8;
-    flex-shrink: 0;
-    font-family: 'JetBrains Mono', monospace;
-    transition: background 0.15s, box-shadow 0.15s;
+.nes-act-row:hover {
+  background: #fafafa;
 }
-.nes-act-row:hover .nes-act-num { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.nes-act-info { flex: 1; min-width: 0; }
+.nes-act-row-clickable {
+  cursor: pointer;
+}
+.nes-act-row-clickable:hover {
+  background: #f0f4ff;
+}
+.nes-act-chevron {
+  font-size: 1.25rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition:
+    color 0.15s,
+    transform 0.15s;
+}
+.nes-act-row-clickable:hover .nes-act-chevron {
+  color: #4f46e5;
+  transform: translateX(2px);
+}
+.nes-act-icon-wrap {
+  width: 3rem;
+  height: 3rem;
+  background: #f1f5f9;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
+}
+.nes-act-row:hover .nes-act-icon-wrap {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.nes-act-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 3rem 2rem;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+.nes-act-info {
+  flex: 1;
+  min-width: 0;
+}
 .nes-act-title {
-    font-size: 0.8125rem;
-    font-weight: 900;
-    color: #0f172a;
-    text-transform: uppercase;
-    font-style: italic;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-size: 0.8125rem;
+  font-weight: 900;
+  color: #0f172a;
+  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .nes-act-sub {
-    font-size: 0.5625rem;
-    font-weight: 900;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-top: 0.25rem;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 0.25rem;
 }
 
 /* ══ Badges ═══════════════════════════════════════════════════════════════════ */
 .nes-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.5rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    border: 1px solid transparent;
-    white-space: nowrap;
-    flex-shrink: 0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.nes-badge-success  { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
-.nes-badge-primary  { background: #eef2ff; color: #4f46e5; border-color: #e0e7ff; }
-.nes-badge-warning  { background: #fffbeb; color: #d97706; border-color: #fde68a; }
-.nes-badge-secondary { background: #f8fafc; color: #64748b; border-color: #f1f5f9; }
+.nes-badge-success {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #d1fae5;
+}
+.nes-badge-primary {
+  background: #eef2ff;
+  color: #4f46e5;
+  border-color: #e0e7ff;
+}
+.nes-badge-warning {
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #fde68a;
+}
+.nes-badge-secondary {
+  background: #f8fafc;
+  color: #64748b;
+  border-color: #f1f5f9;
+}
 
 /* ══ Panel Footer ═════════════════════════════════════════════════════════════ */
 .nes-panel-footer {
-    padding: 1.5rem 2rem;
-    background: #f8fafc;
-    border-top: 1px solid #f1f5f9;
-    flex-shrink: 0;
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  flex-shrink: 0;
 }
 .nes-close-panel-btn {
-    width: 100%;
-    height: 3.5rem;
-    background: #0f172a;
-    color: #fff;
-    border: none;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    cursor: pointer;
-    transition: background 0.15s;
-    font-family: 'Poppins', sans-serif;
+  width: 100%;
+  height: 3.5rem;
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: "Poppins", sans-serif;
 }
-.nes-close-panel-btn:hover { background: #1e293b; }
+.nes-close-panel-btn:hover {
+  background: #1e293b;
+}
 
 /* ══ Offer Panel (overrides) ══════════════════════════════════════════════════ */
-.nes-offer-panel { overflow-y: auto; flex-direction: column; }
+.nes-offer-panel {
+  overflow-y: auto;
+  flex-direction: column;
+}
 
 .nes-offer-img-wrap {
-    position: relative;
-    height: 18rem;
-    flex-shrink: 0;
+  position: relative;
+  height: 18rem;
+  flex-shrink: 0;
 }
-.nes-offer-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nes-offer-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .nes-offer-img-gradient {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, #fff 0%, transparent 55%);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #fff 0%, transparent 55%);
 }
 .nes-offer-close-btn {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    width: 3rem;
-    height: 3rem;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(8px);
-    border: none;
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.15s;
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-.nes-offer-close-btn:hover { background: rgba(255, 255, 255, 0.45); }
+.nes-offer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
 
 .nes-offer-body {
-    padding: 0 2rem 2rem;
-    margin-top: -4rem;
-    position: relative;
-    z-index: 1;
+  padding: 0 2rem 2rem;
+  margin-top: -4rem;
+  position: relative;
+  z-index: 1;
 }
 .nes-offer-card {
-    background: #fff;
-    border-radius: 2.5rem;
-    padding: 2.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
-    border: 1px solid #f8fafc;
+  background: #fff;
+  border-radius: 2.5rem;
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+  border: 1px solid #f8fafc;
 }
 
 .nes-offer-top {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 .nes-offer-badge {
-    padding: 0.375rem 1rem;
-    background: #eef2ff;
-    color: #4f46e5;
-    border: 1px solid #e0e7ff;
-    border-radius: 9999px;
-    font-size: 0.5625rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
+  padding: 0.375rem 1rem;
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #e0e7ff;
+  border-radius: 9999px;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
 }
 .nes-offer-ai-label {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    color: #4f46e5;
-    font-size: 0.5625rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #4f46e5;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
 }
-.nes-offer-ai-label lightning-icon { --lwc-colorTextIconDefault: #4f46e5; }
+.nes-offer-ai-label lightning-icon {
+  --lwc-colorTextIconDefault: #4f46e5;
+}
 
 .nes-offer-name {
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: #0f172a;
-    text-transform: uppercase;
-    font-style: italic;
-    letter-spacing: -0.04em;
-    line-height: 1;
-    margin: 0 0 1rem;
-    font-family: 'Poppins', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0f172a;
+  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0 0 1rem;
+  font-family: "Poppins", sans-serif;
 }
 .nes-offer-reason {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 500;
-    line-height: 1.6;
-    margin: 0 0 2rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0 0 2rem;
 }
 
 .nes-offer-price-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-    border-radius: 1.5rem;
-    margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 1.5rem;
+  margin-bottom: 2rem;
 }
 .nes-price-label {
-    font-size: 0.5625rem;
-    font-weight: 900;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-bottom: 0.25rem;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.25rem;
 }
 .nes-price-value {
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: #4f46e5;
-    font-style: italic;
-    letter-spacing: -0.04em;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #4f46e5;
+  font-style: italic;
+  letter-spacing: -0.04em;
 }
 .nes-stock-value {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.75rem;
-    font-weight: 900;
-    color: #059669;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #059669;
 }
 .nes-stock-dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    background: #10b981;
-    border-radius: 9999px;
-    display: inline-block;
-    animation: nes-pulse 2s infinite;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #10b981;
+  border-radius: 9999px;
+  display: inline-block;
+  animation: nes-pulse 2s infinite;
 }
 
-.nes-offer-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
-.nes-add-cart-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-    height: 4rem;
-    background: #4f46e5;
-    color: #fff;
-    border: none;
-    border-radius: 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
-    font-family: 'Poppins', sans-serif;
+.nes-offer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
 }
-.nes-add-cart-btn:hover  { background: #4338ca; transform: translateY(-1px); }
-.nes-add-cart-btn:active { transform: scale(0.97); }
+.nes-add-cart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 4rem;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
+  font-family: "Poppins", sans-serif;
+}
+.nes-add-cart-btn:hover {
+  background: #4338ca;
+  transform: translateY(-1px);
+}
+.nes-add-cart-btn:active {
+  transform: scale(0.97);
+}
 
 .nes-save-later-btn {
-    width: 100%;
-    height: 4rem;
-    background: #fff;
-    color: #0f172a;
-    border: 2px solid #0f172a;
-    border-radius: 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    font-family: 'Poppins', sans-serif;
+  width: 100%;
+  height: 4rem;
+  background: #fff;
+  color: #0f172a;
+  border: 2px solid #0f172a;
+  border-radius: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: "Poppins", sans-serif;
 }
-.nes-save-later-btn:hover { background: #0f172a; color: #fff; }
+.nes-save-later-btn:hover {
+  background: #0f172a;
+  color: #fff;
+}
 
 .nes-warranty {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #f1f5f9;
-    color: #94a3b8;
-    font-size: 0.625rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  color: #94a3b8;
+  font-size: 0.625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
-.nes-warranty lightning-icon { --lwc-colorTextIconDefault: #10b981; }
+.nes-warranty lightning-icon {
+  --lwc-colorTextIconDefault: #10b981;
+}
 
 /* ══ Pulse animation ═════════════════════════════════════════════════════════ */
 @keyframes nes-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
