@@ -3,7 +3,11 @@ import getProductsWithStock from "@salesforce/apex/ProductController.getProducts
 import getCurrentUserProfile from "@salesforce/apex/AuthController.getCurrentUserProfile";
 import changeUserPassword from "@salesforce/apex/AuthController.changeUserPassword";
 import verifyAndActivateOrder from "@salesforce/apex/StripePaymentController.verifyAndActivateOrder";
+import getRecommendations from "@salesforce/apex/RecommendationController.getRecommendations";
+import getRecentActivity from "@salesforce/apex/OrderManagementController.getRecentActivity";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+
+const BROWSE_KEY = "nexus_browse_history";
 
 const CART_KEY = "ecomm_cart";
 
@@ -98,6 +102,7 @@ export default class NexusCustomerPortal extends LightningElement {
   @track cart = [];
   @track sparksBalance = 1250;
   @track _sparksDiscount = 0; // $ value deducted by Sparks (e.g. 10.00)
+  @track _sparksModalOpen = false;
   @track _products = [];
 
   // detail view state for product overlay
@@ -126,6 +131,17 @@ export default class NexusCustomerPortal extends LightningElement {
   @track _cartToastName = "";
   @track _cartToastPrice = "";
   _cartToastTimer = null;
+
+  // ── Recent Activity ──────────────────────────────────────────────────────────
+  @track _activityItems = [];
+  @track _activityLoading = true;
+
+  // ── Browse popup (shown when user opens a product detail in catalog) ────────
+  @track _browsePopupVisible = false;
+  @track _browsePopupProduct = null;
+  _browsePopupTimer = null;
+  _cachedRecs = []; // populated by nexusrecloaded event
+  _pendingPopupProduct = null; // queued when recs not loaded yet
 
   @wire(getProductsWithStock, { searchTerm: "", category: "" })
   wiredProducts({ data, error }) {
@@ -405,6 +421,49 @@ export default class NexusCustomerPortal extends LightningElement {
       this._onComboNavToCatalog
     );
 
+    // Cache loaded recommendations for the browse popup
+    this._onRecLoaded = (e) => {
+      const detail = e.detail || {};
+      this._cachedRecs = detail.recs || [];
+      // If user already viewed a product before recs loaded, show popup now
+      if (this._pendingPopupProduct && this._cachedRecs.length) {
+        this._triggerBrowsePopup(this._pendingPopupProduct);
+        this._pendingPopupProduct = null;
+      }
+    };
+    document.addEventListener("nexusrecloaded", this._onRecLoaded);
+
+    // Eagerly load recommendations so the popup + navbar badge work on any tab
+    this._loadRecsEagerly();
+
+    // Load real recent activity data
+    this._loadRecentActivity();
+
+    // Show browse popup when user opens a product detail in the catalog
+    this._onProductDetailOpen = (e) => {
+      const detail = (e && e.detail) || {};
+      if (!this._cachedRecs.length) {
+        // Recs not loaded yet — queue it, will fire when _onRecLoaded completes
+        this._pendingPopupProduct = detail;
+        return;
+      }
+      this._triggerBrowsePopup(detail);
+    };
+    document.addEventListener(
+      "nexusproductdetailopen",
+      this._onProductDetailOpen
+    );
+
+    // Open product detail overlay from navbar notification bell
+    this._onOpenProductDetail = (e) => {
+      const productId = e.detail && e.detail.productId;
+      this._openProductDetailById(productId);
+    };
+    document.addEventListener(
+      "nexusopenproductdetail",
+      this._onOpenProductDetail
+    );
+
     // Tell navbar: we are a portal, here are our tabs
     this._pushNavUpdate();
   }
@@ -419,6 +478,142 @@ export default class NexusCustomerPortal extends LightningElement {
       "nexuscombonavtocatalog",
       this._onComboNavToCatalog
     );
+    document.removeEventListener("nexusrecloaded", this._onRecLoaded);
+    document.removeEventListener(
+      "nexusproductdetailopen",
+      this._onProductDetailOpen
+    );
+    document.removeEventListener(
+      "nexusopenproductdetail",
+      this._onOpenProductDetail
+    );
+    if (this._browsePopupTimer) clearTimeout(this._browsePopupTimer);
+  }
+
+  /** Fetch real recent activity (orders + quotes) from Apex */
+  _loadRecentActivity() {
+    this._activityLoading = true;
+    getRecentActivity()
+      .then((data) => {
+        this._activityItems = (data || []).map((a, i) => ({
+          ...a,
+          key: (a.itemId || i) + String(i),
+          pillClass: this._activityPillClass(a)
+        }));
+        this._activityLoading = false;
+        document.dispatchEvent(
+          new CustomEvent("nexusactivityloaded", {
+            detail: { items: this._activityItems, isB2B: this.isB2B }
+          })
+        );
+      })
+      .catch(() => {
+        this._activityLoading = false;
+      });
+  }
+
+  _activityPillClass(a) {
+    if (a.type === "Order") {
+      const s = (a.status || "").toLowerCase();
+      if (s === "livrée" || s === "delivered")
+        return "ncp-status-pill ncp-pill-success";
+      if (s === "annulée" || s === "cancelled")
+        return "ncp-status-pill ncp-pill-danger";
+      return "ncp-status-pill ncp-pill-primary";
+    }
+    // Quote
+    const s = (a.status || "").toLowerCase();
+    if (s === "accepted") return "ncp-status-pill ncp-pill-success";
+    if (s === "rejected") return "ncp-status-pill ncp-pill-danger";
+    if (s === "draft") return "ncp-status-pill ncp-pill-warning";
+    return "ncp-status-pill ncp-pill-primary";
+  }
+
+  get recentActivityItems() {
+    return this._activityItems;
+  }
+  get dashboardActivityItems() {
+    return this._activityItems.slice(0, 3);
+  }
+  get hasActivityItems() {
+    return this._activityItems.length > 0;
+  }
+  get isActivityLoading() {
+    return this._activityLoading;
+  }
+  get isActivityEmpty() {
+    return !this._activityLoading && this._activityItems.length === 0;
+  }
+
+  /** Load recommendations eagerly so popup + navbar badge work on any tab */
+  _loadRecsEagerly() {
+    const cartJson = sessionStorage.getItem(CART_KEY) || "[]";
+    const browseJson = sessionStorage.getItem(BROWSE_KEY) || "[]";
+    getRecommendations({ cartJson, browseJson })
+      .then((data) => {
+        if (!data || !data.length) return;
+        this._cachedRecs = data.map((r) => ({
+          productId: r.productId,
+          productName: r.productName,
+          imageUrl: r.imageUrl,
+          priceFormatted:
+            r.price != null
+              ? new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "EUR",
+                  maximumFractionDigits: 0
+                }).format(r.price)
+              : "—",
+          reason: r.reason,
+          productFamily: r.productFamily,
+          recType: r.recType
+        }));
+        document.dispatchEvent(
+          new CustomEvent("nexusrecloaded", {
+            detail: { count: this._cachedRecs.length, recs: this._cachedRecs }
+          })
+        );
+        // Show proactive popup on any page after a short delay (once per 30 min)
+        this._maybeShowProactivePopup();
+      })
+      .catch(() => {
+        /* silent — badge stays 0 if recs fail */
+      });
+  }
+
+  /**
+   * Show the recommendation popup proactively — on any page, once per 30 min.
+   * Picks the top rec and displays the floating card after 2 seconds.
+   */
+  _maybeShowProactivePopup() {
+    if (!this._cachedRecs.length) return;
+    const POPUP_KEY = "nexus_rec_popup_ts";
+    const THIRTY_MIN = 30 * 60 * 1000;
+    try {
+      const last = parseInt(sessionStorage.getItem(POPUP_KEY) || "0", 10);
+      if (Date.now() - last < THIRTY_MIN) return; // already shown recently
+      // eslint-disable-next-line no-unused-vars
+    } catch (e) {
+      /* sessionStorage not available */
+    }
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    setTimeout(() => {
+      if (!this._cachedRecs.length) return;
+      const pick = this._cachedRecs[0];
+      this._browsePopupProduct = pick;
+      this._browsePopupVisible = true;
+      if (this._browsePopupTimer) clearTimeout(this._browsePopupTimer);
+      // eslint-disable-next-line @lwc/lwc/no-async-operation
+      this._browsePopupTimer = setTimeout(() => {
+        this._browsePopupVisible = false;
+      }, 7000);
+      // eslint-disable-next-line no-unused-vars
+      try {
+        sessionStorage.setItem("nexus_rec_popup_ts", String(Date.now()));
+      } catch (e2) {
+        /* ignore */
+      }
+    }, 2500);
   }
 
   /** Broadcast current portal state to the navbar (sub-header + active tab) */
@@ -431,7 +626,8 @@ export default class NexusCustomerPortal extends LightningElement {
         detail: {
           subHeaderItems: navItems,
           activeView: this.activeTab,
-          isPortal: true
+          isPortal: true,
+          isB2B: this.isB2B
         }
       })
     );
@@ -824,7 +1020,30 @@ export default class NexusCustomerPortal extends LightningElement {
 
   // ── Handlers — Engagement System (drawers) ────────────────────────────────
   handleViewAllActivity() {
-    this.template.querySelector("c-nexus-engagement-system").openHistory();
+    const engSys = this.template.querySelector("c-nexus-engagement-system");
+    if (engSys) engSys.openHistory();
+  }
+
+  handleEngagementActivityClick(e) {
+    const type = e.detail && e.detail.type;
+    const engSys = this.template.querySelector("c-nexus-engagement-system");
+    if (engSys) engSys.closeHistory();
+    if (type === "Quote") {
+      this.activeTab = "quotations";
+    } else {
+      this.activeTab = "orders";
+    }
+    this._pushNavUpdate();
+  }
+
+  handleActivityRowClick(event) {
+    const type = event.currentTarget.dataset.type;
+    if (type === "Quote") {
+      this.activeTab = "quotations";
+    } else {
+      this.activeTab = "orders";
+    }
+    this._pushNavUpdate();
   }
 
   handleViewOffer(e) {
@@ -837,6 +1056,32 @@ export default class NexusCustomerPortal extends LightningElement {
       image: btn.dataset.image,
       reason: btn.dataset.reason
     });
+  }
+
+  handleViewOfferFromRec(e) {
+    this.template
+      .querySelector("c-nexus-engagement-system")
+      .openOffer(e.detail);
+  }
+
+  handleViewProductFromRec(e) {
+    this._openProductDetailById((e.detail && e.detail.productId) || null);
+  }
+
+  /** Open the product detail overlay by productId — works from any tab */
+  _openProductDetailById(productId) {
+    if (!productId) return;
+    const product = this._products.find(
+      (p) => p.id === productId || p.productId === productId
+    );
+    if (!product) return;
+    // Leave the current tab intact — overlay renders on top of any tab
+    // except full-catalog/checkout view, so switch to dashboard in those cases
+    if (this.activeTab === "catalog" || this.activeTab === "checkout") {
+      this.activeTab = "dashboard";
+      this._pushNavUpdate();
+    }
+    this.detailProduct = product;
   }
 
   handleEngagementAddToCart(e) {
@@ -936,6 +1181,60 @@ export default class NexusCustomerPortal extends LightningElement {
     const product = event.detail && event.detail.product;
     if (!product) return;
     this._pushToCart({ ...product, price: product.price || product.salePrice });
+    this._showCartToast(product);
+  }
+
+  // ── Browse popup helper ───────────────────────────────────────────────────
+  _triggerBrowsePopup(detail) {
+    const viewedId = detail.productId;
+    const viewedFamily = detail.productFamily;
+    // Prefer a product from a different family (cross-sell); fall back to any other
+    let pick = this._cachedRecs.find(
+      (r) => r.productId !== viewedId && r.productFamily !== viewedFamily
+    );
+    if (!pick) pick = this._cachedRecs.find((r) => r.productId !== viewedId);
+    if (!pick && this._cachedRecs.length) pick = this._cachedRecs[0];
+    if (!pick) return;
+    this._browsePopupProduct = pick;
+    this._browsePopupVisible = true;
+    if (this._browsePopupTimer) clearTimeout(this._browsePopupTimer);
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    this._browsePopupTimer = setTimeout(() => {
+      this._browsePopupVisible = false;
+    }, 6000);
+  }
+
+  // ── Browse popup getters & handlers ─────────────────────────────────────────
+  get browsePopupVisible() {
+    return this._browsePopupVisible;
+  }
+
+  get browsePopupProduct() {
+    return this._browsePopupProduct;
+  }
+
+  handleDismissBrowsePopup() {
+    this._browsePopupVisible = false;
+    if (this._browsePopupTimer) {
+      clearTimeout(this._browsePopupTimer);
+      this._browsePopupTimer = null;
+    }
+  }
+
+  handleBrowsePopupViewOffer() {
+    if (!this._browsePopupProduct) return;
+    this._browsePopupVisible = false;
+    if (this._browsePopupTimer) {
+      clearTimeout(this._browsePopupTimer);
+      this._browsePopupTimer = null;
+    }
+    this._openProductDetailById(this._browsePopupProduct.productId);
+  }
+
+  handleAddToCartFromRec(event) {
+    const product = event.detail && event.detail.product;
+    if (!product) return;
+    this._pushToCart({ ...product, price: product.price || product.unitPrice });
     this._showCartToast(product);
   }
 
@@ -1046,6 +1345,23 @@ export default class NexusCustomerPortal extends LightningElement {
 
   get sparksDiscount() {
     return this._sparksDiscount;
+  }
+
+  get sparksFormattedValue() {
+    return "$" + ((parseInt(this.sparksBalance, 10) || 0) / 100).toFixed(2);
+  }
+
+  handleSparksIgnite() {
+    this._sparksModalOpen = true;
+  }
+  handleSparksClose() {
+    this._sparksModalOpen = false;
+  }
+  handleSparksOverlayClick() {
+    this._sparksModalOpen = false;
+  }
+  handleSparksModalStopProp(e) {
+    e.stopPropagation();
   }
 
   // ── Handlers — product detail overlay ─────────────────────────────────────

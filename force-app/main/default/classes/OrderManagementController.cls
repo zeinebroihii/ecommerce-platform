@@ -59,6 +59,144 @@ public without sharing class OrderManagementController {
     public String imageUrl;
   }
 
+  // ── Recent Activity feed ──────────────────────────────────────────────────
+
+  public class ActivityItem implements Comparable {
+    @AuraEnabled
+    public String itemId;
+    @AuraEnabled
+    public String type; // Order | Quote
+    @AuraEnabled
+    public String title;
+    @AuraEnabled
+    public String subtitle;
+    @AuraEnabled
+    public String status;
+    @AuraEnabled
+    public String icon;
+    @AuraEnabled
+    public Long ts; // epoch ms — used by JS for keying
+    @AuraEnabled
+    public String dateLabel;
+    public Integer compareTo(Object o) {
+      ActivityItem other = (ActivityItem) o;
+      if (this.ts > other.ts)
+        return -1;
+      if (this.ts < other.ts)
+        return 1;
+      return 0;
+    }
+  }
+
+  @AuraEnabled
+  public static List<ActivityItem> getRecentActivity() {
+    Id accountId = resolvePortalAccountId();
+    if (accountId == null)
+      return new List<ActivityItem>();
+
+    List<ActivityItem> items = new List<ActivityItem>();
+    Datetime now = Datetime.now();
+
+    // Recent Orders
+    for (Order o : [
+      SELECT Id, OrderNumber, Status, LastModifiedDate, Account.Name
+      FROM Order
+      WHERE AccountId = :accountId
+      ORDER BY LastModifiedDate DESC
+      LIMIT 5
+    ]) {
+      ActivityItem a = new ActivityItem();
+      a.itemId = o.Id;
+      a.type = 'Order';
+      a.title = 'Commande #' + o.OrderNumber;
+      a.subtitle = o.Account != null ? o.Account.Name : '';
+      a.status = translateOrderStatus(o.Status);
+      a.icon = 'utility:package';
+      a.ts = o.LastModifiedDate.getTime();
+      a.dateLabel = relativeDateFr(o.LastModifiedDate, now);
+      items.add(a);
+    }
+
+    // Recent Quotes
+    try {
+      for (TALEXO_Quote__c q : [
+        SELECT Id, Name, Status__c, LastModifiedDate
+        FROM TALEXO_Quote__c
+        WHERE Opportunity__r.AccountId = :accountId
+        ORDER BY LastModifiedDate DESC
+        LIMIT 5
+      ]) {
+        ActivityItem a = new ActivityItem();
+        a.itemId = q.Id;
+        a.type = 'Quote';
+        a.title = q.Name;
+        a.subtitle = 'Devis';
+        a.status = q.Status__c != null ? q.Status__c : 'Draft';
+        a.icon = 'utility:file';
+        a.ts = q.LastModifiedDate.getTime();
+        a.dateLabel = relativeDateFr(q.LastModifiedDate, now);
+        items.add(a);
+      }
+    } catch (Exception ex) {
+      System.debug(
+        '[OrderMgmt] Quote activity query skipped: ' + ex.getMessage()
+      );
+    }
+
+    items.sort();
+    List<ActivityItem> result = new List<ActivityItem>();
+    Integer topN = Math.min(8, items.size());
+    for (Integer i = 0; i < topN; i++)
+      result.add(items[i]);
+    return result;
+  }
+
+  private static Id resolvePortalAccountId() {
+    try {
+      User u = [
+        SELECT ContactId, Contact.AccountId
+        FROM User
+        WHERE Id = :UserInfo.getUserId()
+        LIMIT 1
+      ];
+      return u.Contact?.AccountId;
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private static String relativeDateFr(Datetime dt, Datetime now) {
+    Long diffMs = now.getTime() - dt.getTime();
+    Long diffMin = diffMs / 60000;
+    if (diffMin < 2)
+      return 'À l\'instant';
+    if (diffMin < 60)
+      return 'Il y a ' + diffMin + ' min';
+    Long diffH = diffMin / 60;
+    if (diffH < 24)
+      return 'Il y a ' + diffH + 'h';
+    Long diffD = diffH / 24;
+    if (diffD == 1)
+      return 'Hier';
+    if (diffD < 7)
+      return 'Il y a ' + diffD + ' jours';
+    return dt.format('dd/MM/yyyy');
+  }
+
+  private static String translateOrderStatus(String s) {
+    if (s == 'Activated')
+      return 'Activée';
+    if (s == 'Draft')
+      return 'Brouillon';
+    if (s == 'Shipped')
+      return 'Expédiée';
+    if (s == 'Delivered')
+      return 'Livrée';
+    if (s == 'Cancelled')
+      return 'Annulée';
+    return s != null ? s : 'En cours';
+  }
+
   // ── Portal: orders for the current logged-in user ─────────────────────────
 
   @AuraEnabled(cacheable=true)
@@ -244,6 +382,11 @@ public without sharing class OrderManagementController {
         Status,
         EffectiveDate,
         Account.Name,
+        Account.BillingStreet,
+        Account.BillingCity,
+        Account.BillingState,
+        Account.BillingPostalCode,
+        Account.BillingCountry,
         Shipping_Street__c,
         Shipping_City__c,
         Shipping_State__c,
@@ -339,7 +482,24 @@ public without sharing class OrderManagementController {
     if (String.isNotBlank(ord.Shipping_Country__c))
       shippingAddr += '<br/>' + ord.Shipping_Country__c;
     if (String.isBlank(shippingAddr))
-      shippingAddr = '—';
+      shippingAddr = shippingAddr = '—';
+
+    // Billing address from Account
+    String billingAddr = '';
+    if (ord.Account != null) {
+      if (String.isNotBlank(ord.Account.BillingStreet))
+        billingAddr += ord.Account.BillingStreet + '<br/>';
+      if (String.isNotBlank(ord.Account.BillingCity))
+        billingAddr += ord.Account.BillingCity;
+      if (String.isNotBlank(ord.Account.BillingState))
+        billingAddr += ', ' + ord.Account.BillingState;
+      if (String.isNotBlank(ord.Account.BillingPostalCode))
+        billingAddr += ' ' + ord.Account.BillingPostalCode;
+      if (String.isNotBlank(ord.Account.BillingCountry))
+        billingAddr += '<br/>' + ord.Account.BillingCountry;
+    }
+    if (String.isBlank(billingAddr))
+      billingAddr = shippingAddr;
 
     String accountName = ord.Account != null ? ord.Account.Name : 'Customer';
 
@@ -406,7 +566,9 @@ public without sharing class OrderManagementController {
       '.inv-footer-contact{font-size:8px;color:#94a3b8;line-height:1.7;}' +
       '@media print{.print-bar{display:none!important;}body{background:#fff;padding:0;}' +
       '.page{box-shadow:none;max-width:100%;}}' +
-      '</style></head><body>' +
+      '</style>' +
+      '<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},600);});</script>' +
+      '</head><body>' +
       '<div class="print-bar">' +
       '<button class="btn-print" onclick="window.print()">&#128438; Print / Save as PDF</button>' +
       '</div>' +
@@ -458,7 +620,7 @@ public without sharing class OrderManagementController {
       accountName +
       '</div>' +
       '<div class="inv-addr-line">' +
-      shippingAddr +
+      billingAddr +
       '</div>' +
       '</div>' +
       '<div class="inv-addr-right">' +

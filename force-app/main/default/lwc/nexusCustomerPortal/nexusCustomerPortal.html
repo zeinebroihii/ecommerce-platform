@@ -1,5 +1,102 @@
 <template>
   <div class="ncp-wrap">
+    <!-- ── Browse Popup (AI recommendation while browsing catalog) ── -->
+    <template if:true={browsePopupVisible}>
+      <div class="nbp-popup">
+        <div class="nbp-popup-inner">
+          <div class="nbp-popup-left">
+            <div class="nbp-popup-icon">
+              <lightning-icon
+                icon-name="utility:sparkles"
+                size="x-small"
+                variant="inverse"
+              ></lightning-icon>
+            </div>
+            <div class="nbp-popup-text">
+              <p class="nbp-popup-label">Recommended for you</p>
+              <p class="nbp-popup-name">{browsePopupProduct.productName}</p>
+              <p class="nbp-popup-price">{browsePopupProduct.priceFormatted}</p>
+            </div>
+          </div>
+          <div class="nbp-popup-actions">
+            <button class="nbp-popup-cta" onclick={handleBrowsePopupViewOffer}>
+              View Offer
+            </button>
+            <button
+              class="nbp-popup-close"
+              onclick={handleDismissBrowsePopup}
+              aria-label="Dismiss"
+            >
+              &#x2715;
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── Sparks Info Modal (rendered at top level to escape stacking contexts) ── -->
+    <template if:true={_sparksModalOpen}>
+      <div class="ncp-sparks-overlay" onclick={handleSparksOverlayClick}>
+        <div class="ncp-sparks-modal" onclick={handleSparksModalStopProp}>
+          <h3 class="ncp-smodal-title">
+            Nexus <span class="ncp-smodal-accent">Sparks</span>
+          </h3>
+          <p class="ncp-smodal-sub">Your loyalty, amplified by intelligence.</p>
+          <div class="ncp-smodal-rows">
+            <div class="ncp-smodal-row">
+              <span class="ncp-smodal-icon">
+                <lightning-icon
+                  icon-name="utility:currency"
+                  size="x-small"
+                ></lightning-icon>
+              </span>
+              <p class="ncp-smodal-text">
+                100 Sparks = $1.00 — Apply at checkout to reduce your total
+                instantly.
+              </p>
+            </div>
+            <div class="ncp-smodal-row">
+              <span class="ncp-smodal-icon ncp-smodal-icon--amber">
+                <lightning-icon
+                  icon-name="utility:clock"
+                  size="x-small"
+                ></lightning-icon>
+              </span>
+              <p class="ncp-smodal-text">
+                <strong>30-day maturation</strong> — Points activate 30 days
+                after your purchase to prevent buy-and-return fraud.
+              </p>
+            </div>
+            <div class="ncp-smodal-row">
+              <span class="ncp-smodal-icon ncp-smodal-icon--rose">
+                <lightning-icon
+                  icon-name="utility:date_time"
+                  size="x-small"
+                ></lightning-icon>
+              </span>
+              <p class="ncp-smodal-text">
+                <strong>90-day expiry</strong> — New purchases reset your
+                expiration window. Stay active to keep earning!
+              </p>
+            </div>
+          </div>
+          <div class="ncp-smodal-balance-card">
+            <div>
+              <div class="ncp-smodal-bal-label">Current Balance</div>
+              <div class="ncp-smodal-bal-sparks">{sparksBalance} Sparks</div>
+            </div>
+            <div class="ncp-smodal-bal-right">
+              <div class="ncp-smodal-bal-label">Value</div>
+              <div class="ncp-smodal-bal-usd">{sparksFormattedValue}</div>
+            </div>
+          </div>
+          <button class="ncp-smodal-close-btn" onclick={handleSparksClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </template>
+
     <!-- catalog full page view (hides sidebar/main structure) -->
     <template if:true={isCatalog}>
       <c-nexus-catalog
@@ -230,7 +327,10 @@
 
               <!-- Nexus Sparks Banner -->
               <div class="ncp-sparks-row">
-                <c-nexus-sparks sparks-balance={sparksBalance}></c-nexus-sparks>
+                <c-nexus-sparks
+                  sparks-balance={sparksBalance}
+                  onignite={handleSparksIgnite}
+                ></c-nexus-sparks>
               </div>
             </div>
             <!-- end ncp-banner-sparks-row -->
@@ -279,113 +379,12 @@
               </div>
             </div>
 
-            <!-- AI Recommendations -->
-            <section class="ncp-reco-section">
-              <div class="ncp-reco-header">
-                <div class="ncp-reco-title-wrap">
-                  <div class="ncp-reco-icon">
-                    <lightning-icon
-                      icon-name="utility:sparkles"
-                      size="small"
-                      variant="inverse"
-                    ></lightning-icon>
-                  </div>
-                  <h3 class="ncp-page-title">Recommandations AI</h3>
-                </div>
-                <span class="ncp-reco-badge">Basé sur votre historique</span>
-              </div>
-              <div class="ncp-reco-grid">
-                <div class="ncp-reco-card">
-                  <div class="ncp-reco-img">
-                    <img
-                      src="https://picsum.photos/seed/core/400/300"
-                      alt="Nexus Core X-1"
-                      class="ncp-reco-photo"
-                    />
-                    <span class="ncp-reco-cat-badge">Hardware</span>
-                  </div>
-                  <div class="ncp-reco-body">
-                    <h4 class="ncp-reco-name">Nexus Core X-1</h4>
-                    <p class="ncp-reco-reason">
-                      Complète votre installation actuelle
-                    </p>
-                    <div class="ncp-reco-footer">
-                      <span class="ncp-reco-price">1 200 $</span>
-                      <button
-                        class="ncp-reco-btn"
-                        onclick={handleViewOffer}
-                        data-id="OFF-01"
-                        data-name="Nexus Core X-1"
-                        data-category="Hardware"
-                        data-price="1 200 $"
-                        data-image="https://picsum.photos/seed/core/800/600"
-                        data-reason="Complète votre installation actuelle"
-                      >
-                        Voir l'offre
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div class="ncp-reco-card">
-                  <div class="ncp-reco-img">
-                    <img
-                      src="https://picsum.photos/seed/service/400/300"
-                      alt="Maintenance Pro"
-                      class="ncp-reco-photo"
-                    />
-                    <span class="ncp-reco-cat-badge">Service</span>
-                  </div>
-                  <div class="ncp-reco-body">
-                    <h4 class="ncp-reco-name">Maintenance Pro</h4>
-                    <p class="ncp-reco-reason">Recommandé pour vos 12 actifs</p>
-                    <div class="ncp-reco-footer">
-                      <span class="ncp-reco-price">450 $/an</span>
-                      <button
-                        class="ncp-reco-btn"
-                        onclick={handleViewOffer}
-                        data-id="OFF-02"
-                        data-name="Maintenance Pro"
-                        data-category="Service"
-                        data-price="450 $/an"
-                        data-image="https://picsum.photos/seed/service/800/600"
-                        data-reason="Recommandé pour vos 12 actifs"
-                      >
-                        Voir l'offre
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div class="ncp-reco-card">
-                  <div class="ncp-reco-img">
-                    <img
-                      src="https://picsum.photos/seed/iot/400/300"
-                      alt="Sensor Pack v2"
-                      class="ncp-reco-photo"
-                    />
-                    <span class="ncp-reco-cat-badge">IoT</span>
-                  </div>
-                  <div class="ncp-reco-body">
-                    <h4 class="ncp-reco-name">Sensor Pack v2</h4>
-                    <p class="ncp-reco-reason">New compatible product</p>
-                    <div class="ncp-reco-footer">
-                      <span class="ncp-reco-price">800 $</span>
-                      <button
-                        class="ncp-reco-btn"
-                        onclick={handleViewOffer}
-                        data-id="OFF-03"
-                        data-name="Sensor Pack v2"
-                        data-category="IoT"
-                        data-price="800 $"
-                        data-image="https://picsum.photos/seed/iot/800/600"
-                        data-reason="New product compatible with your ecosystem"
-                      >
-                        Voir l'offre
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <!-- AI Recommendations (Agentforce-powered) -->
+            <c-nexus-recommendations
+              onaddtocart={handleAddToCartFromRec}
+              onviewoffer={handleViewOfferFromRec}
+              onviewproduct={handleViewProductFromRec}
+            ></c-nexus-recommendations>
 
             <!-- Top Deals -->
             <c-nexus-portal-deals-section
@@ -394,7 +393,7 @@
             >
             </c-nexus-portal-deals-section>
 
-            <!-- Recent Activity -->
+            <!-- Recent Activity (real data) -->
             <div class="ncp-activity-card">
               <div class="ncp-card-header">
                 <h3 class="ncp-card-title">Activité Récente</h3>
@@ -405,66 +404,97 @@
                   Tout voir
                 </button>
               </div>
-              <div class="ncp-activity-list">
-                <div class="ncp-activity-row ncp-activity-row-clickable">
-                  <div class="ncp-activity-icon">
-                    <lightning-icon
-                      icon-name="utility:product"
-                      size="small"
-                    ></lightning-icon>
-                  </div>
-                  <div class="ncp-activity-info">
-                    <div class="ncp-activity-name">
-                      Commande Nexus Industrial Sensor X1
+
+              <!-- Skeleton while loading -->
+              <template if:true={isActivityLoading}>
+                <div class="ncp-activity-list">
+                  <div class="ncp-activity-row ncp-act-skeleton-row">
+                    <div class="ncp-act-skel ncp-act-skel-icon"></div>
+                    <div class="ncp-act-skel-body">
+                      <div class="ncp-act-skel ncp-act-skel-title"></div>
+                      <div class="ncp-act-skel ncp-act-skel-sub"></div>
                     </div>
-                    <div class="ncp-activity-sub">
-                      Il y a 2 heures · TechFlow Inc
+                    <div class="ncp-act-skel ncp-act-skel-pill"></div>
+                  </div>
+                  <div class="ncp-activity-row ncp-act-skeleton-row">
+                    <div class="ncp-act-skel ncp-act-skel-icon"></div>
+                    <div class="ncp-act-skel-body">
+                      <div
+                        class="ncp-act-skel ncp-act-skel-title"
+                        style="width: 55%"
+                      ></div>
+                      <div
+                        class="ncp-act-skel ncp-act-skel-sub"
+                        style="width: 40%"
+                      ></div>
                     </div>
+                    <div class="ncp-act-skel ncp-act-skel-pill"></div>
                   </div>
-                  <span class="ncp-status-pill ncp-pill-success"
-                    >Delivered</span
-                  >
-                  <span class="ncp-row-chevron">&#8250;</span>
-                </div>
-                <div class="ncp-activity-row ncp-activity-row-clickable">
-                  <div class="ncp-activity-icon">
-                    <lightning-icon
-                      icon-name="utility:file"
-                      size="small"
-                    ></lightning-icon>
-                  </div>
-                  <div class="ncp-activity-info">
-                    <div class="ncp-activity-name">Quote Update QT-2024</div>
-                    <div class="ncp-activity-sub">
-                      Il y a 5 heures · Global Logistics
+                  <div class="ncp-activity-row ncp-act-skeleton-row">
+                    <div class="ncp-act-skel ncp-act-skel-icon"></div>
+                    <div class="ncp-act-skel-body">
+                      <div
+                        class="ncp-act-skel ncp-act-skel-title"
+                        style="width: 70%"
+                      ></div>
+                      <div
+                        class="ncp-act-skel ncp-act-skel-sub"
+                        style="width: 35%"
+                      ></div>
                     </div>
+                    <div class="ncp-act-skel ncp-act-skel-pill"></div>
                   </div>
-                  <span class="ncp-status-pill ncp-pill-primary"
-                    >En transit</span
-                  >
-                  <span class="ncp-row-chevron">&#8250;</span>
                 </div>
-                <div class="ncp-activity-row ncp-activity-row-clickable">
-                  <div class="ncp-activity-icon">
-                    <lightning-icon
-                      icon-name="utility:chat"
-                      size="small"
-                    ></lightning-icon>
-                  </div>
-                  <div class="ncp-activity-info">
-                    <div class="ncp-activity-name">New support message</div>
-                    <div class="ncp-activity-sub">Hier · Nexus Support</div>
-                  </div>
-                  <span class="ncp-status-pill ncp-pill-primary">Répondu</span>
-                  <span class="ncp-row-chevron">&#8250;</span>
+              </template>
+
+              <!-- Real activity rows (dashboard: first 3 only) -->
+              <template if:true={hasActivityItems}>
+                <div class="ncp-activity-list">
+                  <template for:each={dashboardActivityItems} for:item="act">
+                    <div
+                      key={act.key}
+                      class="ncp-activity-row ncp-activity-row-clickable"
+                      data-id={act.itemId}
+                      data-type={act.type}
+                      onclick={handleActivityRowClick}
+                    >
+                      <div class="ncp-activity-icon">
+                        <lightning-icon
+                          icon-name={act.icon}
+                          size="small"
+                        ></lightning-icon>
+                      </div>
+                      <div class="ncp-activity-info">
+                        <div class="ncp-activity-name">{act.title}</div>
+                        <div class="ncp-activity-sub">
+                          {act.dateLabel} · {act.subtitle}
+                        </div>
+                      </div>
+                      <span class={act.pillClass}>{act.status}</span>
+                      <span class="ncp-row-chevron">&#8250;</span>
+                    </div>
+                  </template>
                 </div>
-              </div>
+              </template>
+
+              <!-- Empty state -->
+              <template if:true={isActivityEmpty}>
+                <div class="ncp-act-empty">
+                  <lightning-icon
+                    icon-name="utility:clock"
+                    size="small"
+                  ></lightning-icon>
+                  <p>Aucune activité récente</p>
+                </div>
+              </template>
             </div>
           </div>
 
           <!-- Engagement drawers (Activity History + Offer Detail) -->
           <c-nexus-engagement-system
+            activity-items={_activityItems}
             onaddtocart={handleEngagementAddToCart}
+            onactivityclick={handleEngagementActivityClick}
           ></c-nexus-engagement-system>
 
           <!-- Product detail overlay for deals or other quick views -->
@@ -488,6 +518,7 @@
               favorites={favorites}
               onremovefavorite={handleRemoveFavorite}
               onaddtocart={handleDealsAddToCartPortal}
+              onexplorecatalog={handleGoToCatalog}
             >
             </c-nexus-favorites-system>
           </div>

@@ -1,0 +1,118 @@
+<template>
+  <section class="ncp-reco-section">
+    <!-- ── Header ── -->
+    <div class="ncp-reco-header">
+      <div class="ncp-reco-title-wrap">
+        <div class="ncp-reco-icon">
+          <lightning-icon
+            icon-name="utility:sparkles"
+            size="small"
+            variant="inverse"
+          ></lightning-icon>
+        </div>
+        <h3 class="ncp-page-title">Recommandations AI</h3>
+      </div>
+      <div class="nrec-header-right">
+        <span class="ncp-reco-badge"
+          >Agentforce · Basé sur votre historique</span
+        >
+        <button
+          class="nrec-refresh-btn"
+          onclick={handleRefresh}
+          disabled={isLoading}
+        >
+          <lightning-icon
+            icon-name="utility:refresh"
+            size="x-small"
+          ></lightning-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Loading ── -->
+    <template if:true={isLoading}>
+      <div class="nrec-loading">
+        <lightning-spinner
+          alternative-text="Agentforce analyse..."
+          size="small"
+        ></lightning-spinner>
+        <p class="nrec-loading-text">Agentforce analyse votre profil...</p>
+      </div>
+    </template>
+
+    <!-- ── Error ── -->
+    <template if:true={hasError}>
+      <div class="nrec-empty">
+        <p class="nrec-empty-text">
+          Impossible de charger les recommandations.
+        </p>
+        <button class="ncp-reco-btn" onclick={handleRefresh}>Réessayer</button>
+      </div>
+    </template>
+
+    <!-- ── Empty ── -->
+    <template if:true={isEmpty}>
+      <div class="nrec-empty">
+        <p class="nrec-empty-text">
+          Naviguez dans le catalogue pour que l'IA personnalise vos
+          recommandations.
+        </p>
+      </div>
+    </template>
+
+    <!-- ── Cards ── -->
+    <template if:true={hasRecommendations}>
+      <div class="ncp-reco-grid">
+        <template for:each={recommendations} for:item="rec">
+          <div key={rec.productId} class="ncp-reco-card">
+            <div
+              class="ncp-reco-img nrec-clickable"
+              data-id={rec.productId}
+              onclick={handleViewProduct}
+            >
+              <img
+                src={rec.imageUrl}
+                alt={rec.productName}
+                class="ncp-reco-photo"
+                onerror={handleImgError}
+              />
+              <span class="ncp-reco-cat-badge">{rec.recType}</span>
+            </div>
+            <div class="ncp-reco-body">
+              <h4
+                class="ncp-reco-name nrec-clickable"
+                data-id={rec.productId}
+                onclick={handleViewProduct}
+              >
+                {rec.productName}
+              </h4>
+              <!-- AI reason -->
+              <div class="nrec-reason-row">
+                <lightning-icon
+                  icon-name="utility:einstein"
+                  size="xx-small"
+                ></lightning-icon>
+                <p class="ncp-reco-reason">{rec.reason}</p>
+              </div>
+              <div class="ncp-reco-footer">
+                <span class="ncp-reco-price">{rec.priceFormatted}</span>
+                <button
+                  class="ncp-reco-btn"
+                  data-id={rec.productId}
+                  data-name={rec.productName}
+                  data-category={rec.productFamily}
+                  data-price={rec.priceFormatted}
+                  data-image={rec.imageUrl}
+                  data-reason={rec.reason}
+                  onclick={handleViewOffer}
+                >
+                  Voir l'offre
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+  </section>
+</template>
