@@ -75,6 +75,43 @@
             </div>
           </div>
 
+          <!-- Nexus Biz + Quote (moved from sub-bar) -->
+          <button class="nn-nexusbiz-btn" onclick={handleNexusBiz}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            Nexus Biz
+          </button>
+          <button class="nn-quote-btn" onclick={handleQuote}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            Quote
+          </button>
+
           <!-- Bell + Notification Panel -->
           <div class="nn-bell-wrap">
             <button
@@ -116,7 +153,7 @@
                       size="x-small"
                       class="nn-notif-spark-icon"
                     ></lightning-icon>
-                    Recommandations IA
+                    AI Recommendations
                   </div>
                   <div class="nn-notif-list">
                     <template for:each={notifRecItems} for:item="rec">
@@ -153,7 +190,7 @@
                       size="x-small"
                       class="nn-notif-spark-icon"
                     ></lightning-icon>
-                    Commandes récentes
+                    Recent Orders
                   </div>
                   <div class="nn-notif-list">
                     <template for:each={notifOrderItems} for:item="ord">
@@ -190,7 +227,7 @@
                       size="x-small"
                       class="nn-notif-spark-icon"
                     ></lightning-icon>
-                    Devis récents
+                    Recent Quotes
                   </div>
                   <div class="nn-notif-list">
                     <template for:each={notifQuoteItems} for:item="qt">
@@ -233,11 +270,10 @@
                         ></lightning-icon>
                       </div>
                       <div class="nn-notif-cart-text">
-                        <p class="nn-notif-cart-title">Panier en attente</p>
+                        <p class="nn-notif-cart-title">Cart Reminder</p>
                         <p class="nn-notif-cart-sub">
-                          {cartAbandonedCount} produit(s) dans votre panier
-                          depuis plus de 3 jours — pensez à finaliser votre
-                          commande.
+                          {cartAbandonedCount} item(s) in your cart for over 3
+                          days — don't forget to complete your order.
                         </p>
                       </div>
                     </div>
@@ -247,9 +283,7 @@
 
                 <!-- Empty state -->
                 <template if:false={hasRecItems}>
-                  <p class="nn-notif-empty">
-                    Aucune notification pour le moment.
-                  </p>
+                  <p class="nn-notif-empty">No notifications yet.</p>
                 </template>
 
                 <!-- Voir plus / Voir moins toggle -->
@@ -267,7 +301,7 @@
                     class="nn-notif-view-all"
                     onclick={handleNotifViewAll}
                   >
-                    Voir toutes les recommandations
+                    View all recommendations
                     <span>&#8594;</span>
                   </button>
                 </div>
@@ -296,7 +330,7 @@
               <span class="nn-action-label">Cart</span>
             </button>
             <template if:true={hasCartItems}>
-              <span class="nn-cart-badge">{cartCount}</span>
+              <span class="nn-cart-badge">{effectiveCartCount}</span>
             </template>
           </div>
 
@@ -344,108 +378,6 @@
         <span class="nn-ham-line"></span>
       </button>
     </div>
-
-    <!-- ── Sub-Header ──────────────────────────────────────────────────── -->
-    <template if:true={isSubBarVisible}>
-      <div class="nn-sub-bar">
-        <!-- Left: nav items (scrollable) + MORE sits outside to avoid overflow clip -->
-        <div class="nn-sub-nav-wrap">
-          <div class="nn-sub-left">
-            <template for:each={visibleNavItems} for:item="item">
-              <button
-                key={item.id}
-                class={item.cssClass}
-                data-id={item.id}
-                data-scroll={item.scrollId}
-                onclick={handleSubNavClick}
-              >
-                <template if:true={item.icon}>
-                  <lightning-icon
-                    icon-name={item.icon}
-                    size="x-small"
-                    class="nn-sub-icon"
-                  ></lightning-icon>
-                </template>
-                {item.label}
-              </button>
-            </template>
-          </div>
-
-          <!-- MORE dropdown — sibling of nn-sub-left so it is never clipped -->
-          <template if:true={hasMoreItems}>
-            <div class="nn-more-wrap">
-              <button class="nn-more-btn" onclick={toggleMoreMenu}>
-                <span>&#8943; More</span>
-                <span class="nn-chevron-down">&#9662;</span>
-              </button>
-              <template if:true={isMoreMenuOpen}>
-                <div class="nn-more-dropdown">
-                  <template for:each={moreNavItems} for:item="mitem">
-                    <button
-                      key={mitem.id}
-                      class="nn-more-item"
-                      data-id={mitem.id}
-                      data-scroll={mitem.scrollId}
-                      onclick={handleSubNavClick}
-                    >
-                      <template if:true={mitem.icon}>
-                        <lightning-icon
-                          icon-name={mitem.icon}
-                          size="x-small"
-                          class="nn-more-icon"
-                        ></lightning-icon>
-                      </template>
-                      {mitem.label}
-                    </button>
-                  </template>
-                </div>
-              </template>
-            </div>
-          </template>
-        </div>
-
-        <!-- Right: portal action buttons -->
-        <template if:true={isPortalMode}>
-          <div class="nn-sub-right">
-            <button class="nn-nexusbiz-btn" onclick={handleNexusBiz}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-              Nexus Biz
-            </button>
-            <button class="nn-quote-btn" onclick={handleQuote}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-              Quote
-            </button>
-          </div>
-        </template>
-      </div>
-    </template>
 
     <!-- ── Mobile Drawer ────────────────────────────────────────────────── -->
     <template if:true={mobileOpen}>

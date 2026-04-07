@@ -5,6 +5,8 @@ import changeUserPassword from "@salesforce/apex/AuthController.changeUserPasswo
 import verifyAndActivateOrder from "@salesforce/apex/StripePaymentController.verifyAndActivateOrder";
 import getRecommendations from "@salesforce/apex/RecommendationController.getRecommendations";
 import getRecentActivity from "@salesforce/apex/OrderManagementController.getRecentActivity";
+import getMyOrders from "@salesforce/apex/OrderManagementController.getMyOrders";
+import getAccountQuotes from "@salesforce/apex/QuoteController.getAccountQuotes";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 const BROWSE_KEY = "nexus_browse_history";
@@ -96,13 +98,18 @@ export default class NexusCustomerPortal extends LightningElement {
   @track _showNewPwd = false;
   @track _showConfirmPwd = false;
   @track activeTab = "dashboard";
+  @track _prevTab = "dashboard";
   @track catalogSearch = "";
   @track caseStep = 1;
   @track casePriority = "Medium";
   @track cart = [];
   @track sparksBalance = 1250;
   @track _sparksDiscount = 0; // $ value deducted by Sparks (e.g. 10.00)
+  @track _quotationsRefreshKey = 0; // incremented to force nexusQuotationSystem cache bypass
   @track _sparksModalOpen = false;
+  @track _kpiOrderCount = null;
+  @track _kpiQuoteCount = null;
+  @track _kpiTotalSpent = null;
   @track _products = [];
 
   // detail view state for product overlay
@@ -139,6 +146,7 @@ export default class NexusCustomerPortal extends LightningElement {
   // ── Browse popup (shown when user opens a product detail in catalog) ────────
   @track _browsePopupVisible = false;
   @track _browsePopupProduct = null;
+  @track _cartSliderOpen = false;
   _browsePopupTimer = null;
   _cachedRecs = []; // populated by nexusrecloaded event
   _pendingPopupProduct = null; // queued when recs not loaded yet
@@ -292,8 +300,8 @@ export default class NexusCustomerPortal extends LightningElement {
       .then((data) => {
         if (data) {
           this._userProfile = data;
-          // Re-push nav now that we know the customer type (B2B vs B2C)
           this._pushNavUpdate();
+          this._loadKpis(data.accountId);
         }
       })
       .catch((err) =>
@@ -413,6 +421,7 @@ export default class NexusCustomerPortal extends LightningElement {
 
     // Navigate to catalog when a combo slot is being filled
     this._onComboNavToCatalog = () => {
+      this._prevTab = this.activeTab;
       this.activeTab = "catalog";
       this._pushNavUpdate();
     };
@@ -420,6 +429,16 @@ export default class NexusCustomerPortal extends LightningElement {
       "nexuscombonavtocatalog",
       this._onComboNavToCatalog
     );
+
+    // Track cart slider open/close to suppress browse popup
+    this._onCartRevealPortal = () => {
+      this._cartSliderOpen = true;
+    };
+    this._onCartClosePortal = () => {
+      this._cartSliderOpen = false;
+    };
+    document.addEventListener("nexuscartreveal", this._onCartRevealPortal);
+    document.addEventListener("nexuscartclose", this._onCartClosePortal);
 
     // Cache loaded recommendations for the browse popup
     this._onRecLoaded = (e) => {
@@ -478,6 +497,8 @@ export default class NexusCustomerPortal extends LightningElement {
       "nexuscombonavtocatalog",
       this._onComboNavToCatalog
     );
+    document.removeEventListener("nexuscartreveal", this._onCartRevealPortal);
+    document.removeEventListener("nexuscartclose", this._onCartClosePortal);
     document.removeEventListener("nexusrecloaded", this._onRecLoaded);
     document.removeEventListener(
       "nexusproductdetailopen",
@@ -607,10 +628,9 @@ export default class NexusCustomerPortal extends LightningElement {
       this._browsePopupTimer = setTimeout(() => {
         this._browsePopupVisible = false;
       }, 7000);
-      // eslint-disable-next-line no-unused-vars
       try {
         sessionStorage.setItem("nexus_rec_popup_ts", String(Date.now()));
-      } catch (e2) {
+      } catch {
         /* ignore */
       }
     }, 2500);
@@ -993,7 +1013,13 @@ export default class NexusCustomerPortal extends LightningElement {
     this.activeTab = e.currentTarget.dataset.id;
     this._pushNavUpdate();
   }
+  handleCatalogBack() {
+    this.activeTab = this._prevTab || "dashboard";
+    this._pushNavUpdate();
+  }
+
   handleGoToCatalog() {
+    this._prevTab = this.activeTab;
     this.activeTab = "catalog";
     this._pushNavUpdate();
   }
@@ -1182,6 +1208,28 @@ export default class NexusCustomerPortal extends LightningElement {
     if (!product) return;
     this._pushToCart({ ...product, price: product.price || product.salePrice });
     this._showCartToast(product);
+    document.dispatchEvent(new CustomEvent("nexuscartreveal"));
+  }
+
+  // ── Cart slider events ────────────────────────────────────────────────────
+  handleCartSliderCheckout() {
+    this.activeTab = "checkout";
+  }
+
+  handleCartSliderQuote() {
+    this.activeTab = "quotations";
+  }
+
+  handleCartSliderViewFull() {
+    this.activeTab = "cart";
+  }
+
+  handleCartSliderChange(event) {
+    const items = event.detail && event.detail.items;
+    if (Array.isArray(items)) {
+      this.cart = items;
+      this._saveCart();
+    }
   }
 
   // ── Browse popup helper ───────────────────────────────────────────────────
@@ -1206,7 +1254,7 @@ export default class NexusCustomerPortal extends LightningElement {
 
   // ── Browse popup getters & handlers ─────────────────────────────────────────
   get browsePopupVisible() {
-    return this._browsePopupVisible;
+    return this._browsePopupVisible && !this._cartSliderOpen;
   }
 
   get browsePopupProduct() {
@@ -1340,6 +1388,10 @@ export default class NexusCustomerPortal extends LightningElement {
     } else {
       this._sparksDiscount = 0;
     }
+    // After a cart quote submission navigating to quotations, force a cache bypass
+    if (tab === "quotations") {
+      this._quotationsRefreshKey = (this._quotationsRefreshKey || 0) + 1;
+    }
     this._pushNavUpdate();
   }
 
@@ -1349,6 +1401,77 @@ export default class NexusCustomerPortal extends LightningElement {
 
   get sparksFormattedValue() {
     return "$" + ((parseInt(this.sparksBalance, 10) || 0) / 100).toFixed(2);
+  }
+
+  // ── KPI helpers ───────────────────────────────────────────────────────────
+
+  _loadKpis(accountId) {
+    getMyOrders()
+      .then((orders) => {
+        const list = orders || [];
+        this._kpiOrderCount = list.filter(
+          (o) =>
+            o.status === "Activated" ||
+            o.status === "Draft" ||
+            o.status === "Processing"
+        ).length;
+        this._kpiTotalSpent = list.reduce(
+          (sum, o) => sum + (o.totalAmount || 0),
+          0
+        );
+      })
+      .catch(() => {
+        this._kpiOrderCount = 0;
+        this._kpiTotalSpent = 0;
+      });
+
+    if (accountId) {
+      getAccountQuotes({ accountId })
+        .then((quotes) => {
+          this._kpiQuoteCount = (quotes || []).filter(
+            (q) => q.status !== "Accepted" && q.status !== "Rejected"
+          ).length;
+        })
+        .catch(() => {
+          this._kpiQuoteCount = 0;
+        });
+    } else {
+      this._kpiQuoteCount = 0;
+    }
+  }
+
+  get kpiOrderCount() {
+    return this._kpiOrderCount === null ? "—" : this._kpiOrderCount;
+  }
+  get kpiQuoteCount() {
+    return this._kpiQuoteCount === null ? "—" : this._kpiQuoteCount;
+  }
+  get kpiFavCount() {
+    return this.favorites.length;
+  }
+  get kpiTotalSpent() {
+    if (this._kpiTotalSpent === null) return "—";
+    return (
+      "$" +
+      this._kpiTotalSpent.toLocaleString("en-US", { maximumFractionDigits: 0 })
+    );
+  }
+
+  handleKpiOrders() {
+    this.activeTab = "orders";
+    this._pushNavUpdate();
+  }
+  handleKpiQuotes() {
+    this.activeTab = "quotations";
+    this._pushNavUpdate();
+  }
+  handleKpiFavorites() {
+    this.activeTab = "favorites";
+    this._pushNavUpdate();
+  }
+  handleKpiSpent() {
+    this.activeTab = "orders";
+    this._pushNavUpdate();
   }
 
   handleSparksIgnite() {
@@ -1402,7 +1525,7 @@ export default class NexusCustomerPortal extends LightningElement {
     // eslint-disable-next-line @lwc/lwc/no-async-operation
     this._cartToastTimer = setTimeout(() => {
       this._cartToastVisible = false;
-    }, 3500);
+    }, 2000);
   }
 
   handleCartToastClose() {
@@ -1413,6 +1536,11 @@ export default class NexusCustomerPortal extends LightningElement {
   _saveCart() {
     try {
       sessionStorage.setItem(CART_KEY, JSON.stringify(this.cart));
+      document.dispatchEvent(
+        new CustomEvent("nexuscartupdate", {
+          detail: { count: this.cart.length, items: this.cart }
+        })
+      );
     } catch {
       /* silent */
     }

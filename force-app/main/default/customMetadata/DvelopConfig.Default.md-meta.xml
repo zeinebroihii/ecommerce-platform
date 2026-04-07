@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomMetadata
+  xmlns="http://soap.sforce.com/2006/04/metadata"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+>
+    <label>Default</label>
+    <protected>false</protected>
+    <values>
+        <field>BaseUrl__c</field>
+        <value xsi:type="xsd:string">https://talan.d-velop.cloud</value>
+    </values>
+    <values>
+        <field>ApiKey__c</field>
+        <value
+      xsi:type="xsd:string"
+    >2gkJnM1ZR9AcXUi1LYNLwpo0s3Faly24IjDnNySEntVCpURtDolO5Dug4v0hVR6aNsNnEDgKZamwP1ogj+8z6K1gp1ylsYS2g1AOsxdMHEo=&amp;_z_A0V5ayCQTNfhbeqZ91k788pITBnCQB9Fr_Iv8_YP4DiuJ7LmBieag4OFgKFYtog-Moj-VM7NFWQ_bmAmQje2aRF4g2kc3</value>
+    </values>
+    <values>
+        <field>AdminEmail__c</field>
+        <value xsi:type="xsd:string">zeineb.roihi@talan.com</value>
+    </values>
+</CustomMetadata>

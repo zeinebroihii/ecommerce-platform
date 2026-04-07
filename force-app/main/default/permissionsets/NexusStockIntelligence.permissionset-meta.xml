@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Nexus Stock Intelligence</label>
+    <description
+  >Full access to Stock Intelligence — Stock__c fields, Apex controllers, and tab visibility for admin/sales users.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+
+    <!-- ── Apex Classes ─────────────────────────────────────────────── -->
+    <classAccesses>
+        <apexClass>StockIntelligenceController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>StockVelocityEngine</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+
+    <!-- ── Tab Visibility ───────────────────────────────────────────── -->
+    <tabSettings>
+        <tab>NexusStockWarRoom</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+
+    <!-- ── Stock__c Object ──────────────────────────────────────────── -->
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Stock__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+
+    <!-- ── Stock__c Fields ──────────────────────────────────────────── -->
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Stock__c.Quantity_Available__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Stock__c.Daily_Velocity__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Stock__c.Days_Remaining__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Stock__c.Risk_Level__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Stock__c.Reorder_Threshold__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Stock__c.AI_Risk_Summary__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Stock__c.Forecasted_Demand__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Stock__c.Last_Sync_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Stock__c.Warehouse_Location__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+</PermissionSet>

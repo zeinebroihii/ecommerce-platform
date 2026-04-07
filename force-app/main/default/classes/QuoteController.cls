@@ -42,6 +42,29 @@ public without sharing class QuoteController {
     public Integer versionNumber;
     @AuraEnabled
     public List<LineItemWrap> lineItems;
+    // Negotiation fields
+    @AuraEnabled
+    public Decimal customerCounterPrice;
+    @AuraEnabled
+    public String counterMessage;
+    @AuraEnabled
+    public String approvalStatus;
+    @AuraEnabled
+    public Boolean volumeDiscountApplied;
+    @AuraEnabled
+    public Boolean isExpired;
+    @AuraEnabled
+    public Integer daysUntilExpiry;
+    @AuraEnabled
+    public Boolean canCounter; // customer can submit counter-offer
+    @AuraEnabled
+    public Integer negotiationRound;
+    @AuraEnabled
+    public Boolean isFinalOffer;
+    @AuraEnabled
+    public Integer roundsRemaining;
+    @AuraEnabled
+    public Decimal floorPrice;
   }
 
   public class LineItemWrap {
@@ -77,6 +100,7 @@ public without sharing class QuoteController {
     if (accountId == null)
       return result;
 
+    Date today = Date.today();
     for (TALEXO_Quote__c q : [
       SELECT
         Id,
@@ -94,6 +118,13 @@ public without sharing class QuoteController {
         BulkDiscount__c,
         VersionNumber__c,
         IsPrimary__c,
+        CustomerCounterPrice__c,
+        CounterMessage__c,
+        ApprovalStatus__c,
+        VolumeDiscountApplied__c,
+        NegotiationRound__c,
+        IsFinalOffer__c,
+        FloorPrice__c,
         (
           SELECT
             ProductName__c,
@@ -131,6 +162,28 @@ public without sharing class QuoteController {
       w.canDecide = (q.Status__c == 'Presented');
       w.isAccepted = (q.Status__c == 'Accepted');
       w.isRejected = (q.Status__c == 'Rejected');
+      // Auto-negotiation: customer can counter any Presented quote
+      Integer round = q.NegotiationRound__c != null
+        ? Integer.valueOf(q.NegotiationRound__c)
+        : 0;
+      w.negotiationRound = round;
+      w.isFinalOffer = q.IsFinalOffer__c == true;
+      w.roundsRemaining = 0; // no longer used
+      w.floorPrice = q.FloorPrice__c;
+      w.canCounter = (q.Status__c == 'Presented');
+      w.customerCounterPrice = q.CustomerCounterPrice__c;
+      w.counterMessage = q.CounterMessage__c;
+      w.approvalStatus = q.ApprovalStatus__c;
+      w.volumeDiscountApplied = q.VolumeDiscountApplied__c == true;
+      // Expiry
+      if (q.ExpirationDate__c != null) {
+        Integer diff = today.daysBetween(q.ExpirationDate__c);
+        w.daysUntilExpiry = diff;
+        w.isExpired = diff < 0;
+      } else {
+        w.daysUntilExpiry = null;
+        w.isExpired = false;
+      }
       w.acceptanceProbability = q.AcceptanceProbability__c != null
         ? Integer.valueOf(q.AcceptanceProbability__c)
         : null;
@@ -216,14 +269,26 @@ public without sharing class QuoteController {
         (ci.quantity != null ? ci.quantity : 1);
     }
 
-    // 5. Create Quote with Status = Requested
+    // 5. Auto-apply volume discount based on subtotal tiers
+    Decimal volDiscount = computeVolumeDiscount(subtotal);
+    Decimal discountedTotal = subtotal * (1 - volDiscount / 100);
+    Boolean volApplied = volDiscount > 0;
+
+    // 5b. Flag for internal approval if deal > $100k
+    String approvalStatus = discountedTotal >= 100000
+      ? 'Pending Approval'
+      : 'Not Required';
+
+    // 6. Create Quote with Status = Requested
     TALEXO_Quote__c q = new TALEXO_Quote__c(
       Opportunity__c = oppId,
       Status__c = 'Requested',
-      GrandTotal__c = subtotal,
+      GrandTotal__c = discountedTotal,
       ExpirationDate__c = Date.today().addDays(30),
       PaymentTerms__c = 'Net 30',
-      BulkDiscount__c = 0,
+      BulkDiscount__c = volDiscount,
+      VolumeDiscountApplied__c = volApplied,
+      ApprovalStatus__c = approvalStatus,
       IsPrimary__c = true,
       VersionNumber__c = 1,
       NegotiationStatus__c = 'Draft',
@@ -231,7 +296,8 @@ public without sharing class QuoteController {
         u.Account.Name +
         ' via le portail client · ' +
         items.size() +
-        ' produit(s)'
+        ' produit(s)' +
+        (volApplied ? ' · Remise volume ' + volDiscount + '% appliquée' : '')
     );
     insert q;
 
@@ -262,9 +328,9 @@ public without sharing class QuoteController {
       new List<QuoteAIScoringAction.ScoreInput>{ inp }
     );
 
-    // 8. Email admin notification — try System Admin profile, fall back to org admin
+    // 8. Email notification to admin
     List<User> admins = [
-      SELECT Email
+      SELECT Id, Email
       FROM User
       WHERE
         (Profile.Name = 'System Administrator'
@@ -274,9 +340,8 @@ public without sharing class QuoteController {
       LIMIT 1
     ];
     if (admins.isEmpty()) {
-      // Last fallback: org default sender / first active internal user
       admins = [
-        SELECT Email
+        SELECT Id, Email
         FROM User
         WHERE IsActive = TRUE AND UserType = 'Standard'
         LIMIT 1
@@ -303,18 +368,19 @@ public without sharing class QuoteController {
           ' a soumis une demande de devis via le portail client.\n\n' +
           'Produits demandés :\n' +
           productList +
-          '\n' +
-          'Total estimé : ' +
+          '\nTotal estimé : ' +
           subtotal.setScale(2) +
           ' €\n\n' +
           'Référence : ' +
           q.Id +
           '\n\n' +
-          'Veuillez traiter cette demande dans Nexus Admin → Quote Builder → Requests.\n\n' +
+          'Cliquez sur "Quick Send" dans Nexus Admin → Quote Builder → Requests pour envoyer le devis en un clic.\n\n' +
           'Cordialement,\nNexus Platform'
       );
       mail.setSaveAsActivity(false);
       Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+      // placeholder to maintain closing brace parity below
+      System.debug(LoggingLevel.INFO, 'Admin notified: ' + admins[0].Email);
     }
 
     return q.Id;
@@ -597,8 +663,14 @@ public without sharing class QuoteController {
       }
     } catch (Exception ex) {
       System.debug(
-        LoggingLevel.WARN,
-        'requestQuote Opp/Quote: ' + ex.getMessage()
+        LoggingLevel.ERROR,
+        'requestQuote Opp/Quote: ' +
+          ex.getMessage() +
+          '\n' +
+          ex.getStackTraceString()
+      );
+      throw new AuraHandledException(
+        'Votre demande n\'a pas pu être enregistrée : ' + ex.getMessage()
       );
     }
 
@@ -639,5 +711,293 @@ public without sharing class QuoteController {
     );
     mail.setSaveAsActivity(false);
     Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+  }
+
+  // ── Volume discount: auto-tier rules ─────────────────────────────────────
+  // Tiers: 5% off ≥$10k, 10% off ≥$50k, 15% off ≥$100k, 20% off ≥$200k
+
+  public static Decimal computeVolumeDiscount(Decimal subtotal) {
+    if (subtotal == null || subtotal <= 0)
+      return 0;
+    if (subtotal >= 200000)
+      return 20;
+    if (subtotal >= 100000)
+      return 15;
+    if (subtotal >= 50000)
+      return 10;
+    if (subtotal >= 10000)
+      return 5;
+    return 0;
+  }
+
+  // ── Customer: auto-negotiation engine ────────────────────────────────────
+  // counter >= floor          → AUTO-ACCEPT
+  // counter >= floor × 0.85  → AUTO-COUNTER at midpoint
+  // counter < floor × 0.85   → AUTO-REJECT
+
+  @AuraEnabled
+  public static String submitCounterOffer(
+    Id quoteId,
+    Decimal counterPrice,
+    String message
+  ) {
+    if (counterPrice == null || counterPrice <= 0) {
+      throw new AuraHandledException('Veuillez saisir un montant valide.');
+    }
+    TALEXO_Quote__c q = [
+      SELECT
+        Id,
+        Name,
+        Status__c,
+        GrandTotal__c,
+        FloorPrice__c,
+        BulkDiscount__c,
+        PaymentTerms__c,
+        VersionNumber__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        Opportunity__r.Account.Name,
+        (
+          SELECT
+            ProductName__c,
+            ProductFamily__c,
+            Quantity__c,
+            ListPrice__c,
+            UnitPrice__c,
+            Discount__c,
+            NetTotal__c
+          FROM NexusQuoteLineItems__r
+        )
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (q.Status__c != 'Presented') {
+      throw new AuraHandledException(
+        'Les contre-offres ne sont acceptées que sur les devis présentés.'
+      );
+    }
+
+    // Fall back to 85% of grand total if admin never set a floor price
+    Decimal floor = (q.FloorPrice__c != null &&
+      q.FloorPrice__c > 0)
+      ? q.FloorPrice__c
+      : (q.GrandTotal__c != null ? q.GrandTotal__c * 0.85 : 0);
+
+    if (counterPrice >= floor) {
+      // AUTO-ACCEPT
+      processQuoteDecision(
+        quoteId,
+        'Accepted',
+        'Prix accepté automatiquement — contre-offre dans les limites autorisées.'
+      );
+      return 'ACCEPTED';
+    } else if (counterPrice >= floor * 0.85) {
+      // AUTO-COUNTER: split the difference between counter and original price
+      Decimal midpoint = ((counterPrice + q.GrandTotal__c) / 2).setScale(2);
+      createAutoCounterVersion(q, midpoint, message);
+      return 'COUNTERED';
+    } else {
+      // AUTO-REJECT
+      processQuoteDecision(
+        quoteId,
+        'Rejected',
+        'Prix refusé automatiquement — contre-offre trop éloignée du prix plancher.'
+      );
+      return 'REJECTED';
+    }
+  }
+
+  // Creates a new "Auto Counter" quote version at the midpoint price and emails the customer.
+  private static void createAutoCounterVersion(
+    TALEXO_Quote__c q,
+    Decimal midpointPrice,
+    String customerMessage
+  ) {
+    Integer nextVersion = q.VersionNumber__c != null
+      ? Integer.valueOf(q.VersionNumber__c) + 1
+      : 2;
+
+    // Mark original as non-primary
+    q.IsPrimary__c = false;
+    update q;
+
+    // Create new version at midpoint
+    TALEXO_Quote__c newQ = new TALEXO_Quote__c(
+      Opportunity__c = q.Opportunity__c,
+      Status__c = 'Presented',
+      NegotiationStatus__c = 'Auto Counter',
+      GrandTotal__c = midpointPrice,
+      FloorPrice__c = q.FloorPrice__c,
+      BulkDiscount__c = q.BulkDiscount__c,
+      PaymentTerms__c = q.PaymentTerms__c,
+      ExpirationDate__c = Date.today().addDays(7),
+      IsPrimary__c = true,
+      VersionNumber__c = nextVersion,
+      IsFinalOffer__c = false,
+      CustomerCounterPrice__c = null,
+      CounterMessage__c = null,
+      Description__c = 'Proposition automatique Nexus — prix intermédiaire calculé.' +
+        (String.isNotBlank(customerMessage)
+          ? ' · Message client : ' + customerMessage
+          : '')
+    );
+    insert newQ;
+
+    // Clone line items
+    List<NexusQuoteLineItem__c> newItems = new List<NexusQuoteLineItem__c>();
+    for (NexusQuoteLineItem__c li : q.NexusQuoteLineItems__r) {
+      newItems.add(
+        new NexusQuoteLineItem__c(
+          Quote__c = newQ.Id,
+          ProductName__c = li.ProductName__c,
+          ProductFamily__c = li.ProductFamily__c,
+          Quantity__c = li.Quantity__c,
+          ListPrice__c = li.ListPrice__c,
+          UnitPrice__c = li.UnitPrice__c,
+          Discount__c = li.Discount__c,
+          NetTotal__c = li.NetTotal__c
+        )
+      );
+    }
+    if (!newItems.isEmpty())
+      insert newItems;
+
+    // Re-score AI on new version
+    try {
+      QuoteAIScoringAction.ScoreInput inp = new QuoteAIScoringAction.ScoreInput();
+      inp.quoteId = newQ.Id;
+      QuoteAIScoringAction.scoreQuote(
+        new List<QuoteAIScoringAction.ScoreInput>{ inp }
+      );
+    } catch (Exception ex) {
+      System.debug(LoggingLevel.WARN, 'AI rescore skipped: ' + ex.getMessage());
+    }
+
+    // Email the customer portal user
+    List<User> custUsers = [
+      SELECT Id, Email, FirstName
+      FROM User
+      WHERE
+        AccountId = :q.Opportunity__r.AccountId
+        AND IsActive = TRUE
+        AND UserType = 'PowerCustomerSuccess'
+      LIMIT 1
+    ];
+    if (!custUsers.isEmpty() && String.isNotBlank(custUsers[0].Email)) {
+      Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+      mail.setToAddresses(new List<String>{ custUsers[0].Email });
+      mail.setSubject('Nexus — Proposition révisée automatique : ' + q.Name);
+      mail.setHtmlBody(
+        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">' +
+          '<div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:36px;border-radius:12px 12px 0 0;text-align:center;">' +
+          '<h1 style="color:#fff;font-size:2rem;margin:0;font-weight:900;letter-spacing:0.05em;">NEXUS</h1>' +
+          '<p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:0.9rem;">Proposition Révisée Automatique</p>' +
+          '</div>' +
+          '<div style="background:#fff;padding:36px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;">' +
+          '<p style="color:#334155;">Bonjour ' +
+          custUsers[0].FirstName +
+          ',</p>' +
+          '<p style="color:#334155;">Nous avons étudié votre contre-offre et vous proposons un prix intermédiaire pour le devis <strong>' +
+          q.Name +
+          '</strong>.</p>' +
+          '<div style="background:#f0f4ff;border-radius:12px;padding:24px;margin:24px 0;text-align:center;border:1px solid #c7d2fe;">' +
+          '<p style="margin:0 0 4px;font-size:12px;color:#6b7280;text-transform:uppercase;font-weight:700;">Nouveau prix proposé</p>' +
+          '<p style="margin:0;font-size:36px;font-weight:900;color:#0f172a;">' +
+          midpointPrice.setScale(2).toPlainString() +
+          ' \u20ac</p>' +
+          '</div>' +
+          '<p style="color:#64748b;font-size:13px;">Cette proposition est valable 7 jours. Vous pouvez l\'accepter, la refuser, ou soumettre une nouvelle contre-offre depuis votre espace client.</p>' +
+          '<div style="text-align:center;margin:32px 0;">' +
+          '<a href="https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/mes-offres" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:700;font-size:1rem;display:inline-block;">Voir mon devis \u2192</a>' +
+          '</div>' +
+          '<p style="color:#64748b;font-size:12px;">Cordialement,<br/><strong>L\'équipe Nexus</strong></p>' +
+          '</div></div>'
+      );
+      mail.setSaveAsActivity(false);
+      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    }
+  }
+
+  // ── Auto-expire overdue quotes ─────────────────────────────────────────────
+
+  @AuraEnabled
+  public static Integer expireOverdueQuotes() {
+    List<TALEXO_Quote__c> overdue = [
+      SELECT Id
+      FROM TALEXO_Quote__c
+      WHERE
+        ExpirationDate__c < TODAY
+        AND Status__c NOT IN ('Accepted', 'Rejected', 'Signed', 'Expired')
+    ];
+    for (TALEXO_Quote__c q : overdue) {
+      q.Status__c = 'Expired';
+      q.NegotiationStatus__c = 'Final';
+    }
+    if (!overdue.isEmpty())
+      update overdue;
+    return overdue.size();
+  }
+
+  // ── Get signed contract as base64 for client-side blob download ────────────
+  @AuraEnabled(cacheable=false)
+  public static Map<String, String> getSignedContractBase64(Id quoteId) {
+    List<TALEXO_Quote__c> quotes = [
+      SELECT Name, Opportunity__r.AccountId
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (quotes.isEmpty())
+      return null;
+
+    Id accountId = quotes[0].Opportunity__r.AccountId;
+    String quoteName = quotes[0].Name;
+    String quoteNamePart = quoteName.replaceAll('[^A-Za-z0-9]', '_');
+
+    // Find PDF files on the account matching this quote
+    List<ContentDocumentLink> links = [
+      SELECT
+        ContentDocumentId,
+        ContentDocument.Title,
+        ContentDocument.FileExtension
+      FROM ContentDocumentLink
+      WHERE
+        LinkedEntityId = :accountId
+        AND ContentDocument.FileExtension = 'pdf'
+      ORDER BY ContentDocument.CreatedDate DESC
+      LIMIT 10
+    ];
+
+    Id docId = null;
+    String docTitle = quoteName + '_Contrat_Signe';
+    for (ContentDocumentLink cdl : links) {
+      if (
+        cdl.ContentDocument.Title.contains(quoteNamePart) ||
+        cdl.ContentDocument.Title.contains(quoteName)
+      ) {
+        docId = cdl.ContentDocumentId;
+        docTitle = cdl.ContentDocument.Title;
+        break;
+      }
+    }
+    if (docId == null && !links.isEmpty()) {
+      docId = links[0].ContentDocumentId;
+      docTitle = links[0].ContentDocument.Title;
+    }
+    if (docId == null)
+      return null;
+
+    ContentVersion cv = [
+      SELECT VersionData, Title
+      FROM ContentVersion
+      WHERE ContentDocumentId = :docId AND IsLatest = TRUE
+      LIMIT 1
+    ];
+
+    return new Map<String, String>{
+      'base64' => EncodingUtil.base64Encode(cv.VersionData),
+      'filename' => cv.Title + '.pdf'
+    };
   }
 }

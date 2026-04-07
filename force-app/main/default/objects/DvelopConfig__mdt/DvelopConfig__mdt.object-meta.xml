@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description
+  >Configuration settings for d.velop electronic signature integration</description>
+    <label>D.velop Config</label>
+    <pluralLabel>D.velop Configs</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>

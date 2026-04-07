@@ -76,6 +76,24 @@ public without sharing class NexusQuoteController {
     @AuraEnabled
     public String probColorCls;
     @AuraEnabled
+    public Boolean volumeDiscountApplied;
+    @AuraEnabled
+    public String approvalStatus;
+    @AuraEnabled
+    public Decimal customerCounterPrice;
+    @AuraEnabled
+    public String counterMessage;
+    @AuraEnabled
+    public Boolean isExpired;
+    @AuraEnabled
+    public Integer daysUntilExpiry;
+    @AuraEnabled
+    public Integer negotiationRound;
+    @AuraEnabled
+    public Boolean isFinalOffer;
+    @AuraEnabled
+    public Integer roundsRemaining;
+    @AuraEnabled
     public List<LineItemWrapper> lineItems;
   }
 
@@ -161,6 +179,12 @@ public without sharing class NexusQuoteController {
           Opportunity__r.Name,
           Opportunity__r.Account.Name,
           Opportunity__r.AccountId,
+          VolumeDiscountApplied__c,
+          ApprovalStatus__c,
+          CustomerCounterPrice__c,
+          CounterMessage__c,
+          NegotiationRound__c,
+          IsFinalOffer__c,
           (
             SELECT
               Id,
@@ -183,7 +207,7 @@ public without sharing class NexusQuoteController {
 
   // ── Customer quote requests (Status = Requested) ───────────────────────────
 
-  @AuraEnabled(cacheable=true)
+  @AuraEnabled(cacheable=false)
   public static List<QuoteDetailWrapper> getQuoteRequests() {
     return toWrapperList(
       [
@@ -206,6 +230,12 @@ public without sharing class NexusQuoteController {
           Opportunity__r.Name,
           Opportunity__r.Account.Name,
           Opportunity__r.AccountId,
+          VolumeDiscountApplied__c,
+          ApprovalStatus__c,
+          CustomerCounterPrice__c,
+          CounterMessage__c,
+          NegotiationRound__c,
+          IsFinalOffer__c,
           (
             SELECT
               Id,
@@ -229,7 +259,7 @@ public without sharing class NexusQuoteController {
   // ── Admin: send official quote to customer ─────────────────────────────────
 
   @AuraEnabled
-  public static void sendToCustomer(Id quoteId) {
+  public static void sendToCustomer(Id quoteId, Decimal floorPrice) {
     TALEXO_Quote__c q = [
       SELECT
         Id,
@@ -245,6 +275,11 @@ public without sharing class NexusQuoteController {
       WHERE Id = :quoteId
       LIMIT 1
     ];
+
+    // Save floor price set by admin at send time
+    if (floorPrice != null && floorPrice > 0) {
+      update new TALEXO_Quote__c(Id = quoteId, FloorPrice__c = floorPrice);
+    }
 
     // Find the customer portal user for this account
     List<User> custUsers = [
@@ -275,6 +310,86 @@ public without sharing class NexusQuoteController {
         );
       }
     }
+  }
+
+  // ── Admin: one-click approve & send from Requests tab ──────────────────────
+
+  @AuraEnabled
+  public static Map<String, String> quickSendFromRequest(Id requestedQuoteId) {
+    List<TALEXO_Quote__c> qs = [
+      SELECT
+        Id,
+        Name,
+        Status__c,
+        GrandTotal__c,
+        BulkDiscount__c,
+        PaymentTerms__c,
+        ExpirationDate__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        Opportunity__r.Account.Name
+      FROM TALEXO_Quote__c
+      WHERE Id = :requestedQuoteId
+      LIMIT 1
+    ];
+    if (qs.isEmpty())
+      throw new AuraHandledException('Devis introuvable.');
+    TALEXO_Quote__c q = qs[0];
+
+    // Re-run AI score
+    try {
+      QuoteAIScoringAction.ScoreInput inp = new QuoteAIScoringAction.ScoreInput();
+      inp.quoteId = q.Id;
+      QuoteAIScoringAction.scoreQuote(
+        new List<QuoteAIScoringAction.ScoreInput>{ inp }
+      );
+    } catch (Exception ex) {
+      System.debug(LoggingLevel.WARN, 'AI rescore skipped: ' + ex.getMessage());
+    }
+
+    // Find the portal user for this account
+    List<User> custUsers = [
+      SELECT Id, Email
+      FROM User
+      WHERE
+        AccountId = :q.Opportunity__r.AccountId
+        AND IsActive = TRUE
+        AND UserType = 'PowerCustomerSuccess'
+      LIMIT 1
+    ];
+
+    String recipientEmail = !custUsers.isEmpty() ? custUsers[0].Email : null;
+
+    if (String.isNotBlank(recipientEmail)) {
+      // Full send: email + mark Presented + advance Opp stage
+      QuoteController.sendQuoteToCustomer(
+        q.Id,
+        recipientEmail,
+        'Nexus — Votre devis officiel : ' + q.Name,
+        null,
+        null
+      );
+    } else {
+      // No portal user — still mark Presented so it shows when they log in
+      update new TALEXO_Quote__c(
+        Id = q.Id,
+        Status__c = 'Presented',
+        NegotiationStatus__c = 'Sent'
+      );
+      if (q.Opportunity__c != null) {
+        update new Opportunity(
+          Id = q.Opportunity__c,
+          StageName = 'Proposal/Price Quote'
+        );
+      }
+      recipientEmail = '(compte sans portail — statut mis à jour)';
+    }
+
+    return new Map<String, String>{
+      'quoteName' => q.Name,
+      'recipientEmail' => recipientEmail,
+      'accountName' => q.Opportunity__r.Account.Name
+    };
   }
 
   // ── Per-opportunity quotes ────────────────────────────────────────────────
@@ -467,6 +582,12 @@ public without sharing class NexusQuoteController {
           Opportunity__r.Name,
           Opportunity__r.Account.Name,
           Opportunity__r.AccountId,
+          VolumeDiscountApplied__c,
+          ApprovalStatus__c,
+          CustomerCounterPrice__c,
+          CounterMessage__c,
+          NegotiationRound__c,
+          IsFinalOffer__c,
           (
             SELECT
               Id,
@@ -594,6 +715,12 @@ public without sharing class NexusQuoteController {
           Opportunity__r.Name,
           Opportunity__r.Account.Name,
           Opportunity__r.AccountId,
+          VolumeDiscountApplied__c,
+          ApprovalStatus__c,
+          CustomerCounterPrice__c,
+          CounterMessage__c,
+          NegotiationRound__c,
+          IsFinalOffer__c,
           (
             SELECT
               Id,
@@ -627,7 +754,8 @@ public without sharing class NexusQuoteController {
         Opportunity__c,
         Opportunity__r.AccountId,
         PaymentTerms__c,
-        BulkDiscount__c
+        BulkDiscount__c,
+        CreatedById
       FROM TALEXO_Quote__c
       WHERE Id = :quoteId
       LIMIT 1
@@ -637,12 +765,46 @@ public without sharing class NexusQuoteController {
         'Seuls les devis acceptés peuvent générer un contrat.'
       );
     }
+
+    // Resolve AccountId — prefer Opportunity relationship, fall back to
+    // the portal user who created the quote (for quotes without an Opportunity).
+    Id accountId = q.Opportunity__r.AccountId;
+    if (accountId == null && q.CreatedById != null) {
+      List<User> creators = [
+        SELECT AccountId
+        FROM User
+        WHERE Id = :q.CreatedById AND AccountId != NULL
+        LIMIT 1
+      ];
+      if (!creators.isEmpty())
+        accountId = creators[0].AccountId;
+    }
+    if (accountId == null) {
+      // Last resort: find any active portal user (single-account dev org)
+      List<User> anyPortal = [
+        SELECT AccountId
+        FROM User
+        WHERE
+          UserType = 'PowerCustomerSuccess'
+          AND IsActive = TRUE
+          AND AccountId != NULL
+        LIMIT 1
+      ];
+      if (!anyPortal.isEmpty())
+        accountId = anyPortal[0].AccountId;
+    }
+    if (accountId == null) {
+      throw new AuraHandledException(
+        'Impossible de déterminer le compte associé à ce devis. Vérifiez que l\'opportunité est correctement liée.'
+      );
+    }
+
     // Guard: prevent duplicate contracts (NegStatus=Final means contract already generated)
     if (q.NegotiationStatus__c == 'Final') {
       List<Contract> existing = [
         SELECT Id
         FROM Contract
-        WHERE AccountId = :q.Opportunity__r.AccountId AND StartDate = TODAY
+        WHERE AccountId = :accountId AND StartDate = TODAY
         ORDER BY CreatedDate DESC
         LIMIT 1
       ];
@@ -650,33 +812,44 @@ public without sharing class NexusQuoteController {
         return existing[0].Id;
     }
 
-    // Create contract as Draft (org requires Draft → Activated two-step DML)
+    // Create contract as Draft, then activate
     Contract c = new Contract(
-      AccountId = q.Opportunity__r.AccountId,
+      AccountId = accountId,
       StartDate = Date.today(),
       ContractTerm = 12,
       Status = 'Draft',
       Description = 'Contrat B2B — ' +
         q.Name +
         ' | ' +
-        (q.PaymentTerms__c != null ? q.PaymentTerms__c : 'Net 30'),
-      SpecialTerms = q.PaymentTerms__c
+        (q.PaymentTerms__c != null ? q.PaymentTerms__c : 'Net 30')
     );
     insert c;
-    // Activate the contract (requires separate DML after insert)
-    update new Contract(Id = c.Id, Status = 'Activated');
+    try {
+      update new Contract(Id = c.Id, Status = 'Activated');
+    } catch (Exception ex) {
+      System.debug(
+        LoggingLevel.WARN,
+        '[generateAndSendContract] Contract activation skipped: ' +
+        ex.getMessage()
+      );
+    }
 
     // Signal to portal that contract is awaiting customer signature
     update new TALEXO_Quote__c(Id = quoteId, NegotiationStatus__c = 'Final');
 
-    // Advance opportunity to Value Proposition (contract in hand, awaiting signature)
-    update new Opportunity(
-      Id = q.Opportunity__c,
-      StageName = 'Value Proposition'
-    );
+    // Advance opportunity stage if linked
+    if (q.Opportunity__c != null) {
+      update new Opportunity(
+        Id = q.Opportunity__c,
+        StageName = 'Value Proposition'
+      );
+    }
 
     // Send the formal contract document email to the customer
     sendContractEmailAsync(quoteId, c.Id);
+
+    // Initiate DocuSign dual-party e-sign (async — runs after DML is committed)
+    DocuSignService.initiateContractSigning(quoteId);
 
     return c.Id;
   }
@@ -701,6 +874,10 @@ public without sharing class NexusQuoteController {
           BulkDiscount__c,
           PaymentTerms__c,
           Opportunity__r.AccountId,
+          VolumeDiscountApplied__c,
+          ApprovalStatus__c,
+          CustomerCounterPrice__c,
+          CounterMessage__c,
           Opportunity__r.Account.Name,
           (
             SELECT ProductName__c, Quantity__c, UnitPrice__c, NetTotal__c
@@ -826,6 +1003,10 @@ public without sharing class NexusQuoteController {
           BulkDiscount__c,
           PaymentTerms__c,
           Opportunity__r.AccountId,
+          VolumeDiscountApplied__c,
+          ApprovalStatus__c,
+          CustomerCounterPrice__c,
+          CounterMessage__c,
           Opportunity__r.Account.Name,
           (
             SELECT ProductName__c, Quantity__c, UnitPrice__c, NetTotal__c
@@ -1015,6 +1196,8 @@ public without sharing class NexusQuoteController {
         Name,
         Status__c,
         GrandTotal__c,
+        BulkDiscount__c,
+        PaymentTerms__c,
         Opportunity__c,
         Opportunity__r.AccountId
       FROM TALEXO_Quote__c
@@ -1027,13 +1210,168 @@ public without sharing class NexusQuoteController {
       );
     }
 
+    // Get standard pricebook (required for OrderItems)
+    Pricebook2 stdPb = [
+      SELECT Id
+      FROM Pricebook2
+      WHERE IsStandard = TRUE
+      LIMIT 1
+    ];
+
     Order ord = new Order(
       AccountId = q.Opportunity__r.AccountId,
       Status = 'Draft',
       EffectiveDate = Date.today(),
-      Description = 'Commande B2B générée depuis le devis ' + q.Name
+      Pricebook2Id = stdPb.Id,
+      Description = 'B2B Order from Quote ' + q.Name
     );
     insert ord;
+
+    // Copy quote line items → OrderItems so the order has real products & total
+    // NexusQuoteLineItem__c has no Product__c lookup — match by ProductName__c
+    List<NexusQuoteLineItem__c> lines = [
+      SELECT ProductName__c, Quantity__c, UnitPrice__c, NetTotal__c
+      FROM NexusQuoteLineItem__c
+      WHERE Quote__c = :quoteId
+    ];
+
+    // Collect product names to look up Product2 records
+    Set<String> productNames = new Set<String>();
+    for (NexusQuoteLineItem__c li : lines) {
+      if (li.ProductName__c != null)
+        productNames.add(li.ProductName__c);
+    }
+
+    // Map product name → Product2 Id
+    Map<String, Id> nameToProduct2Id = new Map<String, Id>();
+    if (!productNames.isEmpty()) {
+      for (Product2 p : [
+        SELECT Id, Name
+        FROM Product2
+        WHERE Name IN :productNames AND IsActive = TRUE
+      ]) {
+        nameToProduct2Id.put(p.Name, p.Id);
+      }
+    }
+
+    // Collect matched Product2 Ids for PricebookEntry lookup
+    Set<Id> matchedProductIds = new Set<Id>(nameToProduct2Id.values());
+
+    // Fetch existing PricebookEntries
+    Map<Id, PricebookEntry> prodToPbe = new Map<Id, PricebookEntry>();
+    if (!matchedProductIds.isEmpty()) {
+      for (PricebookEntry pbe : [
+        SELECT Id, Product2Id, UnitPrice
+        FROM PricebookEntry
+        WHERE
+          Product2Id IN :matchedProductIds
+          AND Pricebook2Id = :stdPb.Id
+          AND IsActive = TRUE
+      ]) {
+        prodToPbe.put(pbe.Product2Id, pbe);
+      }
+    }
+
+    // Create missing PricebookEntries
+    List<PricebookEntry> pbesToInsert = new List<PricebookEntry>();
+    for (NexusQuoteLineItem__c li : lines) {
+      if (li.ProductName__c == null)
+        continue;
+      Id prod2Id = nameToProduct2Id.get(li.ProductName__c);
+      if (prod2Id != null && !prodToPbe.containsKey(prod2Id)) {
+        pbesToInsert.add(
+          new PricebookEntry(
+            Product2Id = prod2Id,
+            Pricebook2Id = stdPb.Id,
+            UnitPrice = li.UnitPrice__c != null ? li.UnitPrice__c : 0,
+            IsActive = true
+          )
+        );
+      }
+    }
+    if (!pbesToInsert.isEmpty()) {
+      insert pbesToInsert;
+      for (PricebookEntry pbe : pbesToInsert) {
+        prodToPbe.put(pbe.Product2Id, pbe);
+      }
+    }
+
+    // Build OrderItems from matched lines
+    List<OrderItem> items = new List<OrderItem>();
+    for (NexusQuoteLineItem__c li : lines) {
+      Id prod2Id = li.ProductName__c != null
+        ? nameToProduct2Id.get(li.ProductName__c)
+        : null;
+      PricebookEntry pbe = prod2Id != null ? prodToPbe.get(prod2Id) : null;
+      if (pbe == null)
+        continue;
+      items.add(
+        new OrderItem(
+          OrderId = ord.Id,
+          PricebookEntryId = pbe.Id,
+          Quantity = li.Quantity__c != null ? li.Quantity__c : 1,
+          UnitPrice = li.UnitPrice__c != null ? li.UnitPrice__c : 0
+        )
+      );
+    }
+
+    // Fallback: if no matched line items, create a single summary OrderItem
+    if (items.isEmpty()) {
+      // Ensure a generic "B2B Quote Order" product exists
+      List<Product2> genericProds = [
+        SELECT Id
+        FROM Product2
+        WHERE Name = 'B2B Quote Order'
+        LIMIT 1
+      ];
+      Product2 genericProd;
+      if (genericProds.isEmpty()) {
+        genericProd = new Product2(
+          Name = 'B2B Quote Order',
+          IsActive = true,
+          ProductCode = 'B2B-ORD'
+        );
+        insert genericProd;
+      } else {
+        genericProd = genericProds[0];
+      }
+
+      // Get or create PricebookEntry for the generic product
+      List<PricebookEntry> genericPbes = [
+        SELECT Id
+        FROM PricebookEntry
+        WHERE
+          Product2Id = :genericProd.Id
+          AND Pricebook2Id = :stdPb.Id
+          AND IsActive = TRUE
+        LIMIT 1
+      ];
+      PricebookEntry genericPbe;
+      if (genericPbes.isEmpty()) {
+        genericPbe = new PricebookEntry(
+          Product2Id = genericProd.Id,
+          Pricebook2Id = stdPb.Id,
+          UnitPrice = q.GrandTotal__c != null ? q.GrandTotal__c : 0,
+          IsActive = true
+        );
+        insert genericPbe;
+      } else {
+        genericPbe = genericPbes[0];
+      }
+
+      items.add(
+        new OrderItem(
+          OrderId = ord.Id,
+          PricebookEntryId = genericPbe.Id,
+          Quantity = 1,
+          UnitPrice = q.GrandTotal__c != null ? q.GrandTotal__c : 0,
+          Description = 'B2B Order from Quote ' + q.Name
+        )
+      );
+    }
+
+    if (!items.isEmpty())
+      insert items;
 
     update new Opportunity(Id = q.Opportunity__c, StageName = 'Closed Won');
     update new TALEXO_Quote__c(
@@ -1042,7 +1380,7 @@ public without sharing class NexusQuoteController {
       NegotiationStatus__c = 'Final'
     );
 
-    // Send B2B invoice email immediately (no OrderItems needed — reads quote lines)
+    // Send B2B invoice email (reads quote lines)
     sendB2BInvoiceAsync(
       quoteId,
       'CMD-' + String.valueOf(ord.Id).right(6).toUpperCase(),
@@ -1133,6 +1471,10 @@ public without sharing class NexusQuoteController {
           BulkDiscount__c,
           PaymentTerms__c,
           Opportunity__r.AccountId,
+          VolumeDiscountApplied__c,
+          ApprovalStatus__c,
+          CustomerCounterPrice__c,
+          CounterMessage__c,
           Opportunity__r.Account.Name,
           (
             SELECT
@@ -1358,6 +1700,28 @@ public without sharing class NexusQuoteController {
     w.requestedAt = q.CreatedDate != null
       ? q.CreatedDate.format('dd/MM/yyyy HH:mm')
       : null;
+
+    // Negotiation fields
+    w.volumeDiscountApplied = q.VolumeDiscountApplied__c == true;
+    w.approvalStatus = q.ApprovalStatus__c;
+    w.customerCounterPrice = q.CustomerCounterPrice__c;
+    w.counterMessage = q.CounterMessage__c;
+    Integer negRound = q.NegotiationRound__c != null
+      ? Integer.valueOf(q.NegotiationRound__c)
+      : 0;
+    w.negotiationRound = negRound;
+    w.isFinalOffer = q.IsFinalOffer__c == true;
+    w.roundsRemaining = Math.max(0, 3 - negRound);
+
+    // Expiry helpers
+    if (q.ExpirationDate__c != null) {
+      Integer days = Date.today().daysBetween(q.ExpirationDate__c);
+      w.daysUntilExpiry = days;
+      w.isExpired = (q.Status__c == 'Expired') || (days < 0);
+    } else {
+      w.isExpired = false;
+      w.daysUntilExpiry = null;
+    }
 
     // UI helpers for AI probability display
     Integer prob = w.acceptanceProbability != null

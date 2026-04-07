@@ -1,24 +1,9 @@
 <template>
   <!-- ═══════════════════════ MAIN LIST VIEW ═══════════════════════════════ -->
   <div class="nqs-wrap">
-    <!-- Header -->
-    <div class="nqs-header">
-      <div class="nqs-header-left">
-        <div class="nqs-icon-box">
-          <lightning-icon
-            icon-name="utility:file"
-            size="small"
-            variant="inverse"
-          ></lightning-icon>
-        </div>
-        <div>
-          <h2 class="nqs-title">Quotes &amp; Contracts</h2>
-          <p class="nqs-sub">
-            Manage your enterprise agreements and negotiations
-          </p>
-        </div>
-      </div>
-      <div class="nqs-header-right">
+    <!-- Toolbar -->
+    <div class="nqs-toolbar">
+      <div class="nqs-toolbar-left">
         <div class="nqs-filter-bar">
           <template for:each={filterOptions} for:item="f">
             <button
@@ -31,11 +16,24 @@
             </button>
           </template>
         </div>
-        <button class="nqs-new-btn" onclick={handleOpenNewForm}>
-          + Nouvelle Demande
-        </button>
+        <template if:true={hasQuotes}>
+          <span class="nqs-quote-count">{filteredQuotes.length} devis</span>
+        </template>
       </div>
+      <button class="nqs-new-btn" onclick={handleOpenNewForm}>
+        + Request a Quote
+      </button>
     </div>
+
+    <!-- Loading state -->
+    <template if:true={isLoading}>
+      <div class="nqs-loading-wrap">
+        <lightning-spinner
+          alternative-text="Loading..."
+          size="medium"
+        ></lightning-spinner>
+      </div>
+    </template>
 
     <!-- Empty state -->
     <template if:true={isEmpty}>
@@ -43,80 +41,85 @@
         <div class="nqs-empty-icon-wrap">
           <lightning-icon
             icon-name="utility:contract"
-            size="large"
+            size="medium"
           ></lightning-icon>
         </div>
-        <h3 class="nqs-empty-title">No quotes found</h3>
-        <p class="nqs-empty-sub">
-          Vos devis et contrats apparaîtront ici dès leur création.
-        </p>
+        <div class="nqs-empty-text">
+          <h3 class="nqs-empty-title">No quotes yet</h3>
+          <p class="nqs-empty-sub">
+            Submitted quote requests will appear here. Contact your account
+            manager or submit a new request to get started.
+          </p>
+        </div>
         <button class="nqs-new-btn" onclick={handleOpenNewForm}>
-          Faire une demande
+          Request a Quote
         </button>
       </div>
     </template>
 
-    <!-- Quote list -->
+    <!-- Quote table -->
     <template if:true={hasQuotes}>
-      <div class="nqs-list">
-        <template for:each={filteredQuotes} for:item="q">
-          <div key={q.quoteId} class="nqs-card">
-            <div class="nqs-card-left">
-              <div class="nqs-card-icon-box">
-                <lightning-icon
-                  icon-name="utility:file"
-                  size="small"
-                  class="nqs-card-file-icon"
-                ></lightning-icon>
-              </div>
-              <div>
-                <div class="nqs-card-name">{q.name}</div>
-                <div class="nqs-card-date">{q.displayDate}</div>
-              </div>
-            </div>
-            <div class="nqs-card-right">
-              <div class="nqs-card-prob-block">
-                <div class="nqs-card-prob-label">
-                  <template if:true={q.hasAgentforceScore}>
+      <div class="nqs-table-wrap">
+        <table class="nqs-table">
+          <thead>
+            <tr class="nqs-thead-row">
+              <th class="nqs-th-col">Reference</th>
+              <th class="nqs-th-col">Date d'expiration</th>
+              <th class="nqs-th-col nqs-th-right">Montant</th>
+              <th class="nqs-th-col nqs-th-center">Statut</th>
+              <th class="nqs-th-col nqs-th-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template for:each={filteredQuotes} for:item="q">
+              <tr key={q.quoteId} class="nqs-tbody-row">
+                <!-- Reference -->
+                <td class="nqs-td-col">
+                  <div class="nqs-ref-cell">
+                    <div class="nqs-ref-icon-box">
+                      <lightning-icon
+                        icon-name="utility:file"
+                        size="x-small"
+                      ></lightning-icon>
+                    </div>
+                    <div>
+                      <div class="nqs-ref-name">{q.name}</div>
+                    </div>
+                  </div>
+                </td>
+                <!-- Expiry -->
+                <td class="nqs-td-col nqs-td-muted">{q.displayDate}</td>
+                <!-- Amount -->
+                <td class="nqs-td-col nqs-td-amount">{q.displayTotal}</td>
+                <!-- Status -->
+                <td class="nqs-td-col nqs-td-center">
+                  <span class={q.badgeCls}>{q.status}</span>
+                </td>
+                <!-- Actions -->
+                <td class="nqs-td-col nqs-td-actions">
+                  <button
+                    class="nqs-row-view-btn"
+                    data-id={q.quoteId}
+                    onclick={handleOpenDetail}
+                  >
+                    View Details
+                  </button>
+                  <button
+                    class="nqs-row-pdf-btn"
+                    data-id={q.quoteId}
+                    onclick={handleDownloadPDFCard}
+                  >
                     <lightning-icon
-                      icon-name="utility:einstein"
+                      icon-name="utility:download"
                       size="x-small"
-                      class="nqs-af-prob-icon"
                     ></lightning-icon>
-                    AGENTFORCE AI
-                  </template>
-                  <template if:false={q.hasAgentforceScore}>
-                    PROBABILITY
-                  </template>
-                </div>
-                <div class={q.probColorCls}>{q.probability}%</div>
-                <div class="nqs-card-prob-track">
-                  <div class="nqs-card-prob-fill" style={q.probWidth}></div>
-                </div>
-              </div>
-              <div class="nqs-card-total-block">
-                <div class="nqs-card-total">{q.displayTotal}</div>
-                <span class={q.badgeCls}>{q.status}</span>
-              </div>
-              <div class="nqs-card-actions">
-                <button
-                  class="nqs-view-btn"
-                  data-id={q.quoteId}
-                  onclick={handleOpenDetail}
-                >
-                  VIEW &amp; NEGOTIATE
-                </button>
-                <button
-                  class="nqs-pdf-card-btn"
-                  data-id={q.quoteId}
-                  onclick={handleDownloadPDFCard}
-                >
-                  PDF
-                </button>
-              </div>
-            </div>
-          </div>
-        </template>
+                    PDF
+                  </button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
     </template>
   </div>
@@ -160,15 +163,16 @@
               PDF
             </button>
 
-            <!-- Accepted + contract sent by admin → customer signs the contract -->
+            <!-- Accepted + contract generated → DocuSign emails sent -->
             <template if:true={showSignFinalContract}>
-              <button
-                class="nqs-contract-sign-btn"
-                onclick={handleSignFinalContract}
-                disabled={decideDisabled}
-              >
-                ✎ Signer le Contrat
-              </button>
+              <span class="nqs-dvelop-signing-chip">
+                <lightning-icon
+                  icon-name="utility:email"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+                &nbsp;Signature DocuSign en cours — vérifiez votre email
+              </span>
             </template>
 
             <!-- Accepted but contract not yet sent → show waiting banner -->
@@ -182,7 +186,17 @@
               </span>
             </template>
 
-            <!-- Presented → customer can accept or reject -->
+            <!-- Expiry warning badge -->
+            <template if:true={selectedQuote.expiryWarning}>
+              <span class="nqs-expiry-badge">
+                ⏰ {selectedQuote.expiryLabel}
+              </span>
+            </template>
+            <template if:true={selectedQuote.isExpired}>
+              <span class="nqs-expired-badge">Expired</span>
+            </template>
+
+            <!-- Presented → customer can accept, counter, or reject -->
             <template if:true={selectedQuote.canDecide}>
               <button
                 class="nqs-accept-btn"
@@ -190,6 +204,13 @@
                 disabled={decideDisabled}
               >
                 ✓ Accepter
+              </button>
+              <button
+                class="nqs-counter-btn"
+                onclick={handleShowCounterForm}
+                disabled={decideDisabled}
+              >
+                ↔ Contre-offre
               </button>
               <button
                 class="nqs-reject-btn"
@@ -209,38 +230,29 @@
         <div class="nqs-modal-body">
           <!-- Sidebar tabs -->
           <div class="nqs-modal-sidebar">
-            <button
-              class={tabDetailsCls}
-              onclick={handleTabDetails}
-              title="Détails"
-            >
+            <button class={tabDetailsCls} onclick={handleTabDetails}>
               <lightning-icon
                 icon-name="utility:file"
-                size="small"
+                size="x-small"
                 variant={tabDetailsVariant}
               ></lightning-icon>
+              <span class="nqs-mtab-label">Details</span>
             </button>
-            <button
-              class={tabMessagesCls}
-              onclick={handleTabMessages}
-              title="Messages"
-            >
+            <button class={tabMessagesCls} onclick={handleTabMessages}>
               <lightning-icon
                 icon-name="utility:chat"
-                size="small"
+                size="x-small"
                 variant={tabMessagesVariant}
               ></lightning-icon>
+              <span class="nqs-mtab-label">Messages</span>
             </button>
-            <button
-              class={tabHistoryCls}
-              onclick={handleTabHistory}
-              title="Historique des versions"
-            >
+            <button class={tabHistoryCls} onclick={handleTabHistory}>
               <lightning-icon
                 icon-name="utility:clock"
-                size="small"
+                size="x-small"
                 variant={tabHistoryVariant}
               ></lightning-icon>
+              <span class="nqs-mtab-label">History</span>
             </button>
           </div>
 
@@ -380,101 +392,146 @@
 
                 <!-- Right column -->
                 <div class="nqs-details-right">
-                  <!-- AI Insights dark card -->
-                  <div class="nqs-ai-card">
-                    <div class="nqs-ai-header">
-                      <lightning-icon
-                        icon-name="utility:einstein"
-                        size="x-small"
-                        class="nqs-ai-icon"
-                      ></lightning-icon>
-                      <span class="nqs-ai-title">
-                        <template if:true={selectedQuote.hasAgentforceScore}
-                          >Nexus Quote Analyst — Agentforce</template
-                        >
-                        <template if:false={selectedQuote.hasAgentforceScore}
-                          >Nexus AI Insights</template
-                        >
-                      </span>
-                    </div>
-                    <div class="nqs-ai-prob-row">
-                      <span class="nqs-ai-label"
-                        >Probabilité d'acceptation</span
-                      >
-                      <span class="nqs-ai-prob-val"
-                        >{selectedQuote.probability}%</span
-                      >
-                    </div>
-                    <div class="nqs-ai-bar-bg">
-                      <div
-                        class={selectedQuote.probColorCls}
-                        style={selectedQuote.probStyle}
-                      ></div>
-                    </div>
-                    <!-- Agentforce reasoning -->
-                    <template if:true={selectedQuote.aiReason}>
-                      <div class="nqs-ai-engagement">
-                        <lightning-icon
-                          icon-name="utility:einstein"
-                          size="x-small"
-                          class="nqs-ai-trend-icon"
-                        ></lightning-icon>
-                        <p class="nqs-ai-engagement-text">
-                          {selectedQuote.aiReason}
-                        </p>
-                      </div>
-                      <div class="nqs-af-source-badge">
-                        <lightning-icon
-                          icon-name="utility:einstein"
-                          size="x-small"
-                          class="nqs-af-badge-icon"
-                        ></lightning-icon>
-                        Scoré par Agentforce
-                      </div>
-                    </template>
-                    <template if:false={selectedQuote.aiReason}>
-                      <div class="nqs-ai-engagement">
-                        <lightning-icon
-                          icon-name="utility:trending_up"
-                          size="x-small"
-                          class="nqs-ai-trend-icon"
-                        ></lightning-icon>
-                        <p class="nqs-ai-engagement-text">
-                          Score en attente d'analyse Agentforce.
-                        </p>
-                      </div>
-                    </template>
-                  </div>
-
                   <!-- Financial summary -->
                   <div class="nqs-summary-card">
-                    <div class="nqs-detail-card-title">Résumé Financier</div>
+                    <div class="nqs-detail-card-title">Financial Summary</div>
                     <div class="nqs-detail-card-body">
                       <div class="nqs-detail-row">
-                        <span class="nqs-detail-label">Sous-total</span>
+                        <span class="nqs-detail-label">Subtotal</span>
                         <span class="nqs-detail-val"
                           >{selectedQuote.displayTotal}</span
                         >
                       </div>
-                      <div class="nqs-detail-row">
-                        <span class="nqs-detail-label">Remise (10%)</span>
-                        <span class="nqs-discount-val"
-                          >−{selectedQuote.discountAmount}</span
-                        >
-                      </div>
+                      <template if:true={selectedQuote.volumeDiscountApplied}>
+                        <div class="nqs-detail-row">
+                          <span class="nqs-detail-label"
+                            >Volume Discount
+                            ({selectedQuote.bulkDiscount}%)</span
+                          >
+                          <span class="nqs-discount-val"
+                            >−{selectedQuote.discountAmount}</span
+                          >
+                        </div>
+                      </template>
                       <div class="nqs-summary-total-row">
                         <div>
-                          <div class="nqs-detail-label">Total net</div>
+                          <div class="nqs-detail-label">Net Total</div>
                           <div class="nqs-summary-big-total">
                             {selectedQuote.discountedTotal}
                           </div>
                         </div>
-                        <span class="nqs-badge nqs-badge-success"
-                          >TVA Incluse</span
-                        >
+                        <template if:true={selectedQuote.volumeDiscountApplied}>
+                          <span class="nqs-badge nqs-badge-success"
+                            >Volume Discount Applied</span
+                          >
+                        </template>
                       </div>
                     </div>
                   </div>
+
+                  <!-- Negotiation status card -->
+                  <div class="nqs-detail-card">
+                    <div class="nqs-detail-card-title">Negotiation Status</div>
+                    <div class="nqs-detail-card-body">
+                      <div class="nqs-detail-row">
+                        <span class="nqs-detail-label">Stage</span>
+                        <span class="nqs-detail-val"
+                          >{selectedQuote.negotiationStatus}</span
+                        >
+                      </div>
+                      <div class="nqs-detail-row">
+                        <span class="nqs-detail-label">Internal Approval</span>
+                        <span class="nqs-detail-val">
+                          <template if:true={selectedQuote.needsApproval}>
+                            <span class="nqs-approval-pending"
+                              >⏳ Pending Approval</span
+                            >
+                          </template>
+                          <template if:true={selectedQuote.isApproved}>
+                            <span class="nqs-approval-ok">✓ Approved</span>
+                          </template>
+                          <template if:false={selectedQuote.needsApproval}>
+                            <template if:false={selectedQuote.isApproved}>
+                              <span>{selectedQuote.approvalStatus}</span>
+                            </template>
+                          </template>
+                        </span>
+                      </div>
+                      <template if:true={selectedQuote.customerCounterPrice}>
+                        <div class="nqs-detail-row">
+                          <span class="nqs-detail-label"
+                            >Your Counter-Offer</span
+                          >
+                          <span class="nqs-counter-value"
+                            >{selectedQuote.customerCounterPrice}</span
+                          >
+                        </div>
+                        <template if:true={selectedQuote.counterMessage}>
+                          <div class="nqs-detail-row nqs-detail-row-col">
+                            <span class="nqs-detail-label"
+                              >Counter Message</span
+                            >
+                            <p class="nqs-detail-desc">
+                              {selectedQuote.counterMessage}
+                            </p>
+                          </div>
+                        </template>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- Auto-negotiation counter-offer form -->
+                  <template if:true={showCounterForm}>
+                    <div class="nqs-counter-form-card">
+                      <div class="nqs-detail-card-title">
+                        Soumettre une contre-offre
+                      </div>
+                      <div class="nqs-detail-card-body">
+                        <p class="nqs-counter-hint">
+                          Proposez votre prix — notre système répond
+                          instantanément : si votre offre est proche du seuil,
+                          un prix intermédiaire vous sera automatiquement
+                          proposé.
+                        </p>
+                        <div class="nqs-counter-input-row">
+                          <label class="nqs-detail-label">Votre prix (€)</label>
+                          <input
+                            type="number"
+                            class="nqs-counter-input"
+                            placeholder="ex. 45 000"
+                            value={_counterPrice}
+                            oninput={handleCounterPriceInput}
+                            min="1"
+                          />
+                        </div>
+                        <div class="nqs-counter-input-row">
+                          <label class="nqs-detail-label"
+                            >Message (optionnel)</label
+                          >
+                          <textarea
+                            class="nqs-counter-textarea"
+                            placeholder="Expliquez votre raisonnement..."
+                            oninput={handleCounterMessageInput}
+                          ></textarea>
+                        </div>
+                        <div class="nqs-counter-form-btns">
+                          <button
+                            class="nqs-cancel-btn"
+                            onclick={handleCancelCounter}
+                          >
+                            Annuler
+                          </button>
+                          <button
+                            class="nqs-submit-counter-btn"
+                            onclick={handleSubmitCounter}
+                            disabled={_counterSubmitting}
+                          >
+                            {counterSubmitLabel}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
                 </div>
               </div>
             </template>
@@ -686,84 +743,6 @@
       <!-- end nqs-modal -->
     </div>
     <!-- end overlay -->
-  </template>
-
-  <!-- ═══════════════════════ SIGNING MODAL ════════════════════════════════ -->
-  <template if:true={showSigningModal}>
-    <div class="nqs-overlay nqs-overlay-deep">
-      <div class="nqs-sign-modal">
-        <div class="nqs-sign-header">
-          <div class="nqs-sign-icon-box">
-            <lightning-icon
-              icon-name="utility:shield"
-              size="small"
-              variant="inverse"
-            ></lightning-icon>
-          </div>
-          <div>
-            <h3 class="nqs-sign-title">Signature Électronique</h3>
-            <p class="nqs-sign-sub">Nexus Secure Signature Service</p>
-          </div>
-          <button class="nqs-close-x-btn" onclick={handleCancelSign}>✕</button>
-        </div>
-        <div class="nqs-sign-body">
-          <div class="nqs-sign-notice">
-            <template if:true={isContractSigning}>
-              <p>
-                En signant ce document, vous acceptez les termes du
-                <strong>Contrat B2B</strong> lié au devis
-                <strong>{selectedQuote.name}</strong>. Cet engagement
-                contractuel a une durée de <strong>12 mois</strong> et a valeur
-                légale conformément aux normes eIDAS.
-              </p>
-            </template>
-            <template if:false={isContractSigning}>
-              <p>
-                En signant ce document, vous acceptez les conditions générales
-                de vente et termes de service du devis
-                <strong>{selectedQuote.name}</strong>. Cette signature a valeur
-                légale.
-              </p>
-            </template>
-            <div class="nqs-sign-clock-row">
-              <lightning-icon
-                icon-name="utility:clock"
-                size="x-small"
-              ></lightning-icon>
-              <span>Temps de lecture estimé : 4 min</span>
-            </div>
-          </div>
-          <div class="nqs-sign-field">
-            <label class="nqs-sign-label">Votre signature — nom complet</label>
-            <input
-              type="text"
-              class="nqs-sign-input"
-              placeholder="ex : Jean Nexus Dupont"
-              value={signature}
-              onchange={handleSignatureInput}
-            />
-          </div>
-          <div class="nqs-sign-actions">
-            <button
-              class="nqs-confirm-sign-btn"
-              disabled={signDisabled}
-              onclick={handleConfirmSign}
-            >
-              ✓ Confirm &amp; Sign
-            </button>
-            <button
-              class="nqs-cancel-btn nqs-cancel-outline"
-              onclick={handleCancelSign}
-            >
-              Cancel
-            </button>
-          </div>
-          <p class="nqs-sign-legal">
-            Signature sécurisée conforme aux normes eIDAS.
-          </p>
-        </div>
-      </div>
-    </div>
   </template>
 
   <!-- ═══════════════════════ NEW QUOTE FORM MODAL ══════════════════════════ -->

@@ -4,66 +4,6 @@
   width: 100%;
 }
 
-/* ── Header ── */
-.npcart-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2.5rem;
-}
-.npcart-header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-/* w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl */
-.npcart-icon {
-  width: 3rem;
-  height: 3rem;
-  background: #0f172a;
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
-}
-
-/* text-4xl font-black tracking-tighter uppercase italic */
-.npcart-title {
-  font-size: 2.25rem;
-  font-weight: 900;
-  color: #0f172a;
-  letter-spacing: -0.05em;
-  text-transform: uppercase;
-  font-style: italic;
-  line-height: 1;
-  margin: 0;
-  font-family: "Poppins", sans-serif;
-}
-.npcart-subtitle {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #64748b;
-  margin: 0.25rem 0 0 0;
-}
-
-/* px-4 py-2 bg-indigo-50 rounded-xl border border-indigo-100 */
-.npcart-badge-pill {
-  padding: 0.5rem 1rem;
-  background: #eef2ff;
-  border-radius: 0.75rem;
-  border: 1px solid #e0e7ff;
-}
-.npcart-badge {
-  font-size: 0.75rem;
-  font-weight: 900;
-  color: #4f46e5;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
 /* ── 2-col grid (lg:grid-cols-12 → 8+4) ── */
 .npcart-layout {
   display: grid;
@@ -139,47 +79,7 @@
   transition: background 0.3s;
 }
 .npcart-empty-btn:hover {
-  background: #4f46e5;
-}
-
-/* ── Nexus Intelligence banner (emerald) ── */
-.npcart-banner {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 2rem;
-  background: #ecfdf5;
-  border-radius: 2.5rem;
-  border: 1px solid #d1fae5;
-}
-.npcart-banner-icon {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: #fff;
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-.npcart-banner-icon lightning-icon {
-  --sds-c-icon-color-foreground-default: #059669;
-}
-.npcart-banner-title {
-  font-size: 1.125rem;
-  font-weight: 900;
-  color: #064e3b;
-  text-transform: uppercase;
-  font-style: italic;
-  letter-spacing: -0.04em;
-  margin-bottom: 0.25rem;
-}
-.npcart-banner-text {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #065f46;
-  margin: 0;
+  background: #1e293b;
 }
 
 /* ── Modal overlay (unchanged) ── */
@@ -303,38 +203,6 @@
 }
 .npcart-stat--green {
   color: #10b981;
-}
-.npcart-ai-banner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #0f172a;
-  color: #fff;
-  border-radius: 1rem;
-  padding: 1rem 1.25rem;
-}
-.npcart-ai-tag {
-  display: inline-block;
-  background: #4f46e5;
-  color: #fff;
-  font-size: 0.625rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  margin-bottom: 0.25rem;
-}
-.npcart-ai-desc {
-  display: block;
-  font-size: 0.8125rem;
-  color: #94a3b8;
-}
-.npcart-ai-pct {
-  font-size: 2.25rem;
-  font-weight: 900;
-  color: #a5b4fc;
-  letter-spacing: -0.05em;
 }
 .npcart-done-btn {
   width: 100%;

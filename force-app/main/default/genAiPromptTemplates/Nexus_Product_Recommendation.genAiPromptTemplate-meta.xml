@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <activeVersionIdentifier
+  >zi+tth34jSZ0vh5GhMCD6nho4TkDduhf+JY4YHOzTx0=_1</activeVersionIdentifier>
+    <developerName>Nexus_Product_Recommendation</developerName>
+    <masterLabel>Nexus Product Recommendation</masterLabel>
+    <templateVersions>
+        <content
+    >You are an AI assistant for Nexus, a B2B technology e-commerce platform.
+The interface language is French.
+
+Customer: {!$Input:CustomerName}
+Customer activity: {!$Input:CustomerActivity}
+Cart contents: {!$Input:CartContext}
+Recently viewed: {!$Input:BrowseContext}
+Product (Name | Family | Type): {!$Input:ProductContext}
+
+In 1-2 sentences in French, explain concisely why this product is recommended 
+for this customer. Be specific, professional, and focus on business value.
+
+</content>
+        <inputs>
+            <apiName>CustomerName</apiName>
+            <definition>primitive://String</definition>
+            <masterLabel>Customer Name</masterLabel>
+            <referenceName>Input:CustomerName</referenceName>
+            <required>true</required>
+        </inputs>
+        <inputs>
+            <apiName>CartContext</apiName>
+            <definition>primitive://String</definition>
+            <masterLabel>Cart Context</masterLabel>
+            <referenceName>Input:CartContext</referenceName>
+            <required>true</required>
+        </inputs>
+        <inputs>
+            <apiName>BrowseContext</apiName>
+            <definition>primitive://String</definition>
+            <masterLabel>Browse Context</masterLabel>
+            <referenceName>Input:BrowseContext</referenceName>
+            <required>true</required>
+        </inputs>
+        <inputs>
+            <apiName>ProductContext</apiName>
+            <definition>primitive://String</definition>
+            <masterLabel>Product Context</masterLabel>
+            <referenceName>Input:ProductContext</referenceName>
+            <required>true</required>
+        </inputs>
+        <inputs>
+            <apiName>CustomerActivity</apiName>
+            <definition>primitive://String</definition>
+            <masterLabel>Customer Activity</masterLabel>
+            <referenceName>Input:CustomerActivity</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel>sfdc_ai__DefaultOpenAIGPT4OmniMini</primaryModel>
+        <status>Published</status>
+        <versionIdentifier
+    >zi+tth34jSZ0vh5GhMCD6nho4TkDduhf+JY4YHOzTx0=_1</versionIdentifier>
+    </templateVersions>
+    <type>einstein_gpt__flex</type>
+    <visibility>Global</visibility>
+</GenAiPromptTemplate>

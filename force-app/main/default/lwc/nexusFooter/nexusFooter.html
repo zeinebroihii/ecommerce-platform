@@ -1,86 +1,92 @@
 <template>
-    <footer class="nf-footer">
-        <div class="nf-inner">
-
-            <!-- ── Top grid ──────────────────────────────────────────────── -->
-            <div class="nf-grid">
-
-                <!-- Brand -->
-                <div class="nf-brand">
-                    <div class="nf-logo-row">
-                        <c-nexus-logo variant="emerald" size="lg" subtitle="Platform"></c-nexus-logo>
-                    </div>
-                    <p class="nf-brand-desc">
-                        L&rsquo;&eacute;cosyst&egrave;me CRM le plus avanc&eacute; pour les entreprises modernes.
-                        Propuls&eacute; par l&rsquo;intelligence artificielle Agentforce.
-                    </p>
-                    <div class="nf-socials">
-                        <template for:each={socials} for:item="s">
-                            <button key={s.label} class="nf-social-btn" aria-label={s.label}>
-                                <lightning-icon icon-name="utility:world" size="x-small"></lightning-icon>
-                            </button>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Solutions -->
-                <div class="nf-col nf-col--solutions">
-                    <h4 class="nf-col-title">Solutions</h4>
-                    <ul class="nf-link-list">
-                        <template for:each={solutions} for:item="item">
-                            <li key={item}><a href="#" class="nf-link">{item}</a></li>
-                        </template>
-                    </ul>
-                </div>
-
-                <!-- Entreprise -->
-                <div class="nf-col nf-col--company">
-                    <h4 class="nf-col-title">Entreprise</h4>
-                    <ul class="nf-link-list">
-                        <template for:each={company} for:item="item">
-                            <li key={item}><a href="#" class="nf-link">{item}</a></li>
-                        </template>
-                    </ul>
-                </div>
-
-                <!-- Newsletter -->
-                <div class="nf-newsletter">
-                    <div class="nf-nl-inner">
-                        <h4 class="nf-nl-title">Nexus Newsletter</h4>
-                        <p class="nf-nl-desc">
-                            Recevez nos derni&egrave;res innovations AI directement dans votre bo&icirc;te mail.
-                        </p>
-                        <div class="nf-nl-form">
-                            <input
-                                class="nf-nl-input"
-                                type="email"
-                                placeholder="votre@email.com"
-                                value={newsletterEmail}
-                                oninput={handleEmailInput}
-                            />
-                            <button class="nf-nl-btn" onclick={handleSubscribe}>
-                                <lightning-icon icon-name="utility:arrowup" size="x-small"></lightning-icon>
-                            </button>
-                        </div>
-                        <template if:true={subscribed}>
-                            <p class="nf-nl-success">&#10003;&nbsp;Subscription confirmed!</p>
-                        </template>
-                    </div>
-                    <div class="nf-nl-glow"></div>
-                </div>
-
-            </div>
-
-            <!-- ── Bottom bar ─────────────────────────────────────────────── -->
-            <div class="nf-bottom">
-                <p class="nf-copy">&copy; 2024 Nexus Systems. All rights reserved.</p>
-                <div class="nf-legal">
-                    <a href="#" class="nf-legal-link">Confidentialit&eacute;</a>
-                    <a href="#" class="nf-legal-link">CGU</a>
-                    <a href="#" class="nf-legal-link">Cookies</a>
-                </div>
-            </div>
-
+  <footer class="nf-footer">
+    <div class="nf-inner">
+      <!-- ── Top grid ──────────────────────────────────────────────── -->
+      <div class="nf-grid">
+        <!-- Brand -->
+        <div class="nf-brand">
+          <div class="nf-logo-row">
+            <c-nexus-logo
+              variant="emerald"
+              size="lg"
+              subtitle="Platform"
+            ></c-nexus-logo>
+          </div>
+          <p class="nf-brand-desc">
+            The most advanced CRM ecosystem for modern businesses. Powered by
+            Agentforce artificial intelligence.
+          </p>
+          <div class="nf-socials">
+            <template for:each={socials} for:item="s">
+              <button key={s.label} class="nf-social-btn" aria-label={s.label}>
+                <lightning-icon
+                  icon-name="utility:world"
+                  size="x-small"
+                ></lightning-icon>
+              </button>
+            </template>
+          </div>
         </div>
-    </footer>
+
+        <!-- Solutions -->
+        <div class="nf-col nf-col--solutions">
+          <h4 class="nf-col-title">Solutions</h4>
+          <ul class="nf-link-list">
+            <template for:each={solutions} for:item="item">
+              <li key={item}><a href="#" class="nf-link">{item}</a></li>
+            </template>
+          </ul>
+        </div>
+
+        <!-- Company -->
+        <div class="nf-col nf-col--company">
+          <h4 class="nf-col-title">Company</h4>
+          <ul class="nf-link-list">
+            <template for:each={company} for:item="item">
+              <li key={item}><a href="#" class="nf-link">{item}</a></li>
+            </template>
+          </ul>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="nf-newsletter">
+          <div class="nf-nl-inner">
+            <h4 class="nf-nl-title">Nexus Newsletter</h4>
+            <p class="nf-nl-desc">
+              Get our latest AI innovations delivered directly to your inbox.
+            </p>
+            <div class="nf-nl-form">
+              <input
+                class="nf-nl-input"
+                type="email"
+                placeholder="your@email.com"
+                value={newsletterEmail}
+                oninput={handleEmailInput}
+              />
+              <button class="nf-nl-btn" onclick={handleSubscribe}>
+                <lightning-icon
+                  icon-name="utility:arrowup"
+                  size="x-small"
+                ></lightning-icon>
+              </button>
+            </div>
+            <template if:true={subscribed}>
+              <p class="nf-nl-success">&#10003;&nbsp;Subscription confirmed!</p>
+            </template>
+          </div>
+          <div class="nf-nl-glow"></div>
+        </div>
+      </div>
+
+      <!-- ── Bottom bar ─────────────────────────────────────────────── -->
+      <div class="nf-bottom">
+        <p class="nf-copy">&copy; 2024 Nexus Systems. All rights reserved.</p>
+        <div class="nf-legal">
+          <a href="#" class="nf-legal-link">Privacy</a>
+          <a href="#" class="nf-legal-link">Terms</a>
+          <a href="#" class="nf-legal-link">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 </template>

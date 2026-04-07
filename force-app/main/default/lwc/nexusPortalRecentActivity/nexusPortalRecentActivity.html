@@ -1,60 +1,69 @@
 <template>
-    <div class="npra-card">
-
-        <!-- Header -->
-        <div class="npra-header">
-            <h3 class="npra-title">{cardTitle}</h3>
-            <button class="npra-view-all" onclick={handleViewAll}>Voir tout →</button>
-        </div>
-
-        <!-- Activity rows -->
-        <div class="npra-list">
-
-            <!-- Row 1 -->
-            <div class="npra-row" onclick={handleRow1}>
-                <div class="npra-icon-box">
-                    <lightning-icon icon-name="utility:package" size="small" class="npra-pkg-icon"></lightning-icon>
-                </div>
-                <div class="npra-info">
-                    <div class="npra-order-name">{activity1Number}</div>
-                    <div class="npra-order-date">{activity1Date}</div>
-                </div>
-                <div class="npra-right">
-                    <div class="npra-price">{activity1Price}</div>
-                    <span class={status1Class}>{activity1Status}</span>
-                </div>
-            </div>
-
-            <!-- Row 2 -->
-            <div class="npra-row" onclick={handleRow2}>
-                <div class="npra-icon-box">
-                    <lightning-icon icon-name="utility:package" size="small" class="npra-pkg-icon"></lightning-icon>
-                </div>
-                <div class="npra-info">
-                    <div class="npra-order-name">{activity2Number}</div>
-                    <div class="npra-order-date">{activity2Date}</div>
-                </div>
-                <div class="npra-right">
-                    <div class="npra-price">{activity2Price}</div>
-                    <span class={status2Class}>{activity2Status}</span>
-                </div>
-            </div>
-
-            <!-- Row 3 -->
-            <div class="npra-row" onclick={handleRow3}>
-                <div class="npra-icon-box">
-                    <lightning-icon icon-name="utility:package" size="small" class="npra-pkg-icon"></lightning-icon>
-                </div>
-                <div class="npra-info">
-                    <div class="npra-order-name">{activity3Number}</div>
-                    <div class="npra-order-date">{activity3Date}</div>
-                </div>
-                <div class="npra-right">
-                    <div class="npra-price">{activity3Price}</div>
-                    <span class={status3Class}>{activity3Status}</span>
-                </div>
-            </div>
-
-        </div>
+  <div class="npra-card">
+    <!-- Header -->
+    <div class="npra-header">
+      <h3 class="npra-title">{cardTitle}</h3>
+      <button class="npra-view-all" onclick={handleViewAll}>View all →</button>
     </div>
+
+    <!-- Activity rows -->
+    <div class="npra-list">
+      <!-- Row 1 -->
+      <div class="npra-row" onclick={handleRow1}>
+        <div class="npra-icon-box">
+          <lightning-icon
+            icon-name="utility:package"
+            size="small"
+            class="npra-pkg-icon"
+          ></lightning-icon>
+        </div>
+        <div class="npra-info">
+          <div class="npra-order-name">{activity1Number}</div>
+          <div class="npra-order-date">{activity1Date}</div>
+        </div>
+        <div class="npra-right">
+          <div class="npra-price">{activity1Price}</div>
+          <span class={status1Class}>{activity1Status}</span>
+        </div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="npra-row" onclick={handleRow2}>
+        <div class="npra-icon-box">
+          <lightning-icon
+            icon-name="utility:package"
+            size="small"
+            class="npra-pkg-icon"
+          ></lightning-icon>
+        </div>
+        <div class="npra-info">
+          <div class="npra-order-name">{activity2Number}</div>
+          <div class="npra-order-date">{activity2Date}</div>
+        </div>
+        <div class="npra-right">
+          <div class="npra-price">{activity2Price}</div>
+          <span class={status2Class}>{activity2Status}</span>
+        </div>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="npra-row" onclick={handleRow3}>
+        <div class="npra-icon-box">
+          <lightning-icon
+            icon-name="utility:package"
+            size="small"
+            class="npra-pkg-icon"
+          ></lightning-icon>
+        </div>
+        <div class="npra-info">
+          <div class="npra-order-name">{activity3Number}</div>
+          <div class="npra-order-date">{activity3Date}</div>
+        </div>
+        <div class="npra-right">
+          <div class="npra-price">{activity3Price}</div>
+          <span class={status3Class}>{activity3Status}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>

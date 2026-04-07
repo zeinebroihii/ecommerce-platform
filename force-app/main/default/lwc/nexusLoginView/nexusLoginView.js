@@ -1,129 +1,45 @@
-import { LightningElement, api, track } from "lwc";
+import { LightningElement, api, wire, track } from "lwc";
 import Id from "@salesforce/user/Id";
+import getProductsWithStock from "@salesforce/apex/ProductController.getProductsWithStock";
 
-const MOCK_PRODUCTS = [
-  {
-    id: "pc-1",
-    name: "Nexus Pro-Station G1",
-    productCode: "PC-G1",
-    family: "Computing",
-    price: 2499,
-    rating: 5.0,
-    image: "https://picsum.photos/seed/pc-black/800/800",
-    description:
-      "The ultimate workstation for high-performance computing. Available in three distinct finishes.",
-    features: ["RTX 5090 Ready", "128GB DDR5", "Liquid Cooled"],
-    isNew: true,
-    colors: [
-      {
-        name: "Black",
-        hex: "#000000",
-        image: "https://picsum.photos/seed/pc-black/800/800"
-      },
-      {
-        name: "White",
-        hex: "#ffffff",
-        image: "https://picsum.photos/seed/pc-white/800/800"
-      },
-      {
-        name: "Gray",
-        hex: "#64748b",
-        image: "https://picsum.photos/seed/pc-gray/800/800"
-      }
-    ]
-  },
-  {
-    id: "1",
-    name: "Nexus Core Hub v3",
-    productCode: "NX-100",
-    family: "Central Systems",
-    price: 1299,
-    rating: 4.9,
-    image: "https://picsum.photos/seed/hub/800/800",
-    description:
-      "The ultimate central intelligence unit for your industrial ecosystem. Powered by Nexus Neural Engine.",
-    features: [
-      "AI-Driven Optimization",
-      "Real-time Analytics",
-      "Quantum Encryption"
-    ],
-    colors: [
-      {
-        name: "Titanium",
-        hex: "#475569",
-        image: "https://picsum.photos/seed/hub/800/800"
-      },
-      {
-        name: "Midnight",
-        hex: "#0f172a",
-        image: "https://picsum.photos/seed/hub-dark/800/800"
-      }
-    ]
-  },
-  {
-    id: "2",
-    name: "Neural Sensor Pack",
-    productCode: "NX-200",
-    family: "Sensors",
-    price: 499,
-    rating: 4.8,
-    image: "https://picsum.photos/seed/sensor/800/800",
-    description:
-      "High-precision environmental sensors with edge-computing capabilities for instant data processing.",
-    features: ["Ultra-low Latency", "Self-Calibrating", "IP68 Rated"],
-    isPopular: true
-  },
-  {
-    id: "3",
-    name: "Quantum Link Bridge",
-    productCode: "NX-300",
-    family: "Connectivity",
-    price: 899,
-    rating: 5.0,
-    image: "https://picsum.photos/seed/bridge/800/800",
-    description:
-      "Seamlessly bridge your legacy systems with the Nexus ecosystem using our quantum-secure gateway.",
-    features: ["Legacy Support", "Zero-Trust Security", "Auto-Scaling"]
-  },
-  {
-    id: "4",
-    name: "Nexus Vision Pro",
-    productCode: "NX-400",
-    family: "Monitoring",
-    price: 1599,
-    rating: 4.7,
-    image: "https://picsum.photos/seed/vision/800/800",
-    description:
-      "Advanced visual monitoring system with integrated AI for anomaly detection and predictive maintenance.",
-    features: ["8K Resolution", "Night Vision", "Object Tracking"],
-    isNew: true
-  },
-  {
-    id: "5",
-    name: "Eco-Pulse Monitor",
-    productCode: "NX-500",
-    family: "Sustainability",
-    price: 299,
-    rating: 4.9,
-    image: "https://picsum.photos/seed/pulse/800/800",
-    description:
-      "Track your carbon footprint and energy efficiency in real-time with the Eco-Pulse ecosystem.",
-    features: ["CO2 Tracking", "Energy Insights", "Auto-Reporting"],
-    isPopular: true
-  },
-  {
-    id: "6",
-    name: "Nexus Edge Node",
-    productCode: "NX-600",
-    family: "Computing",
-    price: 749,
-    rating: 4.6,
-    image: "https://picsum.photos/seed/node/800/800",
-    description:
-      "Decentralized computing nodes for distributed intelligence across your entire network.",
-    features: ["Edge AI", "Dynamic Mesh", "Hot-Swappable"]
-  }
+const FALLBACK_IMAGE = "https://picsum.photos/seed/nexus-product/800/800";
+
+const MAIN_CATEGORIES = [
+  "Computing",
+  "Connectivity",
+  "Sensors & Monitoring",
+  "Sustainability",
+  "Storage",
+  "Networking"
 ];
+
+const PREMIUM_TECH_LIMIT = 8;
+
+/** Map a raw ProductWrapper (Apex) to the shape expected by the page / detail view */
+function normalize(p) {
+  let features = [];
+  try {
+    const specs = JSON.parse(p.specs || "[]");
+    features = specs.slice(0, 3).map((s) => s.key || String(s));
+  } catch {
+    /* non-JSON specs — leave empty */
+  }
+
+  return {
+    id: p.productId,
+    name: p.name,
+    productCode: p.productCode || "",
+    description: p.description || "",
+    family: p.family || "",
+    price: p.unitPrice || 0,
+    rating: p.rating || 0,
+    image: p.imageUrl || FALLBACK_IMAGE,
+    features,
+    isNew: p.isNew,
+    isOutOfStock: p.isOutOfStock,
+    colors: [] // Future: populate from Colors__c relationship on Product2
+  };
+}
 
 export default class NexusLoginView extends LightningElement {
   @api pageWidth = "100%";
@@ -137,14 +53,15 @@ export default class NexusLoginView extends LightningElement {
   @track authOpen = false;
   @track authMode = "login";
 
+  @wire(getProductsWithStock, { searchTerm: "", category: "" })
+  wiredProducts;
+
   // ── Auto-redirect authenticated users to the portal ──────────────────────
   connectedCallback() {
     if (Id) {
       window.location.replace("/ss/s/customportal");
       return;
     }
-    // Auto-open password-setup modal when user arrives via welcome email link
-    // URL format: /ss/s/?mode=setpwd&t=ONE_TIME_TOKEN
     const params = new URLSearchParams(window.location.search);
     if (params.get("mode") === "setpwd") {
       this.authMode = "change-password";
@@ -165,9 +82,16 @@ export default class NexusLoginView extends LightningElement {
     return `width:${this.pageWidth};max-width:${this.pageMaxWidth};padding:${this.pagePadding};margin:0 auto;box-sizing:border-box;`;
   }
 
+  get _products() {
+    return (this.wiredProducts.data || []).map(normalize);
+  }
+
+  get isLoadingProducts() {
+    return !this.wiredProducts.data && !this.wiredProducts.error;
+  }
+
   get familyFilters() {
-    const families = ["All", ...new Set(MOCK_PRODUCTS.map((p) => p.family))];
-    return families.map((f) => ({
+    return ["All", ...MAIN_CATEGORIES].map((f) => ({
       family: f,
       label: f,
       cls:
@@ -180,13 +104,13 @@ export default class NexusLoginView extends LightningElement {
   get filteredProducts() {
     const list =
       this.selectedFamily === "All"
-        ? MOCK_PRODUCTS
-        : MOCK_PRODUCTS.filter((p) => p.family === this.selectedFamily);
-    return list.map((p) => {
+        ? this._products
+        : this._products.filter((p) => p.family === this.selectedFamily);
+    return list.slice(0, PREMIUM_TECH_LIMIT).map((p) => {
       const isFav = this.favoritedIds.includes(p.id);
       return {
         ...p,
-        priceFormatted: `$${p.price}`,
+        priceFormatted: `${(p.price || 0).toLocaleString("fr-FR")} €`,
         favCls: isFav
           ? "nlv-pcard2-heart nlv-pcard2-heart--active"
           : "nlv-pcard2-heart",
@@ -198,19 +122,17 @@ export default class NexusLoginView extends LightningElement {
   get hasProducts() {
     return this.filteredProducts.length > 0;
   }
+
   get isQuoteFormOpen() {
     return !!this.quoteProduct;
   }
+
   get favoritedProducts() {
-    return MOCK_PRODUCTS.filter((p) => this.favoritedIds.includes(p.id));
+    return this._products.filter((p) => this.favoritedIds.includes(p.id));
   }
+
   get allProducts() {
-    return MOCK_PRODUCTS;
-  }
-  get isSelectedFavorited() {
-    return this.selectedProduct
-      ? this.favoritedIds.includes(this.selectedProduct.id)
-      : false;
+    return this._products;
   }
 
   /* ── Hero scroll ── */
@@ -228,7 +150,7 @@ export default class NexusLoginView extends LightningElement {
   handleProductClick(event) {
     event.stopPropagation();
     const id = event.currentTarget.dataset.id;
-    this.selectedProduct = MOCK_PRODUCTS.find((p) => p.id === id) || null;
+    this.selectedProduct = this._products.find((p) => p.id === id) || null;
   }
 
   handleToggleFavorite(event) {
@@ -288,8 +210,10 @@ export default class NexusLoginView extends LightningElement {
   }
 
   handleDealsViewDetails(event) {
-    const product = event.detail && event.detail.product;
-    if (product) this.selectedProduct = product;
+    const raw = event.detail && event.detail.product;
+    if (!raw) return;
+    // Normalize the ProductWrapper shape to match what nexusProductDetailView expects
+    this.selectedProduct = normalize(raw);
   }
 
   /* ── Quote form ── */
@@ -297,7 +221,7 @@ export default class NexusLoginView extends LightningElement {
     this.quoteProduct = null;
   }
 
-  /* ── Auth ── opens modal directly on this page */
+  /* ── Auth ── */
   handleB2BLogin() {
     this.authMode = "login";
     this.authOpen = true;
@@ -328,9 +252,5 @@ export default class NexusLoginView extends LightningElement {
     if (this.selectedProduct && this.selectedProduct.id === id) {
       this.selectedProduct = { ...this.selectedProduct };
     }
-  }
-
-  _addToCart(product) {
-    this.dispatchEvent(new CustomEvent("addtocart", { detail: { product } }));
   }
 }

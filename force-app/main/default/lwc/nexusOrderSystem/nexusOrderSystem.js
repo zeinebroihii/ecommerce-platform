@@ -1,102 +1,5 @@
 import { LightningElement, wire, track } from "lwc";
 import getMyOrders from "@salesforce/apex/OrderManagementController.getMyOrders";
-import getInvoiceHtml from "@salesforce/apex/OrderManagementController.getInvoiceHtml";
-
-const MOCK_ORDERS = [
-  {
-    id: "ORD-2024-001",
-    date: "Today",
-    total: 4500,
-    formattedTotal: "$4,500",
-    status: "In Transit",
-    progress: 65,
-    eta: "Tomorrow, 14:00",
-    location: "Sorting Center – Paris South",
-    items: 3,
-    trackingNumber: "NX-99281-772",
-    carrier: "Nexus Express Logistics",
-    shippingAddress: "128 Innovation Blvd, Tech City, 75001 Paris",
-    history: [
-      {
-        status: "In Transit",
-        location: "Paris South Hub",
-        time: "10:30 AM",
-        description: "Package is being sorted for final delivery."
-      },
-      {
-        status: "Shipped",
-        location: "Lyon Distribution Center",
-        time: "Yesterday, 04:15 PM",
-        description: "Package has left the main warehouse."
-      },
-      {
-        status: "Processing",
-        location: "Warehouse Alpha",
-        time: "Yesterday, 09:00 AM",
-        description: "Order picked and packed."
-      }
-    ],
-    products: [
-      {
-        id: "p1",
-        name: "Nexus Core Pro",
-        quantity: 1,
-        price: 2500,
-        image: "https://picsum.photos/seed/core/400/400"
-      },
-      {
-        id: "p2",
-        name: "Edge Sensor X1",
-        quantity: 2,
-        price: 1000,
-        image: "https://picsum.photos/seed/sensor/400/400"
-      }
-    ]
-  },
-  {
-    id: "ORD-2023-098",
-    date: "March 12, 2024",
-    total: 12800,
-    formattedTotal: "$12,800",
-    status: "Delivered",
-    progress: 100,
-    eta: "Delivered March 14",
-    location: "Your Address",
-    items: 12,
-    trackingNumber: "NX-88102-115",
-    carrier: "Nexus Global Freight",
-    shippingAddress: "128 Innovation Blvd, Tech City, 75001 Paris",
-    history: [
-      {
-        status: "Delivered",
-        location: "Your Address",
-        time: "Mar 14, 02:30 PM",
-        description: "Package delivered and signed by M. Ross."
-      },
-      {
-        status: "Out for Delivery",
-        location: "Paris Central",
-        time: "Mar 14, 08:00 AM",
-        description: "Package is with the local courier."
-      },
-      {
-        status: "Arrived at Hub",
-        location: "Paris South Hub",
-        time: "Mar 13, 11:45 PM",
-        description: "Package arrived at local sorting facility."
-      }
-    ],
-    products: [
-      {
-        id: "p3",
-        name: "Industrial Gateway v2",
-        quantity: 4,
-        price: 3200,
-        image: "https://picsum.photos/seed/gateway/400/400"
-      }
-    ]
-  }
-];
 
 const STATUS_MAP = {
   Draft: { label: "Processing", progress: 20 },
@@ -208,15 +111,31 @@ export default class NexusOrderSystem extends LightningElement {
   @track _selectedOrderId = null;
   @track _showFullMap = false;
   @track _realOrders = [];
+  @track _loaded = false;
 
   @wire(getMyOrders)
   wiredOrders({ data, error }) {
-    if (data) this._realOrders = data.map(mapSfOrder);
-    if (error)
+    if (data) {
+      this._realOrders = data.map(mapSfOrder);
+      this._loaded = true;
+    }
+    if (error) {
       console.error(
         "[NexusOrderSystem] getMyOrders error:",
         JSON.stringify(error)
       );
+      this._loaded = true;
+    }
+  }
+
+  get isLoading() {
+    return !this._loaded;
+  }
+  get hasOrders() {
+    return this._loaded && this._realOrders.length > 0;
+  }
+  get isEmpty() {
+    return this._loaded && this._realOrders.length === 0;
   }
 
   _decorate(o) {
@@ -239,13 +158,12 @@ export default class NexusOrderSystem extends LightningElement {
   }
 
   get orders() {
-    // Real orders first (pinned at top), then mocks
-    return [...this._realOrders, ...MOCK_ORDERS].map((o) => this._decorate(o));
+    return this._realOrders.map((o) => this._decorate(o));
   }
 
   get selectedOrder() {
     if (!this._selectedOrderId) return null;
-    const all = [...this._realOrders, ...MOCK_ORDERS];
+    const all = [...this._realOrders];
     const o = all.find((r) => r.id === this._selectedOrderId);
     if (!o) return null;
     return {
@@ -292,35 +210,14 @@ export default class NexusOrderSystem extends LightningElement {
   }
   handleDownloadInvoice() {
     const orderId = this.selectedOrder?._sfId;
-    if (!orderId) {
-      return;
-    }
-
-    // Open window immediately (user-gesture context) to avoid popup blocker
-    const win = window.open("", "_blank");
-    if (!win) {
-      return;
-    }
-    win.document.write(
-      "<html><body style='font-family:Arial;text-align:center;padding:60px;'><p>Generating invoice\u2026</p></body></html>"
+    if (!orderId) return;
+    // Derive the Salesforce org hostname from the Experience Cloud site hostname
+    // e.g. orgname.develop.my.site.com → orgname.develop.my.salesforce.com
+    const sfHost = window.location.hostname.replace(
+      ".my.site.com",
+      ".my.salesforce.com"
     );
-
-    getInvoiceHtml({ orderId })
-      .then((html) => {
-        win.document.open();
-        win.document.write(html);
-        win.document.close();
-      })
-      .catch((err) => {
-        const msg = err?.body?.message || err?.message || JSON.stringify(err);
-        console.error("[NexusOrderSystem] invoice error:", msg);
-        win.document.open();
-        win.document.write(
-          "<html><body style='font-family:Arial;padding:40px;color:#dc2626;'><h2>Invoice Error</h2><pre style='white-space:pre-wrap;font-size:13px;'>" +
-            msg +
-            "</pre></body></html>"
-        );
-        win.document.close();
-      });
+    const url = "https://" + sfHost + "/apex/InvoiceTemplate?id=" + orderId;
+    window.open(url, "_blank");
   }
 }

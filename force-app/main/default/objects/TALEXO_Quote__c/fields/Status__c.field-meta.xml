@@ -1,27 +1,60 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Nexus CPQ — required field</description>
     <fullName>Status__c</fullName>
+    <description>Nexus CPQ — required field</description>
     <label>Status</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
-            <value><fullName>Requested</fullName><default>false</default><label
-        >Requested</label></value>
-            <value><fullName>Draft</fullName><default>true</default><label
-        >Draft</label></value>
-            <value><fullName>Sent</fullName><default>false</default><label
-        >Sent</label></value>
-            <value><fullName>Presented</fullName><default>false</default><label
-        >Presented</label></value>
-            <value><fullName>Accepted</fullName><default>false</default><label
-        >Accepted</label></value>
-            <value><fullName>Rejected</fullName><default>false</default><label
-        >Rejected</label></value>
-            <value><fullName>Signed</fullName><default>false</default><label
-        >Signed</label></value>
+            <value>
+                <fullName>Requested</fullName>
+                <default>false</default>
+                <label>Requested</label>
+            </value>
+            <value>
+                <fullName>Draft</fullName>
+                <default>true</default>
+                <label>Draft</label>
+            </value>
+            <value>
+                <fullName>Sent</fullName>
+                <default>false</default>
+                <label>Sent</label>
+            </value>
+            <value>
+                <fullName>Presented</fullName>
+                <default>false</default>
+                <label>Presented</label>
+            </value>
+            <value>
+                <fullName>Accepted</fullName>
+                <default>false</default>
+                <label>Accepted</label>
+            </value>
+            <value>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+                <label>Rejected</label>
+            </value>
+            <value>
+                <fullName>Signed</fullName>
+                <default>false</default>
+                <label>Signed</label>
+            </value>
+            <value>
+                <fullName>Expired</fullName>
+                <default>false</default>
+                <label>Expired</label>
+            </value>
+            <value>
+                <fullName>Counter Offered</fullName>
+                <default>false</default>
+                <label>Counter Offered</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

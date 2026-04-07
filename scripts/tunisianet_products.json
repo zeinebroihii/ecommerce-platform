@@ -1,0 +1,452 @@
+[
+  {
+    "product_code": "TN-001",
+    "name": "Pc Portable Lenovo IdeaPad 1 15IJL7 / Celeron N4500 / 8 Go / 256 Go SSD / Gris",
+    "price_tnd": 1029,
+    "price_eur": 312,
+    "description": "Laptop 15.6\" HD, Intel Celeron N4500, 8 Go RAM DDR4, 256 Go SSD, sans OS, coloris Gris. Idéal pour usage bureautique quotidien.",
+    "image_url": "https://www.tunisianet.com.tn/440551-home/pc-portable-lenovo-ideapad-1-15ijl7-celeron-n4500-8-go-256-go-ssd-gris.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-002",
+    "name": "Pc Portable Lenovo IdeaPad 1 15IJL7 / Celeron N4500 / 8 Go / 256 Go SSD / Windows 11 / Gris",
+    "price_tnd": 1029,
+    "price_eur": 312,
+    "description": "Laptop 15.6\" HD, Intel Celeron N4500, 8 Go RAM DDR4, 256 Go SSD, Windows 11 Home, coloris Gris.",
+    "image_url": "https://www.tunisianet.com.tn/407706-home/pc-portable-lenovo-ideapad-1-15ijl7-celeron-n4500-8-go-256-go-ssd-windows-11-gris.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-003",
+    "name": "Pc Portable BMAX MaxBook X15 Pro / N95 / 16 Go / 512 Go SSD / Windows 11 / Gris",
+    "price_tnd": 1099,
+    "price_eur": 333,
+    "description": "Laptop 15.6\" FHD IPS, Intel N95, 16 Go RAM LPDDR4, 512 Go SSD NVMe, Windows 11 Home. Rapport qualité/prix exceptionnel.",
+    "image_url": "https://www.tunisianet.com.tn/437353-home/pc-portable-bmax-maxbook-x15-pro-n95-16-go-512-go-ssd-windows-11-gris.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-004",
+    "name": "Pc Portable Lenovo V15 G2 IJL / N4500 / 8 Go / 256 Go SSD / Noir",
+    "price_tnd": 1119,
+    "price_eur": 339,
+    "description": "Laptop professionnel 15.6\" FHD, Intel Celeron N4500, 8 Go RAM DDR4, 256 Go SSD, sans lecteur optique, coloris Noir.",
+    "image_url": "https://www.tunisianet.com.tn/387482-home/pc-portable-lenovo-v15-g2-ijl-n4500-8-go-256-go-ssd-noir.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-005",
+    "name": "Pc Portable BMAX MaxBook X15 Pro / N100 / 16 Go / 512 Go SSD / Windows 11 / Gris",
+    "price_tnd": 1149,
+    "price_eur": 348,
+    "description": "Laptop 15.6\" FHD IPS, Intel N100 (4 cœurs), 16 Go RAM LPDDR4, 512 Go SSD NVMe, Windows 11 Home, WiFi 5, Bluetooth 5.",
+    "image_url": "https://www.tunisianet.com.tn/457550-home/pc-portable-bmax-maxbook-x15-pro-n100-16-go-512-go-ssd-windows-11-gris.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-006",
+    "name": "Pc Portable BMAX MaxBook X15 POWER / i3-8109U / 16 Go / 512 Go SSD / Windows 11 / Gris",
+    "price_tnd": 1299,
+    "price_eur": 394,
+    "description": "Laptop 15.6\" FHD, Intel Core i3-8109U dual-core 3 GHz, 16 Go RAM DDR4, 512 Go SSD, Windows 11 Home.",
+    "image_url": "https://www.tunisianet.com.tn/452833-home/maxbook-x15power-pc-bmax-i3-8109u-16-go-512-go-ssd-windows-11-gris.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-007",
+    "name": "Pc Portable Lenovo V15 G5 IRL / i3-1315U / 16 Go DDR5 / 512 Go SSD / Noir",
+    "price_tnd": 1699,
+    "price_eur": 515,
+    "description": "Laptop business 15.6\" FHD IPS, Intel Core i3-1315U, 16 Go RAM DDR5, 512 Go SSD NVMe, Windows 11 Home, idéal PME.",
+    "image_url": "https://www.tunisianet.com.tn/457487-home/pc-portable-lenovo-v15-g5-irl-i3-1315u-16-go-ddr5-512-go-ssd-noir.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-008",
+    "name": "Pc Portable HP ProBook 455 G9 / AMD Ryzen 5 / 8 Go",
+    "price_tnd": 1959,
+    "price_eur": 594,
+    "description": "Laptop professionnel HP ProBook 455 G9, AMD Ryzen 5, 8 Go RAM, SSD, écran 15.6\" FHD, Windows 11 Pro. Conçu pour les entreprises.",
+    "image_url": "https://www.tunisianet.com.tn/383264-home/pc-portable-hp-probook-455-g9-amd-ryzen-5-8-go.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-009",
+    "name": "Pc Portable Dell 16 / Core 5 120U / 8 Go DDR5 / 512 Go SSD / Noir",
+    "price_tnd": 1999,
+    "price_eur": 606,
+    "description": "Laptop Dell 16\", Intel Core 5 120U, 8 Go RAM DDR5, 512 Go SSD NVMe, Windows 11 Home, grand écran 16\" FHD+, design élégant.",
+    "image_url": "https://www.tunisianet.com.tn/449103-home/pc-portable-dell-16-core-5-120u-8-go-ddr5-512-go-ssd-noir.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-010",
+    "name": "Pc Portable Lenovo IdeaPad Slim 3 15IRH10 / i5-13420H / 8 Go DDR5 / 512 Go SSD / Gris",
+    "price_tnd": 2059,
+    "price_eur": 624,
+    "description": "Laptop slim 15.6\" FHD IPS, Intel Core i5-13420H 8 cœurs, 8 Go RAM DDR5, 512 Go SSD NVMe PCIe, Windows 11 Home, batterie 57 Wh.",
+    "image_url": "https://www.tunisianet.com.tn/440663-home/pc-portable-lenovo-ideapad-slim-3-15irh10-i5-13420h-8-go-ddr5-512-go-ssd-gris.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-011",
+    "name": "PC Portable ASUS ExpertBook P1 P1403CVA / Core 5 210H / 8 Go DDR5 / 512 Go SSD / Gris",
+    "price_tnd": 2099,
+    "price_eur": 636,
+    "description": "Laptop business ASUS ExpertBook 14\" FHD IPS, Intel Core 5 210H, 8 Go RAM DDR5, 512 Go SSD, MIL-STD-810H, Windows 11 Pro.",
+    "image_url": "https://www.tunisianet.com.tn/461278-home/pc-portable-asus-expertbook-p1-p1403cva-core-5-210h-8-go-ddr5-512-go-ssd-gris.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-012",
+    "name": "PC Portable Gamer HP Victus Gaming Laptop 15-fa1006nk / i5-13420H / 16 Go / 512 Go SSD / Windows 11 / Bleu",
+    "price_tnd": 2079,
+    "price_eur": 630,
+    "description": "Laptop gaming 15.6\" FHD IPS 144Hz, Intel Core i5-13420H, NVIDIA GeForce RTX, 16 Go RAM DDR4, 512 Go SSD NVMe, Windows 11.",
+    "image_url": "https://www.tunisianet.com.tn/446663-home/pc-portable-gamer-hp-victus-gaming-laptop-15-fa1006nk-i5-13420h-16-go-512-go-ssd-windows-11-bleu-.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-013",
+    "name": "Pc Portable Gamer MSI Thin 15 B13U / i5-13420H / RTX 2050 4G / 8 Go / 512 Go SSD / Gris Cosmos",
+    "price_tnd": 2229,
+    "price_eur": 676,
+    "description": "Laptop gaming MSI 15.6\" FHD 144Hz, Intel Core i5-13420H, NVIDIA GeForce RTX 2050 4 Go GDDR6, 8 Go RAM DDR5, 512 Go SSD NVMe.",
+    "image_url": "https://www.tunisianet.com.tn/398166-home/pc-portable-gamer-msi-thin-15-b13u-i5-13420h-rtx-2050-4g-8-go-512-go-ssd-gris-cosmos-.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-014",
+    "name": "PC Portable ASUS TUF Gaming A15 FA506NF / Ryzen 5 7535HS / RTX 2050 4G / 8 Go / Windows 11 / Noir",
+    "price_tnd": 2239,
+    "price_eur": 679,
+    "description": "Laptop gaming ASUS TUF 15.6\" FHD IPS 144Hz, AMD Ryzen 5 7535HS, NVIDIA RTX 2050 4 Go, 8 Go RAM DDR5, MIL-STD-810H, Windows 11.",
+    "image_url": "https://www.tunisianet.com.tn/437934-home/pc-portable-asus-tuf-gaming-a15-fa506nf-ryzen-5-7535hs-rtx-2050-4g-8-go-windows-11-noir.jpg",
+    "family": "Computers & Workstations"
+  },
+  {
+    "product_code": "TN-015",
+    "name": "Écran MSI Pro MP223 E2 21.45\" Full HD VA / 100 Hz / Noir",
+    "price_tnd": 229,
+    "price_eur": 69,
+    "description": "Moniteur 21.45\" VA Full HD 1920x1080, 100 Hz, 1 ms MPRT, HDMI + VGA, sans bord 3 côtés, certifié Eye Care. Idéal bureau.",
+    "image_url": "https://www.tunisianet.com.tn/314440-home/ecran-msi-pro-mp223-e2-2145-full-hd-va-100-hz-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-016",
+    "name": "Écran ASUS VP227HF 22\" FHD VA 100Hz 1ms MPRT HDMI/VGA",
+    "price_tnd": 239,
+    "price_eur": 72,
+    "description": "Moniteur ASUS 22\" VA Full HD, 100 Hz, 1ms MPRT, HDMI + VGA, Eye Care (flicker-free, filtre lumière bleue), design ultra-fin.",
+    "image_url": "https://www.tunisianet.com.tn/456253-home/ecran-asus-vp227hf-22-fhd-va-100hz-1ms-mprt-hdmivga-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-017",
+    "name": "Écran XIAOMI A22i EU 21.45\" FHD 75Hz VA HDMI/VGA",
+    "price_tnd": 240,
+    "price_eur": 73,
+    "description": "Moniteur Xiaomi 21.45\" VA Full HD 1920x1080, 75 Hz, temps de réponse 6 ms, entrées HDMI et VGA, flicker-free.",
+    "image_url": "https://www.tunisianet.com.tn/446072-home/ecran-xiaomi-a22i-eu-2145-fhd-75hz-va-hdmivga-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-018",
+    "name": "Écran Asus VP229HF 22\" LED Full HD IPS / 100 Hz / 1 ms / HDMI / VGA / Noir",
+    "price_tnd": 249,
+    "price_eur": 75,
+    "description": "Moniteur ASUS 22\" IPS Full HD, 100 Hz, 1 ms, HDMI + VGA, technologie Eye Care Ultra-Low Blue Light et Flicker-Free.",
+    "image_url": "https://www.tunisianet.com.tn/464030-home/ecran-asus-vp229hf-22-led-full-hd-ips-100-hz-1-ms-hdmi-vga-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-019",
+    "name": "Écran LG 22MR400 21.45\" FHD VA 100Hz 5ms HDMI/VGA",
+    "price_tnd": 255,
+    "price_eur": 77,
+    "description": "Moniteur LG 21.45\" VA Full HD 1920x1080, 100 Hz, 5 ms, HDMI + VGA, Reader Mode, flicker-safe, design slim borderless.",
+    "image_url": "https://www.tunisianet.com.tn/454918-home/ecran-lg-22mr400-2145-fhd-va-100hz-5ms-hdmivga-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-020",
+    "name": "Écran Gaming AERO AE24EFI 24\" Full HD IPS / 144 Hz / 1ms",
+    "price_tnd": 269,
+    "price_eur": 82,
+    "description": "Moniteur gaming 24\" IPS Full HD 1920x1080, 144 Hz, 1 ms, HDMI + DisplayPort, haut-parleurs intégrés, AMD FreeSync.",
+    "image_url": "https://www.tunisianet.com.tn/460748-home/ecran-gaming-aero-ae24efi-24-full-hd-ips-144-hz-1ms-hdmi-displayport-haut-parleurs-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-021",
+    "name": "Écran HP 322pv 21.5\" FHD / 100Hz 5ms GtG HDMI/VGA",
+    "price_tnd": 269,
+    "price_eur": 82,
+    "description": "Moniteur HP 21.5\" VA Full HD 1920x1080, 100 Hz, 5 ms GtG, HDMI + VGA, Eye Comfort certifié (TUV Rheinland).",
+    "image_url": "https://www.tunisianet.com.tn/456628-home/ecran-hp-322pv-215-fhd-100hz-5ms-gtg-hdmivga-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-022",
+    "name": "Écran MSI Pro MP252L 24.5\" Full HD IPS / 100 Hz",
+    "price_tnd": 279,
+    "price_eur": 85,
+    "description": "Moniteur business MSI 24.5\" IPS Full HD, 100 Hz, 1 ms MPRT, HDMI + DisplayPort, anti-reflets, certifié Eye Care Pro.",
+    "image_url": "https://www.tunisianet.com.tn/436205-home/ecran-msi-pro-mp252l-245-full-hd-ips-100-hz-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-023",
+    "name": "Disque SSD HIKSEMI WAVE(S) 2.5\" / 256 Go",
+    "price_tnd": 160,
+    "price_eur": 48,
+    "description": "SSD 2.5\" SATA III 256 Go, vitesse lecture 550 Mo/s, écriture 480 Mo/s, HIKSEMI WAVE(S), compatible laptops et desktops.",
+    "image_url": "https://www.tunisianet.com.tn/315445-home/disque-ssd-hiksemi-waves-25-256-go-ssd.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-024",
+    "name": "Disque Dur Interne SSD Verbatim Vi550 S3 256 Go 2.5\" SATA",
+    "price_tnd": 159,
+    "price_eur": 48,
+    "description": "SSD 2.5\" SATA III 256 Go Verbatim Vi550 S3, vitesse séquentielle lecture 560 Mo/s, écriture 460 Mo/s, garantie 3 ans.",
+    "image_url": "https://www.tunisianet.com.tn/175465-home/disque-ssd-interne-verbatim-vi550-s3-256-go-25-sata.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-025",
+    "name": "Disque Dur Interne SSD Verbatim Vi3000 PCIe NVMe M.2 / 256 Go",
+    "price_tnd": 169,
+    "price_eur": 51,
+    "description": "SSD M.2 2280 NVMe PCIe Gen 3 256 Go Verbatim Vi3000, lecture 3300 Mo/s, écriture 1200 Mo/s, format compact pour laptops.",
+    "image_url": "https://www.tunisianet.com.tn/451999-home/disque-dur-interne-ssd-verbatim-vi3000-pcie-nvme-m2-256-go.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-026",
+    "name": "Disque Dur Interne SSD PNY CS900 / 250 Go",
+    "price_tnd": 185,
+    "price_eur": 56,
+    "description": "SSD 2.5\" SATA III 250 Go PNY CS900, lecture 550 Mo/s, écriture 500 Mo/s, faible consommation, plug & play.",
+    "image_url": "https://www.tunisianet.com.tn/461617-home/disque-dur-interne-ssd-pny-cs900-250-go.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-027",
+    "name": "Disque Dur Interne SSD M.2 NVMe PCIe PNY CS1030 / 250 Go",
+    "price_tnd": 195,
+    "price_eur": 59,
+    "description": "SSD M.2 NVMe PCIe 3.0 x4 250 Go PNY CS1030, lecture 1700 Mo/s, écriture 1050 Mo/s, format M.2 2280, ultra-rapide.",
+    "image_url": "https://www.tunisianet.com.tn/460749-home/disque-dur-interne-ssd-m2-nvme-pcie-pny-cs1030-250-go.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-028",
+    "name": "Disque Dur Interne Seagate Barracuda 1 To",
+    "price_tnd": 229,
+    "price_eur": 69,
+    "description": "Disque dur interne 3.5\" HDD 1 To Seagate Barracuda, 7200 RPM, cache 256 Mo, SATA 6 Gb/s, fiable pour bureau/NAS.",
+    "image_url": "https://www.tunisianet.com.tn/454519-home/disque-dur-interne-seagate-barracuda-1-to.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-029",
+    "name": "Disque Dur Interne 3.5\" Seagate Barracuda 2 To",
+    "price_tnd": 509,
+    "price_eur": 154,
+    "description": "Disque dur interne 3.5\" HDD 2 To Seagate Barracuda, 7200 RPM, cache 256 Mo, SATA 6 Gb/s, idéal stockage bulk.",
+    "image_url": "https://www.tunisianet.com.tn/112112-home/disque-dur-interne-35-seagate-barracuda-2-to.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-030",
+    "name": "Disque Dur Externe ADATA ASD600Q USB 3.2 / 512 Go",
+    "price_tnd": 249,
+    "price_eur": 75,
+    "description": "SSD externe ADATA 512 Go USB 3.2 Gen 1, lecture 440 Mo/s, résistant aux chocs, compact, USB-A + adaptateur USB-C.",
+    "image_url": "https://www.tunisianet.com.tn/353738-home/disque-dur-externe-adata-asd600q-usb-32-512-go-noir.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-031",
+    "name": "Disque Dur Externe Toshiba Canvio Basics / 1 To / USB 3.2",
+    "price_tnd": 259,
+    "price_eur": 79,
+    "description": "Disque dur externe portable Toshiba 1 To USB 3.2, format 2.5\", plug & play, compatible Windows/Mac, coloris noir.",
+    "image_url": "https://www.tunisianet.com.tn/396999-home/disque-dur-externe-toshiba-canvio-basics-1-to-usb-32-noir.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-032",
+    "name": "Disque Dur Externe ADATA Anti-Choc HD330 USB 3.2 / 1 To / Noir",
+    "price_tnd": 369,
+    "price_eur": 112,
+    "description": "Disque dur externe renforcé ADATA HD330 1 To USB 3.2, protection anti-choc IP68, résistant à l'eau et poussière.",
+    "image_url": "https://www.tunisianet.com.tn/110749-home/disque-dur-externe-adata-anti-choc-hd330-usb-32-1-to-noir.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-033",
+    "name": "Disque SSD Externe Lenovo PS6 / 2 To",
+    "price_tnd": 629,
+    "price_eur": 191,
+    "description": "SSD externe Lenovo PS6 2 To USB 3.2 Gen 1, lecture 400 Mo/s, compact et léger, design aluminium, connexion USB-C.",
+    "image_url": "https://www.tunisianet.com.tn/354800-home/disque-ssd-externe-lenovo-ps6-2tb-usb-32-gen-1-port.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-034",
+    "name": "Disque Dur Externe Seagate One Touch Hub 8 To",
+    "price_tnd": 1009,
+    "price_eur": 306,
+    "description": "Disque dur externe de bureau Seagate One Touch Hub 8 To USB 3.0, hub USB intégré (2 ports USB-A), sauvegarde automatique.",
+    "image_url": "https://www.tunisianet.com.tn/279887-home/disque-dur-externe-seagate-one-touch-hub-8-to-usb-30.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-035",
+    "name": "Clé USB Hiksemi Twister M200S 16 Go / USB 3.0",
+    "price_tnd": 12,
+    "price_eur": 4,
+    "description": "Clé USB 3.0 rotative Hiksemi M200S 16 Go, lecture 60 Mo/s, corps en aluminium brossé, sans capuchon, compact.",
+    "image_url": "https://www.tunisianet.com.tn/149862-home/cle-usb-hiksemi-twister-m200s-16-go.jpg",
+    "family": "Storage"
+  },
+  {
+    "product_code": "TN-036",
+    "name": "Disque Dur Interne Surveillance WD Purple 8 To 3.5\"",
+    "price_tnd": 1269,
+    "price_eur": 385,
+    "description": "Disque dur 3.5\" WD Purple 8 To dédié vidéosurveillance, 5640 RPM, AllFrame AI, compatible NVR, 7/24h.",
+    "image_url": "https://www.tunisianet.com.tn/428349-home/disque-dur-interne-35-pour-video-surveillance-western-digital-purple-8tb.jpg",
+    "family": "Hardware & Servers"
+  },
+  {
+    "product_code": "TN-037",
+    "name": "Carte Graphique Gigabyte GeForce GT 710 / 2 Go GDDR3",
+    "price_tnd": 169,
+    "price_eur": 51,
+    "description": "Carte graphique d'entrée de gamme Gigabyte GT 710 2 Go GDDR3, sortie HDMI + DVI + VGA, faible consommation 25W, passif.",
+    "image_url": "https://www.tunisianet.com.tn/189628-home/carte-graphique-gigabyte-geforce-gt-710-2-go-gddr3.jpg",
+    "family": "Hardware & Servers"
+  },
+  {
+    "product_code": "TN-038",
+    "name": "Carte Graphique MSI GeForce GT 710 LP / 2 Go DDR3",
+    "price_tnd": 179,
+    "price_eur": 54,
+    "description": "Carte graphique MSI GT 710 Low Profile 2 Go DDR3, HDMI + DVI + VGA, refroidissement passif silencieux, petit facteur de forme.",
+    "image_url": "https://www.tunisianet.com.tn/358905-home/carte-graphique-msi-geforce-gt-710-lp-2-go-ddr3.jpg",
+    "family": "Hardware & Servers"
+  },
+  {
+    "product_code": "TN-039",
+    "name": "Carte Graphique ASUS Dual GeForce RTX 3050 OC / 6 Go GDDR6",
+    "price_tnd": 799,
+    "price_eur": 242,
+    "description": "Carte graphique ASUS Dual RTX 3050 OC 6 Go GDDR6, HDMI 2.1 + DisplayPort 1.4a, GPU Tweak III, ventilateurs Axial-tech.",
+    "image_url": "https://www.tunisianet.com.tn/457651-home/carte-graphique-asus-dual-geforce-rtx-3050-oc-6-go-gddr6.jpg",
+    "family": "Hardware & Servers"
+  },
+  {
+    "product_code": "TN-040",
+    "name": "Carte Graphique MSI GeForce RTX 3050 VENTUS 2X XS OC / 8 Go GDDR6",
+    "price_tnd": 899,
+    "price_eur": 272,
+    "description": "Carte graphique MSI RTX 3050 8 Go GDDR6, architecture NVIDIA Ampere, DLSS 2.0, Ray Tracing, 2x DisplayPort + HDMI.",
+    "image_url": "https://www.tunisianet.com.tn/322148-home/carte-graphique-msi-geforce-rtx-3050-ventus-2x-xs-oc-8-go-gddr6.jpg",
+    "family": "Hardware & Servers"
+  },
+  {
+    "product_code": "TN-041",
+    "name": "Carte Graphique Gigabyte GeForce RTX 5050 WINDFORCE OC / 8 Go GDDR6",
+    "price_tnd": 1019,
+    "price_eur": 309,
+    "description": "Carte graphique Gigabyte RTX 5050 8 Go GDDR6, WINDFORCE 2X, DLSS 4, Ray Tracing 4e gen, HDMI 2.1 + 2x DisplayPort 2.1.",
+    "image_url": "https://www.tunisianet.com.tn/454286-home/carte-graphique-gigabyte-geforce-rtx-5050-windforce-oc-8-go-gddr6.jpg",
+    "family": "Hardware & Servers"
+  },
+  {
+    "product_code": "TN-042",
+    "name": "Carte Graphique INNO3D GeForce RTX 5060 TWIN X2 / 8 Go GDDR7",
+    "price_tnd": 1119,
+    "price_eur": 339,
+    "description": "Carte graphique INNO3D RTX 5060 8 Go GDDR7, architecture Blackwell, DLSS 4 Multi Frame Generation, PCIe 5.0 x8.",
+    "image_url": "https://www.tunisianet.com.tn/452985-home/carte-graphique-inno3d-geforce-rtx-5060-twin-x2-8-go-gddr7.jpg",
+    "family": "Hardware & Servers"
+  },
+  {
+    "product_code": "TN-043",
+    "name": "Clavier USB Logitech K120 / Azerty",
+    "price_tnd": 26,
+    "price_eur": 8,
+    "description": "Clavier filaire Logitech K120 AZERTY, USB, touches confortables silencieuses, résistant aux éclaboussures, plug & play.",
+    "image_url": "https://www.tunisianet.com.tn/100813-home/clavier-usb-logitech-k120-azerty.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-044",
+    "name": "Clavier Filaire STAR WAVE KB1028 / Noir",
+    "price_tnd": 11,
+    "price_eur": 3,
+    "description": "Clavier filaire multimédia Star Wave KB1028, AZERTY, USB, touches multimédia intégrées, design ergonomique, noir.",
+    "image_url": "https://www.tunisianet.com.tn/376862-home/clavier-filaire-star-wave-kb1028-noir.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-045",
+    "name": "Souris Optique USB HAVIT MS4217 RGB",
+    "price_tnd": 4,
+    "price_eur": 1,
+    "description": "Souris filaire optique Havit MS4217 RGB, USB, résolution 1200 DPI, rétroéclairage RGB, 3 boutons, ergonomique.",
+    "image_url": "https://www.tunisianet.com.tn/350380-home/souris-optique-usb-havit-ms4217-rgb.jpg",
+    "family": "Peripherals"
+  },
+  {
+    "product_code": "TN-046",
+    "name": "Switch D-Link 8 Ports Fast Ethernet 10/100Mbps Unmanaged",
+    "price_tnd": 33,
+    "price_eur": 10,
+    "description": "Switch réseau D-Link 8 ports Fast Ethernet 10/100 Mbps non géré, plug & play, boîtier compact, idéal PME/SOHO.",
+    "image_url": "https://www.tunisianet.com.tn/114755-home/switch-d-link-8-ports-fast-ethernet-10100mbps-unmanaged.jpg",
+    "family": "Networking"
+  },
+  {
+    "product_code": "TN-047",
+    "name": "Routeur sans fil Xiaomi 4A / Blanc",
+    "price_tnd": 89,
+    "price_eur": 27,
+    "description": "Routeur WiFi Xiaomi 4A dual-band 2.4 GHz + 5 GHz, 300 + 867 Mbps, 2 antennes omnidirectionnelles, MU-MIMO, app Mi Home.",
+    "image_url": "https://www.tunisianet.com.tn/228188-home/routeur-sans-fil-xiaomi-4a-blanc.jpg",
+    "family": "Networking"
+  },
+  {
+    "product_code": "TN-048",
+    "name": "Point d'accès TP-Link 300 Mbps 2 Antennes TL-WA801ND",
+    "price_tnd": 85,
+    "price_eur": 26,
+    "description": "Point d'accès WiFi TP-Link TL-WA801ND 300 Mbps 2.4 GHz, 2 antennes amovibles 5 dBi, multi-modes (AP/Client/Bridge/Repeater).",
+    "image_url": "https://www.tunisianet.com.tn/189316-home/point-d-acces-tp-link-300-mbps-2-antennes-tl-wa801nd.jpg",
+    "family": "Networking"
+  },
+  {
+    "product_code": "TN-049",
+    "name": "Switch Aruba PoE+ Instant On 1930 48 Ports 370W JL686A",
+    "price_tnd": 3529,
+    "price_eur": 1069,
+    "description": "Switch manageable HPE Aruba Instant On 1930 48 ports Gigabit PoE+ 370W + 4 SFP+, L2+, idéal infrastructure d'entreprise.",
+    "image_url": "https://www.tunisianet.com.tn/208317-home/switch-aruba-poe-instant-on-1930-48-ports-370w.jpg",
+    "family": "Networking"
+  },
+  {
+    "product_code": "TN-050",
+    "name": "Switch TP-Link TL-SG3452P L2+ 52 Ports Gigabit PoE+",
+    "price_tnd": 3039,
+    "price_eur": 921,
+    "description": "Switch manageable TP-Link JetStream L2+ 52 ports : 48x Gigabit PoE+ (384W) + 4x SFP+, VLAN, QoS, LACP, rack 1U.",
+    "image_url": "https://www.tunisianet.com.tn/361438-home/switch-administrable-tp-link-tl-sg3452p-l2-52-ports-gigabit-avec-48-ports-poe.jpg",
+    "family": "Networking"
+  }
+]

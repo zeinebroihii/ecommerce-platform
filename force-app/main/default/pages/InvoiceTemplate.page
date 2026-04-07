@@ -1,4 +1,4 @@
-<!-- InvoiceTemplate.page — Nexus Commerce PDF Invoice -->
+<!-- InvoiceTemplate.page — Nexus v7 single-page compact -->
 <apex:page
   controller="InvoiceController"
   renderAs="pdf"
@@ -8,528 +8,677 @@
 >
   <head>
     <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
       body {
         font-family: Arial, Helvetica, sans-serif;
-        font-size: 11px;
-        color: #1e293b;
-        background: #fff;
+        font-size: 9px;
+        color: #0f172a;
+        background: #ffffff;
+        margin: 0;
+        padding: 0;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      td,
+      th {
         padding: 0;
         margin: 0;
       }
 
-      /* ── HEADER ── */
-      .inv-header {
+      .lbl {
+        font-size: 7px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+      }
+      .val {
+        font-size: 10px;
+        font-weight: bold;
+        color: #0f172a;
+      }
+
+      /* LOGO */
+      .logo-n {
         background-color: #0f172a;
-        padding: 32px 40px 28px 40px;
-        overflow: hidden;
-      }
-      .inv-brand {
-        float: left;
-      }
-      .inv-logo-wrap {
-        overflow: hidden;
-        margin-bottom: 10px;
-      }
-      .inv-logo-box {
-        float: left;
-        width: 44px;
-        height: 44px;
-        background-color: #4f46e5;
-        border-radius: 10px;
+        width: 38px;
+        height: 38px;
         text-align: center;
-        font-size: 22px;
-        font-weight: 900;
-        color: #ffffff;
-        line-height: 44px;
-        margin-right: 12px;
-      }
-      .inv-brand-text {
-        float: left;
-        padding-top: 4px;
-      }
-      .inv-brand-title {
+        vertical-align: middle;
         font-size: 18px;
-        font-weight: 900;
-        color: #ffffff;
-        letter-spacing: -0.02em;
+        font-weight: bold;
+        color: #34d399;
+      }
+      .logo-name {
+        font-size: 18px;
+        font-weight: bold;
+        font-style: italic;
+        text-transform: uppercase;
+        color: #0f172a;
         line-height: 1.1;
+        letter-spacing: -1px;
       }
-      .inv-brand-sub {
-        font-size: 8px;
-        font-weight: 700;
-        color: #64748b;
+      .logo-sub {
+        font-size: 6px;
+        font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.15em;
-        margin-top: 2px;
+        letter-spacing: 2px;
+        color: #059669;
+        margin-top: 1px;
       }
-      .inv-brand-addr {
-        font-size: 9px;
-        color: #64748b;
-        line-height: 1.7;
-        clear: both;
-        padding-top: 6px;
-      }
-      .inv-meta {
-        float: right;
-        text-align: right;
-      }
-      .inv-meta-label {
-        font-size: 28px;
-        font-weight: 900;
-        color: #ffffff;
-        letter-spacing: 0.1em;
-      }
-      .inv-meta-number {
-        font-size: 13px;
-        font-weight: 700;
-        color: #818cf8;
-        margin-top: 6px;
-      }
-      .inv-meta-row {
-        font-size: 9px;
-        color: #94a3b8;
-        margin-top: 4px;
-      }
-      .inv-meta-row strong {
-        color: #cbd5e1;
-      }
-      .inv-status-badge {
-        display: inline-block;
-        margin-top: 10px;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 8px;
-        font-weight: 900;
+
+      .inv-title {
+        font-size: 36px;
+        font-weight: bold;
+        font-style: italic;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        background-color: #312e81;
-        color: #a5b4fc;
+        color: #0f172a;
+        line-height: 1;
+        letter-spacing: -2px;
       }
-
-      /* Accent bars */
-      .inv-bar-indigo {
-        height: 4px;
-        background-color: #4f46e5;
-      }
-      .inv-bar-emerald {
-        height: 2px;
-        background-color: #10b981;
-      }
-
-      /* ── BODY ── */
-      .inv-body {
-        padding: 28px 40px;
-      }
-
-      /* Info row */
-      .inv-info-row {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 14px 18px;
-        margin-bottom: 24px;
-        overflow: hidden;
-      }
-      .inv-info-cell {
-        float: left;
-        width: 25%;
-      }
-      .inv-info-lbl {
+      .badge {
+        background-color: #dcfce7;
+        color: #166534;
         font-size: 7px;
-        font-weight: 900;
+        font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: #94a3b8;
-        margin-bottom: 4px;
+        letter-spacing: 1px;
+        padding: 3px 10px;
       }
-      .inv-info-val {
-        font-size: 11px;
-        font-weight: 700;
+
+      .from-name {
+        font-size: 10px;
+        font-weight: bold;
         color: #0f172a;
       }
-      .inv-info-val-indigo {
-        font-size: 11px;
-        font-weight: 700;
-        color: #4f46e5;
-      }
-      .inv-info-val-green {
-        font-size: 11px;
-        font-weight: 700;
-        color: #10b981;
+      .addr-line {
+        font-size: 8px;
+        font-weight: bold;
+        color: #64748b;
+        line-height: 1.8;
       }
 
-      /* Addresses */
-      .inv-addresses {
-        overflow: hidden;
-        margin-bottom: 24px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #e2e8f0;
-      }
-      .inv-addr-left {
-        float: left;
-        width: 48%;
-      }
-      .inv-addr-right {
-        float: right;
-        width: 48%;
-      }
-      .inv-addr-eyebrow {
+      .bill-lbl {
         font-size: 7px;
-        font-weight: 900;
+        font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.18em;
-        color: #4f46e5;
-        margin-bottom: 8px;
-        border-bottom: 2px solid #4f46e5;
-        padding-bottom: 4px;
-        display: block;
-      }
-      .inv-addr-name {
-        font-size: 13px;
-        font-weight: 900;
-        color: #0f172a;
+        letter-spacing: 1px;
+        color: #94a3b8;
         margin-bottom: 5px;
       }
-      .inv-addr-line {
+      .bill-name {
         font-size: 10px;
-        color: #64748b;
-        line-height: 1.9;
+        font-weight: bold;
+        color: #0f172a;
+        margin-bottom: 3px;
       }
-
-      /* Section title */
-      .inv-section-title {
-        font-size: 7px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: #94a3b8;
-        margin-bottom: 8px;
-      }
-
-      /* Items table */
-      table.inv-items {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      table.inv-items thead tr {
-        background-color: #0f172a;
-      }
-      table.inv-items thead th {
-        padding: 10px 12px;
+      .bill-addr {
         font-size: 8px;
-        font-weight: 900;
+        font-weight: bold;
+        color: #64748b;
+        line-height: 1.75;
+      }
+
+      .th {
+        font-size: 7px;
+        font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 1px;
         color: #94a3b8;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #0f172a;
         text-align: left;
       }
-      table.inv-items thead th.r {
+      .th-r {
         text-align: right;
       }
-      table.inv-items tbody tr {
-        border-bottom: 1px solid #f1f5f9;
+      .th-c {
+        text-align: center;
       }
-      table.inv-items tbody tr.even {
-        background-color: #f8fafc;
-      }
-      table.inv-items tbody td {
-        padding: 11px 12px;
+
+      .item-name {
         font-size: 10px;
-        color: #334155;
-      }
-      table.inv-items tbody td.r {
-        text-align: right;
-        font-weight: 700;
+        font-weight: bold;
         color: #0f172a;
       }
-      .inv-prod-name {
-        font-size: 11px;
-        font-weight: 700;
-        color: #0f172a;
-      }
-      .inv-prod-cat {
-        font-size: 8px;
+      .item-sku {
+        font-size: 6px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
         color: #94a3b8;
         margin-top: 2px;
       }
-      .inv-qty-pill {
-        background: #ede9fe;
-        color: #4f46e5;
+      .qty-box {
+        background-color: #f1f5f9;
+        color: #0f172a;
         padding: 2px 8px;
-        border-radius: 20px;
         font-size: 9px;
-        font-weight: 900;
+        font-weight: bold;
       }
 
-      /* Totals */
-      .inv-totals-outer {
-        overflow: hidden;
-        margin-top: 20px;
-      }
-      .inv-totals-right {
-        float: right;
-        width: 46%;
-      }
-      table.inv-totals {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      table.inv-totals td {
-        padding: 6px 2px;
+      .td-r {
+        text-align: right;
+        font-weight: bold;
+        color: #0f172a;
         font-size: 10px;
+      }
+      .td-m {
+        text-align: right;
+        font-weight: bold;
         color: #64748b;
+        font-size: 10px;
       }
-      table.inv-totals td.lbl {
-        text-align: left;
-      }
-      table.inv-totals td.amt {
-        text-align: right;
-        font-weight: 700;
-        color: #334155;
-      }
-      table.inv-totals td.sparks-lbl {
-        color: #7c3aed;
-        font-weight: 700;
-      }
-      table.inv-totals td.sparks-amt {
-        text-align: right;
-        font-weight: 900;
-        color: #10b981;
-      }
-      table.inv-totals td.divider-cell {
-        border-top: 2px solid #0f172a;
-        padding-top: 10px;
-      }
-      table.inv-totals td.grand-lbl {
-        font-size: 13px;
-        font-weight: 900;
-        color: #0f172a;
-        border-top: 2px solid #0f172a;
-        padding-top: 10px;
-      }
-      table.inv-totals td.grand-amt {
-        font-size: 20px;
-        font-weight: 900;
-        color: #4f46e5;
-        text-align: right;
-        letter-spacing: -0.02em;
-        border-top: 2px solid #0f172a;
-        padding-top: 10px;
+      .td-c {
+        text-align: center;
       }
 
-      /* Footer */
-      .inv-footer {
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-        padding: 18px 40px;
-        overflow: hidden;
-        margin-top: 36px;
+      .pay-box {
+        background-color: #ecfdf5;
+        padding: 10px 12px;
       }
-      .inv-footer-left {
-        float: left;
+      .pay-title {
+        font-size: 7px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #14532d;
+        margin-bottom: 3px;
       }
-      .inv-footer-right {
-        float: right;
+      .pay-text {
+        font-size: 8px;
+        font-weight: bold;
+        color: #166534;
+        line-height: 1.6;
+      }
+
+      .tot-lbl {
+        font-size: 7px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+        padding: 4px 0;
+      }
+      .tot-amt {
         text-align: right;
-      }
-      .inv-thanks {
-        font-size: 12px;
-        font-weight: 900;
+        font-weight: bold;
         color: #0f172a;
-        margin-bottom: 4px;
-      }
-      .inv-footer-note {
-        font-size: 8px;
-        color: #94a3b8;
-        line-height: 1.7;
-      }
-      .inv-footer-brand {
+        padding: 4px 0;
         font-size: 10px;
-        font-weight: 900;
-        color: #4f46e5;
-        margin-bottom: 4px;
       }
-      .inv-footer-contact {
+      .tot-free {
+        text-align: right;
+        font-weight: bold;
+        font-style: italic;
+        color: #059669;
+        padding: 4px 0;
+        font-size: 10px;
+      }
+
+      .due-lbl {
         font-size: 8px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #0f172a;
+      }
+      .due-sub {
+        font-size: 7px;
+        font-weight: bold;
         color: #94a3b8;
+        margin-top: 2px;
+      }
+      .due-num {
+        font-size: 24px;
+        font-weight: bold;
+        font-style: italic;
+        color: #0f172a;
+        text-align: right;
+        line-height: 1;
+        letter-spacing: -1px;
+      }
+
+      .ft-bg {
+        background-color: #ffffff;
+      }
+      .ft-brand {
+        font-size: 12px;
+        font-weight: bold;
+        font-style: italic;
+        text-transform: uppercase;
+        color: #0f172a;
+        letter-spacing: -1px;
+      }
+      .ft-note {
+        font-size: 7px;
+        font-weight: bold;
+        color: #64748b;
         line-height: 1.7;
+      }
+      .ft-hl {
+        color: #0f172a;
+      }
+      .ft-link {
+        color: #059669;
+      }
+      .ft-clbl {
+        font-size: 6px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #94a3b8;
+        margin-bottom: 5px;
+      }
+      .ft-cval {
+        font-size: 8px;
+        font-weight: bold;
+        color: #475569;
+        line-height: 1.8;
+      }
+      .ft-copy {
+        font-size: 6px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+      }
+      .ft-links {
+        font-size: 6px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+        text-align: right;
       }
     </style>
   </head>
   <body>
+    <!-- TOP BAR -->
+    <table width="100%">
+      <tr>
+        <td
+          width="30%"
+          style="height: 8px; background-color: #0f172a; font-size: 1px"
+        >
+          &#160;
+        </td>
+        <td
+          width="40%"
+          style="height: 8px; background-color: #059669; font-size: 1px"
+        >
+          &#160;
+        </td>
+        <td
+          width="30%"
+          style="height: 8px; background-color: #0f172a; font-size: 1px"
+        >
+          &#160;
+        </td>
+      </tr>
+    </table>
+
     <!-- HEADER -->
-    <div class="inv-header">
-      <div class="inv-brand">
-        <div class="inv-logo-wrap">
-          <div class="inv-logo-box">N</div>
-          <div class="inv-brand-text">
-            <div class="inv-brand-title">NEXUS</div>
-            <div class="inv-brand-sub">Commerce Platform</div>
-          </div>
-        </div>
-        <div class="inv-brand-addr">
-          12 Innovation Drive, Paris, France 75001<br />
-          support@nexus-commerce.com &nbsp;·&nbsp; nexus-commerce.com
-        </div>
-      </div>
-      <div class="inv-meta">
-        <div class="inv-meta-label">INVOICE</div>
-        <div class="inv-meta-number">INV-{!ord.OrderNumber}</div>
-        <div class="inv-meta-row"><strong>Date:</strong> {!formattedDate}</div>
-        <div class="inv-meta-row">
-          <strong>Order #:</strong> {!ord.OrderNumber}
-        </div>
-        <div class="inv-status-badge">{!ord.Status}</div>
-      </div>
-    </div>
-
-    <div class="inv-bar-indigo"></div>
-    <div class="inv-bar-emerald"></div>
-
-    <!-- BODY -->
-    <div class="inv-body">
-      <!-- Order info strip -->
-      <div class="inv-info-row">
-        <div class="inv-info-cell">
-          <div class="inv-info-lbl">Invoice Number</div>
-          <div class="inv-info-val-indigo">INV-{!ord.OrderNumber}</div>
-        </div>
-        <div class="inv-info-cell">
-          <div class="inv-info-lbl">Issue Date</div>
-          <div class="inv-info-val">{!formattedDate}</div>
-        </div>
-        <div class="inv-info-cell">
-          <div class="inv-info-lbl">Order Status</div>
-          <div class="inv-info-val">{!ord.Status}</div>
-        </div>
-        <div class="inv-info-cell">
-          <div class="inv-info-lbl">Payment</div>
-          <div class="inv-info-val-green">Confirmed ✓</div>
-        </div>
-      </div>
-
-      <!-- Addresses -->
-      <div class="inv-addresses">
-        <div class="inv-addr-left">
-          <span class="inv-addr-eyebrow">Billed To</span>
-          <div class="inv-addr-name">{!ord.Account.Name}</div>
-          <div class="inv-addr-line">
-            {!ord.Account.BillingStreet}<br /> {!ord.Account.BillingCity},
-            {!ord.Account.BillingState}<br />
-            {!ord.Account.BillingPostalCode} — {!ord.Account.BillingCountry}
-          </div>
-        </div>
-        <div class="inv-addr-right">
-          <span class="inv-addr-eyebrow">Shipped To</span>
-          <div class="inv-addr-name">{!ord.Account.Name}</div>
-          <div class="inv-addr-line">
-            {!ord.Shipping_Street__c}<br /> {!ord.Shipping_City__c},
-            {!ord.Shipping_State__c}<br />
-            {!ord.Shipping_Zip__c} — {!ord.Shipping_Country__c}
-          </div>
-        </div>
-      </div>
-
-      <!-- Line Items -->
-      <div class="inv-section-title">Order Items</div>
-      <table class="inv-items">
-        <thead>
-          <tr>
-            <th style="width: 42%">Product</th>
-            <th style="width: 20%">Category</th>
-            <th class="r" style="width: 10%">Qty</th>
-            <th class="r" style="width: 14%">Unit Price</th>
-            <th class="r" style="width: 14%">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <apex:repeat value="{!ord.OrderItems}" var="item">
+    <table width="100%">
+      <tr>
+        <td width="36" style="font-size: 1px">&#160;</td>
+        <td style="padding-top: 28px; padding-bottom: 22px">
+          <table width="100%">
             <tr>
-              <td>
-                <div class="inv-prod-name">{!item.Product2.Name}</div>
-                <div class="inv-prod-cat">{!item.Product2.Family}</div>
+              <!-- LEFT -->
+              <td width="44%" style="vertical-align: top; padding-right: 16px">
+                <!-- Logo -->
+                <table style="margin-bottom: 16px">
+                  <tr>
+                    <td class="logo-n" style="width: 38px; height: 38px">N</td>
+                    <td style="padding-left: 8px; vertical-align: middle">
+                      <div class="logo-name">Nexus</div>
+                      <div class="logo-sub">Commerce</div>
+                    </td>
+                  </tr>
+                </table>
+                <!-- From -->
+                <div class="lbl" style="margin-bottom: 4px">From</div>
+                <div class="from-name">Nexus Commerce SAS</div>
+                <div class="addr-line" style="margin-top: 2px">
+                  12 Innovation Drive, Paris, France 75001
+                </div>
+                <div class="addr-line">
+                  support@nexus-commerce.com &#160;·&#160; nexus-commerce.com
+                </div>
               </td>
-              <td style="color: #94a3b8; font-size: 10px">
-                {!item.Product2.Family}
-              </td>
-              <td class="r">
-                <span class="inv-qty-pill">{!item.Quantity}</span>
-              </td>
-              <td class="r">
-                <apex:outputText value="{0,number,#,##0.00}">
-                  <apex:param value="{!item.UnitPrice}" />
-                </apex:outputText>
-                €
-              </td>
-              <td class="r">
-                <apex:outputText value="{0,number,#,##0.00}">
-                  <apex:param value="{!item.TotalPrice}" />
-                </apex:outputText>
-                €
-              </td>
-            </tr>
-          </apex:repeat>
-        </tbody>
-      </table>
 
-      <!-- Totals -->
-      <div class="inv-totals-outer">
-        <div class="inv-totals-right">
-          <table class="inv-totals">
-            <tr>
-              <td class="lbl">Subtotal</td>
-              <td class="amt">
-                <apex:outputText value="{0,number,#,##0.00}">
-                  <apex:param value="{!subtotal}" />
-                </apex:outputText>
-                €
-              </td>
-            </tr>
-            <tr>
-              <td class="lbl">Shipping</td>
-              <td class="amt">{!formattedShipping}</td>
-            </tr>
-            <apex:outputPanel rendered="{!hasSparksDiscount}" layout="none">
-              <tr>
-                <td class="lbl sparks-lbl">&#x2736; Sparks Discount</td>
-                <td class="amt sparks-amt">
-                  -<apex:outputText value="{0,number,#,##0.00}">
-                    <apex:param value="{!sparksDiscount}" />
-                  </apex:outputText>
-                  €
-                </td>
-              </tr>
-            </apex:outputPanel>
-            <tr>
-              <td class="grand-lbl">Grand Total</td>
-              <td class="grand-amt">
-                <apex:outputText value="{0,number,#,##0.00}">
-                  <apex:param value="{!ord.TotalAmount}" />
-                </apex:outputText>
-                €
+              <!-- RIGHT -->
+              <td width="56%" style="vertical-align: top; text-align: right">
+                <div class="inv-title">Invoice</div>
+                <div style="margin-top: 6px; margin-bottom: 14px">
+                  <span class="badge">&#10003; Paid</span>
+                </div>
+                <div class="lbl" style="margin-bottom: 2px">Invoice Number</div>
+                <div class="val" style="margin-bottom: 8px">
+                  INV-{!ord.OrderNumber}
+                </div>
+                <div class="lbl" style="margin-bottom: 2px">Date of Issue</div>
+                <div class="val" style="margin-bottom: 8px">
+                  {!formattedDate}
+                </div>
+                <div class="lbl" style="margin-bottom: 2px">
+                  Order Reference
+                </div>
+                <div class="val">#{!ord.OrderNumber}</div>
               </td>
             </tr>
           </table>
-        </div>
-      </div>
-    </div>
+        </td>
+        <td width="36" style="font-size: 1px">&#160;</td>
+      </tr>
+    </table>
+
+    <!-- BILL TO / SHIP TO -->
+    <table width="100%">
+      <tr>
+        <td width="36" style="font-size: 1px">&#160;</td>
+        <td>
+          <table
+            width="100%"
+            style="background-color: #f8fafc; border: 1px solid #e2e8f0"
+          >
+            <tr>
+              <td
+                width="50%"
+                style="vertical-align: top; padding: 16px 16px 16px 18px"
+              >
+                <div class="bill-lbl">Bill To</div>
+                <div class="bill-name">{!ord.Account.Name}</div>
+                <div class="bill-addr">
+                  {!ord.Account.BillingStreet}<br />
+                  {!ord.Account.BillingCity}<apex:outputPanel
+                    rendered="{!NOT(ISBLANK(ord.Account.BillingState))}"
+                    >, {!ord.Account.BillingState}</apex:outputPanel
+                  >
+                  &#160; {!ord.Account.BillingPostalCode}<apex:outputPanel
+                    rendered="{!NOT(ISBLANK(ord.Account.BillingCountry))}"
+                    >, {!ord.Account.BillingCountry}</apex:outputPanel
+                  >
+                </div>
+              </td>
+              <td
+                width="50%"
+                style="
+                  vertical-align: top;
+                  padding: 16px 18px 16px 16px;
+                  border-left: 1px solid #e2e8f0;
+                "
+              >
+                <div class="bill-lbl">Ship To</div>
+                <div class="bill-name">{!ord.Account.Name}</div>
+                <div class="bill-addr">
+                  {!ord.Shipping_Street__c}<br />
+                  {!ord.Shipping_City__c}<apex:outputPanel
+                    rendered="{!NOT(ISBLANK(ord.Shipping_State__c))}"
+                    >, {!ord.Shipping_State__c}</apex:outputPanel
+                  >
+                  &#160; {!ord.Shipping_Zip__c}<apex:outputPanel
+                    rendered="{!NOT(ISBLANK(ord.Shipping_Country__c))}"
+                    >, {!ord.Shipping_Country__c}</apex:outputPanel
+                  >
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td width="36" style="font-size: 1px">&#160;</td>
+      </tr>
+    </table>
+
+    <!-- LINE ITEMS -->
+    <table width="100%" style="margin-top: 22px">
+      <tr>
+        <td width="36" style="font-size: 1px">&#160;</td>
+        <td>
+          <table width="100%">
+            <thead>
+              <tr>
+                <th class="th" width="46%" style="padding-right: 10px">
+                  Description
+                </th>
+                <th class="th th-c" width="12%">Qty</th>
+                <th class="th th-r" width="21%">Unit Price</th>
+                <th class="th th-r" width="21%">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <apex:repeat value="{!ord.OrderItems}" var="item">
+                <tr>
+                  <td
+                    style="
+                      padding: 11px 10px 11px 0;
+                      border-bottom: 1px solid #f1f5f9;
+                      vertical-align: middle;
+                    "
+                  >
+                    <div class="item-name">{!item.Product2.Name}</div>
+                    <div class="item-sku">
+                      SKU: {!item.Product2.ProductCode}
+                    </div>
+                  </td>
+                  <td
+                    class="td-c"
+                    style="
+                      padding: 11px 0;
+                      border-bottom: 1px solid #f1f5f9;
+                      vertical-align: middle;
+                    "
+                  >
+                    <span class="qty-box">{!item.Quantity}</span>
+                  </td>
+                  <td
+                    class="td-m"
+                    style="
+                      padding: 11px 0;
+                      border-bottom: 1px solid #f1f5f9;
+                      vertical-align: middle;
+                    "
+                  >
+                    <apex:outputText value="{0,number,#,##0.00}"
+                      ><apex:param value="{!item.UnitPrice}"
+                    /></apex:outputText>
+                    &#8364;
+                  </td>
+                  <td
+                    class="td-r"
+                    style="
+                      padding: 11px 0;
+                      border-bottom: 1px solid #f1f5f9;
+                      vertical-align: middle;
+                    "
+                  >
+                    <apex:outputText value="{0,number,#,##0.00}"
+                      ><apex:param value="{!item.TotalPrice}"
+                    /></apex:outputText>
+                    &#8364;
+                  </td>
+                </tr>
+              </apex:repeat>
+            </tbody>
+          </table>
+        </td>
+        <td width="36" style="font-size: 1px">&#160;</td>
+      </tr>
+    </table>
+
+    <!-- SUMMARY -->
+    <table width="100%" style="margin-top: 20px; border-top: 2px solid #f1f5f9">
+      <tr>
+        <td width="36" style="font-size: 1px">&#160;</td>
+        <td style="padding-top: 18px">
+          <table width="100%">
+            <tr>
+              <!-- left: payment box + notes -->
+              <td width="46%" style="vertical-align: top; padding-right: 20px">
+                <div class="pay-box" style="margin-bottom: 14px">
+                  <div class="pay-title">&#10003; Payment Status</div>
+                  <div class="pay-text">
+                    Payment confirmed &#8212; no further action required.
+                  </div>
+                </div>
+                <div class="lbl" style="margin-bottom: 5px">Notes</div>
+                <div class="addr-line">
+                  Payment due within 30 days. Late payments subject to 1.5%
+                  monthly interest. Ref: INV-{!ord.OrderNumber}
+                </div>
+              </td>
+
+              <!-- right: totals -->
+              <td width="46%" style="vertical-align: top">
+                <table width="100%">
+                  <tr>
+                    <td class="tot-lbl">Subtotal</td>
+                    <td class="tot-amt">
+                      <apex:outputText value="{0,number,#,##0.00}"
+                        ><apex:param value="{!subtotal}"
+                      /></apex:outputText>
+                      &#8364;
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tot-lbl">Shipping</td>
+                    <td class="tot-free">Free</td>
+                  </tr>
+                  <tr>
+                    <td class="tot-lbl">VAT (B2B exempt)</td>
+                    <td class="tot-amt">&#8212;</td>
+                  </tr>
+                  <apex:outputPanel
+                    rendered="{!hasSparksDiscount}"
+                    layout="none"
+                  >
+                    <tr>
+                      <td class="tot-lbl" style="color: #7c3aed">
+                        &#x2736; Sparks
+                      </td>
+                      <td
+                        class="tot-amt"
+                        style="color: #10b981; text-align: right"
+                      >
+                        -<apex:outputText value="{0,number,#,##0.00}"
+                          ><apex:param value="{!sparksDiscount}"
+                        /></apex:outputText>
+                        &#8364;
+                      </td>
+                    </tr>
+                  </apex:outputPanel>
+                </table>
+                <table
+                  width="100%"
+                  style="margin-top: 6px; border-top: 2px solid #0f172a"
+                >
+                  <tr>
+                    <td style="vertical-align: top; padding-top: 10px">
+                      <div class="due-lbl">Amount Due</div>
+                      <div class="due-sub">Due {!formattedDate}</div>
+                    </td>
+                    <td
+                      class="due-num"
+                      style="padding-top: 10px; vertical-align: middle"
+                    >
+                      <apex:outputText value="{0,number,#,##0.00}"
+                        ><apex:param value="{!ord.TotalAmount}"
+                      /></apex:outputText>
+                      &#8364;
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td width="36" style="font-size: 1px">&#160;</td>
+      </tr>
+    </table>
 
     <!-- FOOTER -->
-    <div class="inv-footer">
-      <div class="inv-footer-left">
-        <div class="inv-thanks">Thank you for your business!</div>
-        <div class="inv-footer-note">
-          This is an automatically generated invoice. Please retain it for your
-          records.<br />
-          Payment confirmed — no further action required.
-        </div>
-      </div>
-      <div class="inv-footer-right">
-        <div class="inv-footer-brand">NEXUS COMMERCE</div>
-        <div class="inv-footer-contact">
-          support@nexus-commerce.com<br /> 12 Innovation Drive, Paris 75001<br />
-          nexus-commerce.com
-        </div>
-      </div>
-    </div>
+    <table
+      width="100%"
+      style="
+        margin-top: 28px;
+        background-color: #ffffff;
+        border-top: 2px solid #e2e8f0;
+      "
+    >
+      <tr>
+        <td width="36" style="font-size: 1px">&#160;</td>
+        <td style="padding: 22px 0 18px">
+          <!-- brand row with N logo -->
+          <table style="margin-bottom: 10px">
+            <tr>
+              <td
+                style="
+                  background-color: #0f172a;
+                  width: 28px;
+                  height: 28px;
+                  text-align: center;
+                  vertical-align: middle;
+                  font-size: 13px;
+                  font-weight: bold;
+                  color: #34d399;
+                  padding: 0;
+                "
+              >
+                N
+              </td>
+              <td
+                style="padding-left: 8px; vertical-align: middle"
+                class="ft-brand"
+              >
+                Nexus Commerce SAS
+              </td>
+            </tr>
+          </table>
+
+          <div class="ft-note" style="margin-bottom: 16px">
+            Please reference
+            <span class="ft-hl">INV-{!ord.OrderNumber}</span> in all
+            correspondence. For billing enquiries:
+            <span class="ft-link">support@nexus-commerce.com</span>
+          </div>
+
+          <table width="100%" style="margin-bottom: 18px">
+            <tr>
+              <td width="33%" style="vertical-align: top">
+                <div class="ft-clbl">Address</div>
+                <div class="ft-cval">
+                  12 Innovation Drive<br />Paris, France 75001
+                </div>
+              </td>
+              <td width="33%" style="vertical-align: top">
+                <div class="ft-clbl">Tax Info</div>
+                <div class="ft-cval">
+                  VAT: FR00 000 000 000<br />SIRET: 123 456 789 00012
+                </div>
+              </td>
+              <td width="34%">&#160;</td>
+            </tr>
+          </table>
+
+          <table width="100%" style="border-top: 1px solid #1e293b">
+            <tr>
+              <td style="padding-top: 10px" class="ft-copy">
+                &#169; 2026 Nexus Commerce. All rights reserved.
+              </td>
+              <td style="padding-top: 10px" class="ft-links">
+                Terms of Service&#160;&#160;&#160;Privacy Policy
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td width="36" style="font-size: 1px">&#160;</td>
+      </tr>
+    </table>
   </body>
 </apex:page>

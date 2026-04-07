@@ -1,262 +1,420 @@
 <template>
-    <div class="nlv-page" style={pageStyle}>
+  <div class="nlv-page" style={pageStyle}>
+    <!-- ══ 1. Hero ══════════════════════════════════════════════════════ -->
+    <c-nexus-hero onexploretriggered={handleScrollProducts}></c-nexus-hero>
 
-        <!-- ══ 1. Hero ══════════════════════════════════════════════════════ -->
-        <c-nexus-hero onexploretriggered={handleScrollProducts}></c-nexus-hero>
+    <!-- ══ 2. About ═════════════════════════════════════════════════════ -->
+    <c-nexus-about></c-nexus-about>
 
-        <!-- ══ 2. About ═════════════════════════════════════════════════════ -->
-        <c-nexus-about></c-nexus-about>
+    <!-- ══ 3. Journey ═══════════════════════════════════════════════════ -->
+    <c-nexus-journey></c-nexus-journey>
 
-        <!-- ══ 3. Journey ═══════════════════════════════════════════════════ -->
-        <c-nexus-journey></c-nexus-journey>
+    <!-- ══ 3b. Deals Section ════════════════════════════════════════════ -->
+    <c-nexus-deals-section
+      onaddtocart={handleDealsAddToCart}
+      onviewdetails={handleDealsViewDetails}
+    >
+    </c-nexus-deals-section>
 
-        <!-- ══ 3b. Deals Section ════════════════════════════════════════════ -->
-        <c-nexus-deals-section
-            onaddtocart={handleDealsAddToCart}
-            onviewdetails={handleDealsViewDetails}>
-        </c-nexus-deals-section>
-
-        <!-- ══ 4. Products ══════════════════════════════════════════════════ -->
-        <section class="nlv-products" id="products-section">
-            <div class="nlv-products-container">
-
-                <!-- header + filter pills -->
-                <div class="nlv-products-head">
-                    <div class="nlv-products-headleft">
-                        <div class="nlv-products-eyebrow">
-                            <div class="nlv-products-eyebrow-line"></div>
-                            Nexus Collection
-                        </div>
-                        <h2 class="nlv-products-title">
-                            PREMIUM <span class="nlv-products-title-grad">TECH</span>
-                        </h2>
-                    </div>
-                    <div class="nlv-family-pills">
-                        <template for:each={familyFilters} for:item="f">
-                            <button key={f.family} class={f.cls}
-                                    onclick={handleFamilyFilter} data-family={f.family}>
-                                {f.label}
-                            </button>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- grid -->
-                <div class="nlv-products-grid">
-                    <template for:each={filteredProducts} for:item="product">
-                        <div key={product.id} class="nlv-pcard2">
-
-                            <!-- Image Section -->
-                            <div class="nlv-pcard2-img-wrap">
-                                <img src={product.image} alt={product.name} class="nlv-pcard2-img" referrerpolicy="no-referrer"/>
-                                <div class="nlv-pcard2-img-overlay"></div>
-
-                                <!-- Top-left: Family badge + Active Node -->
-                                <div class="nlv-pcard2-badges-tl">
-                                    <span class="nlv-pcard2-family-badge">{product.family}</span>
-                                    <div class="nlv-pcard2-active-node">
-                                        <span class="nlv-pcard2-active-dot"></span>
-                                        Active Node
-                                    </div>
-                                </div>
-
-                                <!-- Top-right: Heart + Zap (slide in from right on hover) -->
-                                <div class="nlv-pcard2-actions-tr">
-                                    <button class={product.favCls} onclick={handleToggleFavorite}
-                                            data-id={product.id} aria-label="Toggle favourite">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill={product.favFill} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                                        </svg>
-                                    </button>
-                                    <button class="nlv-pcard2-zap-btn" aria-label="Quick view">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                <!-- Bottom-right: Detail arrow (slides up on hover) -->
-                                <button class="nlv-pcard2-detail-btn" onclick={handleProductClick}
-                                        data-id={product.id} aria-label="View details">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </button>
-
-                                <!-- Bottom-left: Price tag (slides up on hover) -->
-                                <div class="nlv-pcard2-price-tag">
-                                    <span class="nlv-pcard2-price-label">MSRP</span>
-                                    <span class="nlv-pcard2-price-val">{product.priceFormatted}</span>
-                                </div>
-                            </div>
-
-                            <!-- Content Section -->
-                            <div class="nlv-pcard2-content">
-                                <div class="nlv-pcard2-meta-row">
-                                    <div class="nlv-pcard2-stars">
-                                        <span class="nlv-pcard2-star">&#9733;</span>
-                                        <span class="nlv-pcard2-star">&#9733;</span>
-                                        <span class="nlv-pcard2-star">&#9733;</span>
-                                        <span class="nlv-pcard2-star">&#9733;</span>
-                                        <span class="nlv-pcard2-star">&#9733;</span>
-                                        <span class="nlv-pcard2-rating-num">4.9</span>
-                                    </div>
-                                    <span class="nlv-pcard2-code">ID: {product.productCode}</span>
-                                </div>
-
-                                <h4 class="nlv-pcard2-name">{product.name}</h4>
-                                <p class="nlv-pcard2-desc">{product.description}</p>
-
-                                <div class="nlv-pcard2-footer">
-                                    <div class="nlv-pcard2-verified">
-                                        <div class="nlv-pcard2-verified-row">
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                                <polyline points="9 12 11 14 15 10"/>
-                                            </svg>
-                                            <span class="nlv-pcard2-verified-text">Nexus Verified</span>
-                                        </div>
-                                        <span class="nlv-pcard2-enterprise-text">Enterprise Ready</span>
-                                    </div>
-                                    <button class="nlv-pcard2-cart-btn" onclick={handleAddToCart}
-                                            data-id={product.id} aria-label="Add to cart">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                                            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.97-1.67L21 6H6"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-
-                        </div>
-                    </template>
-
-                    <template if:false={hasProducts}>
-                        <div class="nlv-no-products">No products found.</div>
-                    </template>
-                </div>
-
+    <!-- ══ 4. Products ══════════════════════════════════════════════════ -->
+    <section class="nlv-products" id="products-section">
+      <div class="nlv-products-container">
+        <!-- header + filter pills -->
+        <div class="nlv-products-head">
+          <div class="nlv-products-headleft">
+            <div class="nlv-products-eyebrow">
+              <div class="nlv-products-eyebrow-line"></div>
+              Nexus Collection
             </div>
-        </section>
+            <h2 class="nlv-products-title">
+              PREMIUM <span class="nlv-products-title-grad">TECH</span>
+            </h2>
+          </div>
+          <div class="nlv-family-pills">
+            <template for:each={familyFilters} for:item="f">
+              <button
+                key={f.family}
+                class={f.cls}
+                onclick={handleFamilyFilter}
+                data-family={f.family}
+              >
+                {f.label}
+              </button>
+            </template>
+          </div>
+        </div>
 
-        <!-- ══ 4b2. Product Categories ══════════════════════════════════════ -->
-        <c-nexus-categories-section></c-nexus-categories-section>
+        <!-- grid -->
+        <div class="nlv-products-grid">
+          <template if:true={isLoadingProducts}>
+            <div class="nlv-pcard2-skeleton"></div>
+            <div class="nlv-pcard2-skeleton"></div>
+            <div class="nlv-pcard2-skeleton"></div>
+          </template>
+          <template for:each={filteredProducts} for:item="product">
+            <div key={product.id} class="nlv-pcard2">
+              <!-- Image Section -->
+              <div class="nlv-pcard2-img-wrap">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  class="nlv-pcard2-img"
+                  referrerpolicy="no-referrer"
+                />
+                <div class="nlv-pcard2-img-overlay"></div>
 
-        <!-- ══ 4b. Product Detail View (full-page) ═══════════════════════════ -->
-        <template if:true={selectedProduct}>
-            <c-nexus-product-detail-view
-                product={selectedProduct}
-                favorites={favoritedProducts}
-                all-products={allProducts}
-                onclose={handleModalClose}
-                onaddtocart={handleModalAddToCart}
-                ontogglefavorite={handleModalToggleFavorite}
-                onviewproduct={handleDetailViewProduct}
-                onrequireauth={handleDetailRequireAuth}
-                onquoterequest={handleDetailQuoteRequest}>
-            </c-nexus-product-detail-view>
-        </template>
-
-        <!-- ══ 4c. B2B Quote Form ═════════════════════════════════════════════ -->
-        <template if:true={isQuoteFormOpen}>
-            <c-nexus-b2-b-quote-form
-                product={quoteProduct}
-                onclose={handleQuoteFormClose}>
-            </c-nexus-b2-b-quote-form>
-        </template>
-
-        <!-- ══ 5. Identifiez-vous ════════════════════════════════════════════ -->
-        <section class="login-select-section" id="login-section">
-            <div class="login-select-header">
-                <div class="login-select-eyebrow">
-                    <div class="login-select-eyebrow-line"></div>
-                    Access Portal
+                <!-- Top-left: Family badge + Active Node -->
+                <div class="nlv-pcard2-badges-tl">
+                  <span class="nlv-pcard2-family-badge">{product.family}</span>
+                  <div class="nlv-pcard2-active-node">
+                    <span class="nlv-pcard2-active-dot"></span>
+                    Active Node
+                  </div>
                 </div>
-                <h2 class="login-select-title">
-                    JOIN<br/>
-                    <span class="login-select-title-grad">THE ECOSYSTEM</span>
-                </h2>
-                <p class="login-select-sub">Choisissez votre profil pour acc&eacute;der &agrave; votre espace personnalis&eacute;.</p>
+
+                <!-- Top-right: Heart + Zap (slide in from right on hover) -->
+                <div class="nlv-pcard2-actions-tr">
+                  <button
+                    class={product.favCls}
+                    onclick={handleToggleFavorite}
+                    data-id={product.id}
+                    aria-label="Toggle favourite"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill={product.favFill}
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+                      />
+                    </svg>
+                  </button>
+                  <button class="nlv-pcard2-zap-btn" aria-label="Quick view">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polygon
+                        points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Bottom-right: Detail arrow (slides up on hover) -->
+                <button
+                  class="nlv-pcard2-detail-btn"
+                  onclick={handleProductClick}
+                  data-id={product.id}
+                  aria-label="View details"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                <!-- Bottom-left: Price tag (slides up on hover) -->
+                <div class="nlv-pcard2-price-tag">
+                  <span class="nlv-pcard2-price-label">MSRP</span>
+                  <span class="nlv-pcard2-price-val"
+                    >{product.priceFormatted}</span
+                  >
+                </div>
+              </div>
+
+              <!-- Content Section -->
+              <div class="nlv-pcard2-content">
+                <div class="nlv-pcard2-meta-row">
+                  <div class="nlv-pcard2-stars">
+                    <span class="nlv-pcard2-star">&#9733;</span>
+                    <span class="nlv-pcard2-star">&#9733;</span>
+                    <span class="nlv-pcard2-star">&#9733;</span>
+                    <span class="nlv-pcard2-star">&#9733;</span>
+                    <span class="nlv-pcard2-star">&#9733;</span>
+                    <span class="nlv-pcard2-rating-num">4.9</span>
+                  </div>
+                  <span class="nlv-pcard2-code">ID: {product.productCode}</span>
+                </div>
+
+                <h4 class="nlv-pcard2-name">{product.name}</h4>
+                <p class="nlv-pcard2-desc">{product.description}</p>
+
+                <div class="nlv-pcard2-footer">
+                  <div class="nlv-pcard2-verified">
+                    <div class="nlv-pcard2-verified-row">
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#4f46e5"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <polyline points="9 12 11 14 15 10" />
+                      </svg>
+                      <span class="nlv-pcard2-verified-text"
+                        >Nexus Verified</span
+                      >
+                    </div>
+                    <span class="nlv-pcard2-enterprise-text"
+                      >Enterprise Ready</span
+                    >
+                  </div>
+                  <button
+                    class="nlv-pcard2-cart-btn"
+                    onclick={handleAddToCart}
+                    data-id={product.id}
+                    aria-label="Add to cart"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="9" cy="21" r="1" />
+                      <circle cx="20" cy="21" r="1" />
+                      <path
+                        d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.97-1.67L21 6H6"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
+          </template>
 
-            <div class="login-select-grid">
-                <!-- B2B -->
-                <div class="login-card login-card-b2b">
-                    <div class="login-card-icon login-icon-indigo">
-                        <lightning-icon icon-name="utility:company" size="medium"></lightning-icon>
-                    </div>
-                    <h3 class="login-card-title">Entreprise (B2B)</h3>
-                    <p class="login-card-desc">
-                        Acc&eacute;dez aux tarifs de gros, g&eacute;rez vos commandes complexes et suivez vos devis en temps r&eacute;el.
-                    </p>
-                    <div class="login-card-actions">
-                        <button class="login-btn login-btn-indigo" onclick={handleB2BLogin}>
-                            Se Connecter &rarr;
-                        </button>
-                        <button class="login-btn login-btn-outline" onclick={handleB2BRegister}>
-                            Enregistrer l&apos;entreprise
-                        </button>
-                    </div>
-                    <div class="login-card-blob login-blob-indigo"></div>
-                </div>
+          <template if:false={hasProducts}>
+            <div class="nlv-no-products">No products found.</div>
+          </template>
+        </div>
+      </div>
+    </section>
 
-                <!-- B2C -->
-                <div class="login-card login-card-b2c">
-                    <div class="login-card-icon login-icon-emerald">
-                        <lightning-icon icon-name="utility:user" size="medium"></lightning-icon>
-                    </div>
-                    <h3 class="login-card-title">Particulier (B2C)</h3>
-                    <p class="login-card-desc">
-                        Achat direct, suivi de commande instantan&eacute; et activation imm&eacute;diate de votre compte.
-                    </p>
-                    <div class="login-card-actions">
-                        <button class="login-btn login-btn-emerald" onclick={handleB2CLogin}>
-                            Se Connecter &rarr;
-                        </button>
-                        <button class="login-btn login-btn-outline" onclick={handleB2CRegister}>
-                            Cr&eacute;er un compte
-                        </button>
-                    </div>
-                    <div class="login-card-blob login-blob-emerald"></div>
-                </div>
-            </div>
-        </section>
+    <!-- ══ 4b2. Product Categories ══════════════════════════════════════ -->
+    <c-nexus-categories-section></c-nexus-categories-section>
 
-        <!-- ══ Auth Modal (owned by this page for login-section triggers) ════ -->
-        <c-nexus-auth-modal
-            is-open={authOpen}
-            initial-mode={authMode}
-            onmodalclose={handleAuthClose}>
-        </c-nexus-auth-modal>
+    <!-- ══ 4b. Product Detail View (full-page) ═══════════════════════════ -->
+    <template if:true={selectedProduct}>
+      <c-nexus-product-detail-view
+        product={selectedProduct}
+        favorites={favoritedProducts}
+        all-products={allProducts}
+        onclose={handleModalClose}
+        onaddtocart={handleModalAddToCart}
+        ontogglefavorite={handleModalToggleFavorite}
+        onviewproduct={handleDetailViewProduct}
+        onrequireauth={handleDetailRequireAuth}
+        onquoterequest={handleDetailQuoteRequest}
+      >
+      </c-nexus-product-detail-view>
+    </template>
 
-        <!-- ══ 6. Reviews ═══════════════════════════════════════════════════ -->
-        <c-nexus-reviews></c-nexus-reviews>
+    <!-- ══ 4c. B2B Quote Form ═════════════════════════════════════════════ -->
+    <template if:true={isQuoteFormOpen}>
+      <c-nexus-b2-b-quote-form
+        product={quoteProduct}
+        onclose={handleQuoteFormClose}
+      >
+      </c-nexus-b2-b-quote-form>
+    </template>
 
-        <!-- ══ 7. FAQ ════════════════════════════════════════════════════════ -->
-        <c-nexus-f-a-q></c-nexus-f-a-q>
+    <!-- ══ 5. Identifiez-vous ════════════════════════════════════════════ -->
+    <section class="login-select-section" id="login-section">
+      <div class="login-select-header">
+        <div class="login-select-eyebrow">
+          <div class="login-select-eyebrow-line"></div>
+          Access Portal
+        </div>
+        <h2 class="login-select-title">
+          JOIN<br />
+          <span class="login-select-title-grad">THE ECOSYSTEM</span>
+        </h2>
+        <p class="login-select-sub">
+          Choose your profile to access your personalized space.
+        </p>
+      </div>
 
-        <!-- ══ 8. Trust logos ════════════════════════════════════════════════ -->
-        <section class="nlv-trust">
+      <div class="login-select-grid">
+        <!-- B2B -->
+        <div class="login-card login-card-b2b">
+          <div class="login-card-icon login-icon-indigo">
+            <lightning-icon
+              icon-name="utility:company"
+              size="medium"
+            ></lightning-icon>
+          </div>
+          <h3 class="login-card-title">Business (B2B)</h3>
+          <p class="login-card-desc">
+            Access wholesale pricing, manage complex orders, and track your
+            quotes in real time.
+          </p>
+          <div class="login-card-actions">
+            <button class="login-btn login-btn-indigo" onclick={handleB2BLogin}>
+              Sign In &rarr;
+            </button>
+            <button
+              class="login-btn login-btn-outline"
+              onclick={handleB2BRegister}
+            >
+              Register Company
+            </button>
+          </div>
+          <div class="login-card-blob login-blob-indigo"></div>
+        </div>
 
-            <div class="nlv-trust-inner">
-                <div class="nlv-trust-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    <span>GLOBAL</span>
-                </div>
-                <div class="nlv-trust-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
-                    <span>LOGISTICS</span>
-                </div>
-                <div class="nlv-trust-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    <span>ENERGY</span>
-                </div>
-                <div class="nlv-trust-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-                    <span>SECURE</span>
-                </div>
-            </div>
-        </section>
+        <!-- B2C -->
+        <div class="login-card login-card-b2c">
+          <div class="login-card-icon login-icon-emerald">
+            <lightning-icon
+              icon-name="utility:user"
+              size="medium"
+            ></lightning-icon>
+          </div>
+          <h3 class="login-card-title">Individual (B2C)</h3>
+          <p class="login-card-desc">
+            Direct purchase, instant order tracking, and immediate account
+            activation.
+          </p>
+          <div class="login-card-actions">
+            <button
+              class="login-btn login-btn-emerald"
+              onclick={handleB2CLogin}
+            >
+              Sign In &rarr;
+            </button>
+            <button
+              class="login-btn login-btn-outline"
+              onclick={handleB2CRegister}
+            >
+              Create Account
+            </button>
+          </div>
+          <div class="login-card-blob login-blob-emerald"></div>
+        </div>
+      </div>
+    </section>
 
-    </div>
+    <!-- ══ Auth Modal (owned by this page for login-section triggers) ════ -->
+    <c-nexus-auth-modal
+      is-open={authOpen}
+      initial-mode={authMode}
+      onmodalclose={handleAuthClose}
+    >
+    </c-nexus-auth-modal>
+
+    <!-- ══ 6. Reviews ═══════════════════════════════════════════════════ -->
+    <c-nexus-reviews></c-nexus-reviews>
+
+    <!-- ══ 7. FAQ ════════════════════════════════════════════════════════ -->
+    <c-nexus-f-a-q></c-nexus-f-a-q>
+
+    <!-- ══ 8. Trust logos ════════════════════════════════════════════════ -->
+    <section class="nlv-trust">
+      <div class="nlv-trust-inner">
+        <div class="nlv-trust-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path
+              d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+            />
+          </svg>
+          <span>GLOBAL</span>
+        </div>
+        <div class="nlv-trust-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M16.5 9.4 7.55 4.24" />
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+            />
+            <polyline points="3.29 7 12 12 20.71 7" />
+            <line x1="12" y1="22" x2="12" y2="12" />
+          </svg>
+          <span>LOGISTICS</span>
+        </div>
+        <div class="nlv-trust-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          <span>ENERGY</span>
+        </div>
+        <div class="nlv-trust-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <polyline points="9 12 11 14 15 10" />
+          </svg>
+          <span>SECURE</span>
+        </div>
+      </div>
+    </section>
+  </div>
 </template>

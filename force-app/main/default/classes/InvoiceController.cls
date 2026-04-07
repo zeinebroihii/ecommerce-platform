@@ -1,4 +1,4 @@
-public with sharing class InvoiceController {
+public without sharing class InvoiceController {
   public Order ord { get; private set; }
   public String formattedDate { get; private set; }
   public Decimal subtotal { get; private set; }
@@ -41,7 +41,13 @@ public with sharing class InvoiceController {
         Shipping_Amount__c,
         Sparks_Discount__c,
         (
-          SELECT Product2.Name, Product2.Family, Quantity, UnitPrice, TotalPrice
+          SELECT
+            Product2.Name,
+            Product2.Family,
+            Product2.ProductCode,
+            Quantity,
+            UnitPrice,
+            TotalPrice
           FROM OrderItems
         )
       FROM Order

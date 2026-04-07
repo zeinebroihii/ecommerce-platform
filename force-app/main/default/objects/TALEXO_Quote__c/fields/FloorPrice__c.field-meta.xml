@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FloorPrice__c</fullName>
+    <description
+  >Minimum acceptable price set by admin when sending the quote. The auto-negotiation engine uses this to evaluate customer counters: auto-accept if above floor, auto-counter if within 15%, auto-reject if too low.</description>
+    <label>Floor Price</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

@@ -1,0 +1,563 @@
+<template>
+  <div class="nswr-wrap">
+    <!-- ── Actions row ───────────────────────────────────────────────────── -->
+    <div class="nswr-actions-row">
+      <button
+        class="nswr-refresh-btn"
+        onclick={handleRefresh}
+        disabled={isLoading}
+      >
+        <lightning-icon
+          icon-name="utility:refresh"
+          size="x-small"
+        ></lightning-icon>
+        <span>Refresh</span>
+      </button>
+      <button
+        class="nswr-run-btn"
+        onclick={handleRunEngine}
+        disabled={isRunning}
+      >
+        <lightning-icon
+          icon-name="utility:apex"
+          size="x-small"
+          variant="inverse"
+        ></lightning-icon>
+        <span>{runBtnLabel}</span>
+      </button>
+    </div>
+
+    <!-- ── Summary Cards ───────────────────────────────────────────────────── -->
+    <div class="nswr-summary-row">
+      <div
+        class="nswr-sum-card nswr-sum-critical"
+        onclick={handleFilterCritical}
+      >
+        <div class="nswr-sum-num">{summary.critical}</div>
+        <div class="nswr-sum-label">Critical</div>
+        <div class="nswr-sum-sub">≤ 3 days left</div>
+      </div>
+      <div class="nswr-sum-card nswr-sum-atrisk" onclick={handleFilterAtRisk}>
+        <div class="nswr-sum-num">{summary.atRisk}</div>
+        <div class="nswr-sum-label">At Risk</div>
+        <div class="nswr-sum-sub">≤ 14 days left</div>
+      </div>
+      <div class="nswr-sum-card nswr-sum-healthy" onclick={handleFilterHealthy}>
+        <div class="nswr-sum-num">{summary.healthy}</div>
+        <div class="nswr-sum-label">Healthy</div>
+        <div class="nswr-sum-sub">Good supply</div>
+      </div>
+      <div
+        class="nswr-sum-card nswr-sum-overstock"
+        onclick={handleFilterOverstock}
+      >
+        <div class="nswr-sum-num">{summary.overstock}</div>
+        <div class="nswr-sum-label">Overstock</div>
+        <div class="nswr-sum-sub">Run promotions</div>
+      </div>
+    </div>
+
+    <!-- ── Filter Bar ──────────────────────────────────────────────────────── -->
+    <div class="nswr-filter-bar">
+      <template for:each={filterOptions} for:item="f">
+        <button
+          key={f.value}
+          class={f.cls}
+          data-value={f.value}
+          onclick={handleFilterClick}
+        >
+          {f.label}
+        </button>
+      </template>
+      <select class="nswr-select" onchange={handleCategoryFilter}>
+        <template for:each={categoryOptions} for:item="opt">
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        </template>
+      </select>
+      <select class="nswr-select" onchange={handleSubcategoryFilter}>
+        <template for:each={subcategoryOptions} for:item="opt">
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        </template>
+      </select>
+      <input
+        type="text"
+        class="nswr-search"
+        placeholder="Search products..."
+        onkeyup={handleSearch}
+        value={searchTerm}
+      />
+    </div>
+
+    <!-- ── Loading ─────────────────────────────────────────────────────────── -->
+    <template if:true={isLoading}>
+      <div class="nswr-loading">
+        <lightning-spinner
+          alternative-text="Loading"
+          size="medium"
+        ></lightning-spinner>
+        <p>Analysing stock data...</p>
+      </div>
+    </template>
+
+    <!-- ── Empty State ─────────────────────────────────────────────────────── -->
+    <template if:true={isEmpty}>
+      <div class="nswr-empty">
+        <lightning-icon
+          icon-name="utility:inventory"
+          size="large"
+        ></lightning-icon>
+        <p>No stock records found. Run the engine to analyse your inventory.</p>
+        <button class="nswr-run-btn" onclick={handleRunEngine}>
+          Run Engine Now
+        </button>
+      </div>
+    </template>
+
+    <!-- ── Stock Table ─────────────────────────────────────────────────────── -->
+    <template if:true={hasItems}>
+      <div class="nswr-table-wrap">
+        <table class="nswr-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Stock</th>
+              <th>Velocity</th>
+              <th>Days Left</th>
+              <th>Quotes at Risk</th>
+              <th>AI Insight</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template for:each={filteredItems} for:item="item">
+              <tr key={item.stockId} class={item.rowCls}>
+                <td>
+                  <div class="nswr-product-cell">
+                    <span class={item.riskDot}></span>
+                    <div>
+                      <div class="nswr-product-name">{item.productName}</div>
+                      <div class="nswr-product-family">
+                        {item.productFamily}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="nswr-stock-cell">
+                    <span class="nswr-stock-num">{item.stockLevel}</span>
+                    <span class="nswr-stock-unit">units</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="nswr-velocity">{item.velocityLabel}</span>
+                </td>
+                <td>
+                  <span class={item.daysBadgeCls}>{item.daysLabel}</span>
+                </td>
+                <td>
+                  <template if:true={item.hasQuotes}>
+                    <button
+                      class="nswr-quotes-btn"
+                      data-id={item.productId}
+                      onclick={handleViewQuotes}
+                    >
+                      {item.relatedQuoteCount} quotes
+                      <span class="nswr-quotes-val"
+                        >{item.quoteValueLabel}</span
+                      >
+                    </button>
+                  </template>
+                  <template if:false={item.hasQuotes}>
+                    <span class="nswr-no-quotes">—</span>
+                  </template>
+                </td>
+                <td>
+                  <template if:true={item.aiSummary}>
+                    <div class="nswr-ai-cell">
+                      <lightning-icon
+                        icon-name="utility:einstein"
+                        size="x-small"
+                        class="nswr-ai-icon"
+                      ></lightning-icon>
+                      <span class="nswr-ai-text">
+                        <template if:false={item.aiExpanded}
+                          >{item.aiSummaryShort}</template
+                        >
+                        <template if:true={item.aiExpanded}
+                          >{item.aiSummary}</template
+                        >
+                      </span>
+                      <button
+                        class="nswr-ai-expand"
+                        data-id={item.stockId}
+                        onclick={handleToggleAI}
+                      >
+                        {item.aiExpandLabel}
+                      </button>
+                    </div>
+                  </template>
+                  <template if:false={item.aiSummary}>
+                    <span class="nswr-no-quotes">✓ Healthy</span>
+                  </template>
+                </td>
+                <td>
+                  <div class="nswr-action-cell">
+                    <template if:true={item.needsReorder}>
+                      <button
+                        class="nswr-reorder-btn"
+                        data-id={item.stockId}
+                        data-name={item.productName}
+                        data-qty={item.suggestedReorder}
+                        data-cover={item.coverDays}
+                        onclick={handleReorder}
+                      >
+                        Reorder
+                      </button>
+                    </template>
+                    <template if:true={item.isOverstock}>
+                      <button
+                        class="nswr-promo-btn"
+                        data-id={item.productId}
+                        onclick={handlePromo}
+                      >
+                        Run Promo
+                      </button>
+                    </template>
+                    <template if:true={item.isHealthy}>
+                      <span class="nswr-ok-label">✓ OK</span>
+                    </template>
+                    <button
+                      class="nswr-brief-btn"
+                      data-id={item.stockId}
+                      data-name={item.productName}
+                      onclick={handleGenerateBrief}
+                    >
+                      <lightning-icon
+                        icon-name="utility:einstein"
+                        size="x-small"
+                      ></lightning-icon>
+                      Brief
+                    </button>
+                    <button
+                      class="nswr-forecast-btn"
+                      data-id={item.stockId}
+                      data-name={item.productName}
+                      onclick={handleGenerateForecast}
+                    >
+                      <lightning-icon
+                        icon-name="utility:chart"
+                        size="x-small"
+                      ></lightning-icon>
+                      Forecast
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </template>
+
+    <!-- ── Reorder Confirmation Modal ─────────────────────────────────────── -->
+    <template if:true={reorderModal}>
+      <div class="nswr-modal-overlay" onclick={handleCloseModal}>
+        <div class="nswr-modal" onclick={stopProp}>
+          <div class="nswr-modal-header">
+            <h3 class="nswr-modal-title">Confirm Reorder</h3>
+            <button class="nswr-modal-close" onclick={handleCloseModal}>
+              ✕
+            </button>
+          </div>
+          <div class="nswr-modal-body">
+            <p class="nswr-modal-product">{reorderModal.productName}</p>
+            <div class="nswr-modal-qty-row">
+              <label class="nswr-modal-label">Quantity to order</label>
+              <input
+                type="number"
+                class="nswr-modal-input"
+                value={reorderModal.qty}
+                onchange={handleQtyChange}
+                min="1"
+              />
+            </div>
+            <div class="nswr-modal-ai">
+              <lightning-icon
+                icon-name="utility:einstein"
+                size="x-small"
+              ></lightning-icon>
+              <span
+                >AI suggests {reorderModal.qty} units to cover
+                {reorderModal.coverDays} days of demand</span
+              >
+            </div>
+          </div>
+          <div class="nswr-modal-footer">
+            <button class="nswr-modal-cancel" onclick={handleCloseModal}>
+              Cancel
+            </button>
+            <button class="nswr-modal-confirm" onclick={handleConfirmReorder}>
+              <lightning-icon
+                icon-name="utility:check"
+                size="x-small"
+                variant="inverse"
+              ></lightning-icon>
+              Confirm Reorder
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── Quotes Panel (slide) ────────────────────────────────────────────── -->
+    <template if:true={quotesPanel}>
+      <div class="nswr-side-overlay" onclick={handleCloseQuotes}>
+        <div class="nswr-side-panel" onclick={stopProp}>
+          <div class="nswr-side-header">
+            <h3>Open Quotes — {quotesPanel.productName}</h3>
+            <button onclick={handleCloseQuotes}>✕</button>
+          </div>
+          <div class="nswr-side-body">
+            <template if:true={quotesPanel.isLoading}>
+              <lightning-spinner size="small"></lightning-spinner>
+            </template>
+            <template for:each={quotesPanel.quotes} for:item="q">
+              <div key={q.quoteId} class="nswr-quote-row">
+                <div>
+                  <div class="nswr-quote-name">{q.quoteName}</div>
+                  <div class="nswr-quote-account">{q.accountName}</div>
+                </div>
+                <div class="nswr-quote-right">
+                  <span class="nswr-quote-status">{q.status}</span>
+                  <span class="nswr-quote-total">{q.totalLabel}</span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── AI Reorder Brief Modal ────────────────────────────────────────── -->
+    <template if:true={briefModal}>
+      <div class="nswr-modal-overlay" onclick={handleCloseBrief}>
+        <div class="nswr-brief-modal" onclick={stopProp}>
+          <div class="nswr-modal-header">
+            <div class="nswr-brief-header-left">
+              <lightning-icon
+                icon-name="utility:einstein"
+                size="small"
+                class="nswr-brief-einstein"
+              ></lightning-icon>
+              <div>
+                <h3 class="nswr-modal-title">AI Reorder Brief</h3>
+                <p class="nswr-brief-product">{briefModal.productName}</p>
+              </div>
+            </div>
+            <button class="nswr-modal-close" onclick={handleCloseBrief}>
+              ✕
+            </button>
+          </div>
+          <div class="nswr-brief-body">
+            <template if:true={briefModal.isLoading}>
+              <div class="nswr-brief-loading">
+                <lightning-spinner
+                  size="small"
+                  alternative-text="Generating..."
+                ></lightning-spinner>
+                <p>Generating AI brief...</p>
+              </div>
+            </template>
+            <template if:false={briefModal.isLoading}>
+              <pre class="nswr-brief-text">{briefModal.text}</pre>
+            </template>
+          </div>
+          <div class="nswr-modal-footer">
+            <button class="nswr-modal-cancel" onclick={handleCloseBrief}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── AI Demand Forecast Modal ─────────────────────────────────────────── -->
+    <template if:true={forecastModal}>
+      <div class="nswr-modal-overlay" onclick={handleCloseForecast}>
+        <div class="nswr-forecast-modal" onclick={stopProp}>
+          <!-- Header -->
+          <div class="nswr-fm-header">
+            <div class="nswr-fm-header-left">
+              <div class="nswr-fm-header-icon">
+                <lightning-icon
+                  icon-name="utility:chart"
+                  size="small"
+                ></lightning-icon>
+              </div>
+              <div>
+                <div class="nswr-fm-title">Demand Forecast</div>
+                <div class="nswr-fm-product">{forecastModal.productName}</div>
+              </div>
+            </div>
+            <div class="nswr-fm-header-right">
+              <template if:false={forecastModal.isLoading}>
+                <span class={forecastModal.riskCls}>{forecastModal.risk}</span>
+              </template>
+              <button
+                class="nswr-modal-close nswr-fm-close"
+                onclick={handleCloseForecast}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <template if:true={forecastModal.isLoading}>
+            <div class="nswr-fm-loading">
+              <lightning-spinner
+                size="medium"
+                alternative-text="Generating..."
+              ></lightning-spinner>
+              <p>Generating AI forecast...</p>
+            </div>
+          </template>
+
+          <template if:false={forecastModal.isLoading}>
+            <div class="nswr-fm-body">
+              <!-- Metric Cards -->
+              <div class="nswr-fm-cards">
+                <div class="nswr-fm-card">
+                  <div class="nswr-fm-card-val">{forecastModal.stockLevel}</div>
+                  <div class="nswr-fm-card-label">Current Stock</div>
+                  <div class="nswr-fm-card-sub">units on hand</div>
+                </div>
+                <div class="nswr-fm-card nswr-fm-card-30">
+                  <div class="nswr-fm-card-val">{forecastModal.demand30}</div>
+                  <div class="nswr-fm-card-label">30-Day Demand</div>
+                  <div class="nswr-fm-card-sub">projected units</div>
+                </div>
+                <div class="nswr-fm-card nswr-fm-card-90">
+                  <div class="nswr-fm-card-val">{forecastModal.demand90}</div>
+                  <div class="nswr-fm-card-label">90-Day Demand</div>
+                  <div class="nswr-fm-card-sub">projected units</div>
+                </div>
+                <div class="nswr-fm-card nswr-fm-card-days">
+                  <div class="nswr-fm-card-val">{forecastModal.daysLabel}</div>
+                  <div class="nswr-fm-card-label">Runway</div>
+                  <div class="nswr-fm-card-sub">
+                    {forecastModal.velocityLabel}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bar Chart -->
+              <div class="nswr-fm-chart">
+                <div class="nswr-fm-chart-title">
+                  Supply vs Projected Demand
+                </div>
+                <div class="nswr-fm-bar-row">
+                  <div class="nswr-fm-bar-label">Current Stock</div>
+                  <div class="nswr-fm-bar-track">
+                    <div
+                      class="nswr-fm-bar nswr-fm-bar-stock"
+                      style={forecastModal.stockBarStyle}
+                    ></div>
+                  </div>
+                  <div class="nswr-fm-bar-num">{forecastModal.stockLevel}</div>
+                </div>
+                <div class="nswr-fm-bar-row">
+                  <div class="nswr-fm-bar-label">30-Day Need</div>
+                  <div class="nswr-fm-bar-track">
+                    <div
+                      class="nswr-fm-bar nswr-fm-bar-30"
+                      style={forecastModal.demand30BarStyle}
+                    ></div>
+                  </div>
+                  <div class="nswr-fm-bar-num">{forecastModal.demand30}</div>
+                </div>
+                <div class="nswr-fm-bar-row">
+                  <div class="nswr-fm-bar-label">90-Day Need</div>
+                  <div class="nswr-fm-bar-track">
+                    <div
+                      class="nswr-fm-bar nswr-fm-bar-90"
+                      style={forecastModal.demand90BarStyle}
+                    ></div>
+                  </div>
+                  <div class="nswr-fm-bar-num">{forecastModal.demand90}</div>
+                </div>
+                <template if:true={forecastModal.hasQuotes}>
+                  <div class="nswr-fm-bar-row">
+                    <div class="nswr-fm-bar-label">Committed</div>
+                    <div class="nswr-fm-bar-track">
+                      <div
+                        class="nswr-fm-bar nswr-fm-bar-quote"
+                        style={forecastModal.quotedBarStyle}
+                      ></div>
+                    </div>
+                    <div class="nswr-fm-bar-num">
+                      {forecastModal.quotedUnits}
+                    </div>
+                  </div>
+                </template>
+              </div>
+
+              <!-- Quote Pipeline -->
+              <template if:true={forecastModal.hasQuotes}>
+                <div class="nswr-fm-quote-section">
+                  <lightning-icon
+                    icon-name="utility:opportunity"
+                    size="x-small"
+                    class="nswr-fm-section-icon"
+                  ></lightning-icon>
+                  <span
+                    ><strong>{forecastModal.openQuotes} open quotes</strong>
+                    committing {forecastModal.quotedUnits} units — adjusted
+                    runway:
+                    <strong>{forecastModal.adjustedDaysLabel}</strong></span
+                  >
+                </div>
+              </template>
+
+              <!-- AI Narrative -->
+              <div class="nswr-fm-ai">
+                <div class="nswr-fm-ai-header">
+                  <lightning-icon
+                    icon-name="utility:einstein"
+                    size="x-small"
+                    class="nswr-fm-einstein"
+                  ></lightning-icon>
+                  <span>AI Analysis</span>
+                </div>
+                <p class="nswr-fm-ai-text">{forecastModal.aiText}</p>
+              </div>
+            </div>
+          </template>
+
+          <!-- Footer -->
+          <div class="nswr-fm-footer">
+            <div class="nswr-fm-footer-meta">
+              <template if:false={forecastModal.isLoading}>
+                Stockout estimate: <strong>{forecastModal.stockoutDate}</strong>
+              </template>
+            </div>
+            <button class="nswr-modal-cancel" onclick={handleCloseForecast}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── Toast ───────────────────────────────────────────────────────────── -->
+    <template if:true={toast}>
+      <div class={toast.cls}>
+        <lightning-icon
+          icon-name={toast.icon}
+          size="x-small"
+          variant="inverse"
+        ></lightning-icon>
+        <span>{toast.message}</span>
+      </div>
+    </template>
+  </div>
+</template>
