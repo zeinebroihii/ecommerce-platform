@@ -1,300 +1,657 @@
 <template>
-    <!-- ── Toggle Tab (only after 'Build with it' has been clicked) ── -->
-    <template if:true={showToggleTab}>
+  <!-- ── Toggle Tab (only after 'Build with it' has been clicked) ── -->
+  <template if:true={showToggleTab}>
     <div class="ncb-toggle-tab" onclick={handleToggleTab}>
-        <div class="ncb-toggle-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-        </div>
-        <div class="ncb-toggle-label">Combo Builder</div>
-        <div class={toggleChevronClass}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
+      <div class="ncb-toggle-icon">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+      </div>
+      <div class="ncb-toggle-label">Combo Builder</div>
+      <div class={toggleChevronClass}>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </div>
     </div>
-    </template>
+  </template>
 
-    <!-- ── Main Panel ── -->
-    <template if:true={isPanelVisible}>
+  <!-- ── Main Panel ── -->
+  <template if:true={isPanelVisible}>
+    <!-- Backdrop -->
+    <div class="ncb-backdrop" onclick={handleBackdropClick}></div>
 
-        <!-- Backdrop -->
-        <div class="ncb-backdrop" onclick={handleBackdropClick}></div>
+    <!-- Panel -->
+    <div class="ncb-panel">
+      <!-- Left-edge arrow -->
+      <button class="ncb-panel-arrow" onclick={handleArrow} title="Minimize">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
 
-        <!-- Panel -->
-        <div class="ncb-panel">
-
-            <!-- Saved Lists Bar -->
-            <div class="ncb-saved-bar">
-                <div class="ncb-saved-section-label">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                    <span>Saved</span>
-                </div>
-                <div class="ncb-saved-pills-wrap">
-                    <template if:true={hasSavedLists}>
-                        <template for:each={savedListsEnriched} for:item="list">
-                            <button key={list.id} class={list.pillClass} data-list-id={list.id} onclick={handleLoadList}>
-                                {list.name}
-                            </button>
-                        </template>
-                    </template>
-                    <template if:true={noSavedLists}>
-                        <span class="ncb-no-builds">No saved builds</span>
-                    </template>
-                </div>
-                <button class="ncb-new-build-btn" onclick={handleNewBuild}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    New Build
-                </button>
-            </div>
-
-            <!-- Header -->
-            <div class="ncb-header">
-                <div class="ncb-header-left">
-                    <div class="ncb-header-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                        </svg>
-                    </div>
-                    <div class="ncb-header-title-wrap">
-                        <h2 class="ncb-header-title">{panelTitle}</h2>
-                        <template if:true={hasActiveList}>
-                            <div class="ncb-list-actions">
-                                <button class="ncb-list-action-btn" onclick={handleRenameList}>
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    Rename
-                                </button>
-                                <button class="ncb-list-action-btn" onclick={handleDuplicateList}>
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                                    Duplicate
-                                </button>
-                                <button class="ncb-list-action-btn ncb-list-action-btn--danger" onclick={handleRemoveList}>
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                                    Remove
-                                </button>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                <div class="ncb-header-right">
-                    <button class="ncb-minimize-btn" onclick={handleMinimize}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                        Minimize
-                    </button>
-                    <div class="ncb-icon-btns">
-                        <button class="ncb-icon-btn" title="Share">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                        </button>
-                        <button class="ncb-icon-btn" title="Save" onclick={handleOpenSaveModal}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        </button>
-                    </div>
-                    <button class="ncb-close-btn" onclick={handleClose}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Column Headers -->
-            <div class="ncb-col-headers">
-                <span class="ncb-col-header">Component</span>
-                <span class="ncb-col-header">Selected Product</span>
-            </div>
-
-            <!-- Slots List -->
-            <div class="ncb-slots">
-                <template for:each={slotsEnriched} for:item="slot">
-                    <div key={slot.id} class="ncb-slot-group">
-                    <template if:true={slot.showCatHeader}>
-                        <div class="ncb-cat-header">{slot.catHeaderLabel}</div>
-                    </template>
-                    <div class="ncb-slot-row">
-
-                        <!-- Slot Icon + Label -->
-                        <div class="ncb-slot-meta">
-                            <div class={slot.slotIconClass}>
-                                <!-- CPU icon -->
-                                <template if:true={slot.isCpu}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
-                                        <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
-                                        <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
-                                        <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
-                                        <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
-                                    </svg>
-                                </template>
-                                <!-- Layers (Motherboard) icon -->
-                                <template if:true={slot.isLayers}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                                        <polyline points="2 17 12 22 22 17"/>
-                                        <polyline points="2 12 12 17 22 12"/>
-                                    </svg>
-                                </template>
-                                <!-- Monitor (Memory) icon -->
-                                <template if:true={slot.isMonitor}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                                        <line x1="8" y1="21" x2="16" y2="21"/>
-                                        <line x1="12" y1="17" x2="12" y2="21"/>
-                                    </svg>
-                                </template>
-                                <!-- Gamepad (GPU) icon -->
-                                <template if:true={slot.isGamepad}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="6" y1="11" x2="10" y2="11"/><line x1="8" y1="9" x2="8" y2="13"/>
-                                        <line x1="15" y1="12" x2="15.01" y2="12"/><line x1="17" y1="10" x2="17.01" y2="10"/>
-                                        <path d="M5 3H19C20.1 3 21 3.9 21 5V15C21 16.1 20.1 17 19 17H5C3.9 17 3 16.1 3 15V5C3 3.9 3.9 3 5 3Z"/>
-                                        <path d="M8 21L12 17L16 21"/>
-                                    </svg>
-                                </template>
-                                <!-- HardDrive (Storage) icon -->
-                                <template if:true={slot.isHarddrive}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="22" y1="12" x2="2" y2="12"/>
-                                        <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-                                        <line x1="6" y1="16" x2="6.01" y2="16"/>
-                                        <line x1="10" y1="16" x2="10.01" y2="16"/>
-                                    </svg>
-                                </template>
-                                <!-- Box (Visual Monitoring) icon -->
-                                <template if:true={slot.isBox}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                                        <line x1="12" y1="22.08" x2="12" y2="12"/>
-                                    </svg>
-                                </template>
-                                <!-- Network (Connectivity) icon -->
-                                <template if:true={slot.isNetwork}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="16" y="16" width="6" height="6" rx="1"/>
-                                        <rect x="2" y="16" width="6" height="6" rx="1"/>
-                                        <rect x="9" y="2" width="6" height="6" rx="1"/>
-                                        <path d="M5 16v-4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v4"/>
-                                        <line x1="12" y1="8" x2="12" y2="11"/>
-                                    </svg>
-                                </template>
-                                <!-- Eye (Sensors) icon -->
-                                <template if:true={slot.isEye}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                        <circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </template>
-                            </div>
-                            <span class={slot.slotLabelClass}>{slot.label}</span>
-                        </div>
-
-                        <!-- Product Info or Select Button -->
-                        <div class="ncb-slot-product">
-                            <template if:true={slot.hasProduct}>
-                                <div class="ncb-product-row">
-                                    <div class="ncb-product-img-wrap">
-                                        <img src={slot.product.image} alt={slot.product.name} class="ncb-product-img" referrerpolicy="no-referrer" />
-                                    </div>
-                                    <div class="ncb-product-info">
-                                        <h4 class="ncb-product-name">{slot.product.name}</h4>
-                                        <span class="ncb-product-savings-badge">Save $60.00 W/ Combo Up Offer</span>
-                                        <div class="ncb-qty-row">
-                                            <div class="ncb-qty-controls">
-                                                <button class="ncb-qty-btn">-</button>
-                                                <span class="ncb-qty-val">1</span>
-                                                <button class="ncb-qty-btn">+</button>
-                                            </div>
-                                            <span class="ncb-qty-limit">Limit 2</span>
-                                        </div>
-                                    </div>
-                                    <div class="ncb-product-right">
-                                        <span class="ncb-product-price">${slot.productPrice}</span>
-                                        <template if:true={slot.showRemove}>
-                                            <button class="ncb-remove-btn" data-slot-id={slot.id} onclick={handleRemoveProduct} title="Remove">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                                            </button>
-                                        </template>
-                                        <template if:true={slot.showLock}>
-                                            <div class="ncb-lock-icon" title="Locked">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
-                            <template if:false={slot.hasProduct}>
-                                <div class="ncb-select-wrap">
-                                    <button class="ncb-select-btn" data-slot-id={slot.id} data-category={slot.category} data-subcategory={slot.subcategory} onclick={handleSelectSlot}>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                        Browse &amp; Select
-                                    </button>
-                                    <span class="ncb-select-hint">Catalog → {slot.label}</span>
-                                </div>
-                            </template>
-                        </div>
-
-                    </div><!-- /.ncb-slot-row -->
-                    </div><!-- /.ncb-slot-group -->
-                </template>
-            </div>
-
-            <!-- Footer Summary -->
-            <div class="ncb-footer">
-                <div class="ncb-footer-stats">
-                    <span class="ncb-stat">Part(s) Selected: <strong>{selectedCount}</strong></span>
-                    <span class="ncb-stat">Min. Wattage Estimate: <strong>{wattageEstimate} Watts</strong></span>
-                </div>
-                <div class="ncb-footer-savings">
-                    <span class="ncb-savings-label">Combo Up Savings:</span>
-                    <span class="ncb-savings-val">${totalSavingsFormatted}</span>
-                </div>
-                <div class="ncb-footer-total">
-                    <span class="ncb-total-label">Total Cost:</span>
-                    <span class="ncb-total-val">${totalCostFormatted}</span>
-                </div>
-                <div class="ncb-footer-actions">
-                    <button class="ncb-reset-link" onclick={handleReset}>Reset</button>
-                    <div class="ncb-footer-btns">
-                        <button class="ncb-save-list-btn" onclick={handleSaveList}>Save List</button>
-                        <button class="ncb-add-cart-btn" onclick={handleAddAllToCart}>
-                            Add All To Cart
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Naming Modal -->
-            <template if:true={isNamingModalOpen}>
-                <div class="ncb-modal-overlay" onclick={handleNamingModalClose}>
-                    <div class="ncb-modal-box" onclick={handleModalStopProp}>
-                        <div class="ncb-modal-header">
-                            <h3 class="ncb-modal-title">Save Build</h3>
-                            <button class="ncb-modal-close" onclick={handleNamingModalClose}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
-                        </div>
-                        <input class="ncb-modal-input" type="text" placeholder="Name..." value={newListName} oninput={handleNewListNameChange} onkeydown={handleNamingKeyDown} />
-                        <button class="ncb-modal-confirm-btn" onclick={handleConfirmSave}>Save Build</button>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Renaming Modal -->
-            <template if:true={isRenamingModalOpen}>
-                <div class="ncb-modal-overlay" onclick={handleRenamingModalClose}>
-                    <div class="ncb-modal-box" onclick={handleModalStopProp}>
-                        <div class="ncb-modal-header">
-                            <h3 class="ncb-modal-title">Rename Build</h3>
-                            <button class="ncb-modal-close" onclick={handleRenamingModalClose}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
-                        </div>
-                        <input class="ncb-modal-input" type="text" value={renameValue} oninput={handleRenameValueChange} onkeydown={handleRenameKeyDown} />
-                        <button class="ncb-modal-confirm-btn" onclick={handleConfirmRename}>Update Name</button>
-                    </div>
-                </div>
-            </template>
-
+      <!-- Saved Lists Bar -->
+      <div class="ncb-saved-bar">
+        <div class="ncb-saved-section-label">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+            />
+          </svg>
+          <span>Saved</span>
         </div>
-    </template>
+        <div class="ncb-saved-pills-wrap">
+          <template if:true={hasSavedLists}>
+            <template for:each={savedListsEnriched} for:item="list">
+              <button
+                key={list.id}
+                class={list.pillClass}
+                data-list-id={list.id}
+                onclick={handleLoadList}
+              >
+                {list.name}
+              </button>
+            </template>
+          </template>
+          <template if:true={noSavedLists}>
+            <span class="ncb-no-builds">No saved builds</span>
+          </template>
+        </div>
+        <button class="ncb-new-build-btn" onclick={handleNewBuild}>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          New Build
+        </button>
+      </div>
+
+      <!-- Header -->
+      <div class="ncb-header">
+        <div class="ncb-header-left">
+          <div class="ncb-header-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+          </div>
+          <div class="ncb-header-title-wrap">
+            <h2 class="ncb-header-title">{panelTitle}</h2>
+            <template if:true={hasActiveList}>
+              <div class="ncb-list-actions">
+                <button class="ncb-list-action-btn" onclick={handleRenameList}>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                    />
+                    <path
+                      d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                    />
+                  </svg>
+                  Rename
+                </button>
+                <button
+                  class="ncb-list-action-btn"
+                  onclick={handleDuplicateList}
+                >
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path
+                      d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                    />
+                  </svg>
+                  Duplicate
+                </button>
+                <button
+                  class="ncb-list-action-btn ncb-list-action-btn--danger"
+                  onclick={handleRemoveList}
+                >
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                    <path d="M9 6V4h6v2" />
+                  </svg>
+                  Remove
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="ncb-header-right">
+          <button class="ncb-minimize-btn" onclick={handleMinimize}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            Minimize
+          </button>
+          <div class="ncb-icon-btns">
+            <button class="ncb-icon-btn" title="Share">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+            </button>
+            <button
+              class="ncb-icon-btn"
+              title="Save"
+              onclick={handleOpenSaveModal}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+            </button>
+          </div>
+          <button class="ncb-close-btn" onclick={handleClose}>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Column Headers -->
+      <div class="ncb-col-headers">
+        <span class="ncb-col-header">Component</span>
+        <span class="ncb-col-header">Selected Product</span>
+      </div>
+
+      <!-- Slots List -->
+      <div class="ncb-slots">
+        <template for:each={slotsEnriched} for:item="slot">
+          <div key={slot.id} class="ncb-slot-group">
+            <template if:true={slot.showCatHeader}>
+              <div class="ncb-cat-header">{slot.catHeaderLabel}</div>
+            </template>
+            <div class="ncb-slot-row">
+              <!-- Slot Icon + Label -->
+              <div class="ncb-slot-meta">
+                <div class={slot.slotIconClass}>
+                  <!-- CPU icon -->
+                  <template if:true={slot.isCpu}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="4" y="4" width="16" height="16" rx="2" />
+                      <rect x="9" y="9" width="6" height="6" />
+                      <line x1="9" y1="1" x2="9" y2="4" />
+                      <line x1="15" y1="1" x2="15" y2="4" />
+                      <line x1="9" y1="20" x2="9" y2="23" />
+                      <line x1="15" y1="20" x2="15" y2="23" />
+                      <line x1="20" y1="9" x2="23" y2="9" />
+                      <line x1="20" y1="14" x2="23" y2="14" />
+                      <line x1="1" y1="9" x2="4" y2="9" />
+                      <line x1="1" y1="14" x2="4" y2="14" />
+                    </svg>
+                  </template>
+                  <!-- Layers (Motherboard) icon -->
+                  <template if:true={slot.isLayers}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                      <polyline points="2 17 12 22 22 17" />
+                      <polyline points="2 12 12 17 22 12" />
+                    </svg>
+                  </template>
+                  <!-- Monitor (Memory) icon -->
+                  <template if:true={slot.isMonitor}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                      <line x1="8" y1="21" x2="16" y2="21" />
+                      <line x1="12" y1="17" x2="12" y2="21" />
+                    </svg>
+                  </template>
+                  <!-- Gamepad (GPU) icon -->
+                  <template if:true={slot.isGamepad}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <line x1="6" y1="11" x2="10" y2="11" />
+                      <line x1="8" y1="9" x2="8" y2="13" />
+                      <line x1="15" y1="12" x2="15.01" y2="12" />
+                      <line x1="17" y1="10" x2="17.01" y2="10" />
+                      <path
+                        d="M5 3H19C20.1 3 21 3.9 21 5V15C21 16.1 20.1 17 19 17H5C3.9 17 3 16.1 3 15V5C3 3.9 3.9 3 5 3Z"
+                      />
+                      <path d="M8 21L12 17L16 21" />
+                    </svg>
+                  </template>
+                  <!-- HardDrive (Storage) icon -->
+                  <template if:true={slot.isHarddrive}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <line x1="22" y1="12" x2="2" y2="12" />
+                      <path
+                        d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"
+                      />
+                      <line x1="6" y1="16" x2="6.01" y2="16" />
+                      <line x1="10" y1="16" x2="10.01" y2="16" />
+                    </svg>
+                  </template>
+                  <!-- Box (Visual Monitoring) icon -->
+                  <template if:true={slot.isBox}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                      />
+                      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                      <line x1="12" y1="22.08" x2="12" y2="12" />
+                    </svg>
+                  </template>
+                  <!-- Network (Connectivity) icon -->
+                  <template if:true={slot.isNetwork}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="16" y="16" width="6" height="6" rx="1" />
+                      <rect x="2" y="16" width="6" height="6" rx="1" />
+                      <rect x="9" y="2" width="6" height="6" rx="1" />
+                      <path d="M5 16v-4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v4" />
+                      <line x1="12" y1="8" x2="12" y2="11" />
+                    </svg>
+                  </template>
+                  <!-- Eye (Sensors) icon -->
+                  <template if:true={slot.isEye}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </template>
+                </div>
+                <span class={slot.slotLabelClass}>{slot.label}</span>
+              </div>
+
+              <!-- Product Info or Select Button -->
+              <div class="ncb-slot-product">
+                <template if:true={slot.hasProduct}>
+                  <div class="ncb-product-row">
+                    <div class="ncb-product-img-wrap">
+                      <img
+                        src={slot.product.image}
+                        alt={slot.product.name}
+                        class="ncb-product-img"
+                        referrerpolicy="no-referrer"
+                      />
+                    </div>
+                    <div class="ncb-product-info">
+                      <h4 class="ncb-product-name">{slot.product.name}</h4>
+                      <span class="ncb-product-savings-badge"
+                        >Save $60.00 W/ Combo Up Offer</span
+                      >
+                      <div class="ncb-qty-row">
+                        <div class="ncb-qty-controls">
+                          <button class="ncb-qty-btn">-</button>
+                          <span class="ncb-qty-val">1</span>
+                          <button class="ncb-qty-btn">+</button>
+                        </div>
+                        <span class="ncb-qty-limit">Limit 2</span>
+                      </div>
+                    </div>
+                    <div class="ncb-product-right">
+                      <span class="ncb-product-price"
+                        >${slot.productPrice}</span
+                      >
+                      <template if:true={slot.showRemove}>
+                        <button
+                          class="ncb-remove-btn"
+                          data-slot-id={slot.id}
+                          onclick={handleRemoveProduct}
+                          title="Remove"
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                            <path d="M9 6V4h6v2" />
+                          </svg>
+                        </button>
+                      </template>
+                      <template if:true={slot.showLock}>
+                        <div class="ncb-lock-icon" title="Locked">
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <rect
+                              x="3"
+                              y="11"
+                              width="18"
+                              height="11"
+                              rx="2"
+                              ry="2"
+                            />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                          </svg>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+                <template if:false={slot.hasProduct}>
+                  <div class="ncb-select-wrap">
+                    <button
+                      class="ncb-select-btn"
+                      data-slot-id={slot.id}
+                      data-category={slot.category}
+                      data-subcategory={slot.subcategory}
+                      onclick={handleSelectSlot}
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                      Browse &amp; Select
+                    </button>
+                    <span class="ncb-select-hint">Catalog → {slot.label}</span>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <!-- /.ncb-slot-row -->
+          </div>
+          <!-- /.ncb-slot-group -->
+        </template>
+      </div>
+
+      <!-- Footer Summary -->
+      <div class="ncb-footer">
+        <div class="ncb-footer-stats">
+          <span class="ncb-stat"
+            >Part(s) Selected: <strong>{selectedCount}</strong></span
+          >
+          <span class="ncb-stat"
+            >Min. Wattage Estimate:
+            <strong>{wattageEstimate} Watts</strong></span
+          >
+        </div>
+        <div class="ncb-footer-savings">
+          <span class="ncb-savings-label">Combo Up Savings:</span>
+          <span class="ncb-savings-val">${totalSavingsFormatted}</span>
+        </div>
+        <div class="ncb-footer-total">
+          <span class="ncb-total-label">Total Cost:</span>
+          <span class="ncb-total-val">${totalCostFormatted}</span>
+        </div>
+        <div class="ncb-footer-actions">
+          <button class="ncb-reset-link" onclick={handleReset}>Reset</button>
+          <div class="ncb-footer-btns">
+            <button class="ncb-save-list-btn" onclick={handleSaveList}>
+              Save List
+            </button>
+            <button class="ncb-add-cart-btn" onclick={handleAddAllToCart}>
+              Add All To Cart
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Naming Modal -->
+      <template if:true={isNamingModalOpen}>
+        <div class="ncb-modal-overlay" onclick={handleNamingModalClose}>
+          <div class="ncb-modal-box" onclick={handleModalStopProp}>
+            <div class="ncb-modal-header">
+              <h3 class="ncb-modal-title">Save Build</h3>
+              <button class="ncb-modal-close" onclick={handleNamingModalClose}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <input
+              class="ncb-modal-input"
+              type="text"
+              placeholder="Name..."
+              value={newListName}
+              oninput={handleNewListNameChange}
+              onkeydown={handleNamingKeyDown}
+            />
+            <button class="ncb-modal-confirm-btn" onclick={handleConfirmSave}>
+              Save Build
+            </button>
+          </div>
+        </div>
+      </template>
+
+      <!-- Renaming Modal -->
+      <template if:true={isRenamingModalOpen}>
+        <div class="ncb-modal-overlay" onclick={handleRenamingModalClose}>
+          <div class="ncb-modal-box" onclick={handleModalStopProp}>
+            <div class="ncb-modal-header">
+              <h3 class="ncb-modal-title">Rename Build</h3>
+              <button
+                class="ncb-modal-close"
+                onclick={handleRenamingModalClose}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <input
+              class="ncb-modal-input"
+              type="text"
+              value={renameValue}
+              oninput={handleRenameValueChange}
+              onkeydown={handleRenameKeyDown}
+            />
+            <button class="ncb-modal-confirm-btn" onclick={handleConfirmRename}>
+              Update Name
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
 </template>

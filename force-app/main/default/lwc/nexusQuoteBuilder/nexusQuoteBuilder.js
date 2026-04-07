@@ -2,11 +2,13 @@ import { LightningElement, api, track, wire } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { refreshApex } from "@salesforce/apex";
 import getProducts from "@salesforce/apex/NexusQuoteController.getProducts";
+import getStockForProducts from "@salesforce/apex/StockIntelligenceController.getStockForProducts";
 import createQuote from "@salesforce/apex/NexusQuoteController.createQuote";
 import getOpportunityQuotes from "@salesforce/apex/NexusQuoteController.getOpportunityQuotes";
 import getAllQuotes from "@salesforce/apex/NexusQuoteController.getAllQuotes";
 import getQuoteRequests from "@salesforce/apex/NexusQuoteController.getQuoteRequests";
 import sendToCustomer from "@salesforce/apex/NexusQuoteController.sendToCustomer";
+import quickSendFromRequest from "@salesforce/apex/NexusQuoteController.quickSendFromRequest";
 import createVersionFromEdits from "@salesforce/apex/NexusQuoteController.createVersionFromEdits";
 import convertToOrder from "@salesforce/apex/NexusQuoteController.convertToOrder";
 import generateAndSendContract from "@salesforce/apex/NexusQuoteController.generateAndSendContract";
@@ -22,6 +24,14 @@ const NEG_STATUS_MAP = {
   "In Negotiation": "nqb-neg-badge nqb-neg-neg",
   "Counter Received": "nqb-neg-badge nqb-neg-counter",
   Final: "nqb-neg-badge nqb-neg-final"
+};
+
+const STATUS_ACCENT = {
+  Accepted: "#10b981",
+  Signed: "#10b981",
+  Rejected: "#ef4444",
+  Presented: "#1a56db",
+  Draft: "#94a3b8"
 };
 
 export default class NexusQuoteBuilder extends LightningElement {
@@ -40,11 +50,20 @@ export default class NexusQuoteBuilder extends LightningElement {
 
   // ── Cart (selected products) ──────────────────────────────────────────────
   @track _cart = []; // [{product, quantity}]
+  @track _stockMap = {}; // productId → { available, riskLevel }
 
   // ── Requests (customer-submitted) ────────────────────────────────────────
   @track _requests = [];
   @track _requestsLoading = false;
   @track _requestOppId = null; // set when building from a request
+  @track _quickSendingId = null;
+  @track _editFloorPrice = "";
+  _autoRefreshTimer = null;
+
+  // ── Filter state ──────────────────────────────────────────────────────────
+  @track _filterSearch = "";
+  @track _filterStatus = "All";
+  @track _reqSearch = "";
 
   // ── UI state ──────────────────────────────────────────────────────────────
   @track _view = "list"; // 'list' | 'requests' | 'builder' | 'generated' | 'detail' | 'editVersion'
@@ -103,7 +122,18 @@ export default class NexusQuoteBuilder extends LightningElement {
         this._requests = (data || []).map((r) => ({
           ...r,
           negBadgeCls: "nqb-neg-badge nqb-neg-requested",
-          lineItems: r.lineItems || []
+          lineItems: r.lineItems || [],
+          hasVolumeDiscount: r.volumeDiscountApplied === true,
+          needsApproval: r.approvalStatus === "Pending Approval",
+          hasCounterOffer:
+            r.customerCounterPrice != null && r.customerCounterPrice > 0,
+          counterOfferLabel:
+            r.customerCounterPrice != null
+              ? r.customerCounterPrice.toLocaleString("fr-FR", {
+                  style: "currency",
+                  currency: "EUR"
+                })
+              : null
         }));
       })
       .catch(() => {
@@ -124,6 +154,7 @@ export default class NexusQuoteBuilder extends LightningElement {
         negBadgeCls:
           NEG_STATUS_MAP[q.negotiationStatus] || "nqb-neg-badge nqb-neg-draft",
         versionLabel: "v" + (q.versionNumber || 1) + ".0",
+        accentStyle: "background:" + (STATUS_ACCENT[s] || STATUS_ACCENT.Draft),
         isAccepted: s === "Accepted",
         isRejected: s === "Rejected",
         isSigned: s === "Signed",
@@ -134,7 +165,20 @@ export default class NexusQuoteBuilder extends LightningElement {
               ? "nqb-status-badge nqb-status-rejected"
               : s === "Presented"
                 ? "nqb-status-badge nqb-status-presented"
-                : "nqb-status-badge nqb-status-draft"
+                : "nqb-status-badge nqb-status-draft",
+        // Negotiation enrichment
+        hasVolumeDiscount: q.volumeDiscountApplied === true,
+        needsApproval: q.approvalStatus === "Pending Approval",
+        isManagerApproved: q.approvalStatus === "Approved",
+        hasCounterOffer:
+          q.customerCounterPrice != null && q.customerCounterPrice > 0,
+        counterOfferLabel:
+          q.customerCounterPrice != null
+            ? q.customerCounterPrice.toLocaleString("fr-FR", {
+                style: "currency",
+                currency: "EUR"
+              })
+            : null
       };
     });
   }
@@ -176,16 +220,19 @@ export default class NexusQuoteBuilder extends LightningElement {
       this._cart = [...this._cart, { product: prod, quantity: 1 }];
     }
     this._refreshProductAddLabels();
+    this._checkStock();
   }
 
   handleQtyChange(e) {
     const pid = e.currentTarget.dataset.id;
-    const qty = parseInt(e.target.value, 10);
+    const action = e.currentTarget.dataset.action;
     this._cart = this._cart.map((c) => {
-      if (c.product.productId === pid) {
-        return { ...c, quantity: qty > 0 ? qty : 1 };
-      }
-      return c;
+      if (c.product.productId !== pid) return c;
+      let qty = c.quantity;
+      if (action === "inc") qty = qty + 1;
+      else if (action === "dec") qty = qty - 1;
+      else qty = parseInt(e.target.value, 10);
+      return { ...c, quantity: qty > 0 ? qty : 1 };
     });
   }
 
@@ -238,19 +285,51 @@ export default class NexusQuoteBuilder extends LightningElement {
   }
 
   get cartItems() {
-    return this._cart.map((c, i) => ({
-      key: c.product.productId || String(i),
-      productId: c.product.productId,
-      productName: c.product.name,
-      productFamily: c.product.family,
-      imageUrl: c.product.imageUrl,
-      quantity: c.quantity,
-      listPrice: this._fmt(c.product.price || 0),
-      lineTotal: this._fmt((c.product.price || 0) * c.quantity),
-      netLineTotal: this._fmt(
-        (c.product.price || 0) * c.quantity * (1 - BULK_DISCOUNT / 100)
-      )
-    }));
+    return this._cart.map((c, i) => {
+      const stock = this._stockMap[c.product.productId];
+      const available = stock ? stock.available : null;
+      const insufficient = available !== null && available < c.quantity;
+      const lowStock = available !== null && available <= 10 && !insufficient;
+      return {
+        key: c.product.productId || String(i),
+        productId: c.product.productId,
+        productName: c.product.name,
+        productFamily: c.product.family,
+        imageUrl: c.product.imageUrl,
+        quantity: c.quantity,
+        listPrice: this._fmt(c.product.price || 0),
+        lineTotal: this._fmt((c.product.price || 0) * c.quantity),
+        netLineTotal: this._fmt((c.product.price || 0) * c.quantity),
+        stockAvailable: available,
+        hasStockWarning: insufficient,
+        hasStockAlert: lowStock,
+        stockWarningMsg: insufficient
+          ? `⚠️ Only ${available} in stock — requested ${c.quantity}`
+          : lowStock
+            ? `Low stock: ${available} units remaining`
+            : null
+      };
+    });
+  }
+
+  get hasStockWarnings() {
+    return this.cartItems.some((c) => c.hasStockWarning);
+  }
+
+  _checkStock() {
+    const ids = this._cart.map((c) => c.product.productId).filter(Boolean);
+    if (!ids.length) return;
+    getStockForProducts({ productIds: ids })
+      .then((checks) => {
+        const map = {};
+        checks.forEach((sc) => {
+          map[sc.productId] = sc;
+        });
+        this._stockMap = map;
+      })
+      .catch(() => {
+        /* silent — stock check is non-blocking */
+      });
   }
 
   get hasCartItems() {
@@ -306,13 +385,76 @@ export default class NexusQuoteBuilder extends LightningElement {
         }
       }
     });
-    return [...seenOpps.values()];
+    let list = [...seenOpps.values()];
+
+    // Apply status filter
+    if (this._filterStatus && this._filterStatus !== "All") {
+      list = list.filter((q) => q.status === this._filterStatus);
+    }
+
+    // Apply search filter
+    const term = (this._filterSearch || "").toLowerCase().trim();
+    if (term) {
+      list = list.filter(
+        (q) =>
+          (q.name || "").toLowerCase().includes(term) ||
+          (q.accountName || "").toLowerCase().includes(term) ||
+          (q.opportunityName || "").toLowerCase().includes(term)
+      );
+    }
+
+    return list;
   }
   get hasQuotes() {
     return this.quotes.length > 0;
   }
   get noQuotes() {
-    return this.quotes.length === 0;
+    return this._quotes.length === 0;
+  }
+  get noResults() {
+    return this._quotes.length > 0 && this.quotes.length === 0;
+  }
+
+  get filterStatusOptions() {
+    return ["All", "Draft", "Presented", "Accepted", "Signed", "Rejected"].map(
+      (s) => ({
+        label: s,
+        value: s,
+        active: s === this._filterStatus,
+        pillCls:
+          s === this._filterStatus
+            ? "qb-filter-pill qb-filter-pill-active"
+            : "qb-filter-pill"
+      })
+    );
+  }
+  get filterSearch() {
+    return this._filterSearch;
+  }
+  get activeFilterStatus() {
+    return this._filterStatus;
+  }
+  get filteredCount() {
+    return this.quotes.length;
+  }
+  get totalCount() {
+    const seenOpps = new Map();
+    this._quotes.forEach((q) => {
+      const key = q.opportunityId || q.opportunityName || q.quoteId;
+      if (!seenOpps.has(key)) seenOpps.set(key, q);
+    });
+    return seenOpps.size;
+  }
+
+  handleFilterSearch(e) {
+    this._filterSearch = e.target.value;
+  }
+  handleFilterStatus(e) {
+    this._filterStatus = e.currentTarget.dataset.status;
+  }
+  handleClearFilters() {
+    this._filterSearch = "";
+    this._filterStatus = "All";
   }
   get products() {
     return this._products;
@@ -327,21 +469,89 @@ export default class NexusQuoteBuilder extends LightningElement {
     return this._selectedQuote;
   }
 
-  // Requests
+  // Requests — priority sorted: counter-offers first, then new requests by value desc
   get requests() {
-    return this._requests;
+    const term = (this._reqSearch || "").toLowerCase().trim();
+    const sendingId = this._quickSendingId;
+    const respondId = this._counterRespondId;
+    const now = Date.now();
+
+    const all = this._requests
+      .map((r) => {
+        const hasCounter =
+          r.customerCounterPrice != null && r.customerCounterPrice > 0;
+        const ageMs = r.requestedAt
+          ? now - new Date(r.requestedAt).getTime()
+          : 0;
+        const ageHours = Math.floor(ageMs / 3600000);
+        const ageLabel =
+          ageHours < 1
+            ? "< 1h"
+            : ageHours < 24
+              ? ageHours + "h"
+              : Math.floor(ageHours / 24) + "j";
+        const round = r.negotiationRound || 0;
+        const roundsLeft =
+          r.roundsRemaining != null ? r.roundsRemaining : 3 - round;
+        return {
+          ...r,
+          isQuickSending: r.quoteId === sendingId,
+          showCounterForm: r.quoteId === respondId,
+          hasCounter,
+          ageLabel,
+          priorityScore: hasCounter
+            ? 1000 + (r.grandTotal || 0)
+            : r.grandTotal || 0,
+          roundLabel: round > 0 ? "Round " + round + "/3" : null,
+          roundsLeft,
+          roundsLeftLabel:
+            roundsLeft === 0
+              ? "Limite atteinte"
+              : roundsLeft + " round(s) restant(s)",
+          isFinalOffer: r.isFinalOffer === true,
+          counterBadgeCls:
+            "qb-req-priority-badge" +
+            (hasCounter ? " qb-req-priority-counter" : " qb-req-priority-new")
+        };
+      })
+      .sort((a, b) => b.priorityScore - a.priorityScore);
+
+    if (!term) return all;
+    return all.filter((r) => {
+      const name = (r.name || "").toLowerCase();
+      const account = (r.accountName || "").toLowerCase();
+      return name.includes(term) || account.includes(term);
+    });
   }
   get hasRequests() {
-    return this._requests.length > 0;
+    return this.requests.length > 0;
   }
   get noRequests() {
-    return this._requests.length === 0;
+    return !this._requestsLoading && this.requests.length === 0;
+  }
+  get noRequestResults() {
+    return this._requests.length > 0 && this.requests.length === 0;
+  }
+  get reqFilteredCount() {
+    return this.requests.length;
+  }
+  get reqTotalCount() {
+    return this._requests.length;
+  }
+  get reqSearch() {
+    return this._reqSearch;
   }
   get requestCount() {
     return this._requests.length;
   }
   get requestsLoading() {
     return this._requestsLoading;
+  }
+  handleReqSearch(e) {
+    this._reqSearch = e.target.value;
+  }
+  handleClearReqSearch() {
+    this._reqSearch = "";
   }
   get requestBadgeCls() {
     return this._requests.length > 0
@@ -389,6 +599,21 @@ export default class NexusQuoteBuilder extends LightningElement {
   get editPaymentTerms() {
     return this._editPaymentTerms;
   }
+  get isPaymentNet30() {
+    return this._editPaymentTerms === "Net 30";
+  }
+  get isPaymentNet45() {
+    return this._editPaymentTerms === "Net 45";
+  }
+  get isPaymentNet60() {
+    return this._editPaymentTerms === "Net 60";
+  }
+  get isPaymentNet90() {
+    return this._editPaymentTerms === "Net 90";
+  }
+  get isPaymentImmediate() {
+    return this._editPaymentTerms === "Immediate";
+  }
   get editExpiration() {
     return this._editExpiration;
   }
@@ -432,9 +657,33 @@ export default class NexusQuoteBuilder extends LightningElement {
   handleOpenRequests() {
     this._view = "requests";
     this._loadRequests();
+    // Auto-refresh every 30s while admin is on the Requests view
+    this._stopAutoRefresh();
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    this._autoRefreshTimer = setInterval(() => {
+      if (this._view === "requests" && !this._requestsLoading) {
+        this._loadRequests();
+      }
+    }, 30000);
+  }
+
+  handleRefreshRequests() {
+    this._loadRequests();
+  }
+
+  _stopAutoRefresh() {
+    if (this._autoRefreshTimer) {
+      clearInterval(this._autoRefreshTimer);
+      this._autoRefreshTimer = null;
+    }
+  }
+
+  disconnectedCallback() {
+    this._stopAutoRefresh();
   }
 
   handleBackToList() {
+    this._stopAutoRefresh();
     this._view = "list";
     this._generated = null;
     this._selectedQuote = null;
@@ -444,6 +693,51 @@ export default class NexusQuoteBuilder extends LightningElement {
     } else {
       this._loadAllQuotes();
     }
+  }
+
+  // One-click: approve the request and send the official quote to the customer
+  handleQuickSend(e) {
+    const quoteId = e.currentTarget.dataset.id;
+    this._quickSendingId = quoteId;
+    quickSendFromRequest({ requestedQuoteId: quoteId })
+      .then((result) => {
+        this._quickSendingId = null;
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Devis envoyé ✓",
+            message:
+              "Le devis " +
+              result.quoteName +
+              " a été envoyé à " +
+              result.recipientEmail +
+              " — le client reçoit une notification en temps réel.",
+            variant: "success",
+            mode: "sticky"
+          })
+        );
+        // Remove the sent request from the list immediately
+        this._requests = this._requests.filter((r) => r.quoteId !== quoteId);
+        // Refresh all-quotes list so it appears there too
+        this._loadAllQuotes();
+      })
+      .catch((err) => {
+        this._quickSendingId = null;
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Erreur",
+            message: err.body ? err.body.message : "Une erreur est survenue.",
+            variant: "error"
+          })
+        );
+      });
+  }
+
+  // ── Floor price input (set by admin when sending quote) ──────────────────
+  handleFloorPriceChange(e) {
+    this._editFloorPrice = e.target.value;
+  }
+  get editFloorPrice() {
+    return this._editFloorPrice;
   }
 
   handleOpenDetail(e) {
@@ -478,6 +772,17 @@ export default class NexusQuoteBuilder extends LightningElement {
   // ── Quote generation ──────────────────────────────────────────────────────
   handleGenerateQuote() {
     if (!this.canGenerate) return;
+
+    const opportunityId = this.recordId || this._requestOppId || null;
+    if (!opportunityId) {
+      this._toast(
+        "No Opportunity Selected",
+        "Open this from an Opportunity record page, or build a quote from a customer request.",
+        "warning"
+      );
+      return;
+    }
+
     this._generating = true;
 
     const expiry = new Date();
@@ -485,7 +790,7 @@ export default class NexusQuoteBuilder extends LightningElement {
     const expiryStr = expiry.toISOString().split("T")[0];
 
     const request = {
-      opportunityId: this.recordId || this._requestOppId || null,
+      opportunityId,
       bulkDiscount: BULK_DISCOUNT,
       paymentTerms: PAYMENT_TERMS,
       expirationDate: expiryStr,
@@ -534,9 +839,11 @@ export default class NexusQuoteBuilder extends LightningElement {
       (this._generated ? this._generated.quoteId : null);
     if (!qid) return;
     this._sending = true;
-    sendToCustomer({ quoteId: qid })
+    const floorPrice = parseFloat(this._editFloorPrice) || null;
+    sendToCustomer({ quoteId: qid, floorPrice })
       .then(() => {
         this._sending = false;
+        this._editFloorPrice = "";
         this._toast(
           "Devis envoyé !",
           "Le client peut maintenant voir et accepter le devis dans son portail.",

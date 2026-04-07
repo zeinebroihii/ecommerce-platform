@@ -5,18 +5,24 @@
   >Nexus Admin — Lead Pipeline &amp; CRM Control Center</description>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
-    <isNavPersonalizationDisabled>true</isNavPersonalizationDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>Nexus Admin</label>
     <navType>Standard</navType>
     <tabs>NexusAdminHome</tabs>
+    <tabs>NexusAnalyticsDashboard</tabs>
     <tabs>NexusQuoteBuilder</tabs>
+    <tabs>NexusStockWarRoom</tabs>
     <tabs>standard-Lead</tabs>
     <tabs>standard-Opportunity</tabs>
     <tabs>standard-Account</tabs>
     <tabs>standard-Contact</tabs>
-    <tabs>TALEXO_Quote__c</tabs>
+    <tabs>standard-Contract</tabs>
     <tabs>standard-Case</tabs>
+    <tabs>standard-Order</tabs>
+    <tabs>standard-Product2</tabs>
+    <tabs>standard-report</tabs>
+    <tabs>TALEXO_Quote__c</tabs>
     <uiType>Lightning</uiType>
 </CustomApplication>

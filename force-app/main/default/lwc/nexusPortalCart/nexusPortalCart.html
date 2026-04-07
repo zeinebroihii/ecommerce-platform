@@ -1,19 +1,5 @@
 <template>
   <div class="npcart-wrap">
-    <!-- ── Header (icon + title + item badge) — matches TSX header ── -->
-    <div class="npcart-header">
-      <div class="npcart-header-left">
-        <c-nexus-logo
-          variant="emerald"
-          size="md"
-          subtitle="Cart"
-        ></c-nexus-logo>
-      </div>
-      <div class="npcart-badge-pill">
-        <span class="npcart-badge">{itemCountLabel}</span>
-      </div>
-    </div>
-
     <!-- ── Main grid (8/4 col split matches TSX lg:grid-cols-12) ── -->
     <div class="npcart-layout">
       <!-- Items list -->
@@ -34,22 +20,6 @@
               onupdateqty={handleUpdateQty}
             ></c-nexus-portal-cart-item>
           </template>
-
-          <!-- Nexus Intelligence banner (Zap / emerald) -->
-          <div class="npcart-banner">
-            <c-nexus-logo
-              variant="emerald"
-              size="xs"
-              subtitle="AI"
-            ></c-nexus-logo>
-            <div>
-              <div class="npcart-banner-title">Nexus Intelligence</div>
-              <p class="npcart-banner-text">
-                Free shipping applied! Your order qualifies for priority Nexus
-                logistics.
-              </p>
-            </div>
-          </div>
         </template>
 
         <!-- Empty state — dashed border, Package icon, matches TSX -->
@@ -149,15 +119,6 @@
                       <div class="npcart-stat-label">Délai estimé</div>
                       <div class="npcart-stat-value">24 – 48h</div>
                     </div>
-                  </div>
-                  <div class="npcart-ai-banner">
-                    <div>
-                      <span class="npcart-ai-tag">Nexus AI</span>
-                      <span class="npcart-ai-desc"
-                        >Probabilité d'acceptation calculée</span
-                      >
-                    </div>
-                    <div class="npcart-ai-pct">✓</div>
                   </div>
                   <button class="npcart-quotes-btn" onclick={handleGoToQuotes}>
                     Voir mes devis →

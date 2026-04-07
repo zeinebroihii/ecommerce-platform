@@ -45,6 +45,7 @@ export default class NexusNavbar extends LightningElement {
   @api cartUrl = CART_URL;
   @api devisUrl = "/ss/s/demande-devis"; // kept for EB backwards-compat
   @api cartCount = 0;
+  @track _liveCartCount = 0;
   @api activeView = "home";
   /** Static override from Experience Builder. Ignored when portal syncs dynamically. */
   @api subHeaderItems;
@@ -83,6 +84,16 @@ export default class NexusNavbar extends LightningElement {
   }
 
   connectedCallback() {
+    // Sync cart count from sessionStorage on load
+    this._syncCartCount();
+    this._onCartUpdate = (e) => {
+      this._liveCartCount =
+        e.detail && e.detail.count != null
+          ? e.detail.count
+          : this._readCartStorage();
+    };
+    document.addEventListener("nexuscartupdate", this._onCartUpdate);
+
     if (!_poppinsLoaded) {
       _poppinsLoaded = true;
       const link = document.createElement("link");
@@ -168,6 +179,7 @@ export default class NexusNavbar extends LightningElement {
     );
     document.removeEventListener("nexusrecloaded", this._onRecLoaded);
     document.removeEventListener("nexusactivityloaded", this._onActivityLoaded);
+    document.removeEventListener("nexuscartupdate", this._onCartUpdate);
     document.removeEventListener("click", this._onDocClick);
   }
 
@@ -178,8 +190,24 @@ export default class NexusNavbar extends LightningElement {
     return this._userExists;
   }
 
+  get effectiveCartCount() {
+    return this._liveCartCount || this.cartCount;
+  }
   get hasCartItems() {
-    return this.cartCount > 0;
+    return this.effectiveCartCount > 0;
+  }
+
+  _readCartStorage() {
+    try {
+      const raw = sessionStorage.getItem("ecomm_cart");
+      const items = raw ? JSON.parse(raw) : [];
+      return Array.isArray(items) ? items.length : 0;
+    } catch {
+      return 0;
+    }
+  }
+  _syncCartCount() {
+    this._liveCartCount = this._readCartStorage();
   }
   get notifOpen() {
     return this._notifOpen;
@@ -188,7 +216,7 @@ export default class NexusNavbar extends LightningElement {
     return this._notifExpanded;
   }
   get notifExpandLabel() {
-    return this._notifExpanded ? "Voir moins ▲" : "Voir plus ▼";
+    return this._notifExpanded ? "Show less ▲" : "Show more ▼";
   }
   get hasMoreToShow() {
     return (
@@ -243,7 +271,7 @@ export default class NexusNavbar extends LightningElement {
     return this._dynIsPortal;
   }
   get isSubBarVisible() {
-    return !this._subBarHidden;
+    return !this._subBarHidden && !this.isPortalMode;
   }
 
   get _items() {

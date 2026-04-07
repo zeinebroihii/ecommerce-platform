@@ -104,6 +104,7 @@
         all-products={_products}
         onaddtocart={handleAddToCartFromCatalog}
         ontogglefavorite={handleToggleFavoriteFromCatalog}
+        oncatalogback={handleCatalogBack}
       >
       </c-nexus-catalog>
     </template>
@@ -125,15 +126,6 @@
     <template if:false={isCatalogOrCheckout}>
       <!-- ══ Sidebar ═══════════════════════════════════════════════════════════ -->
       <aside class="ncp-sidebar">
-        <!-- Brand / Logo -->
-        <div class="ncp-brand-header">
-          <c-nexus-logo
-            variant="emerald"
-            size="lg"
-            subtitle="Customer Portal"
-          ></c-nexus-logo>
-        </div>
-
         <!-- Scrollable nav area -->
         <div class="ncp-nav-scroll">
           <!-- ── Main Menu ── -->
@@ -337,46 +329,58 @@
 
             <!-- KPI Grid -->
             <div class="ncp-kpi-grid">
-              <div class="ncp-kpi-card">
+              <button
+                class="ncp-kpi-card ncp-kpi-card--btn"
+                onclick={handleKpiOrders}
+              >
                 <div class="ncp-kpi-icon ncp-kpi-icon-indigo">
                   <lightning-icon
                     icon-name="utility:package"
                     size="small"
                   ></lightning-icon>
                 </div>
-                <div class="ncp-kpi-value">12</div>
+                <div class="ncp-kpi-value">{kpiOrderCount}</div>
                 <div class="ncp-kpi-label">Active Orders</div>
-              </div>
-              <div class="ncp-kpi-card">
-                <div class="ncp-kpi-icon ncp-kpi-icon-emerald">
-                  <lightning-icon
-                    icon-name="utility:trending_up"
-                    size="small"
-                  ></lightning-icon>
-                </div>
-                <div class="ncp-kpi-value">2 450 $</div>
-                <div class="ncp-kpi-label">Économies Totales</div>
-              </div>
-              <div class="ncp-kpi-card">
+              </button>
+              <button
+                class="ncp-kpi-card ncp-kpi-card--btn"
+                onclick={handleKpiQuotes}
+              >
                 <div class="ncp-kpi-icon ncp-kpi-icon-amber">
                   <lightning-icon
-                    icon-name="utility:clock"
+                    icon-name="utility:file"
                     size="small"
                   ></lightning-icon>
                 </div>
-                <div class="ncp-kpi-value">1.2h</div>
-                <div class="ncp-kpi-label">Temps de Réponse</div>
-              </div>
-              <div class="ncp-kpi-card">
-                <div class="ncp-kpi-icon ncp-kpi-icon-indigo">
+                <div class="ncp-kpi-value">{kpiQuoteCount}</div>
+                <div class="ncp-kpi-label">Open Quotes</div>
+              </button>
+              <button
+                class="ncp-kpi-card ncp-kpi-card--btn"
+                onclick={handleKpiFavorites}
+              >
+                <div class="ncp-kpi-icon ncp-kpi-icon-rose">
                   <lightning-icon
-                    icon-name="utility:connected_apps"
+                    icon-name="utility:heart"
                     size="small"
                   ></lightning-icon>
                 </div>
-                <div class="ncp-kpi-value">Actif</div>
-                <div class="ncp-kpi-label">Scanner d'Actifs</div>
-              </div>
+                <div class="ncp-kpi-value">{kpiFavCount}</div>
+                <div class="ncp-kpi-label">Saved Items</div>
+              </button>
+              <button
+                class="ncp-kpi-card ncp-kpi-card--btn"
+                onclick={handleKpiSpent}
+              >
+                <div class="ncp-kpi-icon ncp-kpi-icon-emerald">
+                  <lightning-icon
+                    icon-name="utility:money"
+                    size="small"
+                  ></lightning-icon>
+                </div>
+                <div class="ncp-kpi-value">{kpiTotalSpent}</div>
+                <div class="ncp-kpi-label">Total Spent</div>
+              </button>
             </div>
 
             <!-- AI Recommendations (Agentforce-powered) -->
@@ -396,12 +400,12 @@
             <!-- Recent Activity (real data) -->
             <div class="ncp-activity-card">
               <div class="ncp-card-header">
-                <h3 class="ncp-card-title">Activité Récente</h3>
+                <h3 class="ncp-card-title">Recent Activity</h3>
                 <button
                   class="ncp-view-all-btn"
                   onclick={handleViewAllActivity}
                 >
-                  Tout voir
+                  View all
                 </button>
               </div>
 
@@ -484,7 +488,7 @@
                     icon-name="utility:clock"
                     size="small"
                   ></lightning-icon>
-                  <p>Aucune activité récente</p>
+                  <p>No recent activity</p>
                 </div>
               </template>
             </div>
@@ -547,7 +551,9 @@
         <template if:true={isB2B}>
           <template if:true={isQuotations}>
             <div class="ncp-section ncp-fullbleed">
-              <c-nexus-quotation-system></c-nexus-quotation-system>
+              <c-nexus-quotation-system
+                refresh-trigger={_quotationsRefreshKey}
+              ></c-nexus-quotation-system>
             </div>
           </template>
         </template>
@@ -1120,9 +1126,9 @@
                       </div>
                     </div>
                     <p class="ncp-agent-quote">
-                      "Bonjour ! Je suis l'IA Nexus. Décrivez votre situation,
-                      j'analyse les données en temps réel pour vous proposer une
-                      solution immédiate."
+                      "Hello! I'm the Nexus AI. Describe your situation and I'll
+                      analyze the data in real time to provide you with an
+                      immediate solution."
                     </p>
                     <div class="ncp-agent-chat">
                       <div class="ncp-agent-msg">
@@ -1607,6 +1613,17 @@
     <!-- ── Nexus Combo Builder panel (always present, overlaid on every tab) ── -->
     <c-nexus-combo-builder is-combo-page={isComboDeals}></c-nexus-combo-builder>
 
+    <!-- ── AI Support Chat ── -->
+    <c-nexus-support-chat account-id={profileAccountId}></c-nexus-support-chat>
+
+    <!-- ── Cart Slider (always present, slides in on add-to-cart) ── -->
+    <c-nexus-cart-slider
+      oncartcheckout={handleCartSliderCheckout}
+      oncartquote={handleCartSliderQuote}
+      oncartviewfull={handleCartSliderViewFull}
+      oncartchange={handleCartSliderChange}
+    ></c-nexus-cart-slider>
+
     <!-- ── Custom Cart Toast ── -->
     <template if:true={_cartToastVisible}>
       <div class="ncp-cart-toast">
@@ -1628,7 +1645,7 @@
             </svg>
           </div>
           <div class="ncp-cart-toast-body">
-            <span class="ncp-cart-toast-label">Ajouté au panier</span>
+            <span class="ncp-cart-toast-label">Added to cart</span>
             <span class="ncp-cart-toast-name">{_cartToastName}</span>
             <template if:true={_cartToastPrice}>
               <span class="ncp-cart-toast-price">{_cartToastPrice}</span>

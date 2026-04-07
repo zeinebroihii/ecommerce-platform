@@ -1,4 +1,4 @@
-import { LightningElement, wire, track } from "lwc";
+import { LightningElement, wire, track, api } from "lwc";
 import { getRecord } from "lightning/uiRecordApi";
 import { refreshApex } from "@salesforce/apex";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
@@ -7,7 +7,8 @@ import USER_ACCOUNT_FIELD from "@salesforce/schema/User.AccountId";
 import getAccountQuotes from "@salesforce/apex/QuoteController.getAccountQuotes";
 import processQuoteDecision from "@salesforce/apex/QuoteController.processQuoteDecision";
 import requestQuote from "@salesforce/apex/QuoteController.requestQuote";
-import finalizeContractSign from "@salesforce/apex/NexusQuoteController.finalizeContractSign";
+import getSignedContractBase64 from "@salesforce/apex/QuoteController.getSignedContractBase64";
+import submitCounterOffer from "@salesforce/apex/QuoteController.submitCounterOffer";
 
 // ── Status maps ──────────────────────────────────────────────────────────────
 const PROB_MAP = {
@@ -38,141 +39,6 @@ const MODAL_BADGE_MAP = {
   Rejected: "nqs-modal-badge nqs-modal-badge-danger"
 };
 
-// ── Mock quotes (shown when no Salesforce data) ───────────────────────────────
-const MOCK_QUOTES = [
-  {
-    quoteId: "MOCK-001",
-    name: "QT-2024-001",
-    status: "Accepted",
-    grandTotal: 12500,
-    formattedTotal: "$12,500",
-    expirationDate: "10 MARS 2024",
-    opportunityName: "Nexus Enterprise Deal",
-    description:
-      "Enterprise infrastructure upgrade including core systems and cloud synchronization.",
-    probability: 98,
-    canDecide: false,
-    isAccepted: true,
-    isRejected: false,
-    isMock: true,
-    date: "March 10, 2024",
-    currentVersion: 2,
-    contractStatus: "Pending Signature",
-    versions: [
-      {
-        version: 1,
-        date: "March 01, 2024",
-        total: 13800,
-        status: "Sent",
-        products: [
-          {
-            product: {
-              id: "p1",
-              name: "Nexus Core Pro",
-              family: "Hardware",
-              price: 8500,
-              image: "https://picsum.photos/seed/core/400/400"
-            },
-            quantity: 1
-          },
-          {
-            product: {
-              id: "p2",
-              name: "Cloud Sync Module",
-              family: "Software",
-              price: 5300,
-              image: "https://picsum.photos/seed/cloud/400/400"
-            },
-            quantity: 1
-          }
-        ]
-      },
-      {
-        version: 2,
-        date: "March 05, 2024",
-        total: 12500,
-        status: "Negotiation",
-        products: [
-          {
-            product: {
-              id: "p1",
-              name: "Nexus Core Pro",
-              family: "Hardware",
-              price: 8500,
-              image: "https://picsum.photos/seed/core/400/400"
-            },
-            quantity: 1
-          },
-          {
-            product: {
-              id: "p2",
-              name: "Cloud Sync Module",
-              family: "Software",
-              price: 4000,
-              image: "https://picsum.photos/seed/cloud/400/400"
-            },
-            quantity: 1
-          }
-        ]
-      }
-    ],
-    messages: [
-      {
-        id: "m1",
-        sender: "rep",
-        text: "Bonjour ! J'ai mis à jour le devis avec la remise volume de 10% demandée.",
-        time: "10:30"
-      },
-      {
-        id: "m2",
-        sender: "user",
-        text: "Thank you Sarah. Could you also review the maintenance terms?",
-        time: "11:15"
-      }
-    ]
-  },
-  {
-    quoteId: "MOCK-002",
-    name: "QT-2024-002",
-    status: "Negotiation",
-    grandTotal: 8900,
-    formattedTotal: "$8,900",
-    expirationDate: "MARCH 15, 2024",
-    opportunityName: "Edge Computing Project",
-    description:
-      "Nœuds de calcul distribué pour intelligence en périphérie de réseau.",
-    probability: 72,
-    canDecide: true,
-    isAccepted: false,
-    isRejected: false,
-    isMock: true,
-    date: "March 15, 2024",
-    currentVersion: 1,
-    contractStatus: null,
-    versions: [
-      {
-        version: 1,
-        date: "Feb 28, 2024",
-        total: 4200,
-        status: "Accepted",
-        products: [
-          {
-            product: {
-              id: "p3",
-              name: "Edge Node v2",
-              family: "Hardware",
-              price: 2100,
-              image: "https://picsum.photos/seed/edge/400/400"
-            },
-            quantity: 2
-          }
-        ]
-      }
-    ],
-    messages: []
-  }
-];
-
 export default class NexusQuotationSystem extends LightningElement {
   // ── Salesforce data ────────────────────────────────────────────────────────
   @track accountId;
@@ -192,14 +58,17 @@ export default class NexusQuotationSystem extends LightningElement {
   @track _expandedVersion = null;
 
   // ── Accept/Sign state ─────────────────────────────────────────────────────
-  @track _isSigning = false;
-  @track _isContractSigning = false; // true = signing formal contract; false = accepting quote
-  @track _signature = "";
   @track _isDeciding = false;
 
   // ── Reject state ──────────────────────────────────────────────────────────
   @track _showRejectForm = false;
   @track _rejectReason = "";
+
+  // ── Counter-offer state ───────────────────────────────────────────────────
+  @track _showCounterForm = false;
+  @track _counterPrice = "";
+  @track _counterMessage = "";
+  @track _counterSubmitting = false;
 
   // ── New quote request form ─────────────────────────────────────────────────
   @track _showNewForm = false;
@@ -209,6 +78,23 @@ export default class NexusQuotationSystem extends LightningElement {
   @track _formQty = "10";
   @track _formMessage = "";
   @track _formSubmitting = false;
+
+  // ── Public API: refresh trigger from parent ────────────────────────────────
+  _needsRefresh = false;
+  @api
+  set refreshTrigger(val) {
+    if (val > 0) {
+      if (this._quotesWireResult) {
+        refreshApex(this._quotesWireResult);
+      } else {
+        // Wire hasn't resolved yet; refresh as soon as first result arrives
+        this._needsRefresh = true;
+      }
+    }
+  }
+  get refreshTrigger() {
+    return this._refreshTrigger || 0;
+  }
 
   // ── Wires ─────────────────────────────────────────────────────────────────
   @wire(getRecord, { recordId: userId, fields: [USER_ACCOUNT_FIELD] })
@@ -221,17 +107,26 @@ export default class NexusQuotationSystem extends LightningElement {
     this._quotesWireResult = result;
     if (result.data) {
       this._sfDataLoaded = true;
-      this._quotes = result.data.length > 0 ? result.data : MOCK_QUOTES;
+      this._quotes = result.data;
+      if (this._needsRefresh) {
+        this._needsRefresh = false;
+        refreshApex(result);
+      }
     }
     if (result.error) {
       this._sfDataLoaded = true;
-      this._quotes = MOCK_QUOTES;
+      this._quotes = [];
+      this._needsRefresh = false;
     }
   }
 
-  // Fallback: if wire never fires (e.g. no accountId), use mocks
+  get isLoading() {
+    return !this._sfDataLoaded;
+  }
+
+  // Show nothing while loading — mocks only appear after load if no real data
   get activeQuotes() {
-    return this._sfDataLoaded ? this._quotes : MOCK_QUOTES;
+    return this._sfDataLoaded ? this._quotes : [];
   }
 
   // ── Computed: filter options ───────────────────────────────────────────────
@@ -307,7 +202,7 @@ export default class NexusQuotationSystem extends LightningElement {
   }
 
   get isEmpty() {
-    return this.filteredQuotes.length === 0;
+    return this._sfDataLoaded && this.filteredQuotes.length === 0;
   }
   get hasQuotes() {
     return this.filteredQuotes.length > 0;
@@ -352,30 +247,61 @@ export default class NexusQuotationSystem extends LightningElement {
         : q.currentVersion
           ? "v" + q.currentVersion + ".0"
           : "v1.0",
-      versionCount: q.versions ? q.versions.length : 0
+      versionCount: q.versions ? q.versions.length : 0,
+      // ── New negotiation fields
+      isExpired: q.isExpired || false,
+      daysUntilExpiry: q.daysUntilExpiry,
+      expiryWarning:
+        q.daysUntilExpiry != null &&
+        q.daysUntilExpiry >= 0 &&
+        q.daysUntilExpiry <= 7,
+      expiryLabel:
+        q.daysUntilExpiry != null && q.daysUntilExpiry >= 0
+          ? q.daysUntilExpiry === 0
+            ? "Expires today"
+            : "Expires in " + q.daysUntilExpiry + "d"
+          : null,
+      canCounter: q.canCounter || false,
+      canDecide: q.canDecide || false,
+      isFinalOffer: false,
+      negotiationRound: q.negotiationRound || 0,
+      roundsRemaining: 0,
+      floorPrice: q.floorPrice || null,
+      customerCounterPrice: q.customerCounterPrice
+        ? parseFloat(q.customerCounterPrice).toLocaleString("fr-FR", {
+            style: "currency",
+            currency: "EUR"
+          })
+        : null,
+      counterMessage: q.counterMessage || null,
+      approvalStatus: q.approvalStatus || "Not Required",
+      needsApproval: q.approvalStatus === "Pending Approval",
+      isApproved: q.approvalStatus === "Approved",
+      volumeDiscountApplied: q.volumeDiscountApplied || false
     };
   }
 
   get showDetailModal() {
     return !!this._selectedQuoteId;
   }
-  get showSigningModal() {
-    return this._isSigning;
-  }
   get showRejectForm() {
     return this._showRejectForm;
   }
-  get isContractSigning() {
-    return this._isContractSigning;
+  get showCounterForm() {
+    return this._showCounterForm;
+  }
+  // No longer used (auto-engine replaced manual final offer)
+  get showFinalOfferDecision() {
+    return false;
   }
 
-  // Show "Sign Contract" only after admin has sent the formal contract (NegotiationStatus = 'Final')
+  // Contract sent via DocuSign — both parties received signing email
   get showSignFinalContract() {
     const q = this.selectedQuote;
     return q && q.status === "Accepted" && q.negotiationStatus === "Final";
   }
 
-  // Show "Contract sent — awaiting your signature" banner when waiting for customer
+  // Accepted but contract not yet dispatched
   get showContractPendingBanner() {
     const q = this.selectedQuote;
     return q && q.status === "Accepted" && q.negotiationStatus !== "Final";
@@ -557,9 +483,6 @@ export default class NexusQuotationSystem extends LightningElement {
   }
 
   // ── Computed: misc ─────────────────────────────────────────────────────────
-  get signDisabled() {
-    return !this._signature.trim() || this._isDeciding;
-  }
   get decideDisabled() {
     return this._isDeciding;
   }
@@ -584,9 +507,6 @@ export default class NexusQuotationSystem extends LightningElement {
   get messageInput() {
     return this._messageInput;
   }
-  get signature() {
-    return this._signature;
-  }
   get rejectReason() {
     return this._rejectReason;
   }
@@ -610,11 +530,10 @@ export default class NexusQuotationSystem extends LightningElement {
     const id = e.currentTarget.dataset.id;
     this._selectedQuoteId = id;
     this._modalTab = "details";
-    this._isSigning = false;
-    this._signature = "";
     this._showRejectForm = false;
     this._rejectReason = "";
     this._expandedVersion = null;
+
     // Seed messages from quote data (mock initial conversation)
     const q = this.activeQuotes.find((r) => r.quoteId === id);
     this._messages =
@@ -654,9 +573,7 @@ export default class NexusQuotationSystem extends LightningElement {
     if (!qid) return;
     this._selectedQuoteId = qid;
     this._modalTab = "details";
-    this._isSigning = false;
     this._showRejectForm = false;
-    this._signature = "";
   }
 
   // ── Handlers: messages ────────────────────────────────────────────────────
@@ -705,110 +622,87 @@ export default class NexusQuotationSystem extends LightningElement {
 
   // ── Handlers: PDF ─────────────────────────────────────────────────────────
   handleDownloadPDF() {
-    this._toast("PDF", "Génération du PDF en cours...", "info");
+    const q = this.selectedQuote;
+    this._downloadSignedPDF(q && q.quoteId);
   }
   handleDownloadPDFCard(e) {
     e.stopPropagation();
-    this._toast("PDF", "Génération du PDF en cours...", "info");
+    const quoteId = e.currentTarget.dataset.id;
+    this._downloadSignedPDF(quoteId);
+  }
+  _downloadSignedPDF(quoteId) {
+    if (!quoteId) return;
+    this._toast("PDF", "Récupération du contrat signé...", "info");
+    getSignedContractBase64({ quoteId })
+      .then((result) => {
+        if (!result || !result.base64) {
+          this._toast(
+            "PDF",
+            "Aucun contrat signé disponible pour ce devis.",
+            "warning"
+          );
+          return;
+        }
+        // Decode base64 → Uint8Array → Blob → download
+        const binary = atob(result.base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = result.filename || "Contrat_Signe.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      })
+      .catch((err) => {
+        console.error("PDF download error", err);
+        this._toast("PDF", "Impossible de télécharger le contrat.", "error");
+      });
   }
 
   // ── Handlers: accept / sign ───────────────────────────────────────────────
 
-  // Quote acceptance (status: Presented → Accepted)
+  // Quote acceptance — direct, no overlay
   handleAcceptQuote() {
-    this._isContractSigning = false;
-    this._isSigning = true;
-  }
-
-  // Final contract signing (status: Accepted + negotiationStatus: Final → Signed)
-  handleSignFinalContract() {
-    this._isContractSigning = true;
-    this._isSigning = true;
-  }
-
-  handleSignatureInput(e) {
-    this._signature = e.target.value;
-  }
-
-  handleCancelSign() {
-    this._isSigning = false;
-    this._isContractSigning = false;
-    this._signature = "";
-  }
-
-  handleConfirmSign() {
     if (this._isMock(this._selectedQuoteId)) {
-      this._updateMockStatus(this._selectedQuoteId, "Signed");
-      this._isSigning = false;
-      this._isContractSigning = false;
-      this._signature = "";
+      this._updateMockStatus(this._selectedQuoteId, "Accepted");
       this._selectedQuoteId = null;
       this._toast(
-        "Contrat Signé ✓",
-        "Votre signature a été enregistrée.",
+        "Devis Accepté ✓",
+        "Votre acceptation a été enregistrée.",
         "success"
       );
       return;
     }
-
     this._isDeciding = true;
-
-    if (this._isContractSigning) {
-      // Customer signs the formal B2B contract → closes deal + sends invoice
-      finalizeContractSign({ quoteId: this._selectedQuoteId })
-        .then(() => {
-          this._isSigning = false;
-          this._isContractSigning = false;
-          this._signature = "";
-          return refreshApex(this._quotesWireResult);
-        })
-        .then(() => {
-          this._isDeciding = false;
-          this._selectedQuoteId = null;
-          this._toast(
-            "Contrat Signé ✓",
-            "Votre contrat B2B est signé. La facture vous a été envoyée par email.",
-            "success"
-          );
-        })
-        .catch((err) => {
-          this._isDeciding = false;
-          this._toast(
-            "Erreur",
-            err.body?.message || "Une erreur est survenue.",
-            "error"
-          );
-        });
-    } else {
-      // Customer accepts the quote (Presented → Accepted)
-      processQuoteDecision({
-        quoteId: this._selectedQuoteId,
-        decision: "Accepted",
-        reason: ""
+    processQuoteDecision({
+      quoteId: this._selectedQuoteId,
+      decision: "Accepted",
+      reason: ""
+    })
+      .then(() => refreshApex(this._quotesWireResult))
+      .then(() => {
+        this._isDeciding = false;
+        this._selectedQuoteId = null;
+        this._toast(
+          "Devis Accepté ✓",
+          "Votre acceptation a été enregistrée. Notre équipe va vous préparer le contrat.",
+          "success"
+        );
       })
-        .then(() => {
-          this._isSigning = false;
-          this._signature = "";
-          return refreshApex(this._quotesWireResult);
-        })
-        .then(() => {
-          this._isDeciding = false;
-          this._selectedQuoteId = null;
-          this._toast(
-            "Devis Accepté ✓",
-            "Votre acceptation a été enregistrée. Notre équipe va vous préparer le contrat.",
-            "success"
-          );
-        })
-        .catch((err) => {
-          this._isDeciding = false;
-          this._toast(
-            "Erreur",
-            err.body?.message || "Une erreur est survenue.",
-            "error"
-          );
-        });
-    }
+      .catch((err) => {
+        this._isDeciding = false;
+        this._toast(
+          "Erreur",
+          err.body?.message || "Une erreur est survenue.",
+          "error"
+        );
+      });
   }
 
   // ── Handlers: reject ──────────────────────────────────────────────────────
@@ -860,6 +754,76 @@ export default class NexusQuotationSystem extends LightningElement {
           "error"
         );
       });
+  }
+
+  // ── Handlers: counter-offer ───────────────────────────────────────────────
+  handleShowCounterForm() {
+    this._showCounterForm = true;
+    this._counterPrice = "";
+    this._counterMessage = "";
+  }
+  handleCancelCounter() {
+    this._showCounterForm = false;
+  }
+  handleCounterPriceInput(e) {
+    this._counterPrice = e.target.value;
+  }
+  handleCounterMessageInput(e) {
+    this._counterMessage = e.target.value;
+  }
+  handleSubmitCounter() {
+    const price = parseFloat(this._counterPrice);
+    if (!price || price <= 0) {
+      this._toast(
+        "Montant invalide",
+        "Veuillez saisir un prix de contre-offre valide.",
+        "error"
+      );
+      return;
+    }
+    this._counterSubmitting = true;
+    submitCounterOffer({
+      quoteId: this._selectedQuoteId,
+      counterPrice: price,
+      message: this._counterMessage
+    })
+      .then((outcome) => {
+        this._counterSubmitting = false;
+        this._showCounterForm = false;
+        if (outcome === "ACCEPTED") {
+          this._toast(
+            "Contre-offre acceptée automatiquement",
+            "Votre prix a été accepté. Le contrat est en cours de préparation.",
+            "success"
+          );
+        } else if (outcome === "COUNTERED") {
+          this._toast(
+            "Nouvelle proposition reçue",
+            "Notre système a calculé un prix intermédiaire. Consultez votre devis mis à jour.",
+            "info"
+          );
+        } else {
+          this._toast(
+            "Contre-offre refusée",
+            "Votre prix est trop éloigné du seuil minimal. Vous pouvez accepter le devis ou contacter notre équipe.",
+            "warning"
+          );
+        }
+        return refreshApex(this._quotesWireResult);
+      })
+      .catch((err) => {
+        this._counterSubmitting = false;
+        this._toast(
+          "Erreur",
+          err.body?.message || "Une erreur est survenue.",
+          "error"
+        );
+      });
+  }
+  get counterSubmitLabel() {
+    return this._counterSubmitting
+      ? "Envoi en cours…"
+      : "Soumettre ma contre-offre";
   }
 
   // ── Handlers: new quote form ───────────────────────────────────────────────

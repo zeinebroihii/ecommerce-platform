@@ -1,11 +1,11 @@
 <template>
   <div class="nc2-wrap">
     <!-- ── Layout ── -->
-    <div class="nc2-layout">
+    <div class={layoutClass}>
       <!-- ══════════════════════════════════
                  SIDEBAR
             ══════════════════════════════════ -->
-      <aside class="nc2-sidebar">
+      <aside class={sidebarClass}>
         <div class="nc2-sidebar-inner">
           <!-- Sidebar header -->
           <div class="nc2-sidebar-header">
@@ -19,11 +19,34 @@
               </div>
               <span class="nc2-sidebar-title">Filters</span>
             </div>
-            <template if:true={hasActiveFilters}>
+            <div class="nc2-sidebar-header-actions">
+              <template if:true={hasActiveFilters}>
+                <button
+                  class="nc2-reset-icon-btn"
+                  onclick={handleResetFilters}
+                  title="Reset All"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+                    />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                </button>
+              </template>
               <button
-                class="nc2-reset-icon-btn"
-                onclick={handleResetFilters}
-                title="Reset All"
+                class="nc2-sidebar-collapse-btn"
+                onclick={handleToggleSidebar}
+                title="Collapse filters"
               >
                 <svg
                   width="14"
@@ -32,14 +55,11 @@
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
                 >
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                  <path d="M3 3v5h5" />
+                  <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
-            </template>
+            </div>
           </div>
 
           <!-- All Products -->
@@ -106,7 +126,7 @@
           <!-- Availability Filter -->
           <div class="nc2-filter-section">
             <div class="nc2-filter-section-header">
-              <span class="nc2-filter-section-title">Disponibilité</span>
+              <span class="nc2-filter-section-title">Availability</span>
               <template if:true={hasStatusFilters}>
                 <button class="nc2-clear-link" onclick={handleClearStatus}>
                   Clear
@@ -146,7 +166,7 @@
           <!-- Brand Filter -->
           <div class="nc2-filter-section">
             <div class="nc2-filter-section-header">
-              <span class="nc2-filter-section-title">Marque</span>
+              <span class="nc2-filter-section-title">Brand</span>
               <template if:true={hasBrandFilters}>
                 <button class="nc2-clear-link" onclick={handleClearBrand}>
                   Clear
@@ -243,6 +263,38 @@
       <div class="nc2-main">
         <!-- Breadcrumb + count -->
         <div class="nc2-topbar">
+          <button class="nc2-back-btn" onclick={handleBack}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Back
+          </button>
+          <template if:true={sidebarCollapsed}>
+            <button class="nc2-filters-show-btn" onclick={handleToggleSidebar}>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="8" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+              </svg>
+              Filters
+            </button>
+          </template>
           <div class="nc2-breadcrumb">
             <span class={breadcrumbAllClass}>Catalog</span>
             <svg
@@ -468,24 +520,71 @@
                           />
                         </svg>
                       </button>
-                      <button
-                        class="nc2-card-add"
-                        data-id={p.id}
-                        onclick={handleAddToCart}
-                        title="Add to cart"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2.5"
+                      <template if:false={p.isOutOfStock}>
+                        <button
+                          class={p.addBtnCls}
+                          data-id={p.id}
+                          onclick={handleAddToCart}
+                          title="Add to cart"
                         >
-                          <line x1="12" y1="5" x2="12" y2="19" />
-                          <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                      </button>
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                          >
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                        </button>
+                      </template>
+                      <template if:true={p.isOutOfStock}>
+                        <template if:false={p.notifyDone}>
+                          <button
+                            class="nc2-card-notify-btn"
+                            data-id={p.id}
+                            onclick={handleNotifyOpen}
+                            title="Notify me when back in stock"
+                          >
+                            <svg
+                              width="13"
+                              height="13"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <path
+                                d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
+                              />
+                              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </svg>
+                          </button>
+                        </template>
+                        <template if:true={p.notifyDone}>
+                          <div
+                            class="nc2-card-notify-done"
+                            title="You'll be notified"
+                          >
+                            <svg
+                              width="13"
+                              height="13"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2.5"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </div>
+                        </template>
+                      </template>
                     </div>
 
                     <!-- Add to Nexus Build — prominent pill at bottom of image, combo mode only -->
@@ -518,6 +617,10 @@
                   <!-- NEW badge -->
                   <template if:true={p.isNew}>
                     <span class="nc2-card-badge-new">Save 5%</span>
+                  </template>
+                  <!-- Stock badge -->
+                  <template if:true={p.showStockBadge}>
+                    <span class={p.stockBadgeCls}>{p.stockBadgeLabel}</span>
                   </template>
                 </div>
 
@@ -585,6 +688,82 @@
                       </svg>
                     </div>
                   </button>
+                </template>
+
+                <!-- Notify success flash -->
+                <template if:true={p.notifyFlash}>
+                  <div class="nc2-notify-success-flash">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    You'll be notified!
+                  </div>
+                </template>
+
+                <!-- Notify Me inline overlay -->
+                <template if:true={p.showNotifyForm}>
+                  <div class="nc2-notify-overlay" onclick={handleNotifyCancel}>
+                    <div
+                      class="nc2-notify-panel"
+                      onclick={handleNotifyPanelClick}
+                    >
+                      <div class="nc2-notify-inner">
+                        <div class="nc2-notify-icon">
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path
+                              d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
+                            />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                          </svg>
+                        </div>
+                        <p class="nc2-notify-title">Notify Me</p>
+                        <p class="nc2-notify-sub">
+                          Enter your email and we'll alert you when this item is
+                          back.
+                        </p>
+                        <input
+                          class="nc2-notify-input"
+                          type="email"
+                          placeholder="your@email.com"
+                          value={_notifyEmail}
+                          oninput={handleNotifyEmailChange}
+                        />
+                        <div class="nc2-notify-btns">
+                          <button
+                            class="nc2-notify-cancel"
+                            onclick={handleNotifyCancel}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            class="nc2-notify-submit"
+                            onclick={handleNotifySubmit}
+                            disabled={_notifySubmitting}
+                          >
+                            {notifySubmitLabel}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </template>
               </div>
             </template>

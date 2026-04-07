@@ -862,4 +862,12 @@
         <tab>NexusQuoteBuilder</tab>
         <visibility>DefaultOn</visibility>
     </tabVisibilities>
+    <tabVisibilities>
+        <tab>NexusStockWarRoom</tab>
+        <visibility>DefaultOn</visibility>
+    </tabVisibilities>
+    <tabVisibilities>
+        <tab>NexusAnalyticsDashboard</tab>
+        <visibility>DefaultOn</visibility>
+    </tabVisibilities>
 </Profile>

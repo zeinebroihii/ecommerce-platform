@@ -1192,7 +1192,7 @@ public without sharing class LeadManagementController {
       System.debug('IsActive-check FAILED: ' + e.getMessage());
     }
 
-    // NOTE: NetworkMember records cannot be inserted via Apex DML — they are
+    // NOTE: NetworkMember records cannot be inserted via Apex DML :they are
     // created automatically by the platform when a portal User is committed.
     // If Site.login still returns "access disabled", the setFirstPassword method
     // in AuthController handles it via PATH B (System.setPassword fallback).
@@ -1209,7 +1209,7 @@ public without sharing class LeadManagementController {
       System.debug('setPassword OK for userId=' + userId + ' token=' + token);
     } catch (Exception e) {
       System.debug('setPassword FAILED: ' + e.getMessage());
-      // Fall back to site home — user can use Forgot Password
+      // Fall back to site home  user can use Forgot Password
       setpwdUrl = siteUrl;
     }
     try {

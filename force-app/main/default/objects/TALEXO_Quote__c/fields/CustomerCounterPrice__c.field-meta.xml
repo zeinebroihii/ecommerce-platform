@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CustomerCounterPrice__c</fullName>
+    <description
+  >Price proposed by the customer as a counter-offer during negotiation.</description>
+    <label>Customer Counter Price</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackTrending>false</trackTrending>
+    <!-- v2 -->
+    <type>Currency</type>
+</CustomField>

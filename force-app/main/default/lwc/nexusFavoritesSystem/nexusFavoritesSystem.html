@@ -1,109 +1,93 @@
 <template>
-<div class="nfs-wrap">
-
-    <!-- ══ Header ══════════════════════════════════════════════════════════════ -->
-    <div class="nfs-header">
-        <div>
-            <h2 class="nfs-title">My Favorites</h2>
-            <p class="nfs-sub">Manage your saved items and quick-buy options.</p>
-        </div>
-        <span class="nfs-count-badge">{savedLabel}</span>
+  <div class="nfs-wrap">
+    <!-- ══ Toolbar ══════════════════════════════════════════════════════════════ -->
+    <div class="nfs-toolbar">
+      <span class="nfs-count-badge">{savedLabel}</span>
     </div>
 
     <!-- ══ Empty state ══════════════════════════════════════════════════════════ -->
     <template if:true={isEmpty}>
-        <div class="nfs-empty-card">
-            <div class="nfs-empty-icon-wrap">
-                <lightning-icon icon-name="utility:heart" size="large" class="nfs-empty-icon"></lightning-icon>
-            </div>
-            <h3 class="nfs-empty-title">Your wishlist is empty</h3>
-            <p class="nfs-empty-desc">Start exploring our catalog and save the products that interest you for quick access later.</p>
-            <button class="nfs-explore-btn" onclick={handleExploreCatalog}>
-                Explore Catalog
-                <lightning-icon icon-name="utility:forward" size="x-small" class="nfs-btn-arrow"></lightning-icon>
-            </button>
+      <div class="nfs-empty-card">
+        <div class="nfs-empty-icon-wrap">
+          <lightning-icon
+            icon-name="utility:bookmark"
+            size="medium"
+          ></lightning-icon>
         </div>
+        <div class="nfs-empty-text">
+          <h3 class="nfs-empty-title">No saved items yet</h3>
+          <p class="nfs-empty-desc">
+            Browse the catalog and save products for quick access and future
+            orders.
+          </p>
+        </div>
+        <button class="nfs-explore-btn" onclick={handleExploreCatalog}>
+          Browse Catalog
+        </button>
+      </div>
     </template>
 
     <!-- ══ Product Grid ══════════════════════════════════════════════════════════ -->
     <template if:false={isEmpty}>
-        <div class="nfs-grid">
-            <template for:each={favoritesEnriched} for:item="p">
-                <div key={p.id} class="nfs-card">
+      <div class="nfs-grid">
+        <template for:each={favoritesEnriched} for:item="p">
+          <div key={p.id} class="nfs-card">
+            <!-- Image area -->
+            <div class="nfs-img-wrap">
+              <img src={p.image} alt={p.name} class="nfs-img" />
+              <div class="nfs-img-overlay"></div>
 
-                    <!-- Image area -->
-                    <div class="nfs-img-wrap">
-                        <img src={p.image} alt={p.name} class="nfs-img" />
-                        <div class="nfs-img-overlay"></div>
+              <!-- Family badge (top-left) -->
+              <div class="nfs-family-badge">{p.family}</div>
 
-                        <!-- Family badge (top-left) -->
-                        <div class="nfs-family-badge">{p.family}</div>
+              <!-- Heart / remove button (top-right, slides in on hover) -->
+              <button
+                class="nfs-heart-btn nfs-heart-active"
+                data-id={p.id}
+                onclick={handleRemoveFavorite}
+                title="Remove from favorites"
+              >
+                <lightning-icon
+                  icon-name="utility:heart"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+              </button>
 
-                        <!-- Heart / remove button (top-right, slides in on hover) -->
-                        <button class="nfs-heart-btn nfs-heart-active" data-id={p.id} onclick={handleRemoveFavorite} title="Remove from favorites">
-                            <lightning-icon icon-name="utility:heart" size="x-small" variant="inverse"></lightning-icon>
-                        </button>
-
-                        <!-- MSRP price (bottom-left, slides up on hover) -->
-                        <div class="nfs-price-hover">
-                            <span class="nfs-price-label">MSRP</span>
-                            <span class="nfs-price-val">{p.formattedPrice}</span>
-                        </div>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="nfs-card-body">
-                        <div class="nfs-meta-row">
-                            <div class="nfs-stars">
-                                &#9733;&#9733;&#9733;&#9733;&#9733;
-                                <span class="nfs-rating">4.9</span>
-                            </div>
-                            <span class="nfs-code">ID: {p.productCode}</span>
-                        </div>
-                        <h4 class="nfs-name">{p.name}</h4>
-                        <p class="nfs-desc">{p.description}</p>
-                        <div class="nfs-card-footer">
-                            <div class="nfs-verified">
-                                <div class="nfs-verified-row">
-                                    <lightning-icon icon-name="utility:shield_check" size="x-small" class="nfs-shield-icon"></lightning-icon>
-                                    <span class="nfs-verified-label">Nexus Verified</span>
-                                </div>
-                                <span class="nfs-enterprise-label">Enterprise Ready</span>
-                            </div>
-                            <button class="nfs-cart-btn" data-id={p.id} onclick={handleAddToCart} title="Add to cart">
-                                <lightning-icon icon-name="utility:cart" size="small" variant="inverse"></lightning-icon>
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-            </template>
-        </div>
-
-        <!-- ══ AI Insights Banner ═════════════════════════════════════════════════ -->
-        <div class="nfs-ai-banner">
-            <div class="nfs-ai-inner">
-                <div class="nfs-ai-left">
-                    <div class="nfs-ai-label-row">
-                        <lightning-icon icon-name="utility:einstein" size="x-small" class="nfs-ai-icon"></lightning-icon>
-                        <span class="nfs-ai-label">Nexus AI Insights</span>
-                    </div>
-                    <h4 class="nfs-ai-title">Based on your favorites...</h4>
-                    <p class="nfs-ai-desc">We've detected a pattern in your saved items. You might be interested in our <strong class="nfs-ai-strong">Enterprise Expansion Pack</strong> which includes all your favorites at a <span class="nfs-ai-discount">15% bundle discount</span>.</p>
-                    <div class="nfs-ai-btns">
-                        <button class="nfs-bundle-btn">View Bundle Offer</button>
-                        <button class="nfs-dismiss-btn">Dismiss</button>
-                    </div>
-                </div>
-                <div class="nfs-ai-pkg-box">
-                    <lightning-icon icon-name="utility:package" size="large" class="nfs-pkg-icon"></lightning-icon>
-                    <div class="nfs-discount-tag">-15% OFF</div>
-                </div>
+              <!-- MSRP price (bottom-left, slides up on hover) -->
+              <div class="nfs-price-hover">
+                <span class="nfs-price-label">MSRP</span>
+                <span class="nfs-price-val">{p.formattedPrice}</span>
+              </div>
             </div>
-            <div class="nfs-ai-orb nfs-orb-indigo"></div>
-            <div class="nfs-ai-orb nfs-orb-emerald"></div>
-        </div>
-    </template>
 
-</div>
+            <!-- Body -->
+            <div class="nfs-card-body">
+              <div class="nfs-meta-row">
+                <span class="nfs-code">SKU: {p.productCode}</span>
+                <span class="nfs-family-label">{p.family}</span>
+              </div>
+              <h4 class="nfs-name">{p.name}</h4>
+              <p class="nfs-desc">{p.description}</p>
+              <div class="nfs-card-footer">
+                <c-nexus-logo variant="slate" size="xs"></c-nexus-logo>
+                <button
+                  class="nfs-cart-btn"
+                  data-id={p.id}
+                  onclick={handleAddToCart}
+                  title="Add to cart"
+                >
+                  <lightning-icon
+                    icon-name="utility:cart"
+                    size="small"
+                    variant="inverse"
+                  ></lightning-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+  </div>
 </template>

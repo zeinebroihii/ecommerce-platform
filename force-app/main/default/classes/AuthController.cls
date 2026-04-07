@@ -223,10 +223,33 @@ public without sharing class AuthController {
         );
       }
 
+      // ── Resolve the actual username (may differ from email when a .nx suffix
+      //    was appended during portal user creation due to DUPLICATE_USERNAME)
+      List<User> portalUsers = [
+        SELECT Id, Username, IsActive
+        FROM User
+        WHERE
+          Email = :email
+          AND UserType IN (
+            'PowerCustomerSuccess',
+            'CspLitePortal',
+            'PowerPartner'
+          )
+        ORDER BY CreatedDate DESC
+        LIMIT 1
+      ];
+      if (portalUsers.isEmpty()) {
+        throw new AuraHandledException(
+          'Compte introuvable. Veuillez contacter l\'administrateur Nexus.'
+        );
+      }
+      String loginUsername = portalUsers[0].Username;
+      Id userId = portalUsers[0].Id;
+
       // ── PATH A: normal authenticated flow ────────────────────────────────
       Boolean tokenVerifiedViaDisabled = false;
       try {
-        PageReference loginRef = Site.login(email, token, PORTAL_HOME);
+        PageReference loginRef = Site.login(loginUsername, token, PORTAL_HOME);
         if (loginRef != null) {
           // Fully authenticated — use Site.changePassword in session
           PageReference changeRef = Site.changePassword(
@@ -264,21 +287,7 @@ public without sharing class AuthController {
       }
 
       // ── PATH B: token verified via "access disabled" signal ──────────────
-      // Locate the user, reactivate if needed, set password directly.
-      List<User> users = [
-        SELECT Id, IsActive
-        FROM User
-        WHERE Username = :email
-        LIMIT 1
-      ];
-      if (users.isEmpty()) {
-        throw new AuraHandledException(
-          'Compte introuvable. Veuillez contacter l\'administrateur Nexus.'
-        );
-      }
-      Id userId = users[0].Id;
-
-      if (!users[0].IsActive) {
+      if (!portalUsers[0].IsActive) {
         update new User(Id = userId, IsActive = true);
         System.debug('setFirstPassword: reactivated user ' + userId);
       }
@@ -289,7 +298,11 @@ public without sharing class AuthController {
 
       // Best-effort login with new password to get the proper redirect URL
       try {
-        PageReference finalRef = Site.login(email, newPassword, PORTAL_HOME);
+        PageReference finalRef = Site.login(
+          loginUsername,
+          newPassword,
+          PORTAL_HOME
+        );
         if (finalRef != null) {
           return finalRef.getUrl();
         }

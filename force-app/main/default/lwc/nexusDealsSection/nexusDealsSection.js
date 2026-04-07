@@ -1,83 +1,106 @@
-import { LightningElement } from 'lwc';
+import { LightningElement, wire } from "lwc";
+import getProductsWithStock from "@salesforce/apex/ProductController.getProductsWithStock";
 
-const DEALS = [
-    {
-        id: 'deal-1', name: 'Nexus Core Hub v3', productCode: 'NX-100',
-        family: 'Central Systems', originalPrice: 1299, salePrice: 899, discount: 31,
-        badge: 'Flash Sale',
-        image: 'https://picsum.photos/seed/hub/800/800',
-        description: 'The ultimate central intelligence unit for your industrial ecosystem. Powered by Nexus Neural Engine.',
-        features: ['AI-Driven Optimization', 'Real-time Analytics', 'Quantum Encryption'],
-        colors: [
-            { name: 'Titanium', hex: '#475569', image: 'https://picsum.photos/seed/hub/800/800' },
-            { name: 'Midnight', hex: '#0f172a', image: 'https://picsum.photos/seed/hub-dark/800/800' }
-        ]
-    },
-    {
-        id: 'deal-2', name: 'Neural Sensor Pack', productCode: 'NX-200',
-        family: 'Sensors', originalPrice: 499, salePrice: 299, discount: 40,
-        badge: 'Best Deal',
-        image: 'https://picsum.photos/seed/sensor/800/800',
-        description: 'High-precision environmental sensors with edge-computing capabilities for instant data processing.',
-        features: ['Ultra-low Latency', 'Self-Calibrating', 'IP68 Rated'],
-        colors: []
-    },
-    {
-        id: 'deal-3', name: 'Eco-Pulse Monitor', productCode: 'NX-500',
-        family: 'Sustainability', originalPrice: 299, salePrice: 179, discount: 40,
-        badge: 'Limité',
-        image: 'https://picsum.photos/seed/pulse/800/800',
-        description: 'Track your carbon footprint and energy efficiency in real-time with the Eco-Pulse ecosystem.',
-        features: ['CO2 Tracking', 'Energy Insights', 'Auto-Reporting'],
-        colors: []
-    },
-    {
-        id: 'deal-4', name: 'Quantum Link Bridge', productCode: 'NX-300',
-        family: 'Connectivity', originalPrice: 899, salePrice: 599, discount: 33,
-        badge: 'Bundle',
-        image: 'https://picsum.photos/seed/bridge/800/800',
-        description: 'Quantum-secure gateway to seamlessly bridge your legacy systems with the Nexus ecosystem.',
-        features: ['Legacy Support', 'Zero-Trust Security', 'Auto-Scaling'],
-        colors: []
-    }
-];
-
-const DEALS_VIEW = DEALS.map(d => ({
-    ...d,
-    originalPriceFormatted: d.originalPrice.toLocaleString('fr-FR'),
-    salePriceFormatted: d.salePrice.toLocaleString('fr-FR'),
-    savingFormatted: (d.originalPrice - d.salePrice).toLocaleString('fr-FR')
-}));
+const DEALS_LIMIT = 4;
+const FALLBACK_IMAGE = "https://picsum.photos/seed/nexus-deal/800/800";
 
 export default class NexusDealsSection extends LightningElement {
+  @wire(getProductsWithStock, { searchTerm: "", category: "" })
+  wiredProducts;
 
-    get deals() {
-        return DEALS_VIEW;
-    }
+  get isLoading() {
+    return !this.wiredProducts.data && !this.wiredProducts.error;
+  }
 
-    handleAddToCart(event) {
-        event.stopPropagation();
-        const id = event.currentTarget.dataset.id;
-        const product = DEALS.find(d => d.id === id);
-        if (product) {
-            this.dispatchEvent(new CustomEvent('addtocart', {
-                bubbles: true,
-                composed: true,
-                detail: { product }
-            }));
-        }
-    }
+  get hasError() {
+    return !!this.wiredProducts.error;
+  }
 
-    handleViewDetails(event) {
-        event.stopPropagation();
-        const id = event.currentTarget.dataset.id;
-        const product = DEALS.find(d => d.id === id);
-        if (product) {
-            this.dispatchEvent(new CustomEvent('viewdetails', {
-                bubbles: true,
-                composed: true,
-                detail: { product }
-            }));
-        }
+  get deals() {
+    if (!this.wiredProducts.data) return [];
+
+    return this.wiredProducts.data.slice(0, DEALS_LIMIT).map((p) => {
+      // ── Features ─────────────────────────────────────────────────────
+      // Populated from Specs__c JSON today.
+      // Future: replace with DealFeatures__c (Text/LongText on Product2)
+      let features = [];
+      try {
+        const specs = JSON.parse(p.specs || "[]");
+        features = specs.slice(0, 3).map((s) => s.key || String(s));
+      } catch {
+        /* specs not valid JSON — leave empty */
+      }
+
+      // ── Discount ──────────────────────────────────────────────────────
+      // Future: map from DiscountPercent__c (Number field on Product2)
+      const discount = p.discountPercent || 0;
+
+      // ── Badge ─────────────────────────────────────────────────────────
+      // Future: map from Badge__c (Text field on Product2, e.g. "Flash Sale")
+      const badge = p.badge || (p.isNew ? "New" : p.family || "");
+
+      const originalPrice = p.unitPrice || 0;
+      const salePrice =
+        discount > 0
+          ? Math.round(originalPrice * (1 - discount / 100))
+          : originalPrice;
+      const saving = originalPrice - salePrice;
+
+      return {
+        id: p.productId,
+        name: p.name,
+        description: p.description || "",
+        family: p.family || "",
+        brand: p.brand || "", // Future: shown in card footer
+        productCode: p.productCode || "", // Future: shown as SKU
+        rating: p.rating || 0, // Future: star display
+        reviews: p.reviews || 0, // Future: review count
+        isOutOfStock: p.isOutOfStock,
+        imageUrl: p.imageUrl || FALLBACK_IMAGE,
+        discount,
+        hasDiscount: discount > 0,
+        badge,
+        hasBadge: !!badge,
+        features,
+        hasFeatures: features.length > 0,
+        originalPriceFormatted: originalPrice.toLocaleString("fr-FR"),
+        salePriceFormatted: salePrice.toLocaleString("fr-FR"),
+        savingFormatted: saving.toLocaleString("fr-FR")
+      };
+    });
+  }
+
+  get isEmpty() {
+    return !this.isLoading && !this.hasError && this.deals.length === 0;
+  }
+
+  handleAddToCart(event) {
+    event.stopPropagation();
+    const id = event.currentTarget.dataset.id;
+    const raw = (this.wiredProducts.data || []).find((p) => p.productId === id);
+    if (raw) {
+      this.dispatchEvent(
+        new CustomEvent("addtocart", {
+          bubbles: true,
+          composed: true,
+          detail: { product: raw }
+        })
+      );
     }
+  }
+
+  handleViewDetails(event) {
+    event.stopPropagation();
+    const id = event.currentTarget.dataset.id;
+    const raw = (this.wiredProducts.data || []).find((p) => p.productId === id);
+    if (raw) {
+      this.dispatchEvent(
+        new CustomEvent("viewdetails", {
+          bubbles: true,
+          composed: true,
+          detail: { product: raw }
+        })
+      );
+    }
+  }
 }

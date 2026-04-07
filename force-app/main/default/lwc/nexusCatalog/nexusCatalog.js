@@ -1,5 +1,9 @@
 import { LightningElement, wire, track } from "lwc";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import userId from "@salesforce/user/Id";
+import EMAIL_FIELD from "@salesforce/schema/User.Email";
 import getProductsWithStock from "@salesforce/apex/ProductController.getProductsWithStock";
+import requestNotification from "@salesforce/apex/StockNotificationController.requestNotification";
 
 const CATEGORIES = [
   {
@@ -55,6 +59,74 @@ const FAMILY_TO_CAT = {
   Sustainability: "sustainability"
 };
 
+// Normalize any French/English/mixed status from Salesforce to English canonical
+function normalizeStatus(raw) {
+  const s = (raw || "").toLowerCase();
+  if (
+    s.includes("épuisé") ||
+    s.includes("epuisé") ||
+    s.includes("out of stock")
+  )
+    return "Out of Stock";
+  if (s.includes("arrivage") || s.includes("arriving")) return "Arriving Soon";
+  if (s.includes("commande") || s.includes("on order")) return "On Order (48h)";
+  if (s.includes("stock") || s.includes("en stock") || s.includes("in stock"))
+    return "In Stock";
+  return raw || "In Stock";
+}
+
+function stockBadge(p) {
+  const qty = p.stockLevel || 0;
+  const status = p.status; // already normalized to English
+
+  if (status === "Arriving Soon") {
+    return {
+      stockBadgeLabel: "Arriving Soon",
+      stockBadgeCls: "nc2-stock-badge nc2-stock-arriving",
+      showStockBadge: true,
+      isOutOfStock: false
+    };
+  }
+  if (status === "Out of Stock" || qty === 0) {
+    return {
+      stockBadgeLabel: "Out of Stock",
+      stockBadgeCls: "nc2-stock-badge nc2-stock-out",
+      showStockBadge: true,
+      isOutOfStock: true
+    };
+  }
+  if (status === "On Order (48h)") {
+    return {
+      stockBadgeLabel: "On Order (48h)",
+      stockBadgeCls: "nc2-stock-badge nc2-stock-arriving",
+      showStockBadge: true,
+      isOutOfStock: false
+    };
+  }
+  if (qty <= 3) {
+    return {
+      stockBadgeLabel: "Last " + qty + " left",
+      stockBadgeCls: "nc2-stock-badge nc2-stock-last",
+      showStockBadge: true,
+      isOutOfStock: false
+    };
+  }
+  if (qty <= 10) {
+    return {
+      stockBadgeLabel: "Low Stock",
+      stockBadgeCls: "nc2-stock-badge nc2-stock-low",
+      showStockBadge: true,
+      isOutOfStock: false
+    };
+  }
+  return {
+    stockBadgeLabel: "In Stock",
+    stockBadgeCls: "nc2-stock-badge nc2-stock-in",
+    showStockBadge: false,
+    isOutOfStock: false
+  };
+}
+
 function apexToProduct(p) {
   let features = [];
   try {
@@ -82,12 +154,19 @@ function apexToProduct(p) {
     isNew: p.isNew || false,
     isActive: !p.isOutOfStock,
     stockLevel: p.quantityAvailable || 0,
-    status: p.availabilityStatus || (p.isOutOfStock ? "Épuisé" : "En stock"),
+    status: normalizeStatus(
+      p.availabilityStatus || (p.isOutOfStock ? "Out of Stock" : "In Stock")
+    ),
     specs: p.specs || ""
   };
 }
 
-const ALL_STATUSES = ["En stock", "En arrivage", "Epuisé", "Sur commande 48h"];
+const ALL_STATUSES = [
+  "In Stock",
+  "Arriving Soon",
+  "Out of Stock",
+  "On Order (48h)"
+];
 const BROWSE_KEY = "nexus_browse_history";
 const BROWSE_MAX = 20; // max entries kept
 
@@ -134,9 +213,22 @@ export default class NexusCatalog extends LightningElement {
   @track detailProduct = null;
   @track showToast = false;
   @track _activeComboSlotId = null;
+  @track _notifyProductId = null;
+  @track _notifyEmail = "";
+  @track _notifySubmitting = false;
+  @track _notifyDoneIds = [];
+  @track _notifyFlashId = null;
   @track _activeComboSlotCat = null;
+  @track sidebarCollapsed = false;
   _toastTimer;
   _onComboSlotActive;
+
+  @wire(getRecord, { recordId: userId, fields: [EMAIL_FIELD] })
+  _userRecord;
+
+  get _userEmail() {
+    return getFieldValue(this._userRecord.data, EMAIL_FIELD) || "";
+  }
 
   @wire(getProductsWithStock, { searchTerm: "", category: "" })
   wiredProducts({ data, error }) {
@@ -347,6 +439,13 @@ export default class NexusCatalog extends LightningElement {
             ? "nc2-card-fav nc2-card-fav--active"
             : "nc2-card-fav",
           cardClass: "nc2-product-card",
+          ...stockBadge(p),
+          addBtnCls: stockBadge(p).isOutOfStock
+            ? "nc2-card-add nc2-card-add--oos"
+            : "nc2-card-add",
+          showNotifyForm: this._notifyProductId === p.id,
+          notifyDone: this._notifyDoneIds.includes(p.id),
+          notifyFlash: this._notifyFlashId === p.id,
           stars: [1, 2, 3, 4, 5].map((n) => ({
             n,
             cls:
@@ -381,6 +480,75 @@ export default class NexusCatalog extends LightningElement {
     return this.viewMode === "list"
       ? "nc2-view-btn nc2-view-btn--active"
       : "nc2-view-btn";
+  }
+
+  // ── Sidebar collapse ─────────────────────────────────────────────────────
+
+  get layoutClass() {
+    return this.sidebarCollapsed ? "nc2-layout nc2-layout--full" : "nc2-layout";
+  }
+  get sidebarClass() {
+    return this.sidebarCollapsed
+      ? "nc2-sidebar nc2-sidebar--hidden"
+      : "nc2-sidebar";
+  }
+
+  get notifySubmitLabel() {
+    return this._notifySubmitting ? "Sending…" : "Confirm";
+  }
+
+  handleToggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  handleBack() {
+    this.dispatchEvent(
+      new CustomEvent("catalogback", { bubbles: true, composed: true })
+    );
+  }
+
+  // ── Notify Me ────────────────────────────────────────────────────────────
+
+  handleNotifyOpen(event) {
+    event.stopPropagation();
+    this._notifyProductId = event.currentTarget.dataset.id;
+    this._notifyEmail = this._userEmail;
+  }
+
+  handleNotifyCancel(event) {
+    event.stopPropagation();
+    this._notifyProductId = null;
+  }
+
+  handleNotifyPanelClick(event) {
+    event.stopPropagation();
+  }
+
+  handleNotifyEmailChange(event) {
+    this._notifyEmail = event.target.value;
+  }
+
+  handleNotifySubmit(event) {
+    event.stopPropagation();
+    const productId = this._notifyProductId;
+    const product = this._products.find((p) => p.id === productId);
+    const productName = product ? product.name : "";
+    const email = this._notifyEmail.trim();
+    if (!email || !email.includes("@")) return;
+
+    // Close instantly — optimistic
+    this._notifyProductId = null;
+    this._notifyDoneIds = [...this._notifyDoneIds, productId];
+    this._notifyFlashId = productId;
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    setTimeout(() => {
+      this._notifyFlashId = null;
+    }, 2000);
+
+    // Fire & forget — send email + create Task in background
+    requestNotification({ productId, productName, customerEmail: email }).catch(
+      () => {}
+    );
   }
 
   // ── Active filter pills ──────────────────────────────────────────────────
@@ -526,7 +694,7 @@ export default class NexusCatalog extends LightningElement {
     this.selectedCategory = null;
     this.selectedSubcategory = null;
     this.searchQuery = "";
-    this.priceMax = 20000;
+    this.priceMax = 200000;
     this.statusFilter = [];
     this.brandFilter = [];
   }

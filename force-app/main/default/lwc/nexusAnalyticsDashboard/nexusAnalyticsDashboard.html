@@ -1,0 +1,236 @@
+<template>
+  <div class="nad-wrap">
+    <!-- ── Header ─────────────────────────────────────────────────────────── -->
+    <div class="nad-header">
+      <div class="nad-header-left">
+        <div class="nad-header-icon">
+          <lightning-icon
+            icon-name="utility:chart"
+            size="small"
+          ></lightning-icon>
+        </div>
+        <div>
+          <div class="nad-header-title">Revenue Intelligence</div>
+          <div class="nad-header-sub">Nexus B2B · Sales Analytics</div>
+        </div>
+      </div>
+      <div class="nad-header-badge">Live Data</div>
+    </div>
+
+    <!-- ── Stock Risk Banner ──────────────────────────────────────────────── -->
+    <template if:true={hasStockAlert}>
+      <div class="nad-stock-banner">
+        <lightning-icon
+          icon-name="utility:warning"
+          size="x-small"
+          class="nad-banner-icon"
+        ></lightning-icon>
+        <span><strong>Stock Alert:</strong> {stockAlertMsg}</span>
+      </div>
+    </template>
+
+    <!-- ── KPI Cards ──────────────────────────────────────────────────────── -->
+    <div class="nad-kpi-row">
+      <div class="nad-kpi-card nad-kpi-revenue">
+        <div class="nad-kpi-top">
+          <div class="nad-kpi-icon-wrap nad-kpi-icon-green">
+            <lightning-icon
+              icon-name="utility:moneybag"
+              size="x-small"
+            ></lightning-icon>
+          </div>
+          <span class="nad-kpi-trend nad-kpi-trend-up">Accepted</span>
+        </div>
+        <div class="nad-kpi-val">{kpiRevenue}</div>
+        <div class="nad-kpi-label">Total Revenue</div>
+        <div class="nad-kpi-sub">{kpiAccepted} closed deals</div>
+      </div>
+
+      <div class="nad-kpi-card nad-kpi-pipeline">
+        <div class="nad-kpi-top">
+          <div class="nad-kpi-icon-wrap nad-kpi-icon-blue">
+            <lightning-icon
+              icon-name="utility:opportunity"
+              size="x-small"
+            ></lightning-icon>
+          </div>
+          <span class="nad-kpi-trend nad-kpi-trend-blue">In progress</span>
+        </div>
+        <div class="nad-kpi-val">{kpiPipeline}</div>
+        <div class="nad-kpi-label">Pipeline Value</div>
+        <div class="nad-kpi-sub">{kpiActiveQuotes} active quotes</div>
+      </div>
+
+      <div class="nad-kpi-card nad-kpi-winrate">
+        <div class="nad-kpi-top">
+          <div class="nad-kpi-icon-wrap nad-kpi-icon-purple">
+            <lightning-icon
+              icon-name="utility:target"
+              size="x-small"
+            ></lightning-icon>
+          </div>
+        </div>
+        <div class="nad-kpi-val">{kpiWinRate}</div>
+        <div class="nad-kpi-label">Win Rate</div>
+        <div class="nad-kpi-sub">Accepted ÷ Closed</div>
+      </div>
+
+      <div class="nad-kpi-card nad-kpi-deal">
+        <div class="nad-kpi-top">
+          <div class="nad-kpi-icon-wrap nad-kpi-icon-orange">
+            <lightning-icon
+              icon-name="utility:contract"
+              size="x-small"
+            ></lightning-icon>
+          </div>
+        </div>
+        <div class="nad-kpi-val">{kpiAvgDeal}</div>
+        <div class="nad-kpi-label">Avg Deal Size</div>
+        <div class="nad-kpi-sub">{kpiTotalQuotes} total quotes</div>
+      </div>
+    </div>
+
+    <!-- ── Charts Row ─────────────────────────────────────────────────────── -->
+    <div class="nad-charts-row">
+      <!-- Revenue by Month — vertical bar chart -->
+      <div class="nad-card nad-card-large">
+        <div class="nad-card-header">
+          <div>
+            <div class="nad-card-title">Revenue by Month</div>
+            <div class="nad-card-sub">Last 6 months · Accepted quotes only</div>
+          </div>
+        </div>
+        <template if:true={hasRevenue}>
+          <div class="nad-vchart">
+            <div class="nad-vchart-grid">
+              <div class="nad-grid-line"></div>
+              <div class="nad-grid-line"></div>
+              <div class="nad-grid-line"></div>
+              <div class="nad-grid-line"></div>
+            </div>
+            <div class="nad-vchart-bars">
+              <template for:each={revenueChartData} for:item="m">
+                <div key={m.month} class="nad-vchart-col">
+                  <div class="nad-vchart-label-top">{m.revenueLabel}</div>
+                  <div class="nad-vchart-bar-wrap">
+                    <div class="nad-vchart-bar" style={m.barStyle}></div>
+                  </div>
+                  <div class="nad-vchart-month">{m.month}</div>
+                  <div class="nad-vchart-count">{m.quoteCount} deals</div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+        <template if:false={hasRevenue}>
+          <div class="nad-empty">No accepted quotes in the last 6 months</div>
+        </template>
+      </div>
+
+      <!-- Quote Pipeline — horizontal funnel -->
+      <div class="nad-card">
+        <div class="nad-card-header">
+          <div>
+            <div class="nad-card-title">Quote Pipeline</div>
+            <div class="nad-card-sub">By status · All time</div>
+          </div>
+        </div>
+        <template if:true={hasPipeline}>
+          <div class="nad-pipeline">
+            <template for:each={pipelineChartData} for:item="stage">
+              <div key={stage.status} class="nad-pipeline-row">
+                <div class="nad-pipeline-label">{stage.status}</div>
+                <div class="nad-pipeline-track">
+                  <div class="nad-pipeline-bar" style={stage.barStyle}></div>
+                </div>
+                <div class="nad-pipeline-meta">
+                  <span class="nad-pipeline-count">{stage.quoteCount}</span>
+                  <span class="nad-pipeline-val">{stage.valueLabel}</span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template if:false={hasPipeline}>
+          <div class="nad-empty">No quotes found</div>
+        </template>
+      </div>
+    </div>
+
+    <!-- ── Bottom Row ─────────────────────────────────────────────────────── -->
+    <div class="nad-bottom-row">
+      <!-- Top Products -->
+      <div class="nad-card">
+        <div class="nad-card-header">
+          <div>
+            <div class="nad-card-title">Top Products</div>
+            <div class="nad-card-sub">By deals closed · Accepted quotes</div>
+          </div>
+        </div>
+        <template if:true={hasProducts}>
+          <div class="nad-top-list">
+            <template for:each={topProductsData} for:item="p">
+              <div key={p.productId} class="nad-top-row">
+                <div class="nad-top-rank">{p.rank}</div>
+                <div class="nad-top-info">
+                  <div class="nad-top-name">{p.productName}</div>
+                  <div class="nad-top-family">{p.productFamily}</div>
+                  <div class="nad-top-bar-track">
+                    <div
+                      class="nad-top-bar nad-top-bar-product"
+                      style={p.barStyle}
+                    ></div>
+                  </div>
+                </div>
+                <div class="nad-top-stats">
+                  <div class="nad-top-stat-main">{p.dealCount}</div>
+                  <div class="nad-top-stat-label">deals</div>
+                  <div class="nad-top-stat-sec">{p.unitsSold} units</div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template if:false={hasProducts}>
+          <div class="nad-empty">No closed deals yet</div>
+        </template>
+      </div>
+
+      <!-- Top Accounts -->
+      <div class="nad-card">
+        <div class="nad-card-header">
+          <div>
+            <div class="nad-card-title">Top Accounts</div>
+            <div class="nad-card-sub">By revenue · Accepted quotes</div>
+          </div>
+        </div>
+        <template if:true={hasAccounts}>
+          <div class="nad-top-list">
+            <template for:each={topAccountsData} for:item="a">
+              <div key={a.accountName} class="nad-top-row">
+                <div class="nad-top-rank">{a.rank}</div>
+                <div class="nad-top-info">
+                  <div class="nad-top-name">{a.accountName}</div>
+                  <div class="nad-top-family">Avg deal: {a.avgLabel}</div>
+                  <div class="nad-top-bar-track">
+                    <div
+                      class="nad-top-bar nad-top-bar-account"
+                      style={a.barStyle}
+                    ></div>
+                  </div>
+                </div>
+                <div class="nad-top-stats">
+                  <div class="nad-top-stat-main">{a.totalLabel}</div>
+                  <div class="nad-top-stat-label">{a.quoteCount} quotes</div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template if:false={hasAccounts}>
+          <div class="nad-empty">No accepted quotes with linked accounts</div>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
