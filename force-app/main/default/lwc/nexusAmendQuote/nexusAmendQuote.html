@@ -1,0 +1,132 @@
+<template>
+  <lightning-quick-action-panel header="Amend Quote — Prorated Pricing">
+    <template lwc:if={isLoading}>
+      <lightning-spinner
+        alternative-text="Processing..."
+        size="medium"
+      ></lightning-spinner>
+    </template>
+
+    <template lwc:if={result}>
+      <!-- Success state -->
+      <div class="slds-box slds-theme_success slds-m-bottom_medium">
+        <p><strong>Amendment created: {result.amendmentQuoteName}</strong></p>
+        <p>
+          Proration factor: {prorationPct}% ({result.remainingDays} /
+          {result.totalContractDays} days)
+        </p>
+        <p>
+          Full value: {fullValueFormatted} → Prorated charge:
+          {proratedFormatted}
+        </p>
+        <p>AI Score: {result.acceptanceProbability}%</p>
+      </div>
+    </template>
+
+    <template lwc:if={error}>
+      <div class="slds-box slds-theme_error slds-m-bottom_medium">
+        <p>{error}</p>
+      </div>
+    </template>
+
+    <template lwc:if={showForm}>
+      <div class="slds-form slds-m-bottom_medium">
+        <lightning-input
+          type="date"
+          label="Contract Start Date"
+          value={contractStartDate}
+          onchange={handleStartDate}
+          required
+        >
+        </lightning-input>
+        <lightning-input
+          type="date"
+          label="Contract End Date"
+          value={contractEndDate}
+          onchange={handleEndDate}
+          required
+        >
+        </lightning-input>
+        <lightning-input
+          type="number"
+          label="Bulk Discount %"
+          value={bulkDiscount}
+          onchange={handleDiscount}
+          min="0"
+          max="100"
+        >
+        </lightning-input>
+      </div>
+
+      <!-- Line items from original quote -->
+      <template lwc:if={lineItems.length}>
+        <h3 class="slds-text-heading_small slds-m-bottom_small">
+          Line Items to Amend
+        </h3>
+        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Type</th>
+              <th>Qty</th>
+              <th>List Price</th>
+              <th>Include</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template for:each={lineItems} for:item="li">
+              <tr key={li.id}>
+                <td>{li.productName}</td>
+                <td>{li.productType}</td>
+                <td>
+                  <lightning-input
+                    type="number"
+                    data-id={li.id}
+                    value={li.quantity}
+                    onchange={handleQtyChange}
+                    min="0"
+                    variant="label-hidden"
+                  >
+                  </lightning-input>
+                </td>
+                <td>{li.listPrice}</td>
+                <td>
+                  <lightning-input
+                    type="checkbox"
+                    data-id={li.id}
+                    checked={li.included}
+                    onchange={handleIncludeChange}
+                    variant="label-hidden"
+                  >
+                  </lightning-input>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </template>
+    </template>
+
+    <div slot="footer">
+      <template lwc:if={showForm}>
+        <lightning-button
+          label="Cancel"
+          onclick={handleCancel}
+          class="slds-m-right_small"
+        >
+        </lightning-button>
+        <lightning-button
+          label="Generate Amendment"
+          variant="brand"
+          onclick={handleSubmit}
+          disabled={isLoading}
+        >
+        </lightning-button>
+      </template>
+      <template lwc:if={result}>
+        <lightning-button label="Close" variant="brand" onclick={handleCancel}>
+        </lightning-button>
+      </template>
+    </div>
+  </lightning-quick-action-panel>
+</template>

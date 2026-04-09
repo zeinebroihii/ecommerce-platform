@@ -25,6 +25,10 @@ public without sharing class QuoteGenerationService {
     public Integer quantity;
     @AuraEnabled
     public Decimal listPrice;
+    @AuraEnabled
+    public String productType; // 'One-time' | 'Recurring'
+    @AuraEnabled
+    public String billingFrequency; // 'Monthly' | 'Annual' | 'N/A'
   }
 
   public class GenerateRequest {
@@ -59,6 +63,12 @@ public without sharing class QuoteGenerationService {
     public String paymentTerms;
     @AuraEnabled
     public Decimal bulkDiscount;
+    @AuraEnabled
+    public Decimal mrr;
+    @AuraEnabled
+    public Decimal oneTimeTotal;
+    @AuraEnabled
+    public Decimal recurringTotal;
   }
 
   // ── Main entry point ──────────────────────────────────────────────────────
@@ -112,16 +122,38 @@ public without sharing class QuoteGenerationService {
       update existingPrimary;
     }
 
-    // 3. Compute pricing
+    // 3. Compute pricing (split by charge type)
     Decimal discountPct = req.bulkDiscount != null ? req.bulkDiscount : 10;
     Decimal subtotal = 0;
+    Decimal oneTimeSubtotal = 0;
+    Decimal recurringSubtotal = 0;
     for (LineItemRequest li : req.lineItems) {
-      subtotal +=
+      Decimal lineTotal =
         (li.listPrice != null ? li.listPrice : 0) *
         (li.quantity != null ? li.quantity : 1);
+      subtotal += lineTotal;
+      if (li.productType == 'Recurring') {
+        recurringSubtotal += lineTotal;
+      } else {
+        oneTimeSubtotal += lineTotal;
+      }
     }
     Decimal discountAmt = subtotal * (discountPct / 100);
     Decimal grandTotal = subtotal - discountAmt;
+    // Net totals after discount (proportional split)
+    Decimal oneTimeTotal = oneTimeSubtotal * (1 - discountPct / 100);
+    Decimal recurringTotal = recurringSubtotal * (1 - discountPct / 100);
+    // MRR: Recurring-Monthly = net total; Recurring-Annual = net total / 12
+    Decimal mrr = 0;
+    for (LineItemRequest li : req.lineItems) {
+      if (li.productType == 'Recurring') {
+        Decimal lineNet =
+          (li.listPrice != null ? li.listPrice : 0) *
+          (li.quantity != null ? li.quantity : 1) *
+          (1 - discountPct / 100);
+        mrr += (li.billingFrequency == 'Annual') ? lineNet / 12 : lineNet;
+      }
+    }
 
     // 4. Resolve expiry date
     Date expiry;
@@ -145,6 +177,9 @@ public without sharing class QuoteGenerationService {
       IsPrimary__c = true,
       VersionNumber__c = 1,
       NegotiationStatus__c = 'Draft',
+      MRR__c = mrr,
+      OneTimeTotal__c = oneTimeTotal,
+      RecurringTotal__c = recurringTotal,
       Description__c = 'B2B quote for ' +
         opp.Account.Name +
         ' — ' +
@@ -165,6 +200,12 @@ public without sharing class QuoteGenerationService {
       Decimal unitNet = lp * (1 - discountPct / 100);
       Integer qty = li.quantity != null ? li.quantity : 1;
 
+      String pType = String.isNotBlank(li.productType)
+        ? li.productType
+        : 'One-time';
+      String bFreq = String.isNotBlank(li.billingFrequency)
+        ? li.billingFrequency
+        : 'N/A';
       lineItems.add(
         new NexusQuoteLineItem__c(
           Quote__c = q.Id,
@@ -175,7 +216,9 @@ public without sharing class QuoteGenerationService {
           ListPrice__c = lp,
           UnitPrice__c = unitNet,
           Discount__c = discountPct,
-          NetTotal__c = unitNet * qty
+          NetTotal__c = unitNet * qty,
+          Product_Type__c = pType,
+          Billing_Frequency__c = bFreq
         )
       );
     }
@@ -221,6 +264,9 @@ public without sharing class QuoteGenerationService {
       ? Integer.valueOf(q.AcceptanceProbability__c)
       : 0;
     result.aiReason = q.AIReason__c;
+    result.mrr = mrr;
+    result.oneTimeTotal = oneTimeTotal;
+    result.recurringTotal = recurringTotal;
     return result;
   }
 }

@@ -12,6 +12,7 @@ import quickSendFromRequest from "@salesforce/apex/NexusQuoteController.quickSen
 import createVersionFromEdits from "@salesforce/apex/NexusQuoteController.createVersionFromEdits";
 import convertToOrder from "@salesforce/apex/NexusQuoteController.convertToOrder";
 import generateAndSendContract from "@salesforce/apex/NexusQuoteController.generateAndSendContract";
+import manualFinalize from "@salesforce/apex/DocuSignWebhookController.manualFinalize";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const BULK_DISCOUNT = 10; // 10 % applied to all B2B bulk quotes
@@ -26,13 +27,7 @@ const NEG_STATUS_MAP = {
   Final: "nqb-neg-badge nqb-neg-final"
 };
 
-const STATUS_ACCENT = {
-  Accepted: "#10b981",
-  Signed: "#10b981",
-  Rejected: "#ef4444",
-  Presented: "#1a56db",
-  Draft: "#94a3b8"
-};
+const STATUS_ACCENT = "#0f172a";
 
 export default class NexusQuoteBuilder extends LightningElement {
   // Opportunity record page context
@@ -136,8 +131,15 @@ export default class NexusQuoteBuilder extends LightningElement {
               : null
         }));
       })
-      .catch(() => {
+      .catch((err) => {
         this._requestsLoading = false;
+        this._toast(
+          "Error loading requests",
+          err?.body?.message ||
+            err?.message ||
+            "Unable to load quote requests.",
+          "error"
+        );
       });
   }
 
@@ -154,7 +156,7 @@ export default class NexusQuoteBuilder extends LightningElement {
         negBadgeCls:
           NEG_STATUS_MAP[q.negotiationStatus] || "nqb-neg-badge nqb-neg-draft",
         versionLabel: "v" + (q.versionNumber || 1) + ".0",
-        accentStyle: "background:" + (STATUS_ACCENT[s] || STATUS_ACCENT.Draft),
+        accentStyle: "background:" + STATUS_ACCENT,
         isAccepted: s === "Accepted",
         isRejected: s === "Rejected",
         isSigned: s === "Signed",
@@ -166,6 +168,41 @@ export default class NexusQuoteBuilder extends LightningElement {
               : s === "Presented"
                 ? "nqb-status-badge nqb-status-presented"
                 : "nqb-status-badge nqb-status-draft",
+        // DocuSign / Amendment / Renewal
+        dsStatus: q.docuSignStatus || null,
+        hasDsStatus: q.docuSignStatus && q.docuSignStatus !== "Not Sent",
+        dsStatusBadgeCls:
+          q.docuSignStatus === "Completed"
+            ? "nqb-status-badge nqb-status-accepted"
+            : q.docuSignStatus === "Declined" || q.docuSignStatus === "Voided"
+              ? "nqb-status-badge nqb-status-rejected"
+              : q.docuSignStatus === "Sent" || q.docuSignStatus === "Delivered"
+                ? "nqb-status-badge nqb-status-presented"
+                : "nqb-status-badge nqb-status-draft",
+        isAmendment: q.isAmendment === true,
+        isRenewal: q.isRenewal === true,
+        hasMrr: q.mrr != null && q.mrr > 0,
+        formattedMrr:
+          q.mrr != null
+            ? q.mrr.toLocaleString("fr-FR", {
+                style: "currency",
+                currency: "EUR"
+              })
+            : null,
+        formattedOneTime:
+          q.oneTimeTotal != null
+            ? q.oneTimeTotal.toLocaleString("fr-FR", {
+                style: "currency",
+                currency: "EUR"
+              })
+            : null,
+        formattedRecurring:
+          q.recurringTotal != null
+            ? q.recurringTotal.toLocaleString("fr-FR", {
+                style: "currency",
+                currency: "EUR"
+              })
+            : null,
         // Negotiation enrichment
         hasVolumeDiscount: q.volumeDiscountApplied === true,
         needsApproval: q.approvalStatus === "Pending Approval",
@@ -295,6 +332,9 @@ export default class NexusQuoteBuilder extends LightningElement {
         productId: c.product.productId,
         productName: c.product.name,
         productFamily: c.product.family,
+        productType: c.product.productType || null,
+        billingFrequency: c.product.billingFrequency || null,
+        isRecurring: c.product.productType === "Recurring",
         imageUrl: c.product.imageUrl,
         quantity: c.quantity,
         listPrice: this._fmt(c.product.price || 0),
@@ -506,8 +546,8 @@ export default class NexusQuoteBuilder extends LightningElement {
           roundsLeft,
           roundsLeftLabel:
             roundsLeft === 0
-              ? "Limite atteinte"
-              : roundsLeft + " round(s) restant(s)",
+              ? "Limit reached"
+              : roundsLeft + " round(s) remaining",
           isFinalOffer: r.isFinalOffer === true,
           counterBadgeCls:
             "qb-req-priority-badge" +
@@ -559,7 +599,7 @@ export default class NexusQuoteBuilder extends LightningElement {
       : "nqb-req-badge";
   }
   get sendingLabel() {
-    return this._sending ? "Envoi..." : "Envoyer au Client";
+    return this._sending ? "Sending..." : "Send to Client";
   }
   get sending() {
     return this._sending;
@@ -568,15 +608,15 @@ export default class NexusQuoteBuilder extends LightningElement {
     return this._converting;
   }
   get convertLabel() {
-    return this._converting ? "Conversion..." : "→ Convertir en Commande";
+    return this._converting ? "Converting..." : "Convert to Order";
   }
   get generatingContract() {
     return this._generatingContract;
   }
   get generateContractLabel() {
     return this._generatingContract
-      ? "Génération..."
-      : "📋 Générer & Envoyer Contrat";
+      ? "Generating..."
+      : "Generate & Send Contract";
   }
   get canConvertToOrder() {
     return (
@@ -587,6 +627,15 @@ export default class NexusQuoteBuilder extends LightningElement {
   }
   get canGenerateContract() {
     return this.canConvertToOrder;
+  }
+  // Hide floor price / send / revise for accepted, rejected, and signed quotes
+  get canShowQuoteActions() {
+    if (!this._selectedQuote) return false;
+    return (
+      !this._selectedQuote.isAccepted &&
+      !this._selectedQuote.isRejected &&
+      !this._selectedQuote.isSigned
+    );
   }
 
   // Edit-version getters
@@ -621,9 +670,7 @@ export default class NexusQuoteBuilder extends LightningElement {
     return this._savingVersion;
   }
   get saveVersionLabel() {
-    return this._savingVersion
-      ? "Enregistrement..."
-      : "Enregistrer comme nouvelle version";
+    return this._savingVersion ? "Saving..." : "Save as New Version";
   }
   get editGrandTotal() {
     return this._editLineItems.reduce((s, li) => s + (li.netTotal || 0), 0);
@@ -704,13 +751,13 @@ export default class NexusQuoteBuilder extends LightningElement {
         this._quickSendingId = null;
         this.dispatchEvent(
           new ShowToastEvent({
-            title: "Devis envoyé ✓",
+            title: "Quote Sent ✓",
             message:
-              "Le devis " +
+              "Quote " +
               result.quoteName +
-              " a été envoyé à " +
+              " sent to " +
               result.recipientEmail +
-              " — le client reçoit une notification en temps réel.",
+              " — the customer will receive a real-time notification.",
             variant: "success",
             mode: "sticky"
           })
@@ -724,8 +771,10 @@ export default class NexusQuoteBuilder extends LightningElement {
         this._quickSendingId = null;
         this.dispatchEvent(
           new ShowToastEvent({
-            title: "Erreur",
-            message: err.body ? err.body.message : "Une erreur est survenue.",
+            title: "Error",
+            message: err.body
+              ? err.body.message
+              : "An unexpected error occurred.",
             variant: "error"
           })
         );
@@ -845,8 +894,8 @@ export default class NexusQuoteBuilder extends LightningElement {
         this._sending = false;
         this._editFloorPrice = "";
         this._toast(
-          "Devis envoyé !",
-          "Le client peut maintenant voir et accepter le devis dans son portail.",
+          "Quote Sent!",
+          "The customer can now view and accept the quote in their portal.",
           "success"
         );
         this._loadAllQuotes();
@@ -854,7 +903,7 @@ export default class NexusQuoteBuilder extends LightningElement {
       })
       .catch((err) => {
         this._sending = false;
-        this._toast("Erreur", err.body?.message || "Envoi échoué.", "error");
+        this._toast("Error", err.body?.message || "Send failed.", "error");
       });
   }
 
@@ -966,11 +1015,11 @@ export default class NexusQuoteBuilder extends LightningElement {
       .then((newQ) => {
         this._savingVersion = false;
         this._toast(
-          "Nouvelle version créée !",
+          "New Version Created!",
           newQ.name +
             " (v" +
             newQ.versionNumber +
-            ") créée avec vos modifications. Envoyez-la au client.",
+            ") created with your changes. Send it to the customer.",
           "success"
         );
         this.handleBackToList();
@@ -978,8 +1027,8 @@ export default class NexusQuoteBuilder extends LightningElement {
       .catch((err) => {
         this._savingVersion = false;
         this._toast(
-          "Erreur",
-          err.body?.message || "Impossible de créer la version.",
+          "Error",
+          err.body?.message || "Unable to create version.",
           "error"
         );
       });
@@ -993,8 +1042,8 @@ export default class NexusQuoteBuilder extends LightningElement {
       .then(() => {
         this._converting = false;
         this._toast(
-          "Commande créée !",
-          "Le devis a été converti en Commande Salesforce. L'opportunité est passée en Closed Won.",
+          "Order Created!",
+          "The quote has been converted to a Salesforce Order. Opportunity is now Closed Won.",
           "success"
         );
         this.handleBackToList();
@@ -1002,8 +1051,8 @@ export default class NexusQuoteBuilder extends LightningElement {
       .catch((err) => {
         this._converting = false;
         this._toast(
-          "Erreur",
-          err.body?.message || "Conversion échouée.",
+          "Error",
+          err.body?.message || "Conversion failed.",
           "error"
         );
       });
@@ -1017,8 +1066,8 @@ export default class NexusQuoteBuilder extends LightningElement {
       .then(() => {
         this._generatingContract = false;
         this._toast(
-          "Contrat envoyé au client !",
-          "Le contrat B2B a été créé et envoyé par email. Le client doit maintenant le signer dans son portail.",
+          "Contract Sent!",
+          "The B2B contract has been created and sent via DocuSign. The customer must now sign it.",
           "success"
         );
         this.handleBackToList();
@@ -1026,8 +1075,51 @@ export default class NexusQuoteBuilder extends LightningElement {
       .catch((err) => {
         this._generatingContract = false;
         this._toast(
-          "Erreur",
-          err.body?.message || "Génération du contrat échouée.",
+          "Error",
+          err.body?.message || "Contract generation failed.",
+          "error"
+        );
+      });
+  }
+
+  // ── Manual finalize (when DocuSign Connect not wired) ────────────────────────
+  @track _finalizing = false;
+  get canManualFinalize() {
+    if (!this._selectedQuote) return false;
+    const ds = this._selectedQuote.dsStatus;
+    // Show when DocuSign shows Completed but Salesforce not yet updated,
+    // OR when already Signed (re-sync Opp + PDF attachment).
+    return (
+      ds === "Sent" ||
+      ds === "Delivered" ||
+      ds === "Completed" ||
+      this._selectedQuote.isSigned
+    );
+  }
+  get manualFinalizeLabel() {
+    if (this._finalizing) return "Syncing...";
+    return this._selectedQuote?.isSigned
+      ? "Re-sync (Opp + PDF)"
+      : "Mark as Signed";
+  }
+  handleManualFinalize() {
+    if (!this._selectedQuote) return;
+    this._finalizing = true;
+    manualFinalize({ quoteId: this._selectedQuote.quoteId })
+      .then(() => {
+        this._finalizing = false;
+        this._toast(
+          "Contract Synced!",
+          "Opportunity is now Closed Won. The signed PDF will be attached shortly.",
+          "success"
+        );
+        this.handleBackToList();
+      })
+      .catch((err) => {
+        this._finalizing = false;
+        this._toast(
+          "Error",
+          err.body?.message || "Finalization failed.",
           "error"
         );
       });

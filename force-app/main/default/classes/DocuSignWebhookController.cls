@@ -62,6 +62,14 @@ global class DocuSignWebhookController {
 
       if ('completed'.equalsIgnoreCase(status)) {
         finalizeByEnvelopeId(envelopeId);
+      } else if (
+        'declined'.equalsIgnoreCase(status) || 'voided'.equalsIgnoreCase(status)
+      ) {
+        updateDocuSignStatus(envelopeId, status.capitalize());
+      } else if (
+        'delivered'.equalsIgnoreCase(status) || 'sent'.equalsIgnoreCase(status)
+      ) {
+        updateDocuSignStatus(envelopeId, status.capitalize());
       }
 
       res.statusCode = 200;
@@ -80,8 +88,139 @@ global class DocuSignWebhookController {
     }
   }
 
+  // ── Admin manual finalize (called from LWC when DocuSign Connect not wired) ──
+  // Also handles re-sync for already-Signed quotes (Opp not Closed Won / no PDF attached).
+  @AuraEnabled
+  public static void manualFinalize(Id quoteId) {
+    List<TALEXO_Quote__c> qs = [
+      SELECT
+        Id,
+        Name,
+        DvelopEnvelopeId__c,
+        Status__c,
+        GrandTotal__c,
+        PaymentTerms__c,
+        BulkDiscount__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        Opportunity__r.Account.Name,
+        Opportunity__r.OwnerId,
+        Opportunity__r.Owner.Email
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (qs.isEmpty())
+      throw new AuraHandledException('Quote not found.');
+    TALEXO_Quote__c q = qs[0];
+    if (String.isBlank(q.DvelopEnvelopeId__c))
+      throw new AuraHandledException(
+        'No DocuSign envelope found for this quote. Send to DocuSign first.'
+      );
+
+    Date contractStart = Date.today();
+    Date contractEnd = Date.today().addYears(1);
+
+    // Mark as Signed if not already
+    if (q.Status__c != 'Signed') {
+      update new TALEXO_Quote__c(
+        Id = q.Id,
+        Status__c = 'Signed',
+        NegotiationStatus__c = 'Final',
+        DocuSign_Status__c = 'Completed',
+        Contract_Start_Date__c = contractStart,
+        Contract_End_Date__c = contractEnd
+      );
+    }
+
+    // Update Opportunity to Closed Won (always — re-sync safe)
+    if (q.Opportunity__c != null) {
+      try {
+        update new Opportunity(Id = q.Opportunity__c, StageName = 'Closed Won');
+      } catch (Exception ex) {
+        System.debug('[manualFinalize] Opp update skipped: ' + ex.getMessage());
+      }
+    }
+
+    // Get or create Contract record
+    List<Contract> existingC = [
+      SELECT Id
+      FROM Contract
+      WHERE
+        AccountId = :q.Opportunity__r.AccountId
+        AND StartDate = :contractStart
+      LIMIT 1
+    ];
+    Contract c;
+    if (!existingC.isEmpty()) {
+      c = existingC[0];
+    } else {
+      c = new Contract(
+        AccountId = q.Opportunity__r.AccountId,
+        Status = 'Draft',
+        StartDate = contractStart,
+        ContractTerm = 12,
+        Description = 'Nexus B2B Contract — ' + q.Name,
+        OwnerId = q.Opportunity__r.OwnerId
+      );
+      insert c;
+      try {
+        update new Contract(Id = c.Id, Status = 'Activated');
+      } catch (Exception ex) {
+        System.debug(
+          '[manualFinalize] Contract activation skipped: ' + ex.getMessage()
+        );
+      }
+    }
+
+    String contractRef = 'CTR-' + String.valueOf(c.Id).right(6).toUpperCase();
+    String signedAt = DateTime.now().format('dd/MM/yyyy HH:mm') + ' UTC';
+
+    // Enqueue PDF download + email (Queueable handles callouts correctly)
+    try {
+      System.enqueueJob(new DocuSignPollQueueable());
+    } catch (Exception ex) {
+      postSignAsync(
+        q.Id,
+        c.Id,
+        q.Opportunity__r.AccountId,
+        q.DvelopEnvelopeId__c,
+        contractRef,
+        signedAt,
+        q.Opportunity__r.Owner.Email,
+        q.Opportunity__r.Account.Name,
+        q.Name
+      );
+    }
+  }
+
+  // ── Lightweight status update for non-completion events ──────────────────────
+  private static void updateDocuSignStatus(
+    String envelopeId,
+    String newStatus
+  ) {
+    List<TALEXO_Quote__c> quotes = [
+      SELECT Id
+      FROM TALEXO_Quote__c
+      WHERE DvelopEnvelopeId__c = :envelopeId
+      LIMIT 1
+    ];
+    if (!quotes.isEmpty()) {
+      update new TALEXO_Quote__c(
+        Id = quotes[0].Id,
+        DocuSign_Status__c = newStatus
+      );
+      System.debug(
+        '[DocuSignWebhook] Status updated → ' +
+          newStatus +
+          ' for envelopeId=' +
+          envelopeId
+      );
+    }
+  }
+
   // ── Step 1: DML-only finalization (no callouts here) ─────────────────────────
-  private static void finalizeByEnvelopeId(String envelopeId) {
+  public static void finalizeByEnvelopeId(String envelopeId) {
     List<TALEXO_Quote__c> quotes = [
       SELECT
         Id,
@@ -113,36 +252,87 @@ global class DocuSignWebhookController {
       return;
     }
 
-    // ── Update quote + opportunity ─────────────────────────────────────────────
+    // ── Update quote — mark signed + stamp contract dates ─────────────────────
+    Date contractStart = Date.today();
+    Date contractEnd = Date.today().addYears(1);
     update new TALEXO_Quote__c(
       Id = q.Id,
       Status__c = 'Signed',
-      NegotiationStatus__c = 'Final'
+      NegotiationStatus__c = 'Final',
+      DocuSign_Status__c = 'Completed',
+      Contract_Start_Date__c = contractStart,
+      Contract_End_Date__c = contractEnd
     );
-    update new Opportunity(Id = q.Opportunity__c, StageName = 'Closed Won');
 
-    // ── Create Contract record ─────────────────────────────────────────────────
-    Contract c = new Contract(
-      AccountId = q.Opportunity__r.AccountId,
-      Status = 'Draft',
-      StartDate = Date.today(),
-      ContractTerm = 12,
-      Description = 'Contrat B2B Nexus — ' +
-        q.Name +
-        '\n' +
-        'Montant : ' +
-        (q.GrandTotal__c != null
-          ? String.valueOf(q.GrandTotal__c.setScale(2))
-          : '0') +
-        ' EUR\n' +
-        'Conditions paiement : ' +
-        (String.isNotBlank(q.PaymentTerms__c) ? q.PaymentTerms__c : 'Net 30'),
-      OwnerId = q.Opportunity__r.OwnerId
-    );
-    insert c;
+    // ── Update opportunity — Closed Won ──────────────────────────────────────
+    if (q.Opportunity__c != null) {
+      try {
+        update new Opportunity(Id = q.Opportunity__c, StageName = 'Closed Won');
+      } catch (Exception ex) {
+        System.debug(
+          '[DocuSignWebhook] Opp update skipped: ' + ex.getMessage()
+        );
+      }
+    }
 
-    // Activate contract
-    update new Contract(Id = c.Id, Status = 'Activated');
+    // ── Chatter post on the Opportunity ───────────────────────────────────────
+    try {
+      FeedItem post = new FeedItem(
+        ParentId = q.Opportunity__c,
+        Body = '✅ Contract ' +
+          q.Name +
+          ' signed via DocuSign.\n' +
+          'Opportunity moved to Closed Won. Payment awaiting (Net 30).\n' +
+          'Contract active from ' +
+          contractStart.format() +
+          ' to ' +
+          contractEnd.format() +
+          '.'
+      );
+      insert post;
+    } catch (Exception ex) {
+      System.debug('[DocuSignWebhook] Chatter post failed: ' + ex.getMessage());
+    }
+
+    // ── Create Contract record (skip if one already exists for this account) ────
+    List<Contract> existingC = [
+      SELECT Id
+      FROM Contract
+      WHERE
+        AccountId = :q.Opportunity__r.AccountId
+        AND StartDate = :contractStart
+      LIMIT 1
+    ];
+    Contract c;
+    if (!existingC.isEmpty()) {
+      c = existingC[0];
+      System.debug('[DocuSignWebhook] Reusing existing Contract: ' + c.Id);
+    } else {
+      c = new Contract(
+        AccountId = q.Opportunity__r.AccountId,
+        Status = 'Draft',
+        StartDate = contractStart,
+        ContractTerm = 12,
+        Description = 'Nexus B2B Contract — ' +
+          q.Name +
+          '\nAmount: ' +
+          (q.GrandTotal__c != null
+            ? String.valueOf(q.GrandTotal__c.setScale(2))
+            : '0') +
+          ' EUR' +
+          '\nPayment Terms: ' +
+          (String.isNotBlank(q.PaymentTerms__c) ? q.PaymentTerms__c : 'Net 30'),
+        OwnerId = q.Opportunity__r.OwnerId
+      );
+      insert c;
+      try {
+        update new Contract(Id = c.Id, Status = 'Activated');
+      } catch (Exception ex) {
+        System.debug(
+          '[DocuSignWebhook] Contract activation skipped: ' + ex.getMessage()
+        );
+      }
+    }
 
     String contractRef = 'CTR-' + String.valueOf(c.Id).right(6).toUpperCase();
     String signedAt = DateTime.now().format('dd/MM/yyyy HH:mm') + ' UTC';
@@ -151,18 +341,26 @@ global class DocuSignWebhookController {
       '[DocuSignWebhook] Contract created: ' + c.Id + ' | ' + contractRef
     );
 
-    // ── Step 2: Download signed PDF + send emails (requires callout → @future) ──
-    postSignAsync(
-      q.Id,
-      c.Id,
-      q.Opportunity__r.AccountId,
-      envelopeId,
-      contractRef,
-      signedAt,
-      q.Opportunity__r.Owner.Email,
-      q.Opportunity__r.Account.Name,
-      q.Name
-    );
+    // ── Step 2: Enqueue PDF download (Queueable: callouts happen before DML) ────
+    try {
+      System.enqueueJob(new DocuSignPollQueueable());
+    } catch (Exception ex) {
+      System.debug(
+        '[DocuSignWebhook] Enqueue failed, falling back to @future: ' +
+        ex.getMessage()
+      );
+      postSignAsync(
+        q.Id,
+        c.Id,
+        q.Opportunity__r.AccountId,
+        envelopeId,
+        contractRef,
+        signedAt,
+        q.Opportunity__r.Owner.Email,
+        q.Opportunity__r.Account.Name,
+        q.Name
+      );
+    }
   }
 
   // ── Step 2: Download signed PDF from DocuSign + attach + send emails ──────────
@@ -178,6 +376,16 @@ global class DocuSignWebhookController {
     String accountName,
     String quoteName
   ) {
+    // Re-query quoteId's Opportunity link (not available in @future params as sObject)
+    Id opportunityId = null;
+    List<TALEXO_Quote__c> qList = [
+      SELECT Opportunity__c
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (!qList.isEmpty())
+      opportunityId = qList[0].Opportunity__c;
     try {
       // ── Get DocuSign access token ──────────────────────────────────────────
       String token = getDocuSignToken();
@@ -201,7 +409,7 @@ global class DocuSignWebhookController {
             cfg.Account_Id__c +
             '/envelopes/' +
             envelopeId +
-            '/documents/combined'
+            '/documents/1'
         );
         dlReq.setHeader('Authorization', 'Bearer ' + token);
         dlReq.setTimeout(30000);
@@ -241,8 +449,38 @@ global class DocuSignWebhookController {
             Visibility = 'AllUsers'
           );
 
+          // ── Link to Quote (visible in Notes & Attachments on Quote) ─────
+          try {
+            insert new ContentDocumentLink(
+              ContentDocumentId = cv.ContentDocumentId,
+              LinkedEntityId = quoteId,
+              ShareType = 'V',
+              Visibility = 'AllUsers'
+            );
+          } catch (Exception ex) {
+            System.debug(
+              '[DocuSignWebhook] Quote PDF link skipped: ' + ex.getMessage()
+            );
+          }
+
+          // ── Link to Opportunity (Notes & Attachments) ────────────────────
+          if (opportunityId != null) {
+            try {
+              insert new ContentDocumentLink(
+                ContentDocumentId = cv.ContentDocumentId,
+                LinkedEntityId = opportunityId,
+                ShareType = 'V',
+                Visibility = 'AllUsers'
+              );
+            } catch (Exception ex) {
+              System.debug(
+                '[DocuSignWebhook] Opp PDF link skipped: ' + ex.getMessage()
+              );
+            }
+          }
+
           System.debug(
-            '[DocuSignWebhook] Signed PDF attached to Contract + Account.'
+            '[DocuSignWebhook] Signed PDF attached to Contract + Account + Quote + Opportunity.'
           );
         }
       }

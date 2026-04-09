@@ -26,6 +26,10 @@ public without sharing class NexusQuoteController {
     public Decimal price;
     @AuraEnabled
     public String availabilityStatus;
+    @AuraEnabled
+    public String productType;
+    @AuraEnabled
+    public String billingFrequency;
   }
 
   public class QuoteDetailWrapper {
@@ -95,6 +99,18 @@ public without sharing class NexusQuoteController {
     public Integer roundsRemaining;
     @AuraEnabled
     public List<LineItemWrapper> lineItems;
+    @AuraEnabled
+    public String docuSignStatus;
+    @AuraEnabled
+    public Boolean isAmendment;
+    @AuraEnabled
+    public Boolean isRenewal;
+    @AuraEnabled
+    public Decimal mrr;
+    @AuraEnabled
+    public Decimal oneTimeTotal;
+    @AuraEnabled
+    public Decimal recurringTotal;
   }
 
   public class LineItemWrapper {
@@ -127,7 +143,15 @@ public without sharing class NexusQuoteController {
       : '%';
     List<ProductWrapper> result = new List<ProductWrapper>();
     for (Product2 p : [
-      SELECT Id, Name, Family, Image_URL__c, Price__c, AvailabilityStatus__c
+      SELECT
+        Id,
+        Name,
+        Family,
+        Image_URL__c,
+        Price__c,
+        AvailabilityStatus__c,
+        Product_Type__c,
+        Billing_Frequency__c
       FROM Product2
       WHERE IsActive = TRUE AND Name LIKE :likeStr
       ORDER BY Name ASC
@@ -140,6 +164,8 @@ public without sharing class NexusQuoteController {
       w.imageUrl = p.Image_URL__c;
       w.price = p.Price__c;
       w.availabilityStatus = p.AvailabilityStatus__c;
+      w.productType = p.Product_Type__c;
+      w.billingFrequency = p.Billing_Frequency__c;
       result.add(w);
     }
     return result;
@@ -185,6 +211,12 @@ public without sharing class NexusQuoteController {
           CounterMessage__c,
           NegotiationRound__c,
           IsFinalOffer__c,
+          DocuSign_Status__c,
+          Is_Amendment__c,
+          Is_Renewal__c,
+          MRR__c,
+          OneTimeTotal__c,
+          RecurringTotal__c,
           (
             SELECT
               Id,
@@ -236,6 +268,12 @@ public without sharing class NexusQuoteController {
           CounterMessage__c,
           NegotiationRound__c,
           IsFinalOffer__c,
+          DocuSign_Status__c,
+          Is_Amendment__c,
+          Is_Renewal__c,
+          MRR__c,
+          OneTimeTotal__c,
+          RecurringTotal__c,
           (
             SELECT
               Id,
@@ -416,6 +454,12 @@ public without sharing class NexusQuoteController {
           IsPrimary__c,
           Opportunity__r.Name,
           Opportunity__r.Account.Name,
+          DocuSign_Status__c,
+          Is_Amendment__c,
+          Is_Renewal__c,
+          MRR__c,
+          OneTimeTotal__c,
+          RecurringTotal__c,
           (
             SELECT
               Id,
@@ -762,7 +806,7 @@ public without sharing class NexusQuoteController {
     ];
     if (q.Status__c != 'Accepted') {
       throw new AuraHandledException(
-        'Seuls les devis acceptés peuvent générer un contrat.'
+        'Only accepted quotes can generate a contract.'
       );
     }
 
@@ -795,7 +839,7 @@ public without sharing class NexusQuoteController {
     }
     if (accountId == null) {
       throw new AuraHandledException(
-        'Impossible de déterminer le compte associé à ce devis. Vérifiez que l\'opportunité est correctement liée.'
+        'Cannot determine the account linked to this quote. Please ensure the opportunity is correctly linked.'
       );
     }
 
@@ -813,23 +857,33 @@ public without sharing class NexusQuoteController {
     }
 
     // Create contract as Draft, then activate
-    Contract c = new Contract(
-      AccountId = accountId,
-      StartDate = Date.today(),
-      ContractTerm = 12,
-      Status = 'Draft',
-      Description = 'Contrat B2B — ' +
-        q.Name +
-        ' | ' +
-        (q.PaymentTerms__c != null ? q.PaymentTerms__c : 'Net 30')
-    );
-    insert c;
+    Id contractId = null;
     try {
-      update new Contract(Id = c.Id, Status = 'Activated');
+      Contract c = new Contract(
+        AccountId = accountId,
+        StartDate = Date.today(),
+        ContractTerm = 12,
+        Status = 'Draft',
+        Description = 'B2B Contract — ' +
+          q.Name +
+          ' | ' +
+          (q.PaymentTerms__c != null ? q.PaymentTerms__c : 'Net 30')
+      );
+      insert c;
+      contractId = c.Id;
+      try {
+        update new Contract(Id = c.Id, Status = 'Activated');
+      } catch (Exception ex) {
+        System.debug(
+          LoggingLevel.WARN,
+          '[generateAndSendContract] Contract activation skipped: ' +
+          ex.getMessage()
+        );
+      }
     } catch (Exception ex) {
       System.debug(
         LoggingLevel.WARN,
-        '[generateAndSendContract] Contract activation skipped: ' +
+        '[generateAndSendContract] Contract creation skipped: ' +
         ex.getMessage()
       );
     }
@@ -839,19 +893,48 @@ public without sharing class NexusQuoteController {
 
     // Advance opportunity stage if linked
     if (q.Opportunity__c != null) {
-      update new Opportunity(
-        Id = q.Opportunity__c,
-        StageName = 'Value Proposition'
-      );
+      try {
+        update new Opportunity(
+          Id = q.Opportunity__c,
+          StageName = 'Value Proposition'
+        );
+      } catch (Exception ex) {
+        System.debug(
+          LoggingLevel.WARN,
+          '[generateAndSendContract] Opp stage update skipped: ' +
+          ex.getMessage()
+        );
+      }
     }
 
-    // Send the formal contract document email to the customer
-    sendContractEmailAsync(quoteId, c.Id);
+    // Send the formal contract document email to the customer (only if contract was created)
+    if (contractId != null) {
+      sendContractEmailAsync(quoteId, contractId);
+    }
 
     // Initiate DocuSign dual-party e-sign (async — runs after DML is committed)
     DocuSignService.initiateContractSigning(quoteId);
 
-    return c.Id;
+    return contractId;
+  }
+
+  // ── US5: One-click Send to DocuSign from quote record page ──────────────────
+  @AuraEnabled
+  public static void sendQuoteToDocuSign(Id quoteId) {
+    // Guard: quote must exist and have an opportunity
+    TALEXO_Quote__c q = [
+      SELECT Id, Name, Status__c, DocuSign_Status__c, Opportunity__c
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (q.Opportunity__c == null) {
+      throw new AuraHandledException(
+        'This quote is not linked to an Opportunity. Please link it before sending.'
+      );
+    }
+    // Dispatches envelope asynchronously — @future handles callout
+    DocuSignService.initiateContractSigning(quoteId);
   }
 
   // ── Scenario 2b: Customer signs the formal contract in the portal ──────────
@@ -1675,10 +1758,10 @@ public without sharing class NexusQuoteController {
     w.grandTotal = q.GrandTotal__c;
     w.finalNegotiatedPrice = q.FinalNegotiatedPrice__c;
     w.formattedTotal = q.GrandTotal__c != null
-      ? q.GrandTotal__c.setScale(2).toPlainString() + ' €'
+      ? q.GrandTotal__c.format() + ' €'
       : '—';
     w.formattedFinalPrice = q.FinalNegotiatedPrice__c != null
-      ? q.FinalNegotiatedPrice__c.setScale(2).toPlainString() + ' €'
+      ? q.FinalNegotiatedPrice__c.format() + ' €'
       : null;
     w.expirationDate = q.ExpirationDate__c != null
       ? q.ExpirationDate__c.format()
@@ -1722,6 +1805,14 @@ public without sharing class NexusQuoteController {
       w.isExpired = false;
       w.daysUntilExpiry = null;
     }
+
+    // DocuSign / amendment / renewal fields
+    w.docuSignStatus = q.DocuSign_Status__c;
+    w.isAmendment = q.Is_Amendment__c == true;
+    w.isRenewal = q.Is_Renewal__c == true;
+    w.mrr = q.MRR__c;
+    w.oneTimeTotal = q.OneTimeTotal__c;
+    w.recurringTotal = q.RecurringTotal__c;
 
     // UI helpers for AI probability display
     Integer prob = w.acceptanceProbability != null
