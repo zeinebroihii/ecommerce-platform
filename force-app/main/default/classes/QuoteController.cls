@@ -378,9 +378,16 @@ public without sharing class QuoteController {
           'Cordialement,\nNexus Platform'
       );
       mail.setSaveAsActivity(false);
-      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
-      // placeholder to maintain closing brace parity below
-      System.debug(LoggingLevel.INFO, 'Admin notified: ' + admins[0].Email);
+      try {
+        Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+        System.debug(LoggingLevel.INFO, 'Admin notified: ' + admins[0].Email);
+      } catch (Exception emailEx) {
+        // Non-fatal — quote is already saved. Log and continue.
+        System.debug(
+          LoggingLevel.WARN,
+          'Admin email skipped: ' + emailEx.getMessage()
+        );
+      }
     }
 
     return q.Id;
@@ -483,7 +490,14 @@ public without sharing class QuoteController {
       mail.setSubject(adminSubject);
       mail.setPlainTextBody(adminBody);
       mail.setSaveAsActivity(false);
-      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+      try {
+        Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+      } catch (Exception emailEx) {
+        System.debug(
+          LoggingLevel.WARN,
+          'Owner email skipped: ' + emailEx.getMessage()
+        );
+      }
     }
   }
 
@@ -579,7 +593,14 @@ public without sharing class QuoteController {
     );
     mail.setHtmlBody(html);
     mail.setSaveAsActivity(false);
-    Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    try {
+      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    } catch (Exception emailEx) {
+      System.debug(
+        LoggingLevel.WARN,
+        'Customer email skipped: ' + emailEx.getMessage()
+      );
+    }
 
     // Mark quote as Presented so customer can act on it
     update new TALEXO_Quote__c(
@@ -710,7 +731,14 @@ public without sharing class QuoteController {
         '\n\nCordialement,\nNexus Platform'
     );
     mail.setSaveAsActivity(false);
-    Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    try {
+      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    } catch (Exception emailEx) {
+      System.debug(
+        LoggingLevel.WARN,
+        'requestQuote email skipped: ' + emailEx.getMessage()
+      );
+    }
   }
 
   // ── Volume discount: auto-tier rules ─────────────────────────────────────
@@ -915,7 +943,14 @@ public without sharing class QuoteController {
           '</div></div>'
       );
       mail.setSaveAsActivity(false);
-      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+      try {
+        Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+      } catch (Exception emailEx) {
+        System.debug(
+          LoggingLevel.WARN,
+          'Counter-offer email skipped: ' + emailEx.getMessage()
+        );
+      }
     }
   }
 

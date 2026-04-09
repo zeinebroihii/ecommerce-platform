@@ -1,0 +1,81 @@
+<template>
+  <lightning-quick-action-panel header="Send to DocuSign">
+    <template lwc:if={isSent}>
+      <div class="slds-box slds-theme_success">
+        <p><strong>Envelope dispatched successfully.</strong></p>
+        <p>The customer will receive a DocuSign signing request by email.</p>
+        <p>Signature fields are pre-placed — no manual tagging required.</p>
+        <p style="margin-top: 8px; color: #555">
+          Quote status updated to <strong>Sent</strong>. You will be notified
+          when the customer signs.
+        </p>
+      </div>
+    </template>
+
+    <template lwc:if={isError}>
+      <div class="slds-box slds-theme_error">
+        <p><strong>DocuSign error:</strong> {errorMessage}</p>
+        <p>Check Setup → Debug Logs for details.</p>
+      </div>
+    </template>
+
+    <template lwc:if={showConfirm}>
+      <div class="slds-box slds-m-bottom_medium">
+        <p>
+          This will send <strong>{quoteName}</strong> to the customer for
+          electronic signature via DocuSign.
+        </p>
+        <ul class="slds-list_dotted slds-m-top_small">
+          <li>Signature field is pre-placed automatically using anchor tags</li>
+          <li>Sent to customer only — Nexus signs internally</li>
+          <li>You will be notified when completed</li>
+        </ul>
+        <template lwc:if={alreadySent}>
+          <div class="slds-box slds-theme_warning slds-m-top_small">
+            <p>
+              ⚠️ This quote was already sent to DocuSign on {sentAt}. Sending
+              again will create a new envelope.
+            </p>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <template lwc:if={isLoading}>
+      <lightning-spinner
+        alternative-text="Sending to DocuSign..."
+        size="medium"
+      ></lightning-spinner>
+      <p class="slds-text-align_center slds-m-top_small">Sending envelope...</p>
+    </template>
+
+    <div slot="footer">
+      <template lwc:if={showConfirm}>
+        <lightning-button
+          label="Cancel"
+          onclick={handleCancel}
+          class="slds-m-right_small"
+        ></lightning-button>
+        <lightning-button
+          label="Send to DocuSign"
+          variant="brand"
+          onclick={handleSend}
+          disabled={isLoading}
+        ></lightning-button>
+      </template>
+      <template lwc:if={isSent}>
+        <lightning-button
+          label="Close"
+          variant="brand"
+          onclick={handleCancel}
+        ></lightning-button>
+      </template>
+      <template lwc:if={isError}>
+        <lightning-button
+          label="Close"
+          onclick={handleCancel}
+        ></lightning-button>
+      </template>
+    </div>
+  </lightning-quick-action-panel>
+</template>

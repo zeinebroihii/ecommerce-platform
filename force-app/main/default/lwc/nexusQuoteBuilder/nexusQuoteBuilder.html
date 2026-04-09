@@ -152,6 +152,15 @@
                     <template if:true={q.hasCounterOffer}>
                       <span class="qb-badge qb-badge-counter">↩ Counter</span>
                     </template>
+                    <template if:true={q.isAmendment}>
+                      <span class="qb-badge qb-badge-amend">Amendment</span>
+                    </template>
+                    <template if:true={q.isRenewal}>
+                      <span class="qb-badge qb-badge-renewal">Renewal</span>
+                    </template>
+                    <template if:true={q.hasDsStatus}>
+                      <span class={q.dsStatusBadgeCls}>DS: {q.dsStatus}</span>
+                    </template>
                   </div>
                 </div>
 
@@ -353,238 +362,198 @@
         <template if:true={hasRequests}>
           <div class="qb-req-grid">
             <template for:each={requests} for:item="r">
-              <div key={r.quoteId} class="qb-req-card-v2">
-                <!-- Card top gradient band -->
-                <div class="qb-req-card-band"></div>
-
-                <div class="qb-req-card-inner">
-                  <!-- Priority badge + account header -->
-                  <div class="qb-req-card-head">
-                    <div class="qb-req-card-avatar">
-                      <lightning-icon
-                        icon-name="standard:account"
-                        size="small"
-                        variant="inverse"
-                      ></lightning-icon>
-                    </div>
-                    <div class="qb-req-card-who">
-                      <div class="qb-req-card-account">
-                        {r.accountName}
-                        <template if:true={r.hasCounter}>
-                          <span class={r.counterBadgeCls}>CONTRE-OFFRE</span>
-                        </template>
-                        <template if:false={r.hasCounter}>
-                          <span class={r.counterBadgeCls}>NOUVEAU</span>
-                        </template>
-                      </div>
-                      <div class="qb-req-card-date">
-                        {r.name} &nbsp;·&nbsp; {r.ageLabel} ago
-                        <template if:true={r.roundLabel}
-                          >&nbsp;·&nbsp;
-                          <strong>{r.roundLabel}</strong></template
+              <div key={r.quoteId} class="qb-rc">
+                <!-- ── Header ── -->
+                <div class="qb-rc-header">
+                  <div class="qb-rc-header-left">
+                    <div class="qb-rc-account">{r.accountName}</div>
+                    <div class="qb-rc-submeta">
+                      <span>{r.name}</span>
+                      <span class="qb-rc-dot">·</span>
+                      <span>{r.ageLabel} ago</span>
+                      <span class={r.counterBadgeCls}>
+                        <template if:true={r.hasCounter}
+                          >Counter-offer</template
                         >
-                      </div>
+                        <template if:false={r.hasCounter}>New</template>
+                      </span>
                     </div>
-                    <div class="qb-req-card-amount">{r.formattedTotal}</div>
                   </div>
+                  <div class="qb-rc-amount">{r.formattedTotal}</div>
+                </div>
 
-                  <!-- Products as chips -->
-                  <template if:true={r.lineItems.length}>
-                    <div class="qb-req-chips-label">Requested Products</div>
-                    <div class="qb-req-chips">
-                      <template for:each={r.lineItems} for:item="li">
-                        <div key={li.lineItemId} class="qb-req-chip">
-                          <span class="qb-req-chip-name">{li.productName}</span>
-                          <span class="qb-req-chip-qty">×{li.quantity}</span>
-                          <span class="qb-req-chip-price"
-                            >{li.listPrice} €</span
-                          >
-                        </div>
-                      </template>
+                <!-- ── Product table ── -->
+                <template if:true={r.lineItems.length}>
+                  <div class="qb-rc-products">
+                    <div class="qb-rc-prod-header">
+                      <span class="qb-rc-prod-col-name">Product</span>
+                      <span class="qb-rc-prod-col-qty">Qty</span>
+                      <span class="qb-rc-prod-col-price">Unit price</span>
                     </div>
-                  </template>
+                    <template for:each={r.lineItems} for:item="li">
+                      <div key={li.lineItemId} class="qb-rc-prod-row">
+                        <span class="qb-rc-prod-name">{li.productName}</span>
+                        <span class="qb-rc-prod-qty">{li.quantity}</span>
+                        <span class="qb-rc-prod-price">{li.listPrice} €</span>
+                      </div>
+                    </template>
+                  </div>
+                </template>
 
-                  <!-- Negotiation alert badges -->
-                  <div class="qb-req-badges">
+                <!-- ── Meta strip: tags + AI score ── -->
+                <div class="qb-rc-meta-strip">
+                  <div class="qb-rc-tags">
                     <template if:true={r.hasVolumeDiscount}>
-                      <span class="qb-badge qb-badge-volume">
+                      <span class="qb-rc-tag">
                         <lightning-icon
                           icon-name="utility:discount"
                           size="xx-small"
-                          variant="inverse"
                         ></lightning-icon>
-                        Volume Discount Applied
+                        Vol. Discount
                       </span>
                     </template>
                     <template if:true={r.needsApproval}>
-                      <span class="qb-badge qb-badge-approval">
+                      <span class="qb-rc-tag qb-rc-tag-warn">
                         <lightning-icon
                           icon-name="utility:warning"
                           size="xx-small"
-                          variant="inverse"
                         ></lightning-icon>
-                        Pending Manager Approval
+                        Approval needed
                       </span>
                     </template>
                     <template if:true={r.hasCounterOffer}>
-                      <span class="qb-badge qb-badge-counter">
+                      <span class="qb-rc-tag">↩ {r.counterOfferLabel}</span>
+                    </template>
+                    <template if:true={r.roundLabel}>
+                      <span class="qb-rc-tag">
                         <lightning-icon
-                          icon-name="utility:reply"
+                          icon-name="utility:loop"
                           size="xx-small"
-                          variant="inverse"
                         ></lightning-icon>
-                        Counter-Offer: {r.counterOfferLabel}
+                        {r.roundsLeftLabel}
                       </span>
                     </template>
                   </div>
-
-                  <!-- AI probability highlight -->
                   <template if:true={r.acceptanceProbability}>
-                    <div class="qb-req-ai-block">
-                      <div class="qb-req-ai-left">
-                        <lightning-icon
-                          icon-name="utility:einstein"
-                          size="x-small"
-                          class="qb-einstein-ico"
-                        ></lightning-icon>
-                        <span>AI Score</span>
-                      </div>
-                      <div class="qb-req-ai-right">
-                        <span class="qb-req-ai-pct"
-                          >{r.acceptanceProbability}%</span
-                        >
-                        <div class="qb-req-ai-bar">
-                          <div class="qb-req-ai-fill" style={r.probStyle}></div>
-                        </div>
+                    <div class="qb-rc-ai">
+                      <lightning-icon
+                        icon-name="utility:einstein"
+                        size="xx-small"
+                        class="qb-einstein-ico"
+                      ></lightning-icon>
+                      <span class="qb-rc-ai-pct"
+                        >{r.acceptanceProbability}%</span
+                      >
+                      <div class="qb-rc-ai-bar">
+                        <div class="qb-rc-ai-fill" style={r.probStyle}></div>
                       </div>
                     </div>
                   </template>
+                </div>
 
-                  <!-- Rounds remaining indicator -->
-                  <template if:true={r.roundLabel}>
-                    <div class="qb-req-rounds">
+                <!-- ── Counter-response form ── -->
+                <template if:true={r.showCounterForm}>
+                  <div class="qb-counter-form">
+                    <div class="qb-counter-form-title">
                       <lightning-icon
-                        icon-name="utility:loop"
+                        icon-name="utility:reply"
                         size="xx-small"
                       ></lightning-icon>
-                      <span
-                        >{r.roundLabel} &nbsp;·&nbsp; {r.roundsLeftLabel}</span
-                      >
+                      Respond to counter-offer
                     </div>
-                  </template>
-
-                  <!-- Inline counter-response form (shown when admin clicks Respond) -->
-                  <template if:true={r.showCounterForm}>
-                    <div class="qb-counter-form">
-                      <div class="qb-counter-form-title">
-                        <lightning-icon
-                          icon-name="utility:reply"
-                          size="xx-small"
-                          variant="inverse"
-                        ></lightning-icon>
-                        Répondre à la contre-offre client
-                      </div>
-                      <div class="qb-counter-form-row">
-                        <input
-                          type="number"
-                          class="qb-counter-input"
-                          placeholder="Votre prix (€)"
-                          value={_counterResponsePrice}
-                          oninput={handleCounterRespPrice}
-                        />
-                        <input
-                          type="text"
-                          class="qb-counter-input"
-                          placeholder="Message (optionnel)"
-                          value={_counterResponseMsg}
-                          oninput={handleCounterRespMsg}
-                        />
-                      </div>
-                      <label class="qb-counter-final-row">
-                        <input
-                          type="checkbox"
-                          checked={counterIsFinal}
-                          onchange={handleCounterFinalToggle}
-                        />
-                        <span class="qb-counter-final-label"
-                          >Marquer comme Offre Finale (client ne peut plus
-                          contrer)</span
-                        >
-                      </label>
-                      <div class="qb-counter-form-btns">
-                        <button
-                          class="qb-req-cta qb-req-cta-quick"
-                          onclick={handleSubmitCounterResponse}
-                          disabled={counterSubmitting}
-                        >
-                          <lightning-icon
-                            icon-name="utility:send"
-                            size="x-small"
-                            variant="inverse"
-                          ></lightning-icon>
-                          <span>{counterSubmitLabel}</span>
-                        </button>
-                        <button
-                          class="qb-req-cta qb-req-cta-build"
-                          onclick={handleCloseCounterForm}
-                        >
-                          Annuler
-                        </button>
-                      </div>
+                    <div class="qb-counter-form-row">
+                      <input
+                        type="number"
+                        class="qb-counter-input"
+                        placeholder="Your price (€)"
+                        value={_counterResponsePrice}
+                        oninput={handleCounterRespPrice}
+                      />
+                      <input
+                        type="text"
+                        class="qb-counter-input"
+                        placeholder="Message (optional)"
+                        value={_counterResponseMsg}
+                        oninput={handleCounterRespMsg}
+                      />
                     </div>
-                  </template>
-
-                  <!-- CTAs -->
-                  <div class="qb-req-cta-row">
-                    <template if:true={r.hasCounter}>
-                      <button
-                        class="qb-req-cta qb-req-cta-quick"
-                        data-id={r.quoteId}
-                        onclick={handleOpenCounterForm}
-                        title="Répondre à la contre-offre client"
+                    <label class="qb-counter-final-row">
+                      <input
+                        type="checkbox"
+                        checked={counterIsFinal}
+                        onchange={handleCounterFinalToggle}
+                      />
+                      <span class="qb-counter-final-label"
+                        >Mark as Final Offer</span
                       >
-                        <lightning-icon
-                          icon-name="utility:reply"
-                          size="x-small"
-                          variant="inverse"
-                        ></lightning-icon>
-                        <span>Répondre</span>
-                        <span class="qb-req-cta-sub"
-                          >{r.counterOfferLabel}</span
-                        >
-                      </button>
-                    </template>
-                    <template if:false={r.hasCounter}>
+                    </label>
+                    <div class="qb-counter-form-btns">
                       <button
-                        class="qb-req-cta qb-req-cta-quick"
-                        data-id={r.quoteId}
-                        onclick={handleQuickSend}
-                        disabled={r.isQuickSending}
-                        title="Génère et envoie le devis au client en un seul clic"
+                        class="qb-rc-btn-primary"
+                        onclick={handleSubmitCounterResponse}
+                        disabled={counterSubmitting}
                       >
                         <lightning-icon
                           icon-name="utility:send"
                           size="x-small"
                           variant="inverse"
                         ></lightning-icon>
-                        <span>Quick Send</span>
-                        <span class="qb-req-cta-sub">1 clic · Email</span>
+                        <span>{counterSubmitLabel}</span>
                       </button>
-                    </template>
+                      <button
+                        class="qb-rc-btn-secondary"
+                        onclick={handleCloseCounterForm}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- ── Footer actions ── -->
+                <div class="qb-rc-footer">
+                  <template if:true={r.hasCounter}>
                     <button
-                      class="qb-req-cta qb-req-cta-build"
+                      class="qb-rc-btn-primary"
                       data-id={r.quoteId}
-                      onclick={handleBuildFromRequest}
-                      title="Ouvre le builder pour personnaliser avant envoi"
+                      onclick={handleOpenCounterForm}
                     >
                       <lightning-icon
-                        icon-name="utility:edit"
+                        icon-name="utility:reply"
                         size="x-small"
                         variant="inverse"
                       ></lightning-icon>
-                      <span>Personnaliser</span>
+                      <span>Respond</span>
+                      <span class="qb-rc-btn-sub">{r.counterOfferLabel}</span>
                     </button>
-                  </div>
+                  </template>
+                  <template if:false={r.hasCounter}>
+                    <button
+                      class="qb-rc-btn-primary"
+                      data-id={r.quoteId}
+                      onclick={handleQuickSend}
+                      disabled={r.isQuickSending}
+                    >
+                      <lightning-icon
+                        icon-name="utility:send"
+                        size="x-small"
+                        variant="inverse"
+                      ></lightning-icon>
+                      <span>Send Quote</span>
+                      <span class="qb-rc-btn-sub">1-click · Email</span>
+                    </button>
+                  </template>
+                  <button
+                    class="qb-rc-btn-secondary"
+                    data-id={r.quoteId}
+                    onclick={handleBuildFromRequest}
+                  >
+                    <lightning-icon
+                      icon-name="utility:edit"
+                      size="x-small"
+                    ></lightning-icon>
+                    <span>Customize</span>
+                  </button>
                 </div>
               </div>
             </template>
@@ -663,6 +632,16 @@
                     <div class="qb-prod-info">
                       <div class="qb-prod-name" title={p.name}>{p.name}</div>
                       <div class="qb-prod-family">{p.family}</div>
+                      <template if:true={p.productType}>
+                        <div class="qb-prod-type-row">
+                          <span class="qb-prod-type-chip">{p.productType}</span>
+                          <template if:true={p.billingFrequency}>
+                            <span class="qb-prod-billing-chip"
+                              >{p.billingFrequency}</span
+                            >
+                          </template>
+                        </div>
+                      </template>
                       <div class="qb-prod-price">{p.price} €</div>
                     </div>
                     <button
@@ -712,6 +691,18 @@
                       <div class="qb-cart-prod-name">{item.productName}</div>
                       <div class="qb-cart-prod-family">
                         {item.productFamily}
+                        <template if:true={item.productType}>
+                          &nbsp;·&nbsp;
+                          <span class="qb-prod-type-chip qb-prod-type-chip-sm"
+                            >{item.productType}</span
+                          >
+                          <template if:true={item.billingFrequency}>
+                            &nbsp;<span
+                              class="qb-prod-billing-chip qb-prod-type-chip-sm"
+                              >{item.billingFrequency}</span
+                            >
+                          </template>
+                        </template>
                       </div>
                       <template if:true={item.hasStockWarning}>
                         <div class="qb-stock-warning">
@@ -899,6 +890,22 @@
           </div>
         </div>
 
+        <!-- MRR / Revenue-type breakdown row -->
+        <div class="qb-metric-row">
+          <div class="qb-metric-card">
+            <div class="qb-metric-label">One-time Revenue</div>
+            <div class="qb-metric-value">{generated.oneTimeTotal} €</div>
+          </div>
+          <div class="qb-metric-card">
+            <div class="qb-metric-label">Recurring Revenue</div>
+            <div class="qb-metric-value">{generated.recurringTotal} €</div>
+          </div>
+          <div class="qb-metric-card qb-metric-blue">
+            <div class="qb-metric-label">MRR</div>
+            <div class="qb-metric-value qb-metric-main">{generated.mrr} €</div>
+          </div>
+        </div>
+
         <!-- AI panel -->
         <div class="qb-ai-panel">
           <div class="qb-ai-panel-header">
@@ -935,21 +942,20 @@
         <!-- Send to customer -->
         <div class="qb-send-section">
           <div class="qb-send-info">
-            <div class="qb-send-title">Envoyer au client</div>
+            <div class="qb-send-title">Send to Customer</div>
             <div class="qb-send-desc">
-              Le client recevra ce devis par email et pourra l'accepter ou
-              négocier depuis son portail. Définissez un prix plancher
-              (optionnel) : toute contre-offre supérieure sera automatiquement
-              acceptée, en dessous de 15% elle sera contrée à mi-chemin, sinon
-              refusée.
+              The customer will receive this quote by email and can accept or
+              negotiate from their portal. Set a floor price (optional): any
+              counter-offer above it is auto-accepted; within 15% it is met
+              halfway; otherwise refused.
             </div>
           </div>
           <div class="qb-floor-price-row">
-            <label class="qb-floor-label">Prix plancher (€)</label>
+            <label class="qb-floor-label">Floor Price (€)</label>
             <input
               type="number"
               class="qb-floor-input"
-              placeholder="ex. 9 000"
+              placeholder="e.g. 9 000"
               value={editFloorPrice}
               onchange={handleFloorPriceChange}
               min="0"
@@ -1062,62 +1068,45 @@
 
               <!-- Action bar inside main column -->
               <div class="qb-action-bar">
-                <!-- Send + floor price: only for non-accepted quotes -->
-                <template if:false={selectedQuote.isAccepted}>
-                  <template if:false={selectedQuote.isRejected}>
-                    <div class="qb-floor-price-row">
-                      <label class="qb-floor-label">Prix plancher (€)</label>
-                      <input
-                        type="number"
-                        class="qb-floor-input"
-                        placeholder="Optionnel"
-                        value={editFloorPrice}
-                        onchange={handleFloorPriceChange}
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                    <button
-                      class="qb-btn-outline"
-                      data-id={selectedQuote.quoteId}
-                      onclick={handleSendToCustomer}
-                      disabled={sending}
-                    >
-                      <lightning-icon
-                        icon-name="utility:send"
-                        size="x-small"
-                      ></lightning-icon>
-                      <span>{sendingLabel}</span>
-                    </button>
-                    <button
-                      class="qb-btn-outline"
-                      data-id={selectedQuote.quoteId}
-                      onclick={handleOpenEditVersion}
-                    >
-                      <lightning-icon
-                        icon-name="utility:edit"
-                        size="x-small"
-                      ></lightning-icon>
-                      <span>Réviser (Nouvelle Version)</span>
-                    </button>
-                  </template>
-                </template>
-                <!-- Convert + Contract: only for accepted quotes -->
-                <template if:true={canConvertToOrder}>
+                <!-- Send + floor price + revise: only for editable quotes (not accepted/rejected/signed) -->
+                <template if:true={canShowQuoteActions}>
+                  <div class="qb-floor-price-row">
+                    <label class="qb-floor-label">Floor Price (€)</label>
+                    <input
+                      type="number"
+                      class="qb-floor-input"
+                      placeholder="Optional"
+                      value={editFloorPrice}
+                      onchange={handleFloorPriceChange}
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
                   <button
-                    class="qb-btn-primary"
+                    class="qb-btn-outline"
                     data-id={selectedQuote.quoteId}
-                    onclick={handleConvertToOrder}
-                    disabled={converting}
+                    onclick={handleSendToCustomer}
+                    disabled={sending}
                   >
                     <lightning-icon
-                      icon-name="utility:checkin"
+                      icon-name="utility:send"
                       size="x-small"
-                      variant="inverse"
                     ></lightning-icon>
-                    <span>{convertLabel}</span>
+                    <span>{sendingLabel}</span>
+                  </button>
+                  <button
+                    class="qb-btn-outline"
+                    data-id={selectedQuote.quoteId}
+                    onclick={handleOpenEditVersion}
+                  >
+                    <lightning-icon
+                      icon-name="utility:edit"
+                      size="x-small"
+                    ></lightning-icon>
+                    <span>Revise (New Version)</span>
                   </button>
                 </template>
+                <!-- Generate Contract: only for accepted quotes -->
                 <template if:true={canGenerateContract}>
                   <button
                     class="qb-btn-contract"

@@ -403,16 +403,14 @@ public without sharing class RecommendationController {
     Id accountId,
     List<RecommendationResult> results
   ) {
-    // Deactivate previous recommendations for this customer
+    // Delete ALL previous recommendations for this customer (not just active ones)
     List<AI_Recommendation__c> old = [
       SELECT Id
       FROM AI_Recommendation__c
-      WHERE Customer__c = :accountId AND Is_Active__c = TRUE
+      WHERE Customer__c = :accountId
     ];
-    for (AI_Recommendation__c r : old)
-      r.Is_Active__c = false;
     if (!old.isEmpty())
-      update old;
+      delete old;
 
     // Insert fresh recommendations
     List<AI_Recommendation__c> toInsert = new List<AI_Recommendation__c>();
