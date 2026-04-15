@@ -1,0 +1,285 @@
+/* ── Backdrop ── */
+.ntf-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9000;
+  animation: ntf-fade-in 0.2s ease;
+}
+
+/* ── Modal ── */
+.ntf-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9001;
+  background: #ffffff;
+  border-radius: 2rem;
+  padding: 3rem;
+  width: min(560px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 40px 80px rgba(15, 23, 42, 0.25);
+  animation: ntf-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ntf-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ntf-slide-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -44%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ── Close ── */
+.ntf-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.ntf-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ── Header ── */
+.ntf-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #059669;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  margin-bottom: 1rem;
+}
+.ntf-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+  margin: 0 0 0.5rem;
+}
+.ntf-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 2rem;
+}
+
+/* ── Stars ── */
+.ntf-stars-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+}
+.ntf-stars {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+.ntf-star {
+  font-size: 2.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #e2e8f0;
+  padding: 0;
+  line-height: 1;
+  transition:
+    color 0.15s,
+    transform 0.15s;
+}
+.ntf-star:hover,
+.ntf-star--active {
+  color: #f59e0b;
+}
+.ntf-star:hover {
+  transform: scale(1.2);
+}
+
+/* ── Fields ── */
+.ntf-field {
+  margin-bottom: 1.5rem;
+}
+.ntf-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+.ntf-input,
+.ntf-textarea {
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 1rem;
+  font-size: 0.9375rem;
+  color: #0f172a;
+  background: #f8fafc;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  font-family: inherit;
+  resize: vertical;
+}
+.ntf-input:focus,
+.ntf-textarea:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: #ffffff;
+}
+.ntf-textarea--error {
+  border-color: #e11d48 !important;
+}
+.ntf-char-count {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-align: right;
+  margin-top: 0.375rem;
+}
+.ntf-field-error {
+  font-size: 0.8125rem;
+  color: #e11d48;
+  margin-top: 0.375rem;
+  font-weight: 600;
+}
+
+/* ── Error banner ── */
+.ntf-error-banner {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 0.75rem;
+  color: #be123c;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Actions ── */
+.ntf-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+.ntf-btn {
+  padding: 0.875rem 2rem;
+  border-radius: 9999px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ntf-btn--primary {
+  background: #0f172a;
+  color: #ffffff;
+}
+.ntf-btn--primary:hover:not(:disabled) {
+  background: #4f46e5;
+}
+.ntf-btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ntf-btn--ghost {
+  background: transparent;
+  color: #64748b;
+  border: 1.5px solid #e2e8f0;
+}
+.ntf-btn--ghost:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.ntf-btn--ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Spinner ── */
+.ntf-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: ntf-spin 0.6s linear infinite;
+  display: inline-block;
+}
+@keyframes ntf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Success state ── */
+.ntf-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 0 1rem;
+}
+.ntf-success-icon {
+  width: 5rem;
+  height: 5rem;
+  background: #ecfdf5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #059669;
+  margin-bottom: 1.5rem;
+}
+.ntf-success-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+  margin: 0 0 0.75rem;
+}
+.ntf-success-sub {
+  font-size: 0.9375rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 2rem;
+}

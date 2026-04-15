@@ -498,6 +498,28 @@ public without sharing class LeadManagementController {
       }
     }
 
+    // Notify admin of successful B2B lead conversion
+    try {
+      Lead ldNotif = [
+        SELECT FirstName, LastName, Email, Company
+        FROM Lead
+        WHERE Id = :leadId
+        LIMIT 1
+      ];
+      notifyAdminConversionAsync(
+        ldNotif.FirstName != null ? ldNotif.FirstName : '',
+        ldNotif.LastName != null ? ldNotif.LastName : '',
+        ldNotif.Company != null ? ldNotif.Company : '',
+        ldNotif.Email != null ? ldNotif.Email : '',
+        res.getOpportunityId() != null
+          ? String.valueOf(res.getOpportunityId())
+          : '',
+        res.getContactId() != null ? String.valueOf(res.getContactId()) : ''
+      );
+    } catch (Exception notifEx) {
+      System.debug('Admin conversion notif failed: ' + notifEx.getMessage());
+    }
+
     return new Map<String, Id>{
       'contactId' => res.getContactId(),
       'accountId' => res.getAccountId(),
@@ -637,19 +659,19 @@ public without sharing class LeadManagementController {
       '<td style="text-align:right;vertical-align:middle;">' +
       '<span style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);' +
       'color:#6ee7b7;font-size:11px;font-weight:700;letter-spacing:0.06em;padding:5px 13px;border-radius:100px;">' +
-      '&#x2705; LEAD CONVERTI</span>' +
+      '&#x2705; LEAD CONVERTED</span>' +
       '</td></tr></table>' +
       '<div style="margin-top:22px;height:2px;background:#10b981;"></div>' +
       '</div>' +
       // ── Dark header title ──
       '<div style="background:#0f172a;padding:18px 36px 30px;">' +
-      '<div style="font-size:20px;font-weight:700;color:#f1f5f9;">Conversion r\u00e9alis\u00e9e avec succ\u00e8s</div>' +
-      '<div style="color:#94a3b8;font-size:13px;margin-top:5px;">Le lead a \u00e9t\u00e9 converti en Client et Opportunit\u00e9</div>' +
+      '<div style="font-size:20px;font-weight:700;color:#f1f5f9;">Conversion completed successfully</div>' +
+      '<div style="color:#94a3b8;font-size:13px;margin-top:5px;">The lead has been converted into a Client and Opportunity</div>' +
       '</div>' +
       // ── White body ──
       '<div style="background:#fff;padding:36px;">' +
       '<p style="color:#475569;line-height:1.7;font-size:14px;margin:0 0 24px;">' +
-      'Le prospect suivant vient d\'\u00eatre converti avec succ\u00e8s dans Nexus CRM :</p>' +
+      'The following prospect has just been successfully converted in Nexus CRM:</p>' +
       // Client info card (green accent)
       '<div style="background:#f8fafc;border-left:4px solid #10b981;border-radius:0 12px 12px 0;padding:20px 24px;margin:0 0 24px;">' +
       '<table style="width:100%;border-collapse:collapse;">' +
@@ -659,7 +681,7 @@ public without sharing class LeadManagementController {
       ' ' +
       lastName +
       '</td></tr>' +
-      '<tr><td style="padding:8px 16px 8px 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;">ENTREPRISE</td>' +
+      '<tr><td style="padding:8px 16px 8px 0;color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;">COMPANY</td>' +
       '<td style="padding:8px 0;color:#0f172a;font-weight:600;font-size:14px;">' +
       (String.isNotBlank(company) ? company : '\u2014') +
       '</td></tr>' +
@@ -669,31 +691,31 @@ public without sharing class LeadManagementController {
       '</td></tr>' +
       '</table></div>' +
       '<p style="color:#475569;font-size:14px;margin:0 0 24px;line-height:1.7;">' +
-      'Un email de bienvenue personnalis\u00e9 a \u00e9t\u00e9 envoy\u00e9 automatiquement au client.</p>' +
+      'A personalized welcome email has been automatically sent to the client.</p>' +
       // CTA buttons
       '<div style="text-align:center;">' +
       (String.isNotBlank(oppLink)
         ? '<a href="' +
           oppLink +
-          '" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;margin-right:12px;">Voir Opportunit\u00e9 &rarr;</a>'
+          '" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;margin-right:12px;">View Opportunity &rarr;</a>'
         : '') +
       (String.isNotBlank(conLink)
         ? '<a href="' +
           conLink +
-          '" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;">Voir Contact &rarr;</a>'
+          '" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;">View Contact &rarr;</a>'
         : '') +
       '</div></div>' +
       // ── Dark footer ──
       '<div style="background:#1e293b;padding:18px 36px;text-align:center;">' +
       '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 Nexus Systems &bull; CRM &amp; Intelligence Platform</p>' +
-      '<p style="color:#475569;font-size:11px;margin:0;">Notification CRM automatique &mdash; Ne pas r\u00e9pondre \u00e0 cet email</p>' +
+      '<p style="color:#475569;font-size:11px;margin:0;">Automated CRM notification &mdash; Please do not reply to this email</p>' +
       '</div>' +
       '</div></body></html>';
 
     Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
     mail.setToAddresses(new List<String>{ admins[0].Email });
     mail.setSubject(
-      '✅ Nexus Systems — Lead Converti : ' + firstName + ' ' + lastName
+      '✅ Nexus Systems — Lead Converted: ' + firstName + ' ' + lastName
     );
     mail.setHtmlBody(html);
     mail.setSaveAsActivity(false);
@@ -808,18 +830,18 @@ public without sharing class LeadManagementController {
       return existing[0].Username;
     }
 
-    // Find the Community profile — priority order to avoid license limits
+    // B2B portal users must use Customer Community Login User profile
     List<Profile> profiles = [
       SELECT Id
       FROM Profile
-      WHERE Name = 'Customer Community Plus Login User'
+      WHERE Name = 'Customer Community Login User'
       LIMIT 1
     ];
     if (profiles.isEmpty())
       profiles = [
         SELECT Id
         FROM Profile
-        WHERE Name = 'Customer Community Plus User'
+        WHERE Name = 'Customer Community Plus Login User'
         LIMIT 1
       ];
     if (profiles.isEmpty())
@@ -827,13 +849,6 @@ public without sharing class LeadManagementController {
         SELECT Id
         FROM Profile
         WHERE Name = 'Customer Community User'
-        LIMIT 1
-      ];
-    if (profiles.isEmpty())
-      profiles = [
-        SELECT Id
-        FROM Profile
-        WHERE Name = 'Customer Community Login User'
         LIMIT 1
       ];
     if (profiles.isEmpty()) {
@@ -884,17 +899,24 @@ public without sharing class LeadManagementController {
         LIMIT 1
       ];
       if (accountOwner.UserRoleId == null) {
-        List<UserRole> roles = [SELECT Id FROM UserRole LIMIT 1];
+        // Always use the 'Nexus Admin' role by name — never LIMIT 1 without a
+        // filter, which risks grabbing auto-generated Person Account roles.
+        List<UserRole> nexusRoles = [
+          SELECT Id
+          FROM UserRole
+          WHERE Name = 'Nexus Admin'
+          LIMIT 1
+        ];
         Id roleId;
-        if (roles.isEmpty()) {
+        if (!nexusRoles.isEmpty()) {
+          roleId = nexusRoles[0].Id;
+        } else {
           UserRole defaultRole = new UserRole(
             Name = 'Nexus Admin',
             DeveloperName = 'Nexus_Admin'
           );
           insert defaultRole;
           roleId = defaultRole.Id;
-        } else {
-          roleId = roles[0].Id;
         }
         accountOwner.UserRoleId = roleId;
         update accountOwner;
@@ -1036,18 +1058,18 @@ public without sharing class LeadManagementController {
     }
     Contact c = cList[0];
 
-    // 4. Community profile — query in priority order to avoid license limits
+    // 4. B2B portal users must use Customer Community Login User profile
     List<Profile> profiles = [
       SELECT Id
       FROM Profile
-      WHERE Name = 'Customer Community Plus Login User'
+      WHERE Name = 'Customer Community Login User'
       LIMIT 1
     ];
     if (profiles.isEmpty())
       profiles = [
         SELECT Id
         FROM Profile
-        WHERE Name = 'Customer Community Plus User'
+        WHERE Name = 'Customer Community Plus Login User'
         LIMIT 1
       ];
     if (profiles.isEmpty())
@@ -1055,13 +1077,6 @@ public without sharing class LeadManagementController {
         SELECT Id
         FROM Profile
         WHERE Name = 'Customer Community User'
-        LIMIT 1
-      ];
-    if (profiles.isEmpty())
-      profiles = [
-        SELECT Id
-        FROM Profile
-        WHERE Name = 'Customer Community Login User'
         LIMIT 1
       ];
     if (profiles.isEmpty()) {
@@ -1089,10 +1104,10 @@ public without sharing class LeadManagementController {
       LastName = ln,
       Alias = alias,
       CommunityNickname = nick,
-      TimeZoneSidKey = 'Europe/Paris',
-      LocaleSidKey = 'fr_FR',
+      TimeZoneSidKey = 'Europe/London',
+      LocaleSidKey = 'en_GB',
       EmailEncodingKey = 'UTF-8',
-      LanguageLocaleKey = 'fr',
+      LanguageLocaleKey = 'en_US',
       IsActive = true
     );
 
@@ -1111,17 +1126,24 @@ public without sharing class LeadManagementController {
         LIMIT 1
       ];
       if (owner.UserRoleId == null) {
-        List<UserRole> roles = [SELECT Id FROM UserRole LIMIT 1];
+        // Always use the 'Nexus Admin' role by name — never LIMIT 1 without a
+        // filter, which risks grabbing auto-generated Person Account roles.
+        List<UserRole> nexusRoles = [
+          SELECT Id
+          FROM UserRole
+          WHERE Name = 'Nexus Admin'
+          LIMIT 1
+        ];
         Id roleId;
-        if (roles.isEmpty()) {
+        if (!nexusRoles.isEmpty()) {
+          roleId = nexusRoles[0].Id;
+        } else {
           UserRole r = new UserRole(
             Name = 'Nexus Admin',
             DeveloperName = 'Nexus_Admin'
           );
           insert r;
           roleId = r.Id;
-        } else {
-          roleId = roles[0].Id;
         }
         owner.UserRoleId = roleId;
         update owner;
@@ -1218,6 +1240,51 @@ public without sharing class LeadManagementController {
     } catch (Exception e) {
       System.debug('sendPortalWelcomeEmail FAILED: ' + e.getMessage());
     }
+
+    // Assign required B2B permission sets to the portal user
+    try {
+      List<PermissionSet> permSets = [
+        SELECT Id, Name
+        FROM PermissionSet
+        WHERE
+          Name IN (
+            'Nexus_Chat_Apex_Access',
+            'Nexus_Portal_Apex_Access',
+            'Nexus_Portal_Products_Access'
+          )
+      ];
+      List<PermissionSetAssignment> assignments = new List<PermissionSetAssignment>();
+      // Skip any already assigned
+      Set<Id> alreadyAssigned = new Set<Id>();
+      for (PermissionSetAssignment existing : [
+        SELECT PermissionSetId
+        FROM PermissionSetAssignment
+        WHERE AssigneeId = :userId
+      ]) {
+        alreadyAssigned.add(existing.PermissionSetId);
+      }
+      for (PermissionSet ps : permSets) {
+        if (!alreadyAssigned.contains(ps.Id)) {
+          assignments.add(
+            new PermissionSetAssignment(
+              AssigneeId = userId,
+              PermissionSetId = ps.Id
+            )
+          );
+        }
+      }
+      if (!assignments.isEmpty()) {
+        insert assignments;
+        System.debug(
+          'Assigned ' +
+            assignments.size() +
+            ' permission set(s) to userId=' +
+            userId
+        );
+      }
+    } catch (Exception e) {
+      System.debug('Permission set assignment FAILED: ' + e.getMessage());
+    }
   }
 
   // ── Generates a random alphanumeric token used as the one-time initial password ──
@@ -1257,7 +1324,7 @@ public without sharing class LeadManagementController {
 
     Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
     mail.setToAddresses(new List<String>{ email });
-    mail.setSubject('Bienvenue sur Nexus \u2014 Activez votre compte');
+    mail.setSubject('Welcome to Nexus \u2014 Activate Your Account');
     mail.setHtmlBody(buildPortalWelcomeHtml(fullName, setpwdUrl));
     mail.setSaveAsActivity(false);
     mail.setSenderDisplayName('Nexus Platform');
@@ -1296,40 +1363,40 @@ public without sharing class LeadManagementController {
       '<table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 16px;"><tr>' +
       '<td align="center" width="60" height="60" style="background-color:#059669;border-radius:30px;font-size:28px;color:#ffffff;line-height:60px;">&#128274;</td>' +
       '</tr></table>' +
-      '<h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#f9fafb;font-family:Arial,Helvetica,sans-serif;">Bienvenue sur Nexus !</h1>' +
-      '<p style="margin:0;font-size:14px;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;">Cher(e) <strong style="color:#6ee7b7;">' +
+      '<h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#f9fafb;font-family:Arial,Helvetica,sans-serif;">Welcome to Nexus!</h1>' +
+      '<p style="margin:0;font-size:14px;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;">Dear <strong style="color:#6ee7b7;">' +
       fullName +
-      '</strong>, votre compte est pr\u00eat \u00e0 \u00eatre activ\u00e9.</p>' +
+      '</strong>, your account is ready to be activated.</p>' +
       '</td></tr>' +
       // ── White body ──
       '<tr><td style="background-color:#ffffff;padding:36px 40px;">' +
       '<p style="color:#475569;line-height:1.75;font-size:14px;margin:0 0 28px;font-family:Arial,Helvetica,sans-serif;">' +
-      'Votre demande d\'acc\u00e8s \u00e0 la plateforme <strong style="color:#0f172a;">Nexus</strong> a \u00e9t\u00e9 valid\u00e9e. ' +
-      'Pour activer votre compte, cliquez sur le bouton ci-dessous pour d\u00e9finir votre mot de passe.</p>' +
+      'Your access request to the <strong style="color:#0f172a;">Nexus</strong> platform has been approved. ' +
+      'To activate your account, click the button below to set your password.</p>' +
       // ── 3-step table (no flex — email-safe) ──
       '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">' +
       '<tr>' +
       // Step 1
       '<td width="33%" align="center" valign="top" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 8px;">' +
       '<div style="font-size:24px;margin-bottom:8px;">&#128231;</div>' +
-      '<div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:4px;font-family:Arial,Helvetica,sans-serif;">\u00c9tape 1</div>' +
-      '<div style="font-size:11px;color:#64748b;font-family:Arial,Helvetica,sans-serif;">Cliquez sur le bouton ci-dessous</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:4px;font-family:Arial,Helvetica,sans-serif;">Step 1</div>' +
+      '<div style="font-size:11px;color:#64748b;font-family:Arial,Helvetica,sans-serif;">Click the button below</div>' +
       '</td>' +
       // Spacer
       '<td width="2%"></td>' +
       // Step 2
       '<td width="33%" align="center" valign="top" style="background-color:#f0fdf4;border:2px solid #10b981;border-radius:10px;padding:16px 8px;">' +
       '<div style="font-size:24px;margin-bottom:8px;">&#128274;</div>' +
-      '<div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:4px;font-family:Arial,Helvetica,sans-serif;">\u00c9tape 2</div>' +
-      '<div style="font-size:11px;color:#047857;font-family:Arial,Helvetica,sans-serif;">D\u00e9finissez votre mot de passe</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:4px;font-family:Arial,Helvetica,sans-serif;">Step 2</div>' +
+      '<div style="font-size:11px;color:#047857;font-family:Arial,Helvetica,sans-serif;">Set your password</div>' +
       '</td>' +
       // Spacer
       '<td width="2%"></td>' +
       // Step 3
       '<td width="33%" align="center" valign="top" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 8px;">' +
       '<div style="font-size:24px;margin-bottom:8px;">&#10003;</div>' +
-      '<div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:4px;font-family:Arial,Helvetica,sans-serif;">\u00c9tape 3</div>' +
-      '<div style="font-size:11px;color:#64748b;font-family:Arial,Helvetica,sans-serif;">Acc\u00e9dez \u00e0 votre espace</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:4px;font-family:Arial,Helvetica,sans-serif;">Step 3</div>' +
+      '<div style="font-size:11px;color:#64748b;font-family:Arial,Helvetica,sans-serif;">Access your portal</div>' +
       '</td>' +
       '</tr></table>' +
       // ── CTA button — solid bg so it shows in ALL email clients ──
@@ -1340,25 +1407,25 @@ public without sharing class LeadManagementController {
       '" style="display:inline-block;background-color:#059669;color:#ffffff;' +
       'text-decoration:none;font-size:16px;font-weight:700;padding:16px 44px;border-radius:12px;' +
       'font-family:Arial,Helvetica,sans-serif;letter-spacing:0.3px;">' +
-      '&#128274; D\u00e9finir mon mot de passe &rarr;' +
+      '&#128274; Set My Password &rarr;' +
       '</a>' +
       '</td></tr></table>' +
       // ── Security note ──
       '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;"><tr>' +
       '<td style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;">' +
       '<p style="margin:0;color:#166534;font-size:12px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">' +
-      '<strong>&#128272; Lien s\u00e9curis\u00e9 \u00e0 usage unique.</strong> Ce lien est valable pour une seule utilisation. ' +
-      'S\'il a expir\u00e9, utilisez la fonction <em>&laquo;&nbsp;Mot de passe oubli\u00e9&nbsp;&raquo;</em> sur la page de connexion.' +
+      '<strong>&#128272; Single-use secure link.</strong> This link can only be used once. ' +
+      'If it has expired, use the <em>Forgot Password</em> option on the login page.' +
       '</p>' +
       '</td></tr></table>' +
       '<p style="color:#94a3b8;font-size:13px;text-align:center;margin:0;border-top:1px solid #e2e8f0;padding-top:20px;font-family:Arial,Helvetica,sans-serif;">' +
-      'Des questions ? Notre \u00e9quipe support est disponible pour vous aider.</p>' +
+      'Questions? Our support team is here to help.</p>' +
       '</td></tr>' +
       // ── Footer ──
       '<tr><td align="center" style="background-color:#0a0d14;padding:20px 40px;border-top:1px solid #1f2937;">' +
       '<div style="font-size:14px;font-weight:900;color:#10b981;letter-spacing:4px;margin-bottom:6px;font-family:Arial,Helvetica,sans-serif;">NEXUS</div>' +
       '<div style="font-size:11px;color:#6b7280;font-family:Arial,Helvetica,sans-serif;">Intelligence Platform &bull; &copy; 2026</div>' +
-      '<div style="margin-top:8px;font-size:11px;color:#4b5563;font-family:Arial,Helvetica,sans-serif;">Ne pas r\u00e9pondre \u00e0 cet email automatique</div>' +
+      '<div style="margin-top:8px;font-size:11px;color:#4b5563;font-family:Arial,Helvetica,sans-serif;">Please do not reply to this automated email</div>' +
       '</td></tr>' +
       '</table></td></tr></table>' +
       '</body></html>';

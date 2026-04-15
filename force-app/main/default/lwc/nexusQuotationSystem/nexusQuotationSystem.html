@@ -1,4 +1,14 @@
 <template>
+  <!-- ── Testimonial popup (fires after quote acceptance) ── -->
+  <template if:true={_showTestimonialForm}>
+    <c-nexus-testimonial-form
+      quote-id={_testimonialQuoteId}
+      quote-name={_testimonialQuoteName}
+      onclose={handleTestimonialClose}
+      onsubmitted={handleTestimonialClose}
+    ></c-nexus-testimonial-form>
+  </template>
+
   <!-- ═══════════════════════ MAIN LIST VIEW ═══════════════════════════════ -->
   <div class="nqs-wrap">
     <!-- Toolbar -->

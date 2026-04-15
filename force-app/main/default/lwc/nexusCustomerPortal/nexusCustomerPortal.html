@@ -865,8 +865,7 @@
               </div>
             </div>
 
-            <!-- Reviews received -->
-            <div class="ncp-reviews-section">
+            <div class="ncp-reviews-section" style="display: none">
               <div class="ncp-reviews-header">
                 <h3 class="ncp-reviews-title">Reviews Received</h3>
                 <span class="ncp-reviews-count-badge">312 reviews total</span>
@@ -1084,6 +1083,13 @@
                 Personnalisez votre expérience Nexus.
               </p>
             </div>
+          </div>
+        </template>
+
+        <!-- ─ Mes Avis ──────────────────────────────────────────────────── -->
+        <template if:true={isMyReviews}>
+          <div class="ncp-section ncp-fullbleed">
+            <c-nexus-my-reviews></c-nexus-my-reviews>
           </div>
         </template>
 

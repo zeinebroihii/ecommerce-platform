@@ -153,7 +153,7 @@ export default class NexusChangePassword extends LightningElement {
     ).value;
 
     if (newPwd !== confirmPwd) {
-      this.errorMsg = "Les mots de passe ne correspondent pas.";
+      this.errorMsg = "Passwords do not match.";
       this.isLoading = false;
       return;
     }
@@ -188,7 +188,7 @@ export default class NexusChangePassword extends LightningElement {
     } catch (e) {
       this.errorMsg = e.body
         ? e.body.message
-        : 'Impossible de définir le mot de passe. Le lien a peut-être expiré — utilisez "Mot de passe oublié".';
+        : 'Unable to set password. The link may have expired — use "Forgot Password" on the login page.';
     } finally {
       this.isLoading = false;
     }

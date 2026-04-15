@@ -1,0 +1,131 @@
+<template>
+  <!-- Backdrop -->
+  <div class="ntf-backdrop" onclick={handleBackdropClick}></div>
+
+  <!-- Modal -->
+  <div
+    class="ntf-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Leave a Review"
+  >
+    <!-- Close -->
+    <button class="ntf-close" onclick={handleClose} aria-label="Close">
+      &#x2715;
+    </button>
+
+    <!-- ── Success state ── -->
+    <template if:true={submitted}>
+      <div class="ntf-success">
+        <div class="ntf-success-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        </div>
+        <h3 class="ntf-success-title">Thank you for your review!</h3>
+        <p class="ntf-success-sub">
+          Your testimonial is now live on our homepage.<br />
+          We appreciate your trust in Nexus!
+        </p>
+        <button class="ntf-btn ntf-btn--primary" onclick={handleClose}>
+          Close
+        </button>
+      </div>
+    </template>
+
+    <!-- ── Form state ── -->
+    <template if:false={submitted}>
+      <div class="ntf-header">
+        <div class="ntf-eyebrow">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+            />
+          </svg>
+          Share your experience
+        </div>
+        <h3 class="ntf-title">Leave a Review</h3>
+      </div>
+
+      <!-- Star rating -->
+      <div class="ntf-stars-label">Your rating *</div>
+      <div class="ntf-stars" role="radiogroup" aria-label="Rating">
+        <template for:each={starList} for:item="star">
+          <button
+            key={star.value}
+            class={star.cls}
+            data-value={star.value}
+            onmouseenter={handleStarHover}
+            onmouseleave={handleStarLeave}
+            onclick={handleStarClick}
+            aria-label={star.ariaLabel}
+            type="button"
+          >
+            &#9733;
+          </button>
+        </template>
+      </div>
+
+      <!-- Message -->
+      <div class="ntf-field">
+        <label class="ntf-label" for="ntf-msg">Your testimonial *</label>
+        <textarea
+          id="ntf-msg"
+          class={textareaClass}
+          placeholder="Describe your experience with Nexus…"
+          onchange={handleMessageChange}
+          maxlength="500"
+          rows="4"
+        ></textarea>
+        <div class="ntf-char-count">{charCount} / 500</div>
+        <template if:true={msgError}>
+          <div class="ntf-field-error">{msgError}</div>
+        </template>
+      </div>
+
+      <!-- Error banner -->
+      <template if:true={error}>
+        <div class="ntf-error-banner">{error}</div>
+      </template>
+
+      <!-- Actions -->
+      <div class="ntf-actions">
+        <button
+          class="ntf-btn ntf-btn--ghost"
+          onclick={handleClose}
+          disabled={loading}
+        >
+          Cancel
+        </button>
+        <button
+          class="ntf-btn ntf-btn--primary"
+          onclick={handleSubmit}
+          disabled={loading}
+        >
+          <template if:true={loading}>
+            <span class="ntf-spinner"></span>
+            Submitting…
+          </template>
+          <template if:false={loading}> Submit Review </template>
+        </button>
+      </div>
+    </template>
+  </div>
+</template>
