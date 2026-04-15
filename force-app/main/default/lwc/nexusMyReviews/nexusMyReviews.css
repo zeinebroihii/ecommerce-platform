@@ -1,0 +1,336 @@
+:host {
+  display: block;
+}
+
+.nmr-wrap {
+  padding: 2rem 2rem 2.5rem;
+}
+
+/* ── Header ── */
+.nmr-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #059669;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  margin-bottom: 0.75rem;
+}
+.nmr-title {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.05em;
+  margin: 0 0 1.75rem;
+}
+.nmr-header {
+  margin-bottom: 0;
+}
+
+/* ── Loading ── */
+.nmr-loading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #64748b;
+  padding: 2rem 0;
+}
+.nmr-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: nmr-spin 0.7s linear infinite;
+}
+@keyframes nmr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Two-column layout ── */
+.nmr-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .nmr-layout {
+    grid-template-columns: 1fr;
+  }
+  .nmr-col--right {
+    order: -1;
+  }
+}
+
+/* ── Column headers ── */
+.nmr-col-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.nmr-section-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.nmr-section-dot--green {
+  background: #059669;
+}
+.nmr-section-dot--indigo {
+  background: #4f46e5;
+}
+.nmr-section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+.nmr-badge {
+  padding: 0.2rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.nmr-badge--green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* ── Review cards (left column) ── */
+.nmr-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nmr-review-card {
+  background: #ffffff;
+  border: 1.5px solid #f1f5f9;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(148, 163, 184, 0.07);
+  transition: border-color 0.2s;
+}
+.nmr-review-card:hover {
+  border-color: #e0e7ff;
+}
+
+.nmr-review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.875rem;
+}
+.nmr-stars {
+  display: flex;
+  gap: 0.2rem;
+}
+.nmr-star {
+  font-size: 0.9375rem;
+}
+.nmr-star--on {
+  color: #f59e0b;
+}
+.nmr-star--off {
+  color: #e2e8f0;
+}
+
+.nmr-status {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.625rem;
+  border-radius: 9999px;
+}
+.nmr-status--pending {
+  background: #fffbeb;
+  color: #d97706;
+}
+.nmr-status--approved {
+  background: #ecfdf5;
+  color: #059669;
+}
+.nmr-status--rejected {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.nmr-review-msg {
+  font-size: 0.9375rem;
+  color: #475569;
+  font-style: italic;
+  line-height: 1.6;
+  margin: 0 0 1.25rem;
+}
+.nmr-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.nmr-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+.nmr-avatar--emerald {
+  background: #059669;
+}
+.nmr-avatar--indigo {
+  background: #4f46e5;
+}
+.nmr-avatar--rose {
+  background: #e11d48;
+}
+.nmr-avatar--amber {
+  background: #d97706;
+}
+
+.nmr-review-meta-text {
+  flex: 1;
+  min-width: 0;
+}
+.nmr-review-name {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.nmr-review-role {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nmr-review-date {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+/* ── Eligible cards (right column) ── */
+.nmr-eligible-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.nmr-eligible-card {
+  background: #ffffff;
+  border: 1.5px solid #f1f5f9;
+  border-radius: 1.25rem;
+  padding: 1.125rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.nmr-eligible-card:hover {
+  border-color: #a7f3d0;
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.08);
+}
+.nmr-eligible-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #f0fdf4;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #059669;
+  flex-shrink: 0;
+}
+.nmr-eligible-info {
+  flex: 1;
+  min-width: 0;
+}
+.nmr-eligible-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nmr-eligible-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+
+.nmr-review-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nmr-review-btn:hover {
+  background: #4f46e5;
+}
+
+/* ── Empty states ── */
+.nmr-empty-reviews,
+.nmr-empty-eligible {
+  background: #f8fafc;
+  border: 1.5px dashed #e2e8f0;
+  border-radius: 1.25rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+.nmr-empty-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+.nmr-empty-icon--indigo {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+.nmr-empty-icon--green {
+  background: #f0fdf4;
+  color: #059669;
+}
+.nmr-empty-text {
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.375rem;
+  font-size: 0.9375rem;
+}
+.nmr-empty-sub {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  margin: 0;
+}

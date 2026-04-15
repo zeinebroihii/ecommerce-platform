@@ -230,10 +230,23 @@ export default class NexusCatalog extends LightningElement {
     return getFieldValue(this._userRecord.data, EMAIL_FIELD) || "";
   }
 
+  _pendingProductId = null;
+
   @wire(getProductsWithStock, { searchTerm: "", category: "" })
   wiredProducts({ data, error }) {
     if (data) {
       this._products = data.map(apexToProduct);
+      // Auto-open product if ?productId= was in the URL (e.g. from newsletter email)
+      if (this._pendingProductId) {
+        const found = this._products.find(
+          (p) => p.id === this._pendingProductId
+        );
+        if (found) {
+          this.detailProduct = found;
+          saveBrowseEvent(found);
+        }
+        this._pendingProductId = null;
+      }
     } else if (error) {
       console.error(
         "[NexusCatalog] getProductsWithStock error:",
@@ -245,6 +258,27 @@ export default class NexusCatalog extends LightningElement {
   // ── Combo builder integration ────────────────────────────────────────────
 
   connectedCallback() {
+    // Read ?productId= from URL — set by newsletter email "Buy now" links
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const pid = params.get("productId");
+      if (pid) this._pendingProductId = pid;
+
+      // ?section=catalog — scroll catalog into view
+      const section = params.get("section");
+      if (section === "catalog") {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
+          this.template
+            .querySelector(".nc-wrap")
+            ?.scrollIntoView({ behavior: "smooth" });
+        }, 400);
+      }
+      // eslint-disable-next-line no-unused-vars
+    } catch (_e) {
+      /* ignore */
+    }
+
     // eslint-disable-next-line @lwc/lwc/no-document-query
     if (!document.getElementById("nexus-poppins")) {
       const link = document.createElement("link");

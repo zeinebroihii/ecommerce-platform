@@ -1,112 +1,92 @@
 <template>
-    <section class="nr-section" id="reviews-section">
-        <div class="nr-container">
-
-            <!-- ── Header ── -->
-            <div class="nr-header">
-                <div class="nr-header-left">
-                    <div class="nr-eyebrow">
-                        <div class="nr-eyebrow-line"></div>
-                        Testimonials
-                    </div>
-                    <h2 class="nr-heading">
-                        TRUSTED BY<br/>
-                        <span class="nr-heading-gradient">GLOBAL LEADERS</span>
-                    </h2>
-                </div>
-                <div class="nr-nav">
-                    <button class="nr-nav-btn nr-nav-btn--outline" aria-label="Previous">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="15 18 9 12 15 6"/>
-                        </svg>
-                    </button>
-                    <button class="nr-nav-btn nr-nav-btn--dark" aria-label="Next">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ── Reviews grid ── -->
-            <div class="nr-grid">
-
-                <!-- Review 1 -->
-                <div class="nr-card">
-                    <div class="nr-quote-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/>
-                            <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>
-                        </svg>
-                    </div>
-                    <div class="nr-stars">
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                    </div>
-                    <p class="nr-content">&ldquo;Nexus transformed our inventory management. The interface is intuitive and the predictive analytics are incredibly accurate.&rdquo;</p>
-                    <div class="nr-author">
-                        <div class="nr-avatar nr-avatar--emerald">SJ</div>
-                        <div>
-                            <div class="nr-author-name">Sarah Jenkins</div>
-                            <div class="nr-author-role">CTO, Global Logistics</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 2 -->
-                <div class="nr-card">
-                    <div class="nr-quote-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/>
-                            <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>
-                        </svg>
-                    </div>
-                    <div class="nr-stars">
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                    </div>
-                    <p class="nr-content">&ldquo;The B2B portal is a game-changer. Our clients love the autonomy and transparency the platform provides.&rdquo;</p>
-                    <div class="nr-author">
-                        <div class="nr-avatar nr-avatar--indigo">MD</div>
-                        <div>
-                            <div class="nr-author-name">Marc Dupont</div>
-                            <div class="nr-author-role">Purchasing Director, EuroSystems</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 3 -->
-                <div class="nr-card">
-                    <div class="nr-quote-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/>
-                            <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>
-                        </svg>
-                    </div>
-                    <div class="nr-stars">
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                        <span class="nr-star">&#9733;</span>
-                    </div>
-                    <p class="nr-content">&ldquo;Exceptional customer support and seamless integration. Nexus has become the pillar of our digital growth.&rdquo;</p>
-                    <div class="nr-author">
-                        <div class="nr-avatar nr-avatar--rose">ER</div>
-                        <div>
-                            <div class="nr-author-name">Elena Rodriguez</div>
-                            <div class="nr-author-role">Founder, TechFlow</div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
+  <section class="nr-section" id="reviews-section">
+    <div class="nr-container">
+      <!-- ── Header ── -->
+      <div class="nr-header">
+        <div class="nr-header-left">
+          <div class="nr-eyebrow">
+            <div class="nr-eyebrow-line"></div>
+            Testimonials
+          </div>
+          <h2 class="nr-heading">
+            TRUSTED BY<br />
+            <span class="nr-heading-gradient">GLOBAL LEADERS</span>
+          </h2>
         </div>
-    </section>
+        <div class="nr-nav">
+          <button class={prevBtnCls} aria-label="Previous" onclick={handlePrev}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <button class={nextBtnCls} aria-label="Next" onclick={handleNext}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Reviews grid ── -->
+      <div class="nr-grid">
+        <template for:each={reviews} for:item="r">
+          <div key={r.testimonialId} class="nr-card">
+            <div class="nr-quote-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="80"
+                height="80"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"
+                />
+                <path
+                  d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"
+                />
+              </svg>
+            </div>
+            <div class="nr-stars">
+              <template for:each={r.stars} for:item="s">
+                <span key={s.key} class={s.cls}>&#9733;</span>
+              </template>
+            </div>
+            <p class="nr-content">&ldquo;{r.message}&rdquo;</p>
+            <div class="nr-author">
+              <div class={r.avatarCls}>{r.initials}</div>
+              <div>
+                <div class="nr-author-name">{r.customerName}</div>
+                <div class="nr-author-role">{r.role}</div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
 </template>

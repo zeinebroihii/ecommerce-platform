@@ -1,4 +1,67 @@
 <template>
+  <!-- ── Unsubscribe Modal ──────────────────────────────────────────────── -->
+  <template if:true={showUnsubscribeModal}>
+    <div class="nf-unsub-backdrop" onclick={handleCancelUnsubscribe}>
+      <div class="nf-unsub-modal" onclick={stopProp}>
+        <!-- Done state -->
+        <template if:true={unsubscribeDone}>
+          <div class="nf-unsub-icon nf-unsub-icon--done">&#10003;</div>
+          <h3 class="nf-unsub-title">You've been unsubscribed</h3>
+          <p class="nf-unsub-body">
+            <template if:true={unsubscribeEmail}>
+              <strong>{unsubscribeEmail}</strong> has been removed from the
+              Nexus Newsletter.
+            </template>
+            <template if:false={unsubscribeEmail}>
+              Your email has been removed from the Nexus Newsletter.
+            </template>
+            <br />You won't receive any more emails from us.
+          </p>
+          <button
+            class="nf-unsub-btn nf-unsub-btn--secondary"
+            onclick={handleCloseUnsubscribe}
+          >
+            Close
+          </button>
+        </template>
+
+        <!-- Confirm state -->
+        <template if:false={unsubscribeDone}>
+          <div class="nf-unsub-icon">&#9993;</div>
+          <h3 class="nf-unsub-title">Unsubscribe from newsletter?</h3>
+          <p class="nf-unsub-body">
+            You'll stop receiving product updates and exclusive offers from
+            Nexus. You can always re-subscribe from our website.
+          </p>
+
+          <template if:true={unsubscribeError}>
+            <p class="nf-unsub-error">&#9888;&nbsp;{unsubscribeError}</p>
+          </template>
+
+          <div class="nf-unsub-actions">
+            <button
+              class="nf-unsub-btn nf-unsub-btn--secondary"
+              onclick={handleCancelUnsubscribe}
+              disabled={unsubscribeLoading}
+            >
+              Keep me subscribed
+            </button>
+            <button
+              class="nf-unsub-btn nf-unsub-btn--danger"
+              onclick={handleConfirmUnsubscribe}
+              disabled={unsubscribeLoading}
+            >
+              <template if:true={unsubscribeLoading}>
+                <span class="nf-nl-spinner"></span>
+              </template>
+              <template if:false={unsubscribeLoading}> Unsubscribe </template>
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+
   <footer class="nf-footer">
     <div class="nf-inner">
       <!-- ── Top grid ──────────────────────────────────────────────── -->
@@ -18,12 +81,25 @@
           </p>
           <div class="nf-socials">
             <template for:each={socials} for:item="s">
-              <button key={s.label} class="nf-social-btn" aria-label={s.label}>
-                <lightning-icon
-                  icon-name="utility:world"
-                  size="x-small"
-                ></lightning-icon>
-              </button>
+              <a
+                key={s.id}
+                href={s.href}
+                class="nf-social-btn"
+                aria-label={s.label}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d={s.path}></path>
+                </svg>
+              </a>
             </template>
           </div>
         </div>
@@ -51,36 +127,101 @@
         <!-- Newsletter -->
         <div class="nf-newsletter">
           <div class="nf-nl-inner">
-            <h4 class="nf-nl-title">Nexus Newsletter</h4>
-            <p class="nf-nl-desc">
-              Get our latest AI innovations delivered directly to your inbox.
-            </p>
-            <div class="nf-nl-form">
-              <input
-                class="nf-nl-input"
-                type="email"
-                placeholder="your@email.com"
-                value={newsletterEmail}
-                oninput={handleEmailInput}
-              />
-              <button class="nf-nl-btn" onclick={handleSubscribe}>
-                <lightning-icon
-                  icon-name="utility:arrowup"
-                  size="x-small"
-                ></lightning-icon>
-              </button>
+            <!-- Header -->
+            <div class="nf-nl-badge">
+              <span class="nf-nl-badge-dot"></span>
+              Nexus Newsletter
             </div>
+            <h4 class="nf-nl-title">Stay in the loop</h4>
+            <p class="nf-nl-desc">
+              New products, exclusive offers and AI innovations — delivered
+              straight to your inbox.
+            </p>
+
+            <!-- Form -->
+            <template if:false={subscribed}>
+              <div class="nf-nl-form">
+                <input
+                  class="nf-nl-input"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={newsletterEmail}
+                  oninput={handleEmailInput}
+                  onkeydown={handleKeyDown}
+                  disabled={isLoading}
+                  aria-label="Adresse e-mail"
+                />
+                <button
+                  class="nf-nl-btn"
+                  onclick={handleSubscribe}
+                  disabled={isLoading}
+                  aria-label="S'abonner"
+                >
+                  <template if:true={isLoading}>
+                    <span class="nf-nl-spinner"></span>
+                  </template>
+                  <template if:false={isLoading}>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </template>
+                </button>
+              </div>
+
+              <!-- Error -->
+              <template if:true={errorMessage}>
+                <p class="nf-nl-error">&#9888;&nbsp;{errorMessage}</p>
+              </template>
+
+              <!-- Trust line -->
+              <p class="nf-nl-trust">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#34d399"
+                  stroke-width="2.5"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                &nbsp;No spam · Unsubscribe anytime
+              </p>
+            </template>
+
+            <!-- Success state -->
             <template if:true={subscribed}>
-              <p class="nf-nl-success">&#10003;&nbsp;Subscription confirmed!</p>
+              <div class="nf-nl-success-card">
+                <div class="nf-nl-success-icon">&#10003;</div>
+                <p class="nf-nl-success-title">You're in!</p>
+                <p class="nf-nl-success-msg">
+                  Check your inbox — your first Nexus newsletter has just been
+                  sent with our latest products and exclusive offers.
+                </p>
+              </div>
             </template>
           </div>
-          <div class="nf-nl-glow"></div>
+
+          <!-- Decorative glows -->
+          <div class="nf-nl-glow nf-nl-glow--top"></div>
+          <div class="nf-nl-glow nf-nl-glow--bottom"></div>
         </div>
       </div>
 
       <!-- ── Bottom bar ─────────────────────────────────────────────── -->
       <div class="nf-bottom">
-        <p class="nf-copy">&copy; 2024 Nexus Systems. All rights reserved.</p>
+        <p class="nf-copy">&copy; 2026 Nexus Systems. All rights reserved.</p>
         <div class="nf-legal">
           <a href="#" class="nf-legal-link">Privacy</a>
           <a href="#" class="nf-legal-link">Terms</a>

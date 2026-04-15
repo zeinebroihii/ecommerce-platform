@@ -1,0 +1,1 @@
+List<Testimonial__c> ts = [SELECT Id, Customer_Name__c, Status__c, Rating__c FROM Testimonial__c LIMIT 5]; for(Testimonial__c t : ts){ System.debug('ID:' + t.Id + ' Name:' + t.Customer_Name__c + ' Status:' + t.Status__c + ' Rating:' + t.Rating__c); } System.debug('Total count: ' + ts.size());

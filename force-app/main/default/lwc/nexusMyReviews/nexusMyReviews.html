@@ -1,0 +1,182 @@
+<template>
+  <div class="nmr-wrap">
+    <!-- ── Testimonial form modal ── -->
+    <template if:true={_formOpen}>
+      <c-nexus-testimonial-form
+        quote-id={_activeQuoteId}
+        onclose={handleFormClose}
+        onsubmitted={handleFormSubmitted}
+      ></c-nexus-testimonial-form>
+    </template>
+
+    <!-- ── Header ── -->
+    <div class="nmr-header">
+      <div class="nmr-eyebrow">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path
+            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+          />
+        </svg>
+        Testimonials
+      </div>
+      <h2 class="nmr-title">My Reviews</h2>
+    </div>
+
+    <!-- ── Loading ── -->
+    <template if:true={loading}>
+      <div class="nmr-loading">
+        <div class="nmr-spinner"></div>
+        <span>Loading…</span>
+      </div>
+    </template>
+
+    <!-- ── Two-column layout ── -->
+    <template if:false={loading}>
+      <div class="nmr-layout">
+        <!-- ── LEFT: Submitted reviews ── -->
+        <div class="nmr-col nmr-col--left">
+          <div class="nmr-col-header">
+            <div class="nmr-section-dot nmr-section-dot--indigo"></div>
+            <h3 class="nmr-section-title">Published Reviews</h3>
+          </div>
+
+          <template if:true={hasMyReviews}>
+            <div class="nmr-reviews-list">
+              <template for:each={myReviews} for:item="r">
+                <div key={r.testimonialId} class="nmr-review-card">
+                  <div class="nmr-review-top">
+                    <div class="nmr-stars">
+                      <template for:each={r.stars} for:item="s">
+                        <span key={s.key} class={s.cls}>&#9733;</span>
+                      </template>
+                    </div>
+                    <div class={r.statusCls}>{r.statusLabel}</div>
+                  </div>
+                  <p class="nmr-review-msg">&ldquo;{r.message}&rdquo;</p>
+                  <div class="nmr-review-meta">
+                    <div class={r.avatarCls}>{r.initials}</div>
+                    <div class="nmr-review-meta-text">
+                      <div class="nmr-review-name">{r.customerName}</div>
+                      <div class="nmr-review-role">{r.role}</div>
+                    </div>
+                    <div class="nmr-review-date">{r.createdDate}</div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <template if:false={hasMyReviews}>
+            <div class="nmr-empty-reviews">
+              <div class="nmr-empty-icon nmr-empty-icon--indigo">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"
+                  />
+                  <path
+                    d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"
+                  />
+                </svg>
+              </div>
+              <p class="nmr-empty-text">No reviews submitted yet.</p>
+              <p class="nmr-empty-sub">
+                Accept a quote and share your experience.
+              </p>
+            </div>
+          </template>
+        </div>
+
+        <!-- ── RIGHT: Accepted quotes awaiting review ── -->
+        <div class="nmr-col nmr-col--right">
+          <div class="nmr-col-header">
+            <div class="nmr-section-dot nmr-section-dot--green"></div>
+            <h3 class="nmr-section-title">Awaiting Review</h3>
+            <template if:true={hasEligible}>
+              <span class="nmr-badge nmr-badge--green">{eligibleCount}</span>
+            </template>
+          </div>
+
+          <template if:true={hasEligible}>
+            <div class="nmr-eligible-list">
+              <template for:each={eligibleQuotes} for:item="q">
+                <div key={q.quoteId} class="nmr-eligible-card">
+                  <div class="nmr-eligible-icon">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                      />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </div>
+                  <div class="nmr-eligible-info">
+                    <div class="nmr-eligible-name">{q.quoteName}</div>
+                    <div class="nmr-eligible-date">
+                      Accepted {q.acceptedDate}
+                    </div>
+                  </div>
+                  <button
+                    class="nmr-review-btn"
+                    data-id={q.quoteId}
+                    data-name={q.quoteName}
+                    onclick={handleOpenForm}
+                  >
+                    &#9733; Review
+                  </button>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <template if:false={hasEligible}>
+            <div class="nmr-empty-eligible">
+              <div class="nmr-empty-icon nmr-empty-icon--green">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
+              <p class="nmr-empty-text">All caught up!</p>
+              <p class="nmr-empty-sub">No accepted quotes awaiting a review.</p>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

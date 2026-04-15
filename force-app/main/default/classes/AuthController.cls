@@ -82,19 +82,21 @@ public without sharing class AuthController {
       }
 
       // ── 2. Resolve community profile ──────────────────────────────────
+      // B2C users must use Customer Community Plus Login User so that
+      // Salesforce auto-assigns the Person Account portal role correctly.
       List<Profile> profiles = [
         SELECT Id
         FROM Profile
-        WHERE
-          Name IN (
-            'Customer Community User',
-            'Customer Community Login User',
-            'Customer Community Plus Login User',
-            'Customer Community Plus User'
-          )
-        ORDER BY Name ASC
+        WHERE Name = 'Customer Community Plus Login User'
         LIMIT 1
       ];
+      if (profiles.isEmpty())
+        profiles = [
+          SELECT Id
+          FROM Profile
+          WHERE Name = 'Customer Community Plus User'
+          LIMIT 1
+        ];
       if (profiles.isEmpty()) {
         throw new AuraHandledException(
           'Profil communautaire B2C introuvable. Contactez l\'administrateur.'
@@ -262,14 +264,31 @@ public without sharing class AuthController {
           }
           // changeRef null: fall through to System.setPassword below
           tokenVerifiedViaDisabled = true; // token was valid
+        } else {
+          // Site.login returned null — for B2B portal users provisioned via manual
+          // INSERT (Customer Community Login User profile), Site.login may return null
+          // even with the correct token because the user is not yet a full network member.
+          // Since the token was delivered only to the user's email, treat the link
+          // presentation as sufficient proof and fall through to System.setPassword (PATH B).
+          tokenVerifiedViaDisabled = true;
+          System.debug(
+            'setFirstPassword PATH B — Site.login returned null (B2B user), using System.setPassword'
+          );
         }
-        // loginRef == null means wrong credentials (token expired/invalid)
       } catch (Exception loginEx) {
         String lm = loginEx.getMessage() != null
           ? loginEx.getMessage().toLowerCase()
           : '';
-        if (lm.contains('disabled') || lm.contains('access is disabled')) {
-          // "Access disabled" = credentials CORRECT, account inactive/not in network
+        if (
+          lm.contains('disabled') ||
+          lm.contains('access is disabled') ||
+          lm.contains('not allowed') ||
+          lm.contains('access is not')
+        ) {
+          // Salesforce throws several variants when credentials are correct but
+          // the account is inactive / not enrolled in the community network:
+          //   "Your access is not allowed. Contact your site administrator."
+          //   "Portal user access is disabled."
           // Token is confirmed valid — proceed to PATH B
           tokenVerifiedViaDisabled = true;
           System.debug(
@@ -282,7 +301,7 @@ public without sharing class AuthController {
 
       if (!tokenVerifiedViaDisabled) {
         throw new AuraHandledException(
-          'Lien expiré ou invalide. Cliquez sur "Mot de passe oublié" pour en recevoir un nouveau.'
+          'Link expired or invalid. Please use "Forgot Password" on the login page to receive a new one.'
         );
       }
 

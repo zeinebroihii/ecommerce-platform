@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "path": "c:/Users/MSI/Desktop/Salesforces/ecommerce-platform"
+    }
+  ],
+  "settings": {
+    "eslint.workingDirectories": [
+      "c:/Users/MSI/Desktop/Salesforces/ecommerce-platform"
+    ],
+    "eslint.validate": [
+      "javascript",
+      "typescript"
+    ],
+    "eslint.options": {
+      "overrideConfigFile": "c:\\Users\\MSI\\Desktop\\Salesforces\\ecommerce-platform\\.eslintrc.json"
+    }
+  }
+}

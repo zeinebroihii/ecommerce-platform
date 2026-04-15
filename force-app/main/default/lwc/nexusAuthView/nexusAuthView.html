@@ -251,13 +251,13 @@
                 />
                 <polyline points="22,6 12,13 2,6" />
               </svg>
-              <span class="nav-cp-hint-text">Lien expir&eacute; ?&nbsp;</span>
+              <span class="nav-cp-hint-text">Link expired?&nbsp;</span>
               <button
                 type="button"
                 class="nav-inline-link nav-cp-link"
                 onclick={handleShowForgot}
               >
-                R&eacute;initialiser le mot de passe
+                Reset Password
               </button>
             </div>
           </div>
@@ -441,33 +441,32 @@
             </div>
 
             <h2 class="nav-centered-title nav-fp-sent-title">
-              V&eacute;rifiez votre messagerie&nbsp;!
+              Check your inbox!
             </h2>
             <p class="nav-fp-sent-desc">
-              Un lien de r&eacute;initialisation a &eacute;t&eacute;
-              envoy&eacute; &agrave;&nbsp;
+              A reset link has been sent to&nbsp;
               <strong class="nav-fp-email-highlight">{forgotEmail}</strong>.
-              Pensez &agrave; v&eacute;rifier vos spams si vous ne le voyez pas.
+              Check your spam folder if you don&apos;t see it.
             </p>
 
             <!-- Step hints -->
             <div class="nav-fp-steps">
               <div class="nav-fp-step">
                 <div class="nav-fp-step-num">1</div>
-                <span>Ouvrez votre bo&icirc;te mail</span>
+                <span>Open your inbox</span>
               </div>
               <div class="nav-fp-step">
                 <div class="nav-fp-step-num">2</div>
-                <span>Cliquez sur le lien re&ccedil;u</span>
+                <span>Click the link you received</span>
               </div>
               <div class="nav-fp-step">
                 <div class="nav-fp-step-num">3</div>
-                <span>D&eacute;finissez votre nouveau mot de passe</span>
+                <span>Set your new password</span>
               </div>
             </div>
 
             <p class="nav-fp-resend-hint">
-              Pas re&ccedil;u &nbsp;&bull;&nbsp;
+              Didn&apos;t receive it?&nbsp;&bull;&nbsp;
               <button
                 type="button"
                 class="nav-inline-link nav-inline-link-emerald"
@@ -542,11 +541,8 @@
               </svg>
             </div>
 
-            <h2 class="nav-centered-title">R&eacute;cup&eacute;ration</h2>
-            <p class="nav-subtext">
-              Saisissez votre email pour recevoir un lien de
-              r&eacute;initialisation.
-            </p>
+            <h2 class="nav-centered-title">Password Recovery</h2>
+            <p class="nav-subtext">Enter your email to receive a reset link.</p>
 
             <form class="nav-centered-form" onsubmit={handleForgotSubmit}>
               <div class="nav-input-wrap">
@@ -1009,7 +1005,7 @@
             >
               <polyline points="15 18 9 12 15 6" />
             </svg>
-            &nbsp;Retour &agrave; la connexion
+            &nbsp;Back to Login
           </button>
         </div>
         <!-- Embed change-password form in modal mode -->

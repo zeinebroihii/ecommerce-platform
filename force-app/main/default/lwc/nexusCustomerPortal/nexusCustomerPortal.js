@@ -758,6 +758,12 @@ export default class NexusCustomerPortal extends LightningElement {
       },
       { id: "cases", label: "Support", icon: "utility:case", hasBadge: false },
       {
+        id: "my-reviews",
+        label: "My Reviews",
+        icon: "utility:rating",
+        hasBadge: false
+      },
+      {
         id: "settings",
         label: "Settings",
         icon: "utility:settings",
@@ -814,6 +820,9 @@ export default class NexusCustomerPortal extends LightningElement {
   }
   get isSettings() {
     return this.activeTab === "settings";
+  }
+  get isMyReviews() {
+    return this.activeTab === "my-reviews";
   }
 
   // ── Cart ───────────────────────────────────────────────────────────────────

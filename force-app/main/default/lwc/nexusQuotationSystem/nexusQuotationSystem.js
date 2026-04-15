@@ -60,6 +60,11 @@ export default class NexusQuotationSystem extends LightningElement {
   // ── Accept/Sign state ─────────────────────────────────────────────────────
   @track _isDeciding = false;
 
+  // ── Testimonial popup (shown after acceptance) ────────────────────────────
+  @track _showTestimonialForm = false;
+  @track _testimonialQuoteId = null;
+  @track _testimonialQuoteName = "";
+
   // ── Reject state ──────────────────────────────────────────────────────────
   @track _showRejectForm = false;
   @track _rejectReason = "";
@@ -688,12 +693,21 @@ export default class NexusQuotationSystem extends LightningElement {
       .then(() => refreshApex(this._quotesWireResult))
       .then(() => {
         this._isDeciding = false;
+        const acceptedId = this._selectedQuoteId;
+        const acceptedName = this.selectedQuote ? this.selectedQuote.name : "";
         this._selectedQuoteId = null;
         this._toast(
           "Devis Accepté ✓",
           "Votre acceptation a été enregistrée. Notre équipe va vous préparer le contrat.",
           "success"
         );
+        // Show testimonial popup after a brief delay so the toast is seen first
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
+          this._testimonialQuoteId = acceptedId;
+          this._testimonialQuoteName = acceptedName;
+          this._showTestimonialForm = true;
+        }, 1200);
       })
       .catch((err) => {
         this._isDeciding = false;
@@ -703,6 +717,13 @@ export default class NexusQuotationSystem extends LightningElement {
           "error"
         );
       });
+  }
+
+  // ── Handlers: testimonial popup ───────────────────────────────────────────
+  handleTestimonialClose() {
+    this._showTestimonialForm = false;
+    this._testimonialQuoteId = null;
+    this._testimonialQuoteName = "";
   }
 
   // ── Handlers: reject ──────────────────────────────────────────────────────

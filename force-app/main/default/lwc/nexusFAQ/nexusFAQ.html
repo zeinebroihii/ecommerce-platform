@@ -1,71 +1,161 @@
 <template>
-    <section class="nfq-section" id="faq-section">
-        <div class="nfq-container">
-
-            <!-- ── Header ── -->
-            <div class="nfq-header">
-                <div class="nfq-eyebrow">
-                    <div class="nfq-eyebrow-line"></div>
-                    Support &amp; Help Center
-                </div>
-                <h2 class="nfq-heading">
-                    FREQUENTLY ASKED<br/>
-                    <span class="nfq-heading-gradient">QUESTIONS</span>
-                </h2>
-
-                <!-- Category tabs -->
-                <div class="nfq-cats">
-                    <template for:each={categoryItems} for:item="cat">
-                        <button key={cat.id} class={cat.btnClass} onclick={handleCategoryClick} data-id={cat.id}>
-                            {cat.label}
-                        </button>
-                    </template>
-                </div>
-            </div>
-
-            <!-- ── Accordion ── -->
-            <div class="nfq-list">
-                <template for:each={currentItems} for:item="faq">
-                    <div key={faq.idx} class={faq.itemClass}>
-                        <button class="nfq-q-btn" onclick={handleToggle} data-idx={faq.idx}>
-                            <span class={faq.questionClass}>{faq.question}</span>
-                            <div class={faq.toggleClass}>
-                                <template if:true={faq.isOpen}>
-                                    <!-- Minus -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                </template>
-                                <template if:false={faq.isOpen}>
-                                    <!-- Plus -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                </template>
-                            </div>
-                        </button>
-                        <template if:true={faq.isOpen}>
-                            <div class="nfq-answer">{faq.answer}</div>
-                        </template>
-                    </div>
-                </template>
-            </div>
-
-            <!-- ── CTA block ── -->
-            <div class="nfq-cta">
-                <div class="nfq-cta-inner">
-                    <div class="nfq-cta-left">
-                        <div class="nfq-cta-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="nfq-cta-title">Still have questions?</h4>
-                            <p class="nfq-cta-sub">Our Nexus experts are available 24/7 to assist you.</p>
-                        </div>
-                    </div>
-                    <button class="nfq-cta-btn">Contact Support</button>
-                </div>
-                <div class="nfq-cta-glow"></div>
-            </div>
-
+  <section class="nfq-section" id="faq-section">
+    <div class="nfq-container">
+      <!-- ── Header ── -->
+      <div class="nfq-header">
+        <div class="nfq-eyebrow">
+          <div class="nfq-eyebrow-line"></div>
+          Support &amp; Help Center
         </div>
-    </section>
+        <h2 class="nfq-heading">
+          FREQUENTLY ASKED<br />
+          <span class="nfq-heading-gradient">QUESTIONS</span>
+        </h2>
+
+        <!-- Category tabs -->
+        <div class="nfq-cats">
+          <template for:each={categoryItems} for:item="cat">
+            <button
+              key={cat.id}
+              class={cat.btnClass}
+              onclick={handleCategoryClick}
+              data-id={cat.id}
+            >
+              {cat.label}
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- ── Accordion ── -->
+      <div class="nfq-list">
+        <template for:each={currentItems} for:item="faq">
+          <div key={faq.idx} class={faq.itemClass}>
+            <button class="nfq-q-btn" onclick={handleToggle} data-idx={faq.idx}>
+              <span class={faq.questionClass}>{faq.question}</span>
+              <div class={faq.toggleClass}>
+                <template if:true={faq.isOpen}>
+                  <!-- Minus -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </template>
+                <template if:false={faq.isOpen}>
+                  <!-- Plus -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </template>
+              </div>
+            </button>
+            <template if:true={faq.isOpen}>
+              <div class="nfq-answer">{faq.answer}</div>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- ── CTA block ── -->
+      <div class="nfq-cta">
+        <div class="nfq-cta-inner">
+          <div class="nfq-cta-left">
+            <div class="nfq-cta-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h4 class="nfq-cta-title">Still have questions?</h4>
+              <p class="nfq-cta-sub">
+                Our Nexus experts are available 24/7 — request a quote or drop
+                us a line.
+              </p>
+            </div>
+          </div>
+          <div class="nfq-cta-actions">
+            <button
+              class="nfq-cta-btn nfq-cta-btn--primary"
+              onclick={handleRequestQuote}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+              Request a Quote
+            </button>
+            <a
+              class="nfq-cta-btn nfq-cta-btn--secondary"
+              href="mailto:contact@nexus-platform.com"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              Email Us
+            </a>
+          </div>
+        </div>
+        <div class="nfq-cta-glow"></div>
+      </div>
+    </div>
+  </section>
 </template>
