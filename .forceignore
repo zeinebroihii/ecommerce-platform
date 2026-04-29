@@ -13,3 +13,7 @@ package.xml
 
 # Build artifacts and dependencies
 **/node_modules/**
+
+# Standard Salesforce apps - cannot be deployed via Metadata API
+**/applications/standard__*.app-meta.xml
+
