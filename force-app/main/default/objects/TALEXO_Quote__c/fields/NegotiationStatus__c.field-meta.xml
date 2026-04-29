@@ -51,6 +51,12 @@
                 <default>false</default>
                 <label>Escalated</label>
             </value>
+            <value>
+                <fullName>Sent</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Sent</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

@@ -5,9 +5,7 @@
   >Message submitted by customer alongside their counter-offer price.</description>
     <label>Counter Offer Message</label>
     <length>2000</length>
-    <required>false</required>
     <trackTrending>false</trackTrending>
-    <!-- v2 -->
     <type>LongTextArea</type>
     <visibleLines>3</visibleLines>
 </CustomField>

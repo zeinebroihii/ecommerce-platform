@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Proration_Factor__c</fullName>
+    <description
+  >Ratio of remaining days to total contract days. E.g. 0.5 = half the contract remains. Applied to line item prices in amendment quotes.</description>
+    <externalId>false</externalId>
+    <formula
+  >IF(Total_Contract_Days__c &gt; 0, Remaining_Days__c / Total_Contract_Days__c, 0)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Proration Factor</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>4</scale>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>
