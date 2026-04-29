@@ -1,13 +1,8 @@
 import { LightningElement, wire, track } from "lwc";
+import getActivePackages from "@salesforce/apex/ComboPackageController.getActivePackages";
 import getProductsWithStock from "@salesforce/apex/ProductController.getProductsWithStock";
 
-const COMBO_FAMILIES = [
-  "Computing",
-  "Connectivity",
-  "Sensors & Monitoring",
-  "Sustainability"
-];
-const SAVINGS_PCT = 0.1; // 10% bundle discount
+const SAVINGS_PCT = 0.1;
 
 function fmt(n) {
   return (
@@ -19,8 +14,14 @@ function fmt(n) {
   );
 }
 
+// Fallback: auto-generate combos from product catalog when no packages exist
 function buildCombos(products) {
-  // Group products by family
+  const COMBO_FAMILIES = [
+    "Computing",
+    "Connectivity",
+    "Sensors & Monitoring",
+    "Sustainability"
+  ];
   const byFamily = {};
   products.forEach((p) => {
     const fam = p.family || "Other";
@@ -30,8 +31,6 @@ function buildCombos(products) {
 
   const combos = [];
   let comboIdx = 0;
-
-  // Priority order: target families first, then whatever else exists
   const families = [
     ...COMBO_FAMILIES,
     ...Object.keys(byFamily).filter((f) => !COMBO_FAMILIES.includes(f))
@@ -41,12 +40,10 @@ function buildCombos(products) {
     if (combos.length >= 4) break;
     const famProds = byFamily[fam];
     if (!famProds || famProds.length < 2) continue;
-
     const selected = famProds.slice(0, Math.min(4, famProds.length));
     const origTotal = selected.reduce((s, p) => s + (p.unitPrice || 0), 0);
     const savings = origTotal * SAVINGS_PCT;
     const comboPrice = origTotal - savings;
-
     combos.push({
       id: "combo-" + ++comboIdx,
       brand: fam,
@@ -70,19 +67,16 @@ function buildCombos(products) {
     });
   }
 
-  // Fill remaining slots with cross-family combos if needed
   if (combos.length < 4) {
     const usedIds = new Set(
       combos.flatMap((c) => c.productsWithIndex.map((p) => p.id))
     );
     const leftover = products.filter((p) => !usedIds.has(p.productId));
-
     while (combos.length < 4 && leftover.length >= 2) {
       const selected = leftover.splice(0, Math.min(3, leftover.length));
       const origTotal = selected.reduce((s, p) => s + (p.unitPrice || 0), 0);
       const savings = origTotal * SAVINGS_PCT;
       const comboPrice = origTotal - savings;
-
       combos.push({
         id: "combo-" + ++comboIdx,
         brand: "Multi-Category",
@@ -110,14 +104,53 @@ function buildCombos(products) {
   return combos;
 }
 
+// Map Apex PackageWrapper → combo deal shape for the template
+function packageToCombo(pkg) {
+  return {
+    id: pkg.id,
+    brand: pkg.category || "Bundle",
+    title: pkg.name,
+    savings: pkg.savings || 0,
+    savingsFormatted: (pkg.savings || 0).toFixed(2),
+    price: pkg.totalPrice || 0,
+    priceFormatted: fmt(pkg.totalPrice || 0),
+    originalPrice: pkg.originalPrice || 0,
+    originalPriceFormatted: fmt(pkg.originalPrice || 0),
+    productsWithIndex: (pkg.items || []).map((item, idx) => ({
+      id: item.productId || item.id,
+      productId: item.productId || item.id,
+      name: item.productName,
+      image: item.productImageUrl || "",
+      price: item.productPrice || 0,
+      priceFormatted: fmt(item.productPrice || 0),
+      family: item.productFamily || "",
+      idx
+    }))
+  };
+}
+
 export default class NexusComboDeals extends LightningElement {
   @track _combos = [];
+  @track _hasPackages = false;
+
+  @wire(getActivePackages)
+  wiredPackages({ data, error }) {
+    if (data) {
+      if (data.length > 0) {
+        this._hasPackages = true;
+        this._combos = data.map(packageToCombo);
+      }
+      // if no packages, fallback wired products will fill _combos
+    } else if (error) {
+      console.error("NexusComboDeals getActivePackages error", error);
+    }
+  }
 
   @wire(getProductsWithStock, { searchTerm: null, category: null })
-  wiredProducts({ error, data }) {
-    if (data) {
+  wiredProducts({ data, error }) {
+    if (data && !this._hasPackages) {
       this._combos = buildCombos(data);
-    } else if (error) {
+    } else if (error && !this._hasPackages) {
       console.error("NexusComboDeals wire error", error);
     }
   }
@@ -126,19 +159,15 @@ export default class NexusComboDeals extends LightningElement {
     return this._combos;
   }
 
-  // Click on individual product thumbnail → open product detail view
   handleProductClick(event) {
     event.stopPropagation();
     const productId = event.currentTarget.dataset.productId;
     if (!productId) return;
     document.dispatchEvent(
-      new CustomEvent("nexusopenproductdetail", {
-        detail: { productId }
-      })
+      new CustomEvent("nexusopenproductdetail", { detail: { productId } })
     );
   }
 
-  // Click "+" center icon → open combo builder with this combo
   handlePlusClick(event) {
     event.stopPropagation();
     const comboId = event.currentTarget.dataset.comboId;

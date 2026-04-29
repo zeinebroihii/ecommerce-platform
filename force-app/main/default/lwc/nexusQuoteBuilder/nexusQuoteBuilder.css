@@ -13,6 +13,30 @@
   min-height: 100vh;
   color: #1e293b;
   width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.qb-main {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.qb-sidebar {
+  width: 296px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 12px 12px 12px 0;
+  scrollbar-width: none;
+}
+
+.qb-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Filter bar ──────────────────────────────────────────── */
@@ -468,7 +492,7 @@
 ══════════════════════════════════════════════════════════════ */
 .qb-list-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1rem;
   padding: 0.5rem 0.75rem 1.25rem;
 }
@@ -478,7 +502,6 @@
   border-radius: 14px;
   box-shadow: 0 2px 12px rgba(15, 30, 69, 0.07);
   display: flex;
-  overflow: hidden;
   transition:
     transform 0.18s,
     box-shadow 0.18s;
@@ -507,16 +530,14 @@
 /* Card top row */
 .qb-card-top {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 .qb-card-identity {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
-  flex: 1;
 }
 .qb-card-icon-wrap {
   width: 38px;
@@ -553,9 +574,8 @@
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  flex-shrink: 0;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 /* ── Status & Negotiation Badges ─────────────────────────────── */
@@ -693,20 +713,24 @@
 
 /* ── Financial strip ─────────────────────────────────────────── */
 .qb-fin-strip {
-  display: flex;
-  gap: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   background: #f8faff;
   border-radius: 10px;
   border: 1px solid #e8edf5;
   overflow: hidden;
 }
 .qb-fin-item {
-  flex: 1;
   padding: 0.6rem 0.75rem;
   border-right: 1px solid #e8edf5;
+  border-bottom: 1px solid #e8edf5;
 }
-.qb-fin-item:last-child {
+.qb-fin-item:nth-child(even) {
   border-right: none;
+}
+.qb-fin-item:last-child,
+.qb-fin-item:nth-last-child(2):nth-child(odd) {
+  border-bottom: none;
 }
 .qb-fin-label {
   font-size: 0.68rem;
@@ -2080,11 +2104,8 @@
     grid-template-columns: 1fr;
     gap: 0;
   }
-  .qb-fin-strip {
-    flex-wrap: wrap;
-  }
-  .qb-fin-item {
-    min-width: 50%;
+  .qb-sidebar {
+    display: none;
   }
 }
 
@@ -2474,4 +2495,470 @@
   border-color: #1a56db;
   color: #1a56db;
   background: #f8faff;
+}
+
+/* ── Quote Terms panel (generated view) ──────────────────────── */
+.qb-terms-panel {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.qb-terms-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+.qb-terms-ico {
+  color: #4f46e5;
+}
+.qb-terms-panel-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+  flex: 1;
+}
+.qb-terms-source-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.qb-terms-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+.qb-terms-item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+.qb-terms-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+.qb-terms-val {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.qb-terms-green {
+  color: #15803d;
+}
+.qb-terms-sub {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+.qb-terms-gtc-block {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+.qb-terms-gtc-text {
+  font-size: 0.73rem;
+  color: #475569;
+  line-height: 1.6;
+  margin-top: 0.3rem;
+  white-space: pre-wrap;
+}
+.qb-terms-edit-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-top: 0.4rem;
+}
+
+/* ── Editable Quote Terms (builder cart panel) ───────────────── */
+.qb-terms-section {
+  border-top: 1px solid #e8edf5;
+}
+.qb-terms-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  background: #f8fafc;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  text-align: left;
+  transition: background 0.12s;
+}
+.qb-terms-toggle:hover {
+  background: #f1f5f9;
+}
+.qb-terms-toggle-ico {
+  color: #4f46e5;
+  flex-shrink: 0;
+}
+.qb-terms-toggle-label {
+  flex: 1;
+}
+.qb-terms-prefilled-chip {
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.qb-terms-toggle-chevron {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.qb-terms-edit-form {
+  padding: 0.875rem 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  background: #fafbff;
+  border-top: 1px solid #f1f5f9;
+}
+.qb-tef-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.625rem;
+}
+.qb-tef-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.qb-tef-full {
+  grid-column: 1 / -1;
+}
+.qb-tef-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.qb-tef-input {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.qb-tef-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+.qb-tef-select {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+  color: #1e293b;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  appearance: auto;
+  width: 100%;
+}
+.qb-tef-select:focus {
+  border-color: #4f46e5;
+}
+.qb-tef-ltextarea {
+  --slds-c-textarea-sizing-min-height: 80px;
+}
+
+/* ── Charge type badges (One-time / Recurring) ────────────────── */
+.qb-charge-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.qb-charge-onetime {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.qb-charge-recurring {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.qb-price-split {
+  font-size: 0.82rem;
+}
+.qb-price-mrr {
+  font-size: 0.78rem;
+  padding-bottom: 0.25rem;
+}
+.qb-price-label-muted {
+  color: #94a3b8;
+}
+.qb-mrr-val {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #15803d;
+}
+.qb-price-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.5rem 0;
+}
+
+/* ── Escalation panel ──────────────────────────────────────── */
+.qb-esc-panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #0f172a;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+.qb-esc-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.qb-esc-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.qb-esc-note {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+.qb-esc-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.qb-esc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+}
+.qb-esc-label {
+  color: #64748b;
+  font-weight: 500;
+}
+.qb-esc-val {
+  font-weight: 600;
+  color: #0f172a;
+}
+.qb-esc-val-price {
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+.qb-esc-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.5rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── AI Combo proposal cards ─────────────────────────────────── */
+.qb-esc-combos {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.qb-esc-combos-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.5rem;
+}
+.qb-combo-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.qb-combo-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: #fff;
+}
+.qb-combo-a {
+  border-top: 2px solid #0f172a;
+}
+.qb-combo-b {
+  border-top: 2px solid #94a3b8;
+}
+.qb-combo-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+}
+.qb-combo-price {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.qb-combo-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.qb-combo-terms,
+.qb-combo-validity {
+  font-size: 0.72rem;
+  color: #475569;
+}
+.qb-combo-btn {
+  border: none;
+  border-radius: 5px;
+  padding: 0.38rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: 0.25rem;
+}
+.qb-combo-btn:hover { opacity: 0.82; }
+.qb-combo-btn-a { background: #0f172a; color: #fff; }
+.qb-combo-btn-b { background: transparent; color: #0f172a; border: 1.5px solid #0f172a; }
+.qb-combo-btn-custom {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.qb-combo-btn-custom:hover { border-color: #94a3b8; color: #0f172a; }
+.qb-combo-custom {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* ── Risk badge ─────────────────────────────────────────────── */
+.qb-risk-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  padding: 0.12rem 0.4rem;
+  margin-left: auto;
+  background: transparent;
+}
+.qb-risk-high {
+  color: #0f172a;
+  border: 1px solid #0f172a;
+}
+.qb-risk-medium {
+  color: #64748b;
+  border: 1px solid #64748b;
+}
+
+/* ── AI recommendation ───────────────────────────────────────── */
+.qb-ai-rec {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+.qb-ai-rec strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* ── Custom counter form ────────────────────────────────────── */
+.qb-custom-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.qb-custom-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.qb-custom-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  box-sizing: border-box;
+  background: #fff;
+}
+.qb-custom-input:focus {
+  outline: none;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+.qb-custom-select {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  background: #fff;
+  box-sizing: border-box;
 }

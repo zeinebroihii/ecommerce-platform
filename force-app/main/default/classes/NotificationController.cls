@@ -40,4 +40,46 @@ public without sharing class NotificationController {
             RelatedUrl__c = relatedUrl
         );
     }
+
+    // ── Admin bell: send a Salesforce platform bell notification to System Admin ──
+    // Called from Apex classes on key sales events (lead submit, quote decision,
+    // contract signed, quote request).  Silently swallows all errors so that
+    // a notification failure never breaks the main transaction.
+    public static void pushAdminBell(String title, String body, Id targetId) {
+        try {
+            List<CustomNotificationType> types = [
+                SELECT Id
+                FROM CustomNotificationType
+                WHERE DeveloperName = 'Nexus_Admin_Alert'
+                LIMIT 1
+            ];
+            if (types.isEmpty()) return;
+
+            // Send to ALL active System Admin users so every admin sees it
+            List<User> admins = [
+                SELECT Id
+                FROM User
+                WHERE (Profile.Name = 'System Administrator'
+                    OR Profile.Name = 'Administrateur système')
+                    AND IsActive = TRUE
+                    AND UserType = 'Standard'
+                LIMIT 10
+            ];
+            if (admins.isEmpty()) return;
+
+            Set<String> recipientIds = new Set<String>();
+            for (User u : admins) recipientIds.add(u.Id);
+
+            Messaging.CustomNotification notif = new Messaging.CustomNotification();
+            notif.setTitle(title);
+            notif.setBody(body);
+            notif.setNotificationTypeId(types[0].Id);
+            if (targetId != null) {
+                notif.setTargetId(targetId);
+            }
+            notif.send(recipientIds);
+        } catch (Exception ex) {
+            System.debug(LoggingLevel.WARN, '[Nexus] pushAdminBell failed: ' + ex.getMessage());
+        }
+    }
 }

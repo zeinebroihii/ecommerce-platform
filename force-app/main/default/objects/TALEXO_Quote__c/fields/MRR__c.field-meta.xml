@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MRR__c</fullName>
+    <description>Monthly Recurring Revenue — sum of all recurring line items normalised to monthly (annual items divided by 12).</description>
+    <label>MRR (Monthly)</label>
+    <precision>18</precision>
+    <scale>2</scale>
+    <type>Currency</type>
+</CustomField>

@@ -17,6 +17,11 @@
                 <label>Net 30</label>
             </value>
             <value>
+                <fullName>Net 45</fullName>
+                <default>false</default>
+                <label>Net 45</label>
+            </value>
+            <value>
                 <fullName>Net 60</fullName>
                 <default>false</default>
                 <label>Net 60</label>

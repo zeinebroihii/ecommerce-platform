@@ -1,0 +1,31 @@
+@startuml Template
+title [Feature Name] Sequence Diagram
+
+actor User
+participant LWC as "Lightning Web Component"
+participant Controller as "Apex Controller"
+participant Service as "Business Service"
+participant Database as "Salesforce Database"
+
+== Main Flow ==
+User -> LWC: [User Action]
+LWC -> Controller: [Method Call](parameters)
+Controller -> Service: [Business Logic](data)
+
+alt [Condition]
+    Service -> Database: [SOQL Query]
+    Database --> Service: [Records]
+    Service -> Controller: [Success Response]
+else [Error Condition]
+    Service --> Controller: [Error/Exception]
+end
+
+Controller --> LWC: [Response Data]
+LWC --> User: [UI Update/Feedback]
+
+== Additional Flow (Optional) ==
+note over User, Database
+    Additional notes about
+    the flow or business rules
+end note
+@enduml

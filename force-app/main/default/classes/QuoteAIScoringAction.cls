@@ -73,8 +73,10 @@ public class QuoteAIScoringAction {
   private static Integer calculateScore(TALEXO_Quote__c q) {
     Integer score = 50; // baseline
 
-    // +15 : 10% (or greater) bulk discount applied — strong buying incentive
-    if (q.BulkDiscount__c != null && q.BulkDiscount__c >= 10)
+    // +15 : 10–100% bulk discount applied — cap at 100 to guard against data-entry errors
+    Decimal disc = q.BulkDiscount__c != null
+      ? Math.min(q.BulkDiscount__c, 100) : 0;
+    if (disc >= 10)
       score += 15;
 
     // +8  : Net 30 payment terms — most attractive standard term
@@ -96,10 +98,9 @@ public class QuoteAIScoringAction {
     }
 
     // +8 : high-revenue account — proven buying power
-    if (
-      q.Opportunity__r?.Account?.AnnualRevenue != null &&
-      q.Opportunity__r.Account.AnnualRevenue > 5000000
-    ) {
+    // Skip if revenue < 10 000 EUR (dev/test placeholder data — treat as neutral)
+    Decimal annRev = q.Opportunity__r?.Account?.AnnualRevenue;
+    if (annRev != null && annRev >= 10000 && annRev > 5000000) {
       score += 8;
     }
 
@@ -126,11 +127,10 @@ public class QuoteAIScoringAction {
   private static String buildReason(TALEXO_Quote__c q, Integer score) {
     List<String> factors = new List<String>();
 
-    if (q.BulkDiscount__c != null && q.BulkDiscount__c >= 10) {
-      factors.add(
-        q.BulkDiscount__c.intValue() +
-        '% bulk discount applied (strong incentive)'
-      );
+    Decimal displayDisc = q.BulkDiscount__c != null
+      ? Math.min(q.BulkDiscount__c, 100) : 0;
+    if (displayDisc >= 10) {
+      factors.add(displayDisc.intValue() + '% bulk discount applied (strong incentive)');
     }
     if (q.PaymentTerms__c == 'Net 30') {
       factors.add('Net 30 payment terms improve cashflow appeal');
@@ -141,10 +141,8 @@ public class QuoteAIScoringAction {
     ) {
       factors.add('Ample validity window reduces customer pressure');
     }
-    if (
-      q.Opportunity__r?.Account?.AnnualRevenue != null &&
-      q.Opportunity__r.Account.AnnualRevenue > 5000000
-    ) {
+    Decimal revCheck = q.Opportunity__r?.Account?.AnnualRevenue;
+    if (revCheck != null && revCheck >= 10000 && revCheck > 5000000) {
       factors.add('High-revenue account — strong B2B buying power');
     }
     if (

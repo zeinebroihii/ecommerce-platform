@@ -4,7 +4,7 @@
     <deleteConstraint>SetNull</deleteConstraint>
     <label>Opportunity</label>
     <referenceTo>Opportunity</referenceTo>
-    <relationshipLabel>TALCORE Quotes</relationshipLabel>
+    <relationshipLabel>Nexus Quotes</relationshipLabel>
     <relationshipName>Quotes</relationshipName>
     <required>false</required>
     <trackTrending>false</trackTrending>

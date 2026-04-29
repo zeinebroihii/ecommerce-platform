@@ -341,6 +341,13 @@ global class DocuSignWebhookController {
       '[DocuSignWebhook] Contract created: ' + c.Id + ' | ' + contractRef
     );
 
+    // ── Bell notification to admin — contract signed ─────────────────────────
+    NotificationController.pushAdminBell(
+      'Contract Signed: ' + q.Opportunity__r.Account.Name,
+      q.Name + ' signed via e-signature · Opportunity → Closed Won.',
+      q.Id
+    );
+
     // ── Step 2: Enqueue PDF download (Queueable: callouts happen before DML) ────
     try {
       System.enqueueJob(new DocuSignPollQueueable());
@@ -421,7 +428,7 @@ global class DocuSignWebhookController {
         if (dlRes.getStatusCode() == 200) {
           Blob pdfBlob = dlRes.getBodyAsBlob();
           String filename =
-            quoteName.replaceAll('[^A-Za-z0-9_-]', '_') + '_Contrat_Signe.pdf';
+            quoteName.replaceAll('[^A-Za-z0-9_-]', '_') + '_Signed_Contract.pdf';
 
           // ── Save as ContentVersion ────────────────────────────────────────
           ContentVersion cv = new ContentVersion(
@@ -520,18 +527,18 @@ global class DocuSignWebhookController {
     if (String.isNotBlank(ownerEmail)) {
       Messaging.SingleEmailMessage notif = new Messaging.SingleEmailMessage();
       notif.setToAddresses(new List<String>{ ownerEmail });
-      notif.setSubject('[Nexus] Contrat signé — ' + accountName);
+      notif.setSubject('[Nexus] Contract Signed — ' + accountName);
       notif.setSenderDisplayName('Nexus CRM');
       notif.setHtmlBody(
-        '<p>Le contrat <strong>' +
+        '<p>Contract <strong>' +
           quoteName +
-          '</strong> a été signé via DocuSign.</p>' +
-          '<p>Référence : <strong>' +
+          '</strong> has been signed via DocuSign.</p>' +
+          '<p>Reference: <strong>' +
           contractRef +
-          '</strong> | Signé le : ' +
+          '</strong> | Signed on: ' +
           signedAt +
           '</p>' +
-          '<p>L\'opportunité est <strong>Closed Won</strong>. Le contrat est activé dans Salesforce.</p>' +
+          '<p>The opportunity is <strong>Closed Won</strong>. The contract is activated in Salesforce.</p>' +
           '<p>— Nexus CRM</p>'
       );
       emails.add(notif);
@@ -672,50 +679,50 @@ global class DocuSignWebhookController {
 
     Messaging.SingleEmailMessage m = new Messaging.SingleEmailMessage();
     m.setToAddresses(new List<String>{ toEmail });
-    m.setSubject('[Nexus] Contrat signé — Facture ' + contractRef);
+    m.setSubject('[Nexus] Contract Signed — Invoice ' + contractRef);
     m.setSenderDisplayName('Nexus B2B Platform');
     m.setHtmlBody(
       '<body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">' +
         '<div style="max-width:640px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;">' +
         '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:32px;text-align:center;">' +
         '<h1 style="color:#fff;margin:0;">NEXUS</h1>' +
-        '<p style="color:#a0aec0;margin:8px 0 0;">Contrat B2B — Signé électroniquement via DocuSign</p></div>' +
+        '<p style="color:#a0aec0;margin:8px 0 0;">B2B Contract — Electronically signed via DocuSign</p></div>' +
         '<div style="padding:32px;">' +
-        '<p>Bonjour <strong>' +
+        '<p>Hello <strong>' +
         toName +
         '</strong>,</p>' +
-        '<p>Votre contrat a été signé par les deux parties. Le PDF signé est disponible dans votre espace client.</p>' +
+        '<p>Your contract has been signed by both parties. The signed PDF is available in your customer portal.</p>' +
         '<div style="background:#f7fafc;border-radius:8px;padding:16px;margin:20px 0;">' +
-        '<p><strong>Réf. contrat :</strong> ' +
+        '<p><strong>Contract ref:</strong> ' +
         contractRef +
         '</p>' +
-        '<p><strong>Devis :</strong> ' +
+        '<p><strong>Quote:</strong> ' +
         q.Name +
         '</p>' +
-        '<p><strong>Signé le :</strong> ' +
+        '<p><strong>Signed on:</strong> ' +
         signedAt +
         '</p></div>' +
         '<table style="width:100%;border-collapse:collapse;margin:12px 0;">' +
         '<thead><tr style="background:#1a1a2e;color:#fff;">' +
-        '<th style="padding:8px;text-align:left;">Produit</th>' +
-        '<th style="padding:8px;text-align:center;">Qté</th>' +
-        '<th style="padding:8px;text-align:right;">Prix unit.</th>' +
+        '<th style="padding:8px;text-align:left;">Product</th>' +
+        '<th style="padding:8px;text-align:center;">Qty</th>' +
+        '<th style="padding:8px;text-align:right;">Unit price</th>' +
         '<th style="padding:8px;text-align:right;">Total</th></tr></thead>' +
         '<tbody>' +
         rows +
         '</tbody></table>' +
         '<div style="background:#edf2f7;border-radius:8px;padding:16px;margin:16px 0;">' +
-        '<p><strong>Remise :</strong> ' +
+        '<p><strong>Discount:</strong> ' +
         discount +
         '</p>' +
-        '<p style="font-size:18px;"><strong>Total TTC : ' +
+        '<p style="font-size:18px;"><strong>Grand Total: ' +
         total +
         '</strong></p>' +
-        '<p><strong>Paiement :</strong> ' +
+        '<p><strong>Payment:</strong> ' +
         terms +
         '</p></div>' +
         '<p style="color:#718096;font-size:12px;border-top:1px solid #e2e8f0;padding-top:16px;">' +
-        'Signature électronique via DocuSign.</p>' +
+        'Electronic signature via DocuSign.</p>' +
         '</div></div></body>'
     );
     return m;

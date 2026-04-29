@@ -36,6 +36,21 @@
                 <default>false</default>
                 <label>Final</label>
             </value>
+            <value>
+                <fullName>Auto Counter</fullName>
+                <default>false</default>
+                <label>Auto Counter</label>
+            </value>
+            <value>
+                <fullName>Sales Approved</fullName>
+                <default>false</default>
+                <label>Sales Approved</label>
+            </value>
+            <value>
+                <fullName>Escalated</fullName>
+                <default>false</default>
+                <label>Escalated</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

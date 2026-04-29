@@ -5,14 +5,16 @@
   >Nexus Admin — Lead Pipeline &amp; CRM Control Center</description>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
-    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavPersonalizationDisabled>true</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>Nexus Admin</label>
     <navType>Standard</navType>
     <tabs>NexusAdminHome</tabs>
+    <tabs>standard-dashboard</tabs>
     <tabs>NexusAnalyticsDashboard</tabs>
     <tabs>NexusQuoteBuilder</tabs>
+    <tabs>NexusComboPackages</tabs>
     <tabs>NexusStockWarRoom</tabs>
     <tabs>standard-Lead</tabs>
     <tabs>standard-Opportunity</tabs>

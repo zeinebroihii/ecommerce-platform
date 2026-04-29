@@ -153,13 +153,13 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>TALCORE Quote</label>
+    <label>Nexus Quote</label>
     <nameField>
-        <displayFormat>DEVIS-{0000}</displayFormat>
+        <displayFormat>QUOTE-{0000}</displayFormat>
         <label>Quote Number</label>
         <type>AutoNumber</type>
     </nameField>
-    <pluralLabel>TALCORE Quotes</pluralLabel>
+    <pluralLabel>Nexus Quotes</pluralLabel>
     <searchLayouts />
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>

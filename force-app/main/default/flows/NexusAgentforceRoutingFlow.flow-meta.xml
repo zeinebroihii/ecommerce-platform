@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <description>Routes incoming Embedded Messaging sessions to Nexus Support Agent (Agentforce)</description>
+    <interviewLabel>Nexus Agentforce Routing Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Nexus Agentforce Routing Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>OmniChannelFlow</processType>
+    <start>
+        <locationX>176</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>RouteToNexusAgent</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <actionCalls>
+        <name>RouteToNexusAgent</name>
+        <label>Route to Nexus Support Agent</label>
+        <locationX>176</locationX>
+        <locationY>168</locationY>
+        <actionName>Nexus_Support_Agent</actionName>
+        <actionType>omniChannelFlowRouteToAgentforceAgent</actionType>
+        <faultConnector>
+            <targetReference>FallbackToQueue</targetReference>
+        </faultConnector>
+    </actionCalls>
+    <actionCalls>
+        <name>FallbackToQueue</name>
+        <label>Fallback to Support Queue</label>
+        <locationX>352</locationX>
+        <locationY>168</locationY>
+        <actionName>Nexus_Support_Queue</actionName>
+        <actionType>omniChannelFlowRouteToQueue</actionType>
+    </actionCalls>
+</Flow>

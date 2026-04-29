@@ -16,7 +16,19 @@
         ></lightning-icon>
         &nbsp;Quote Builder
       </button>
+      <button class={tabPackagesClass} data-tab="packages" onclick={handleTabClick}>
+        <lightning-icon
+          icon-name="utility:layers"
+          size="x-small"
+        ></lightning-icon>
+        &nbsp;Combo Packages
+      </button>
     </div>
+
+    <!-- ── Combo Packages Tab ── -->
+    <template if:true={isPackages}>
+      <c-nexus-combo-package-manager></c-nexus-combo-package-manager>
+    </template>
 
     <!-- ── Quote Builder Tab ── -->
     <template if:true={isQuotes}>

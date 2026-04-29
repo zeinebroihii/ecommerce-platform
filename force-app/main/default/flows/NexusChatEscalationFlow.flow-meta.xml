@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <description>Escalation flow for Nexus Support Agent.</description>
+    <interviewLabel>Nexus Chat Escalation Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Nexus Chat Escalation Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>176</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>LogEscalation</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>escalationNote</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <stringValue>Escalating to human agent</stringValue>
+        </value>
+    </variables>
+    <assignments>
+        <name>LogEscalation</name>
+        <label>Log Escalation</label>
+        <locationX>176</locationX>
+        <locationY>168</locationY>
+        <assignmentItems>
+            <assignToReference>escalationNote</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Transferred to Nexus Support Queue</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+</Flow>

@@ -42,6 +42,10 @@ public without sharing class QuoteGenerationService {
     public String paymentTerms; // default 'Net 30'
     @AuraEnabled
     public String expirationDate; // ISO date string yyyy-MM-dd
+    @AuraEnabled
+    public String generalTerms; // per-quote T&Cs set by admin
+    @AuraEnabled
+    public Integer signatureDeadlineDays; // days customer has to sign
   }
 
   public class GenerateResult {
@@ -69,6 +73,10 @@ public without sharing class QuoteGenerationService {
     public Decimal oneTimeTotal;
     @AuraEnabled
     public Decimal recurringTotal;
+    @AuraEnabled
+    public String generalTerms;
+    @AuraEnabled
+    public Integer signatureDeadlineDays;
   }
 
   // ── Main entry point ──────────────────────────────────────────────────────
@@ -180,6 +188,8 @@ public without sharing class QuoteGenerationService {
       MRR__c = mrr,
       OneTimeTotal__c = oneTimeTotal,
       RecurringTotal__c = recurringTotal,
+      GeneralTerms__c = req.generalTerms,
+      SignatureDeadlineDays__c = req.signatureDeadlineDays,
       Description__c = 'B2B quote for ' +
         opp.Account.Name +
         ' — ' +
@@ -246,7 +256,9 @@ public without sharing class QuoteGenerationService {
         AcceptanceProbability__c,
         AIReason__c,
         PaymentTerms__c,
-        BulkDiscount__c
+        BulkDiscount__c,
+        GeneralTerms__c,
+        SignatureDeadlineDays__c
       FROM TALEXO_Quote__c
       WHERE Id = :q.Id
       LIMIT 1
@@ -265,6 +277,9 @@ public without sharing class QuoteGenerationService {
       : 0;
     result.aiReason = q.AIReason__c;
     result.mrr = mrr;
+    result.generalTerms = q.GeneralTerms__c;
+    result.signatureDeadlineDays = q.SignatureDeadlineDays__c != null
+      ? Integer.valueOf(q.SignatureDeadlineDays__c) : null;
     result.oneTimeTotal = oneTimeTotal;
     result.recurringTotal = recurringTotal;
     return result;

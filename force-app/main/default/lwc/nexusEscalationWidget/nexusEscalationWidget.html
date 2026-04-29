@@ -1,0 +1,277 @@
+<template>
+  <template if:true={hasEscalations}>
+    <div class="ew-tray">
+      <!-- ── Tray header — always visible ── -->
+      <div class="ew-tray-header" onclick={handleToggleTray}>
+        <div class="ew-tray-title">
+          <span class="ew-tray-dot"></span>
+          <span>Escalation Queue</span>
+          <span class="ew-count-badge">{escalationCount}</span>
+        </div>
+        <lightning-icon
+          icon-name={trayToggleIcon}
+          size="xx-small"
+          variant="inverse"
+        ></lightning-icon>
+      </div>
+
+      <!-- ── Work items ── -->
+      <template if:true={trayOpen}>
+        <div class="ew-items">
+          <template for:each={escalations} for:item="esc">
+            <div key={esc.quoteId} class="ew-item">
+
+              <!-- Item summary row (click to expand) -->
+              <div
+                class="ew-item-header"
+                data-id={esc.quoteId}
+                onclick={handleToggleItem}
+              >
+                <div class="ew-item-left">
+                  <span class={esc.riskBadgeCls}>{esc.riskLabel}</span>
+                  <span class="ew-item-account">{esc.accountName}</span>
+                  <span class="ew-esc-quote-tag">{esc.name}</span>
+                  <span class="ew-item-age">{esc.ageLabel}</span>
+                </div>
+                <lightning-icon
+                  icon-name={esc.expandIcon}
+                  size="xx-small"
+                ></lightning-icon>
+              </div>
+
+              <!-- Expanded body -->
+              <template if:true={esc.expanded}>
+                <div class="ew-item-body">
+
+                  <!-- Summary -->
+                  <div class="ew-summary">
+                    <p class="ew-summary-text">{esc.summaryText}</p>
+                    <div class="ew-meta-row">
+                      <template if:true={esc.requestedTermsLabel}>
+                        <span class="ew-meta-chip">{esc.requestedTermsLabel}</span>
+                      </template>
+                      <template if:true={esc.formattedCounter}>
+                        <span class="ew-meta-chip">{esc.formattedCounter}</span>
+                      </template>
+                    </div>
+                    <div class="ew-products">
+                      <template for:each={esc.lineItems} for:item="li">
+                        <span key={li.productName} class="ew-product-chip">
+                          {li.productName} &times;{li.quantity}
+                        </span>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- AI recommendation -->
+                  <template if:true={esc.aiRecommendation}>
+                    <div class="ew-ai-rec">
+                      <lightning-icon
+                        icon-name="utility:einstein"
+                        size="xx-small"
+                        variant="inverse"
+                      ></lightning-icon>
+                      <span class="ew-ai-rec-label">
+                        AI recommends Option {esc.aiRecommendation}
+                      </span>
+                      <span class="ew-ai-rec-reason">{esc.aiRecommendationReason}</span>
+                    </div>
+                  </template>
+
+                  <!-- Combo cards -->
+                  <template if:true={esc.hasComboA}>
+                    <div class="ew-combos">
+
+                      <!-- Option A -->
+                      <div class={esc.comboACardCls}>
+                        <div class="ew-combo-top">
+                          <span class="ew-combo-label">Option A</span>
+                          <template if:true={esc.isAiA}>
+                            <span class="ew-ai-pick">AI Pick</span>
+                          </template>
+                        </div>
+                        <div class="ew-combo-price">{esc.comboAPriceLabel}</div>
+                        <div class="ew-combo-sub">
+                          {esc.comboAData.terms} &middot; {esc.comboAData.discount}% disc &middot; {esc.comboAData.validity}d
+                        </div>
+                        <button
+                          class="ew-btn-approve"
+                          data-id={esc.quoteId}
+                          data-combo="A"
+                          disabled={esc.approving}
+                          onclick={handleApproveCombo}
+                        >
+                          <template if:false={esc.approving}>Approve A</template>
+                          <template if:true={esc.approving}>Approving...</template>
+                        </button>
+                      </div>
+
+                      <!-- Option B -->
+                      <template if:true={esc.hasComboB}>
+                        <div class={esc.comboBCardCls}>
+                          <div class="ew-combo-top">
+                            <span class="ew-combo-label">Option B</span>
+                            <template if:true={esc.isAiB}>
+                              <span class="ew-ai-pick">AI Pick</span>
+                            </template>
+                          </div>
+                          <div class="ew-combo-price">{esc.comboBPriceLabel}</div>
+                          <div class="ew-combo-sub">
+                            {esc.comboBData.terms} &middot; {esc.comboBData.discount}% disc &middot; {esc.comboBData.validity}d
+                          </div>
+                          <button
+                            class="ew-btn-approve ew-btn-b"
+                            data-id={esc.quoteId}
+                            data-combo="B"
+                            disabled={esc.approving}
+                            onclick={handleApproveCombo}
+                          >
+                            <template if:false={esc.approving}>Approve B</template>
+                            <template if:true={esc.approving}>Approving...</template>
+                          </button>
+                        </div>
+                      </template>
+
+                    </div>
+                  </template>
+
+                  <!-- Message to send (editable) -->
+                  <div class="ew-msg-preview">
+                    <div class="ew-msg-preview-label">Message to customer — edit before sending</div>
+                    <textarea
+                      class="ew-msg-note ew-msg-note-tall"
+                      data-id={esc.quoteId}
+                      value={esc.salesNote}
+                      oninput={handleSalesNoteChange}
+                    ></textarea>
+                  </div>
+
+                  <!-- Customize toggle + form -->
+                  <div class="ew-actions-row">
+                    <button
+                      class="ew-btn-custom"
+                      data-id={esc.quoteId}
+                      onclick={handleToggleCustom}
+                    >Customize Terms</button>
+                  </div>
+
+                  <template if:true={esc.showCustom}>
+                    <div class="ew-custom-form">
+                      <div class="ew-custom-row">
+                        <input
+                          type="number"
+                          class="ew-custom-input"
+                          placeholder="Custom price (€)"
+                          data-id={esc.quoteId}
+                          data-field="price"
+                          value={esc.customPrice}
+                          oninput={handleCustomFieldChange}
+                        />
+                        <select
+                          class="ew-custom-select"
+                          data-id={esc.quoteId}
+                          data-field="terms"
+                          onchange={handleCustomFieldChange}
+                        >
+                          <option value="Net 30" selected={esc.customTermsNet30}>Net 30</option>
+                          <option value="Net 45" selected={esc.customTermsNet45}>Net 45</option>
+                          <option value="Net 60" selected={esc.customTermsNet60}>Net 60</option>
+                          <option value="Net 90" selected={esc.customTermsNet90}>Net 90</option>
+                        </select>
+                        <input
+                          type="number"
+                          class="ew-custom-input"
+                          placeholder="Validity (days)"
+                          data-id={esc.quoteId}
+                          data-field="validity"
+                          value={esc.customValidity}
+                          oninput={handleCustomFieldChange}
+                        />
+                      </div>
+                      <button
+                        class="ew-btn-approve ew-btn-custom-apply"
+                        data-id={esc.quoteId}
+                        data-combo="custom"
+                        disabled={esc.approving}
+                        onclick={handleApproveCombo}
+                      >Apply Custom Terms</button>
+                    </div>
+                  </template>
+
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <!-- ── Open Conversations (customer replied, waiting on sales) ── -->
+  <template if:true={hasConversations}>
+    <div class="ew-tray ew-conv-tray">
+      <div class="ew-tray-header ew-tray-header-msgs">
+        <div class="ew-tray-title">
+          <span class="ew-tray-dot ew-dot-blue"></span>
+          <span>Messages</span>
+          <span class="ew-count-badge ew-badge-blue">{conversationCount}</span>
+        </div>
+        <div class="ew-conv-filter">
+          <button class={allFilterCls} data-filter="all" onclick={handleConvFilter}>All</button>
+          <button class={awaitingFilterCls} data-filter="awaiting" onclick={handleConvFilter}>Awaiting Reply</button>
+        </div>
+      </div>
+      <div class="ew-items">
+        <template for:each={conversations} for:item="conv">
+          <div key={conv.quoteId} class="ew-item">
+            <!-- Collapsed header -->
+            <div class="ew-item-header" data-id={conv.quoteId} onclick={handleToggleConv}>
+              <div class="ew-item-left">
+                <span class={conv.convDotCls}></span>
+                <span class="ew-item-account">{conv.accountName}</span>
+                <span class="ew-conv-quote-tag">{conv.quoteName}</span>
+                <span class="ew-item-age">{conv.lastPreview}</span>
+              </div>
+              <lightning-icon icon-name={conv.expandIcon} size="xx-small"></lightning-icon>
+            </div>
+
+            <!-- Expanded: full thread + reply -->
+            <template if:true={conv.expanded}>
+              <div class="ew-conv-body">
+                <template if:true={conv.dealSummary}>
+                  <div class="ew-conv-deal-bar">{conv.dealSummary}</div>
+                </template>
+                <div class="ew-thread">
+                  <template for:each={conv.messages} for:item="msg">
+                    <div key={msg.id} class={msg.rowCls}>
+                      <div class={msg.bubbleCls}>{msg.text}</div>
+                      <span class="ew-msg-time">{msg.timeLabel}</span>
+                    </div>
+                  </template>
+                </div>
+                <div class="ew-reply-area">
+                  <textarea
+                    class="ew-reply-input"
+                    placeholder="Reply to customer…"
+                    data-id={conv.quoteId}
+                    value={conv.replyText}
+                    oninput={handleConvReplyChange}
+                  ></textarea>
+                  <button
+                    class="ew-btn-send"
+                    data-id={conv.quoteId}
+                    disabled={conv.sending}
+                    onclick={handleSendReply}
+                  >
+                    <template if:false={conv.sending}>Send</template>
+                    <template if:true={conv.sending}>Sending…</template>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+</template>

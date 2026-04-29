@@ -880,6 +880,133 @@
   line-height: 1;
 }
 
+/* ── Unread badge on Messages tab ── */
+.nqs-tab-badge {
+  min-width: 16px;
+  height: 16px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 99px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-left: 2px;
+}
+
+/* ── Unread dot on quote list row ── */
+.nqs-unread-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #3b82f6;
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+  animation: nqs-pulse 2s ease-in-out infinite;
+}
+
+@keyframes nqs-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Floating Instagram-style notification bubble ── */
+.nqs-notif-bubble {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1e293b;
+  color: #fff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  min-width: 260px;
+  max-width: 340px;
+  animation: nqs-slide-up 0.3s ease;
+}
+
+@keyframes nqs-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.nqs-notif-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #3b82f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.nqs-notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nqs-notif-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nqs-notif-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.nqs-notif-view-btn {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nqs-notif-view-btn:hover {
+  background: #2563eb;
+}
+
+.nqs-notif-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.nqs-notif-dismiss-btn:hover {
+  color: #94a3b8;
+}
+
 .nqs-modal-content {
   flex: 1;
   overflow-y: auto;
@@ -2242,6 +2369,64 @@ button:disabled {
   letter-spacing: 0.07em;
   white-space: nowrap;
   animation: nqsPulse 2s ease-in-out infinite;
+}
+
+/* ── Charge type badges ───────────────────────────────────────────────────── */
+.nqs-charge-badge {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.nqs-charge-onetime {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.nqs-charge-recurring {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.nqs-billing-label {
+  display: block;
+  font-size: 0.65rem;
+  color: #94a3b8;
+  margin-top: 2px;
+  text-align: center;
+}
+.nqs-mrr-val {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #15803d;
+}
+.nqs-muted {
+  color: #94a3b8 !important;
+  font-size: 0.78rem;
+}
+.nqs-summary-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.5rem 0;
+}
+
+/* ── General Terms & Conditions ──────────────────────────────────────────── */
+.nqs-terms-gtc-wrap {
+  margin-top: 0.75rem;
+}
+.nqs-terms-gtc {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.6;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  margin-top: 0.35rem;
+  white-space: pre-wrap;
 }
 
 /* ── Animation ────────────────────────────────────────────────────────────── */

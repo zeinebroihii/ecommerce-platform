@@ -396,6 +396,35 @@
   width: 100%;
 }
 
+/* ══ AI Negotiation chat CTA ════════════════════════════════════════════════ */
+.ncp-ai-chat-cta {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem 0;
+}
+.ncp-ai-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+  transition: opacity 0.2s, transform 0.15s;
+}
+.ncp-ai-chat-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+.ncp-ai-chat-ico {
+  --lwc-colorTextIconDefault: #fff;
+}
+
 /* ══ Page heading ═══════════════════════════════════════════════════════════ */
 .ncp-page-title {
   font-size: 2rem;

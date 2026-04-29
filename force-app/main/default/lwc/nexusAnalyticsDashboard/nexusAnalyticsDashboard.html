@@ -1,17 +1,15 @@
 <template>
   <div class="nad-wrap">
+
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <div class="nad-header">
       <div class="nad-header-left">
         <div class="nad-header-icon">
-          <lightning-icon
-            icon-name="utility:chart"
-            size="small"
-          ></lightning-icon>
+          <lightning-icon icon-name="utility:chart" size="small"></lightning-icon>
         </div>
         <div>
-          <div class="nad-header-title">Revenue Intelligence</div>
-          <div class="nad-header-sub">Nexus B2B · Sales Analytics</div>
+          <div class="nad-header-title">Reports &amp; Analytics</div>
+          <div class="nad-header-sub">Nexus B2B · Sales Intelligence</div>
         </div>
       </div>
       <div class="nad-header-badge">Live Data</div>
@@ -25,79 +23,74 @@
           size="x-small"
           class="nad-banner-icon"
         ></lightning-icon>
-        <span><strong>Stock Alert:</strong> {stockAlertMsg}</span>
+        <span><strong>Stock Alert :</strong> {stockAlertMsg}</span>
       </div>
     </template>
 
-    <!-- ── KPI Cards ──────────────────────────────────────────────────────── -->
+    <!-- ════════════════ SECTION: PERFORMANCE COMMERCIALE ════════════════ -->
+    <div class="nad-section-tag-row">
+      <lightning-icon icon-name="utility:opportunity" size="x-small" class="nad-section-icon"></lightning-icon>
+      <span class="nad-section-tag-label">Performance Commerciale</span>
+    </div>
+
+    <!-- ── Quote KPI Cards ────────────────────────────────────────────────── -->
     <div class="nad-kpi-row">
       <div class="nad-kpi-card nad-kpi-revenue">
         <div class="nad-kpi-top">
           <div class="nad-kpi-icon-wrap nad-kpi-icon-green">
-            <lightning-icon
-              icon-name="utility:moneybag"
-              size="x-small"
-            ></lightning-icon>
+            <lightning-icon icon-name="utility:moneybag" size="x-small"></lightning-icon>
           </div>
-          <span class="nad-kpi-trend nad-kpi-trend-up">Accepted</span>
+          <span class="nad-kpi-trend nad-kpi-trend-up">Accepté</span>
         </div>
         <div class="nad-kpi-val">{kpiRevenue}</div>
-        <div class="nad-kpi-label">Total Revenue</div>
-        <div class="nad-kpi-sub">{kpiAccepted} closed deals</div>
+        <div class="nad-kpi-label">Chiffre d'Affaires</div>
+        <div class="nad-kpi-sub">{kpiAccepted} contrats signés</div>
       </div>
 
       <div class="nad-kpi-card nad-kpi-pipeline">
         <div class="nad-kpi-top">
           <div class="nad-kpi-icon-wrap nad-kpi-icon-blue">
-            <lightning-icon
-              icon-name="utility:opportunity"
-              size="x-small"
-            ></lightning-icon>
+            <lightning-icon icon-name="utility:opportunity" size="x-small"></lightning-icon>
           </div>
-          <span class="nad-kpi-trend nad-kpi-trend-blue">In progress</span>
+          <span class="nad-kpi-trend nad-kpi-trend-blue">En cours</span>
         </div>
         <div class="nad-kpi-val">{kpiPipeline}</div>
-        <div class="nad-kpi-label">Pipeline Value</div>
-        <div class="nad-kpi-sub">{kpiActiveQuotes} active quotes</div>
+        <div class="nad-kpi-label">Pipeline</div>
+        <div class="nad-kpi-sub">{kpiActiveQuotes} devis actifs</div>
       </div>
 
       <div class="nad-kpi-card nad-kpi-winrate">
         <div class="nad-kpi-top">
           <div class="nad-kpi-icon-wrap nad-kpi-icon-purple">
-            <lightning-icon
-              icon-name="utility:target"
-              size="x-small"
-            ></lightning-icon>
+            <lightning-icon icon-name="utility:target" size="x-small"></lightning-icon>
           </div>
         </div>
         <div class="nad-kpi-val">{kpiWinRate}</div>
-        <div class="nad-kpi-label">Win Rate</div>
-        <div class="nad-kpi-sub">Accepted ÷ Closed</div>
+        <div class="nad-kpi-label">Taux de Succès</div>
+        <div class="nad-kpi-sub">Acceptés ÷ Clôturés</div>
       </div>
 
       <div class="nad-kpi-card nad-kpi-deal">
         <div class="nad-kpi-top">
           <div class="nad-kpi-icon-wrap nad-kpi-icon-orange">
-            <lightning-icon
-              icon-name="utility:contract"
-              size="x-small"
-            ></lightning-icon>
+            <lightning-icon icon-name="utility:contract" size="x-small"></lightning-icon>
           </div>
         </div>
         <div class="nad-kpi-val">{kpiAvgDeal}</div>
-        <div class="nad-kpi-label">Avg Deal Size</div>
-        <div class="nad-kpi-sub">{kpiTotalQuotes} total quotes</div>
+        <div class="nad-kpi-label">Valeur Moyenne</div>
+        <div class="nad-kpi-sub">{kpiTotalQuotes} devis au total</div>
       </div>
     </div>
 
-    <!-- ── Charts Row ─────────────────────────────────────────────────────── -->
+    <!-- ── Charts Row: Revenue + Pipeline Donut ──────────────────────────── -->
     <div class="nad-charts-row">
+
       <!-- Revenue by Month — vertical bar chart -->
       <div class="nad-card nad-card-large">
         <div class="nad-card-header">
           <div>
-            <div class="nad-card-title">Revenue by Month</div>
-            <div class="nad-card-sub">Last 6 months · Accepted quotes only</div>
+            <div class="nad-card-title">Revenus par Mois</div>
+            <div class="nad-card-sub">6 derniers mois · Devis acceptés uniquement</div>
           </div>
         </div>
         <template if:true={hasRevenue}>
@@ -123,48 +116,218 @@
           </div>
         </template>
         <template if:false={hasRevenue}>
-          <div class="nad-empty">No accepted quotes in the last 6 months</div>
+          <div class="nad-empty">Aucun devis accepté ces 6 derniers mois</div>
         </template>
       </div>
 
-      <!-- Quote Pipeline — horizontal funnel -->
+      <!-- Pipeline by Status — SVG Donut Chart -->
       <div class="nad-card">
         <div class="nad-card-header">
           <div>
-            <div class="nad-card-title">Quote Pipeline</div>
-            <div class="nad-card-sub">By status · All time</div>
+            <div class="nad-card-title">Pipeline Devis</div>
+            <div class="nad-card-sub">Par statut · Tous</div>
           </div>
         </div>
-        <template if:true={hasPipeline}>
-          <div class="nad-pipeline">
-            <template for:each={pipelineChartData} for:item="stage">
-              <div key={stage.status} class="nad-pipeline-row">
-                <div class="nad-pipeline-label">{stage.status}</div>
-                <div class="nad-pipeline-track">
-                  <div class="nad-pipeline-bar" style={stage.barStyle}></div>
+        <template if:true={hasPipelineDonut}>
+          <div class="nad-donut-wrap">
+            <svg viewBox="0 0 100 100" class="nad-donut-svg" aria-hidden="true">
+              <!-- Track -->
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" stroke-width="12"/>
+              <!-- Segments -->
+              <template for:each={pipelineDonutSegments} for:item="seg">
+                <circle
+                  key={seg._key}
+                  cx="50" cy="50" r="40"
+                  fill="none"
+                  stroke={seg.color}
+                  stroke-width="12"
+                  stroke-dasharray={seg.dasharray}
+                  transform={seg.svgTransform}
+                ></circle>
+              </template>
+              <!-- Center label -->
+              <text x="50" y="47" text-anchor="middle"
+                    style="font-size:15px;font-weight:900;fill:#0f172a;font-family:inherit">
+                {totalQuotesCount}
+              </text>
+              <text x="50" y="59" text-anchor="middle"
+                    style="font-size:6px;font-weight:700;fill:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-family:inherit">
+                DEVIS
+              </text>
+            </svg>
+            <div class="nad-donut-legend">
+              <template for:each={pipelineDonutSegments} for:item="seg">
+                <div key={seg._key} class="nad-legend-row">
+                  <div class="nad-legend-dot" style={seg.dotStyle}></div>
+                  <div class="nad-legend-name">{seg.status}</div>
+                  <div class="nad-legend-spacer"></div>
+                  <div class="nad-legend-count">{seg.quoteCount}</div>
+                  <div class="nad-legend-pct">{seg.pctLabel}</div>
                 </div>
-                <div class="nad-pipeline-meta">
-                  <span class="nad-pipeline-count">{stage.quoteCount}</span>
-                  <span class="nad-pipeline-val">{stage.valueLabel}</span>
-                </div>
-              </div>
-            </template>
+              </template>
+            </div>
           </div>
         </template>
-        <template if:false={hasPipeline}>
-          <div class="nad-empty">No quotes found</div>
+        <template if:false={hasPipelineDonut}>
+          <div class="nad-empty">Aucun devis trouvé</div>
         </template>
+      </div>
+
+    </div>
+
+    <!-- ════════════════ SECTION DIVIDER: LEAD INTELLIGENCE ════════════════ -->
+    <div class="nad-section-divider">
+      <div class="nad-divider-line"></div>
+      <div class="nad-divider-tag">
+        <lightning-icon icon-name="utility:people" size="x-small" class="nad-section-icon"></lightning-icon>
+        <span>Lead Intelligence</span>
+      </div>
+      <div class="nad-divider-line"></div>
+    </div>
+
+    <!-- ── Lead KPI Cards ────────────────────────────────────────────────── -->
+    <div class="nad-kpi-row">
+      <div class="nad-kpi-card nad-kpi-leads">
+        <div class="nad-kpi-top">
+          <div class="nad-kpi-icon-wrap nad-kpi-icon-blue">
+            <lightning-icon icon-name="utility:people" size="x-small"></lightning-icon>
+          </div>
+        </div>
+        <div class="nad-kpi-val">{leadKpiTotal}</div>
+        <div class="nad-kpi-label">Total Leads</div>
+        <div class="nad-kpi-sub">{leadKpiPending} en attente de décision</div>
+      </div>
+
+      <div class="nad-kpi-card nad-kpi-converted">
+        <div class="nad-kpi-top">
+          <div class="nad-kpi-icon-wrap nad-kpi-icon-green">
+            <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+          </div>
+          <span class="nad-kpi-trend nad-kpi-trend-up">Convertis</span>
+        </div>
+        <div class="nad-kpi-val">{leadKpiConverted}</div>
+        <div class="nad-kpi-label">Leads Convertis</div>
+        <div class="nad-kpi-sub">Clients actifs</div>
+      </div>
+
+      <div class="nad-kpi-card nad-kpi-convrate">
+        <div class="nad-kpi-top">
+          <div class="nad-kpi-icon-wrap nad-kpi-icon-purple">
+            <lightning-icon icon-name="utility:trending" size="x-small"></lightning-icon>
+          </div>
+        </div>
+        <div class="nad-kpi-val">{leadKpiConversionRate}</div>
+        <div class="nad-kpi-label">Taux de Conversion</div>
+        <div class="nad-kpi-sub">Leads → Clients</div>
+      </div>
+
+      <div class="nad-kpi-card nad-kpi-aiscore">
+        <div class="nad-kpi-top">
+          <div class="nad-kpi-icon-wrap nad-kpi-icon-orange">
+            <lightning-icon icon-name="utility:einstein" size="x-small"></lightning-icon>
+          </div>
+        </div>
+        <div class="nad-kpi-val">{leadKpiAvgScore}</div>
+        <div class="nad-kpi-label">Score IA Moyen</div>
+        <div class="nad-kpi-sub">Tous leads scorés</div>
       </div>
     </div>
 
-    <!-- ── Bottom Row ─────────────────────────────────────────────────────── -->
+    <!-- ── Lead Charts Row: Source Donut + AI Score Distribution ─────────── -->
+    <div class="nad-charts-row">
+
+      <!-- Lead Source Donut -->
+      <div class="nad-card">
+        <div class="nad-card-header">
+          <div>
+            <div class="nad-card-title">Sources des Leads</div>
+            <div class="nad-card-sub">Répartition par canal d'acquisition</div>
+          </div>
+        </div>
+        <template if:true={hasLeadSources}>
+          <div class="nad-donut-wrap">
+            <svg viewBox="0 0 100 100" class="nad-donut-svg" aria-hidden="true">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" stroke-width="12"/>
+              <template for:each={leadSourceDonutSegments} for:item="seg">
+                <circle
+                  key={seg._key}
+                  cx="50" cy="50" r="40"
+                  fill="none"
+                  stroke={seg.color}
+                  stroke-width="12"
+                  stroke-dasharray={seg.dasharray}
+                  transform={seg.svgTransform}
+                ></circle>
+              </template>
+              <text x="50" y="47" text-anchor="middle"
+                    style="font-size:15px;font-weight:900;fill:#0f172a;font-family:inherit">
+                {totalLeadSourceCount}
+              </text>
+              <text x="50" y="59" text-anchor="middle"
+                    style="font-size:6px;font-weight:700;fill:#94a3b8;letter-spacing:1px;text-transform:uppercase;font-family:inherit">
+                LEADS
+              </text>
+            </svg>
+            <div class="nad-donut-legend">
+              <template for:each={leadSourceDonutSegments} for:item="seg">
+                <div key={seg._key} class="nad-legend-row">
+                  <div class="nad-legend-dot" style={seg.dotStyle}></div>
+                  <div class="nad-legend-name">{seg.source}</div>
+                  <div class="nad-legend-spacer"></div>
+                  <div class="nad-legend-count">{seg.leadCount}</div>
+                  <div class="nad-legend-pct">{seg.pctLabel}</div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+        <template if:false={hasLeadSources}>
+          <div class="nad-empty">Aucun lead enregistré</div>
+        </template>
+      </div>
+
+      <!-- AI Score Distribution -->
+      <div class="nad-card">
+        <div class="nad-card-header">
+          <div>
+            <div class="nad-card-title">Distribution Score IA</div>
+            <div class="nad-card-sub">Leads par tranche · Nexus AI Scoring</div>
+          </div>
+        </div>
+        <template if:true={hasAIScores}>
+          <div class="nad-ai-dist">
+            <template for:each={aiScoreChartData} for:item="bucket">
+              <div key={bucket.bucketKey} class="nad-ai-row">
+                <div class="nad-ai-label">{bucket.label}</div>
+                <div class="nad-ai-track">
+                  <div class="nad-ai-bar" style={bucket.barStyle}></div>
+                </div>
+                <div class="nad-ai-count">{bucket.cnt}</div>
+              </div>
+            </template>
+            <div class="nad-ai-legend">
+              <span class="nad-ai-legend-item nad-ai-legend-low">Faible</span>
+              <span class="nad-ai-legend-arrow">→</span>
+              <span class="nad-ai-legend-item nad-ai-legend-high">Élevé</span>
+            </div>
+          </div>
+        </template>
+        <template if:false={hasAIScores}>
+          <div class="nad-empty">Aucun score IA disponible</div>
+        </template>
+      </div>
+
+    </div>
+
+    <!-- ── Bottom Row: Top Products + Top Accounts ────────────────────────── -->
     <div class="nad-bottom-row">
+
       <!-- Top Products -->
       <div class="nad-card">
         <div class="nad-card-header">
           <div>
-            <div class="nad-card-title">Top Products</div>
-            <div class="nad-card-sub">By deals closed · Accepted quotes</div>
+            <div class="nad-card-title">Top Produits</div>
+            <div class="nad-card-sub">Par deals clôturés · Devis acceptés</div>
           </div>
         </div>
         <template if:true={hasProducts}>
@@ -176,23 +339,20 @@
                   <div class="nad-top-name">{p.productName}</div>
                   <div class="nad-top-family">{p.productFamily}</div>
                   <div class="nad-top-bar-track">
-                    <div
-                      class="nad-top-bar nad-top-bar-product"
-                      style={p.barStyle}
-                    ></div>
+                    <div class="nad-top-bar nad-top-bar-product" style={p.barStyle}></div>
                   </div>
                 </div>
                 <div class="nad-top-stats">
                   <div class="nad-top-stat-main">{p.dealCount}</div>
                   <div class="nad-top-stat-label">deals</div>
-                  <div class="nad-top-stat-sec">{p.unitsSold} units</div>
+                  <div class="nad-top-stat-sec">{p.unitsSold} unités</div>
                 </div>
               </div>
             </template>
           </div>
         </template>
         <template if:false={hasProducts}>
-          <div class="nad-empty">No closed deals yet</div>
+          <div class="nad-empty">Aucun deal clôturé</div>
         </template>
       </div>
 
@@ -200,8 +360,8 @@
       <div class="nad-card">
         <div class="nad-card-header">
           <div>
-            <div class="nad-card-title">Top Accounts</div>
-            <div class="nad-card-sub">By revenue · Accepted quotes</div>
+            <div class="nad-card-title">Top Comptes</div>
+            <div class="nad-card-sub">Par revenu · Devis acceptés</div>
           </div>
         </div>
         <template if:true={hasAccounts}>
@@ -211,26 +371,24 @@
                 <div class="nad-top-rank">{a.rank}</div>
                 <div class="nad-top-info">
                   <div class="nad-top-name">{a.accountName}</div>
-                  <div class="nad-top-family">Avg deal: {a.avgLabel}</div>
+                  <div class="nad-top-family">Moy. deal : {a.avgLabel}</div>
                   <div class="nad-top-bar-track">
-                    <div
-                      class="nad-top-bar nad-top-bar-account"
-                      style={a.barStyle}
-                    ></div>
+                    <div class="nad-top-bar nad-top-bar-account" style={a.barStyle}></div>
                   </div>
                 </div>
                 <div class="nad-top-stats">
                   <div class="nad-top-stat-main">{a.totalLabel}</div>
-                  <div class="nad-top-stat-label">{a.quoteCount} quotes</div>
+                  <div class="nad-top-stat-label">{a.quoteCount} devis</div>
                 </div>
               </div>
             </template>
           </div>
         </template>
         <template if:false={hasAccounts}>
-          <div class="nad-empty">No accepted quotes with linked accounts</div>
+          <div class="nad-empty">Aucun compte avec devis accepté</div>
         </template>
       </div>
+
     </div>
   </div>
 </template>

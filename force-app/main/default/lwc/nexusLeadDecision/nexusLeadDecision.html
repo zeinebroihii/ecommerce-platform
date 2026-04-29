@@ -3,75 +3,111 @@
 
         <!-- ── Header ── -->
         <div class="nld-header">
-            <div class="nld-header-icon">
-                <lightning-icon icon-name="utility:einstein" size="small" variant="inverse"></lightning-icon>
-            </div>
             <div class="nld-header-text">
-                <h3 class="nld-title">Nexus AI — Décision Admin</h3>
-                <p class="nld-subtitle">Analyse intelligente du lead B2B</p>
+                <h3 class="nld-title">Nexus AI Lead Decision</h3>
+                <p class="nld-subtitle">AI-powered B2B lead intelligence</p>
             </div>
-            <button class="nld-btn-refresh" onclick={handleRefresh} disabled={isRefreshing} title="Rafraîchir l'analyse">
+            <button class="nld-btn-refresh" onclick={handleRefresh} disabled={isRefreshing} title="Re-analyze">
                 <lightning-icon icon-name="utility:refresh" size="x-small" variant="inverse"></lightning-icon>
             </button>
         </div>
 
-        <!-- ── Loading ── -->
-        <template if:true={isLoading}>
-            <div class="nld-loading">Chargement de l'analyse IA...</div>
-        </template>
+        <!-- ── Body ── -->
+        <div class="nld-body">
 
-        <!-- ── Main content ── -->
-        <template if:false={isLoading}>
-
-            <!-- Score ring -->
-            <div class="nld-score-section">
-                <div class={scoreRingClass}>
-                    <span class="nld-score-num">{score}</span>
-                    <span class="nld-score-divider">/100</span>
+            <!-- Wire loading skeleton -->
+            <template if:true={isLoading}>
+                <div class="nld-skeleton">
+                    <div class="nld-skel-row">
+                        <div class="nld-skel-box"></div>
+                        <div class="nld-skel-lines">
+                            <div class="nld-skel-line nld-skel-lg"></div>
+                            <div class="nld-skel-line nld-skel-sm"></div>
+                        </div>
+                    </div>
+                    <div class="nld-skel-line nld-skel-md"></div>
+                    <div class="nld-skel-line nld-skel-lg"></div>
                 </div>
-                <div class="nld-score-right">
-                    <div class={scoreLabelClass}>{scoreLabel}</div>
-                    <template if:true={hasIntent}>
-                        <div class="nld-intent-badge">{intent}</div>
+            </template>
+
+            <template if:false={isLoading}>
+
+                <!-- ── Score Card ── -->
+                <div class="nld-score-card">
+                    <div class={scoreRingClass}>
+                        <span class="nld-score-num">{score}</span>
+                        <span class="nld-score-divider">/100</span>
+                    </div>
+                    <div class="nld-score-meta">
+                        <div class={scoreLabelClass}>{scoreLabel}</div>
+                        <template if:true={hasIntent}>
+                            <span class="nld-intent-badge">{intent}</span>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- ── Einstein analyzing spinner ── -->
+                <template if:true={isAnalyzing}>
+                    <div class="nld-analyzing">
+                        <lightning-spinner size="small" variant="brand" alternative-text="Analyzing"></lightning-spinner>
+                        <span class="nld-analyzing-text">Einstein is analyzing this lead...</span>
+                    </div>
+                </template>
+
+                <!-- ── Einstein error ── -->
+                <template if:true={hasEinsteinError}>
+                    <div class="nld-error-box">
+                        <lightning-icon icon-name="utility:error" size="x-small" class="nld-error-icon"></lightning-icon>
+                        <span>{einsteinError}</span>
+                    </div>
+                </template>
+
+                <!-- ── Einstein Analysis Sections ── -->
+                <template if:true={hasSections}>
+                    <div class="nld-sections-wrap">
+                        <div class="nld-sections-header">
+                            <lightning-icon icon-name="utility:sparkles" size="x-small" class="nld-sparkle-icon"></lightning-icon>
+                            <span class="nld-sections-title">Einstein Analysis</span>
+                            <span class="nld-sections-badge">AI</span>
+                        </div>
+                        <div class="nld-sections-list">
+                            <template for:each={sections} for:item="sec">
+                                <div key={sec.id} class={sec.cardClass}>
+                                    <div class="nld-section-header">
+                                        <lightning-icon icon-name={sec.icon} size="x-small" class="nld-section-icon"></lightning-icon>
+                                        <span class="nld-section-title">{sec.title}</span>
+                                        <template if:true={sec.verdict}>
+                                            <span class={sec.verdictClass}>{sec.verdictLabel}</span>
+                                        </template>
+                                    </div>
+                                    <p class="nld-section-content">{sec.content}</p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- ── Agentforce Deep Analysis (kept) ── -->
+                <a class="nld-btn-agent"
+                   href="https://orgfarm-56b3b63a30-dev-ed.develop.lightning.force.com/AiCopilot/copilotStudio.app#/copilot/builder?copilotId=0Xxg5000000b81pCAA&versionId=0X9g5000000s8mzCAA"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   onclick={handleCopyPrompt}>
+                    <lightning-icon icon-name="utility:einstein" size="x-small" class="nld-agent-icon"></lightning-icon>
+                    <span>Deep Analysis — Nexus Lead Analyst</span>
+                    <lightning-icon icon-name="utility:new_window" size="x-small" class="nld-agent-ext-icon"></lightning-icon>
+                </a>
+
+                <!-- ── Decision Status Footer ── -->
+                <div class="nld-status-footer">
+                    <span class="nld-status-label">Decision:</span>
+                    <span class={decisionBadgeClass}>{decisionLabel}</span>
+                    <template if:false={isPending}>
+                        <span class="nld-status-note">Lead Status: <strong>{leadStatus}</strong></span>
                     </template>
                 </div>
-            </div>
 
-            <!-- AI Reason -->
-            <template if:true={hasReason}>
-                <div class="nld-reason-box">
-                    <div class="nld-reason-label">
-                        <lightning-icon icon-name="utility:sparkles" size="x-small" class="nld-sparkle"></lightning-icon>
-                        &nbsp;Analyse IA
-                    </div>
-                    <p class="nld-reason-text">{reason}</p>
-                </div>
             </template>
-
-            <!-- Current decision status -->
-            <div class="nld-status-row">
-                <span class="nld-status-label">Statut :</span>
-                <span class={decisionBadgeClass}>{decisionLabel}</span>
-            </div>
-
-            <!-- Agent deep-analysis button (always visible) -->
-            <a class="nld-btn-agent"
-               href="https://orgfarm-56b3b63a30-dev-ed.develop.lightning.force.com/AiCopilot/copilotStudio.app#/copilot/builder?copilotId=0Xxg5000000b81pCAA&versionId=0X9g5000000s8mzCAA"
-               target="_blank"
-               rel="noopener noreferrer"
-               onclick={handleCopyPrompt}>
-                <lightning-icon icon-name="utility:einstein" size="x-small" variant="inverse"></lightning-icon>
-                &nbsp;Analyse approfondie — Nexus Lead Analyst
-            </a>
-
-            <!-- Decision status message -->
-            <template if:false={isPending}>
-                <div class="nld-decided-msg">
-                    <lightning-icon icon-name="utility:check" size="x-small" class="nld-decided-icon"></lightning-icon>
-                    &nbsp;Décision enregistrée — statut : <strong>{leadStatus}</strong>
-                </div>
-            </template>
-
-        </template>
+        </div>
     </div>
 </template>

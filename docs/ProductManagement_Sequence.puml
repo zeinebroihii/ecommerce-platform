@@ -1,0 +1,52 @@
+@startuml Product Management Flow
+title Product Management with Stock Intelligence
+
+actor Admin
+participant LWC as "ProductManager"
+participant Controller as "ProductController"
+participant Service as "StockIntelligenceService"
+participant Database as "Salesforce DB"
+participant AI as "Einstein AI"
+
+== Load Products ==
+Admin -> LWC: Open Product Manager
+LWC -> Controller: getProductsWithStock(searchTerm, category)
+Controller -> Database: SELECT FROM Product__c WITH Stock__c > 0
+Database --> Controller: Product data
+Controller --> LWC: ProductWrapper[]
+
+== Stock Intelligence Check ==
+Service -> Database: SELECT Stock__c, ReorderPoint__c FROM Product__c
+Database --> Service: Stock data
+
+loop For each low stock product
+    Service -> AI: Analyze stock trends + predict demand
+    AI --> Service: Demand prediction
+    Service -> Database: UPDATE Product__c SET StockStatus__c = 'Low'
+    Service -> Admin: Send notification (if configured)
+end
+
+== Bulk Import ==
+Admin -> LWC: Upload CSV file
+LWC -> Controller: bulkImportProducts(csvData)
+Controller -> Service: validateAndImport(csvData)
+
+loop For each product
+    Service -> Database: Check existing Product__c
+    alt Product exists
+        Service -> Database: UPDATE Product__c
+    else New product
+        Service -> Database: INSERT Product__c
+    end
+end
+
+Service --> Controller: Import results
+Controller --> LWC: Success/error counts
+LWC --> Admin: Import complete
+
+== Stock Alerts ==
+Service -> Database: SELECT products WHERE Stock__c <= ReorderPoint__c
+Database --> Service: Low stock products
+Service -> Admin: Email/Slack notification
+Service -> Database: Log alert in StockAlert__c
+@enduml

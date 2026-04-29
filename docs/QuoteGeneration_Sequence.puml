@@ -1,0 +1,45 @@
+@startuml Quote Generation Flow
+title Quote Generation Sequence
+
+actor SalesRep
+participant LWC as "Quote Builder UI"
+participant Service as "QuoteGenerationService"
+participant Database as "Salesforce DB"
+participant AI as "Einstein AI"
+
+== Initialize Quote ==
+SalesRep -> LWC: Open Quote Builder
+LWC -> Service: getQuoteTemplates()
+Service -> Database: SELECT FROM TALEXO_Quote__c WHERE IsPrimary__c = true
+Database --> Service: Template data
+Service --> LWC: Available templates
+
+== Generate Quote ==
+SalesRep -> LWC: Select products + opportunity
+LWC -> Service: generateQuote(request)
+Service -> Database: Check existing primary quotes
+Database --> Service: Existing quotes
+
+alt Has existing primary quote
+    Service -> Database: UPDATE existing SET IsPrimary__c = false
+end
+
+Service -> Database: INSERT TALEXO_Quote__c
+Service -> Database: INSERT NexusQuoteLineItem__c[]
+Database --> Service: Quote created
+
+== Apply AI Scoring ==
+Service -> AI: Score quote acceptance probability
+AI --> Service: AI prediction + reasoning
+Service -> Database: UPDATE TALEXO_Quote__c SET AcceptanceProbability__c, AIReason__c
+Database --> Service: Updated
+
+== Calculate Totals ==
+Service -> Database: Calculate GrandTotal__c
+Database --> Service: Total amount
+Service -> Database: UPDATE GrandTotal__c
+Database --> Service: Final quote
+
+Service --> LWC: QuoteResponse
+LWC --> SalesRep: Quote generated + PDF download
+@enduml

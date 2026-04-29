@@ -78,6 +78,21 @@ public without sharing class GetQuoteDetailsForAgent {
       ? Date.today().daysBetween(q.ExpirationDate__c)
       : null;
 
+    // Sanitize bulk discount: valid B2B range is 0–50%.
+    // Values > 100 are data-entry errors — exclude from scoring entirely.
+    // Values 51–100 are also unrealistic; flag but keep.
+    Decimal rawDiscount = q.BulkDiscount__c != null ? q.BulkDiscount__c : 0;
+    String discountStr;
+    if (rawDiscount > 100) {
+      discountStr = 'INVALID DATA (raw value: ' + rawDiscount.intValue() +
+        '%) — ignore this field entirely when scoring; do not penalise or reward.';
+    } else if (rawDiscount > 50) {
+      discountStr = rawDiscount.intValue() +
+        '% — unusually high, verify before scoring; treat as a moderate incentive only.';
+    } else {
+      discountStr = rawDiscount.intValue() + '%';
+    }
+
     List<String> lines = new List<String>();
     lines.add('=== Nexus Quote: ' + q.Name + ' ===');
     lines.add('Status: ' + q.Status__c);
@@ -89,10 +104,7 @@ public without sharing class GetQuoteDetailsForAgent {
       'Grand Total: ' +
       (q.GrandTotal__c != null ? q.GrandTotal__c.setScale(2) + ' EUR' : 'N/A')
     );
-    lines.add(
-      'Bulk Discount: ' +
-      (q.BulkDiscount__c != null ? q.BulkDiscount__c.intValue() + '%' : '0%')
-    );
+    lines.add('Bulk Discount: ' + discountStr);
     lines.add(
       'Payment Terms: ' +
       (q.PaymentTerms__c != null ? q.PaymentTerms__c : 'N/A')
@@ -143,12 +155,18 @@ public without sharing class GetQuoteDetailsForAgent {
             ? q.Opportunity__r.Account.Industry
             : 'N/A')
         );
-        lines.add(
-          'Annual Revenue: ' +
-          (q.Opportunity__r.Account.AnnualRevenue != null
-            ? q.Opportunity__r.Account.AnnualRevenue.setScale(0) + ' EUR'
-            : 'N/A')
-        );
+        // Annual Revenue below 10 000 EUR is almost certainly test/placeholder
+        // data in a dev org — flag it so the agent does not penalise the deal.
+        Decimal annRev = q.Opportunity__r.Account.AnnualRevenue;
+        String annRevStr;
+        if (annRev == null) {
+          annRevStr = 'N/A';
+        } else if (annRev < 10000) {
+          annRevStr = annRev.setScale(0) + ' EUR — LIKELY TEST DATA; treat Annual Revenue as unknown/neutral, do not penalise.';
+        } else {
+          annRevStr = annRev.setScale(0) + ' EUR';
+        }
+        lines.add('Annual Revenue: ' + annRevStr);
       }
     }
 

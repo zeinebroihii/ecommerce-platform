@@ -1,0 +1,44 @@
+@startuml Combo Package Management
+title Combo Package Management Sequence
+
+actor User
+participant LWC as "nexusComboPackageManager"
+participant Controller as "ComboPackageController"
+participant Database as "Salesforce DB"
+
+== Load Packages ==
+User -> LWC: Open Combo Package Manager
+LWC -> Controller: getAllPackages()
+Controller -> Database: SELECT FROM ComboPackage__c WITH SECURITY_ENFORCED
+Database --> Controller: Package data + items
+Controller --> LWC: PackageWrapper[]
+LWC --> User: Display packages
+
+== Create Package ==
+User -> LWC: Click "New Package"
+LWC --> User: Show editor form
+User -> LWC: Fill package details + select products
+LWC -> Controller: savePackage(packageJson)
+Controller -> Database: INSERT ComboPackage__c
+Controller -> Database: INSERT ComboPackageItem__c[]
+Database --> Controller: Success
+Controller --> LWC: Package ID
+LWC --> User: Success message + refresh list
+
+== Delete Package ==
+User -> LWC: Click delete on package
+LWC -> Controller: deletePackage(packageId)
+Controller -> Database: DELETE ComboPackageItem__c WHERE ComboPackage__c = :id
+Controller -> Database: DELETE ComboPackage__c WHERE Id = :id
+Database --> Controller: Success
+Controller --> LWC: Success
+LWC --> User: Refresh list
+
+== Toggle Active Status ==
+User -> LWC: Toggle active/inactive
+LWC -> Controller: togglePackageActive(packageId, isActive)
+Controller -> Database: UPDATE ComboPackage__c SET IsActive__c = :isActive
+Database --> Controller: Success
+Controller --> LWC: Success
+LWC --> User: Update UI status
+@enduml

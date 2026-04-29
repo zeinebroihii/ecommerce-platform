@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DefaultValidityDays__c</fullName>
+    <description>Number of days a quote remains valid after creation (e.g. 30).</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Default Validity (Days)</label>
+    <precision>5</precision>
+    <scale>0</scale>
+    <type>Number</type>
+</CustomField>

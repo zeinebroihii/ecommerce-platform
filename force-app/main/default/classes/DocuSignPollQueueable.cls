@@ -221,7 +221,7 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
     // 5. Attach signed PDF
     if (pdfBlob != null) {
       String filename =
-        q.Name.replaceAll('[^A-Za-z0-9_-]', '_') + '_Contrat_Signe.pdf';
+        q.Name.replaceAll('[^A-Za-z0-9_-]', '_') + '_Signed_Contract.pdf';
       ContentVersion cv = new ContentVersion(
         Title = filename,
         PathOnClient = filename,

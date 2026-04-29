@@ -3,6 +3,6 @@
     <fullName>AIReason__c</fullName>
     <label>Analyse IA</label>
     <type>LongTextArea</type>
-    <length>1000</length>
-    <visibleLines>4</visibleLines>
+    <length>32768</length>
+    <visibleLines>6</visibleLines>
 </CustomField>

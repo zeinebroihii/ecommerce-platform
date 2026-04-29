@@ -1,0 +1,81 @@
+@startuml Order Processing Flow
+title Complete Order Processing with Authentication
+
+actor Customer
+participant Portal as "Customer Portal"
+participant AuthService as "AuthService"
+participant Session as "Session Manager"
+participant Controller as "OrderController"
+participant Service as "OrderService"
+participant Trigger as "OrderItemTriggerHandler"
+participant Database as "Salesforce DB"
+
+== Authentication ==
+Customer -> Portal: Access e-commerce portal
+Portal -> Customer: Show login options (B2B/B2C)
+
+alt B2B Login
+    Customer -> Portal: B2B credentials
+    Portal -> AuthService: authenticateB2B(credentials)
+    AuthService -> Database: Validate User__c + Account
+else B2C Login
+    Customer -> Portal: B2C credentials
+    Portal -> AuthService: authenticateB2C(credentials)
+    AuthService -> Database: Validate B2CUser__c
+end
+
+AuthService -> Session: Create authenticated session
+Session --> AuthService: JWT token + user context
+AuthService --> Portal: Auth success + user profile
+Portal --> Customer: Welcome + personalized dashboard
+
+== Browse & Add to Cart ==
+Customer -> Portal: Browse products
+Portal -> Database: Load Product__c with pricing
+Database --> Portal: Product catalog
+
+alt B2B Customer
+    Portal -> Database: Apply account-specific pricing
+    Database --> Portal: B2B discounted prices
+else B2C Customer
+    Portal -> Database: Standard retail pricing
+end
+
+Customer -> Portal: Add products to cart
+Portal -> Session: Store cart in session
+Session --> Portal: Cart updated
+
+== Place Order ==
+Portal -> Controller: createOrder(cartData)
+Controller -> Service: processOrder(orderData)
+
+== Validate Stock ==
+Service -> Database: SELECT Stock__c FROM Product__c WHERE Id IN :productIds
+Database --> Service: Stock levels
+
+alt Insufficient stock
+    Service --> Controller: StockException
+    Controller --> Portal: Error message
+    Portal --> Customer: "Out of stock" message
+else Sufficient stock
+    Service -> Database: INSERT Order__c
+    Service -> Database: INSERT OrderItem__c[]
+    Database --> Service: Order created
+end
+
+== Trigger Processing ==
+Trigger -> Database: SELECT Product__c FROM OrderItem__c WHERE Order__c = :newOrderId
+Database --> Trigger: Product data
+Trigger -> Database: UPDATE Product__c SET Stock__c = Stock__c - quantity
+Database --> Trigger: Stock updated
+
+== Calculate Totals ==
+Service -> Database: Calculate order totals with taxes
+Database --> Service: Order totals
+Service -> Database: UPDATE Order__c SET TotalAmount__c, TaxAmount__c
+Database --> Service: Updated
+
+Service --> Controller: OrderResponse
+Controller --> Portal: Order confirmation
+Portal --> Customer: Order # + tracking info
+@enduml

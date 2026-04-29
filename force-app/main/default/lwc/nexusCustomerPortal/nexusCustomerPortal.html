@@ -548,14 +548,22 @@
         </template>
 
         <!-- ─ Devis (B2B only) ─────────────────────────────────────────── -->
-        <template if:true={isB2B}>
-          <template if:true={isQuotations}>
-            <div class="ncp-section ncp-fullbleed">
-              <c-nexus-quotation-system
-                refresh-trigger={_quotationsRefreshKey}
-              ></c-nexus-quotation-system>
+        <template if:true={isQuotations}>
+          <div class="ncp-section ncp-fullbleed">
+            <c-nexus-quotation-system
+              refresh-trigger={_quotationsRefreshKey}
+            ></c-nexus-quotation-system>
+            <div class="ncp-ai-chat-cta">
+              <button class="ncp-ai-chat-btn" onclick={handleOpenNegotiationChat}>
+                <lightning-icon
+                  icon-name="utility:einstein"
+                  size="x-small"
+                  class="ncp-ai-chat-ico"
+                ></lightning-icon>
+                Négocier avec l'IA
+              </button>
             </div>
-          </template>
+          </div>
         </template>
 
         <!-- ─ Eco Swap ─────────────────────────────────────────────────── -->
@@ -1619,8 +1627,8 @@
     <!-- ── Nexus Combo Builder panel (always present, overlaid on every tab) ── -->
     <c-nexus-combo-builder is-combo-page={isComboDeals}></c-nexus-combo-builder>
 
-    <!-- ── AI Support Chat ── -->
-    <c-nexus-support-chat account-id={profileAccountId}></c-nexus-support-chat>
+    <!-- ── AI Support Chat — replaced by Agentforce Embedded Service component in Experience Builder ── -->
+    <!-- <c-nexus-support-chat account-id={profileAccountId}></c-nexus-support-chat> -->
 
     <!-- ── Cart Slider (always present, slides in on add-to-cart) ── -->
     <c-nexus-cart-slider

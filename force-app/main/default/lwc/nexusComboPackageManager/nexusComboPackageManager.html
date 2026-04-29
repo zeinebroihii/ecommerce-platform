@@ -1,0 +1,263 @@
+<template>
+  <div class="ncpm-wrap">
+
+    <!-- ── Header ── -->
+    <div class="ncpm-header">
+      <div>
+        <h2 class="ncpm-title">Combo Package Manager</h2>
+        <p class="ncpm-subtitle">Create and manage product bundles shown in the customer portal.</p>
+      </div>
+      <button class="ncpm-btn-primary" onclick={handleNewPackage}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        New Package
+      </button>
+    </div>
+
+    <!-- ── Package List ── -->
+    <template if:false={isEditing}>
+      <template if:true={hasPackages}>
+        <div class="ncpm-list">
+          <template for:each={packagesEnriched} for:item="pkg">
+            <div key={pkg.id} class={pkg.cardClass}>
+              <!-- Status badge -->
+              <div class="ncpm-pkg-top">
+                <span class={pkg.statusBadgeClass}>{pkg.statusLabel}</span>
+                <span class="ncpm-pkg-category">{pkg.category}</span>
+                <div class="ncpm-pkg-actions">
+                  <button class="ncpm-icon-btn" data-id={pkg.id} onclick={handleToggleActive} title={pkg.toggleTitle}>
+                    <template if:true={pkg.isActive}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    </template>
+                    <template if:false={pkg.isActive}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </template>
+                  </button>
+                  <button class="ncpm-icon-btn" data-id={pkg.id} onclick={handleEditPackage} title="Edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button class="ncpm-icon-btn ncpm-icon-btn--danger" data-id={pkg.id} onclick={handleDeletePackage} title="Delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14H6L5 6"/>
+                      <path d="M10 11v6"/><path d="M14 11v6"/>
+                      <path d="M9 6V4h6v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <h3 class="ncpm-pkg-name">{pkg.name}</h3>
+              <p class="ncpm-pkg-desc">{pkg.description}</p>
+
+              <!-- Product thumbnails -->
+              <div class="ncpm-pkg-products">
+                <template for:each={pkg.items} for:item="item">
+                  <div key={item.id} class="ncpm-pkg-thumb" title={item.productName}>
+                    <img src={item.productImageUrl} alt={item.productName} class="ncpm-pkg-thumb-img" referrerpolicy="no-referrer"/>
+                  </div>
+                </template>
+                <template if:true={pkg.noItems}>
+                  <span class="ncpm-pkg-no-items">No products yet</span>
+                </template>
+              </div>
+
+              <!-- Pricing -->
+              <div class="ncpm-pkg-pricing">
+                <span class="ncpm-pkg-price">{pkg.totalPriceFormatted}</span>
+                <span class="ncpm-pkg-original">{pkg.originalPriceFormatted}</span>
+                <span class="ncpm-pkg-discount">{pkg.discountLabel}</span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <template if:false={hasPackages}>
+        <div class="ncpm-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          </svg>
+          <p>No combo packages yet. Create your first bundle!</p>
+          <button class="ncpm-btn-primary" onclick={handleNewPackage}>New Package</button>
+        </div>
+      </template>
+    </template>
+
+    <!-- ── Package Editor ── -->
+    <template if:true={isEditing}>
+      <div class="ncpm-editor">
+
+        <!-- Editor Header -->
+        <div class="ncpm-editor-header">
+          <button class="ncpm-back-btn" onclick={handleCancelEdit}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back
+          </button>
+          <h3 class="ncpm-editor-title">{editorTitle}</h3>
+          <button class="ncpm-btn-primary" onclick={handleSavePackage} disabled={isSaving}>
+            <template if:false={isSaving}>Save Package</template>
+            <template if:true={isSaving}>Saving…</template>
+          </button>
+        </div>
+
+        <!-- Basic fields -->
+        <div class="ncpm-form-grid">
+          <div class="ncpm-form-group ncpm-form-group--full">
+            <label class="ncpm-label">Package Name *</label>
+            <input class="ncpm-input" type="text" value={editName} oninput={handleEditName} placeholder="e.g. Edge Computing Starter Kit"/>
+          </div>
+          <div class="ncpm-form-group">
+            <label class="ncpm-label">Category</label>
+            <select class="ncpm-select" onchange={handleEditCategory}>
+              <template for:each={categoryOptions} for:item="opt">
+                <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.label}</option>
+              </template>
+            </select>
+          </div>
+          <div class="ncpm-form-group">
+            <label class="ncpm-label">Discount %</label>
+            <input class="ncpm-input" type="number" min="0" max="100" step="1" value={editDiscount} oninput={handleEditDiscount} placeholder="10"/>
+          </div>
+          <div class="ncpm-form-group ncpm-form-group--full">
+            <label class="ncpm-label">Description</label>
+            <textarea class="ncpm-textarea" data-id="description-area" oninput={handleEditDescription} placeholder="Brief description shown to customers…"></textarea>
+          </div>
+          <div class="ncpm-form-group ncpm-form-check">
+            <input type="checkbox" id="ncpm-active-chk" class="ncpm-checkbox" checked={editIsActive} onchange={handleEditIsActive}/>
+            <label for="ncpm-active-chk" class="ncpm-label ncpm-label--inline">Active (visible in portal)</label>
+          </div>
+        </div>
+
+        <!-- Products in this package -->
+        <div class="ncpm-section">
+          <div class="ncpm-section-header">
+            <h4 class="ncpm-section-title">
+              Products in this package
+              <span class="ncpm-count-badge">{editItemCount}</span>
+            </h4>
+            <button class="ncpm-btn-ghost" onclick={handleOpenProductPicker}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Browse &amp; Select Products
+            </button>
+          </div>
+
+          <template if:true={hasEditItems}>
+            <div class="ncpm-item-list">
+              <template for:each={editItemsEnriched} for:item="item">
+                <div key={item.productId} class="ncpm-item-row">
+                  <div class="ncpm-item-thumb">
+                    <img src={item.productImageUrl} alt={item.productName} class="ncpm-item-img" referrerpolicy="no-referrer"/>
+                  </div>
+                  <div class="ncpm-item-info">
+                    <p class="ncpm-item-name">{item.productName}</p>
+                    <p class="ncpm-item-family">{item.productFamily}</p>
+                  </div>
+                  <span class="ncpm-item-price">{item.priceFormatted}</span>
+                  <button class="ncpm-item-remove" data-id={item.productId} onclick={handleRemoveItem} title="Remove">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </template>
+            </div>
+            <!-- Live pricing summary -->
+            <div class="ncpm-summary">
+              <span class="ncpm-summary-label">Original total:</span>
+              <span class="ncpm-summary-val">{editOriginalPriceFormatted}</span>
+              <span class="ncpm-summary-sep">−</span>
+              <span class="ncpm-summary-discount">{editDiscount}% off</span>
+              <span class="ncpm-summary-sep">=</span>
+              <span class="ncpm-summary-total">{editBundlePriceFormatted}</span>
+              <span class="ncpm-summary-save">You save {editSavingsFormatted}</span>
+            </div>
+          </template>
+
+          <template if:false={hasEditItems}>
+            <div class="ncpm-items-empty">
+              Click "Browse &amp; Select Products" to add products to this package.
+            </div>
+          </template>
+        </div>
+
+      </div>
+    </template>
+
+    <!-- ── Product Picker Modal ── -->
+    <template if:true={isPickerOpen}>
+      <div class="ncpm-modal-overlay" onclick={handleClosePickerOverlay}>
+        <div class="ncpm-modal" onclick={handleModalStopProp}>
+          <div class="ncpm-modal-header">
+            <h3 class="ncpm-modal-title">Browse &amp; Select Products</h3>
+            <button class="ncpm-modal-close" onclick={handleClosePicker}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Filters -->
+          <div class="ncpm-picker-filters">
+            <input class="ncpm-picker-search" type="search" placeholder="Search products…"
+                   value={pickerSearch} oninput={handlePickerSearch}/>
+            <select class="ncpm-picker-cat" onchange={handlePickerCategory}>
+              <template for:each={pickerCategoryOptions} for:item="opt">
+                <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.label}</option>
+              </template>
+            </select>
+          </div>
+
+          <!-- Product grid -->
+          <div class="ncpm-picker-grid">
+            <template if:true={hasPickerProducts}>
+              <template for:each={filteredPickerProducts} for:item="prod">
+                <div key={prod.productId} class={prod.pickerCardClass}
+                     data-id={prod.productId} onclick={handlePickProduct}>
+                  <div class="ncpm-picker-img-wrap">
+                    <img src={prod.imageUrl} alt={prod.name} class="ncpm-picker-img" referrerpolicy="no-referrer"/>
+                  </div>
+                  <p class="ncpm-picker-name">{prod.name}</p>
+                  <p class="ncpm-picker-price">{prod.priceFormatted}</p>
+                  <p class="ncpm-picker-family">{prod.family}</p>
+                  <template if:true={prod.isSelected}>
+                    <div class="ncpm-picker-check">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </template>
+            <template if:false={hasPickerProducts}>
+              <div class="ncpm-picker-empty">No products found.</div>
+            </template>
+          </div>
+
+          <div class="ncpm-modal-footer">
+            <span class="ncpm-picker-count">{selectedPickerCount} selected</span>
+            <button class="ncpm-btn-primary" onclick={handleConfirmPicker}>
+              Add to Package
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+  </div>
+</template>

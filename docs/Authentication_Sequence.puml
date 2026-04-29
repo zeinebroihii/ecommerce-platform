@@ -1,0 +1,77 @@
+@startuml Authentication Flow
+title B2B & B2C Customer Authentication
+
+actor B2BCustomer as "B2B Customer"
+actor B2CCustomer as "B2C Customer"
+participant Portal as "Customer Portal"
+participant AuthService as "AuthService"
+participant Community as "Salesforce Community"
+participant ExternalAuth as "External Auth Provider"
+participant Database as "Salesforce DB"
+participant Session as "Session Manager"
+
+== B2B Customer Login ==
+B2BCustomer -> Portal: Access portal URL
+Portal -> Community: Redirect to Experience Cloud
+Community -> B2BCustomer: Show login form
+
+B2BCustomer -> Community: Enter credentials (email/password)
+Community -> Database: Validate User__c + Contact
+Database --> Community: User data + Account info
+
+alt Valid credentials
+    Community -> Session: Create session + JWT token
+    Session --> Community: Session established
+    Community -> Portal: Redirect with auth token
+    Portal -> Session: Validate token
+    Session --> Portal: User context + permissions
+    Portal --> B2BCustomer: Dashboard + B2B features
+else Invalid credentials
+    Community --> B2BCustomer: Error message
+end
+
+== B2C Customer Login ==
+B2CCustomer -> Portal: Click "Sign In"
+Portal -> B2CCustomer: Show unified login form
+
+alt Social Login (Google/Facebook)
+    B2CCustomer -> ExternalAuth: Authenticate with provider
+    ExternalAuth --> Portal: OAuth callback + user data
+else Email/Password Login
+    B2CCustomer -> Portal: Enter email + password
+    Portal -> AuthService: authenticateUser(credentials)
+    AuthService -> Database: SELECT FROM B2CUser__c
+    Database --> AuthService: User record
+end
+
+AuthService -> Database: Validate password hash
+Database --> AuthService: Validation result
+
+alt Valid B2C credentials
+    AuthService -> Session: Create session token
+    Session --> AuthService: JWT token
+    AuthService --> Portal: Auth success + user profile
+    Portal --> B2CCustomer: Welcome + B2C features
+else Invalid credentials
+    AuthService --> Portal: Authentication failed
+    Portal --> B2CCustomer: Error message
+end
+
+== Session Management ==
+note over Session
+    - JWT tokens for API calls
+    - Session timeout handling
+    - Cross-tab session sync
+    - Logout invalidation
+end note
+
+== Permission Context ==
+Portal -> Database: Load user permissions + account data
+Database --> Portal: B2B/B2C specific features
+
+alt B2B User
+    Portal --> B2BCustomer: Show bulk pricing, quotes, account management
+else B2C User
+    Portal --> B2CCustomer: Show retail pricing, personal orders, wishlist
+end
+@enduml
