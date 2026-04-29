@@ -1,0 +1,80 @@
+@startuml Account Management Flow
+title B2B & B2C Account Management
+
+actor B2BCustomer as "B2B Customer"
+actor B2CCustomer as "B2C Customer"
+participant Portal as "Customer Portal"
+participant Controller as "AccountController"
+participant Service as "AccountService"
+participant Database as "Salesforce DB"
+participant Email as "Email Service"
+
+== B2B Account Management ==
+B2BCustomer -> Portal: Access account dashboard
+Portal -> Controller: getAccountDetails(accountId)
+Controller -> Database: SELECT Account, Contact, User__c data
+Database --> Controller: Account information
+Controller --> Portal: Account profile + team members
+
+== B2B Order History ==
+B2BCustomer -> Portal: View order history
+Portal -> Controller: getOrderHistory(accountId, filters)
+Controller -> Database: SELECT Orders with TALEXO_Quote__c links
+Database --> Controller: Order + quote history
+Controller --> Portal: Formatted order list
+
+== B2B Quote Requests ==
+B2BCustomer -> Portal: Request custom quote
+Portal -> Controller: createQuoteRequest(requestData)
+Controller -> Service: generateQuoteFromRequest()
+Service -> Database: INSERT TALEXO_Quote__c with status 'Requested'
+Database --> Service: Quote created
+Service -> Email: Notify sales team
+Email --> Service: Email sent
+Service --> Controller: Quote request submitted
+Controller --> Portal: Confirmation + quote tracking
+
+== B2C Account Management ==
+B2CCustomer -> Portal: Access profile
+Portal -> Controller: getProfile(userId)
+Controller -> Database: SELECT B2CUser__c + preferences
+Database --> Controller: User profile data
+Controller --> Portal: Profile information
+
+== B2C Wishlist Management ==
+B2CCustomer -> Portal: Manage wishlist
+Portal -> Controller: getWishlist(userId)
+Controller -> Database: SELECT WishlistItem__c
+Database --> Controller: Wishlist products
+Controller --> Portal: Wishlist display
+
+B2CCustomer -> Portal: Add to wishlist
+Portal -> Controller: addToWishlist(productId, userId)
+Controller -> Database: INSERT/UPDATE WishlistItem__c
+Database --> Controller: Success
+Controller --> Portal: Updated wishlist
+
+== Password Management ==
+note over B2BCustomer, B2CCustomer
+    Both B2B and B2C users can:
+    - Change password
+    - Reset forgotten password
+    - Update profile information
+    - Manage notification preferences
+end note
+
+Customer -> Portal: Change password
+Portal -> Controller: updatePassword(current, new)
+Controller -> AuthService: validateCurrentPassword()
+AuthService -> Database: Verify password hash
+Database --> AuthService: Validation result
+AuthService --> Controller: Password updated
+Controller --> Portal: Success message
+
+== Notification Preferences ==
+Customer -> Portal: Update preferences
+Portal -> Controller: updatePreferences(preferences)
+Controller -> Database: UPDATE User__c/B2CUser__c
+Database --> Controller: Updated
+Controller --> Portal: Preferences saved
+@enduml

@@ -13,11 +13,17 @@ import createVersionFromEdits from "@salesforce/apex/NexusQuoteController.create
 import convertToOrder from "@salesforce/apex/NexusQuoteController.convertToOrder";
 import generateAndSendContract from "@salesforce/apex/NexusQuoteController.generateAndSendContract";
 import manualFinalize from "@salesforce/apex/DocuSignWebhookController.manualFinalize";
+import getQuoteSettings from "@salesforce/apex/NexusQuoteController.getQuoteSettings";
+import applyNegotiatedTerms from "@salesforce/apex/NexusQuoteController.applyNegotiatedTerms";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const BULK_DISCOUNT = 10; // 10 % applied to all B2B bulk quotes
-const PAYMENT_TERMS = "Net 30";
-const VALIDITY_DAYS = 30;
+// ── Static fallbacks (used until CMT loads) ───────────────────────────────────
+const DEFAULT_SETTINGS = {
+  defaultBulkDiscount: 10,
+  defaultPaymentTerms: "Net 30",
+  defaultValidityDays: 30,
+  generalTerms: "",
+  signatureDeadlineDays: 14
+};
 
 const NEG_STATUS_MAP = {
   Draft: "nqb-neg-badge nqb-neg-draft",
@@ -32,6 +38,19 @@ const STATUS_ACCENT = "#0f172a";
 export default class NexusQuoteBuilder extends LightningElement {
   // Opportunity record page context
   @api recordId; // Opportunity Id when placed on record page
+
+  // ── Quote settings (loaded from CMT via Apex) ─────────────────────────────
+  @track _settings = { ...DEFAULT_SETTINGS };
+
+  // ── Per-quote term overrides (pre-filled from CMT, editable by admin) ──────
+  @track _quoteTerms = {
+    validityDays: DEFAULT_SETTINGS.defaultValidityDays,
+    paymentTerms: DEFAULT_SETTINGS.defaultPaymentTerms,
+    bulkDiscount: DEFAULT_SETTINGS.defaultBulkDiscount,
+    signatureDeadlineDays: DEFAULT_SETTINGS.signatureDeadlineDays,
+    generalTerms: DEFAULT_SETTINGS.generalTerms
+  };
+  @track _termsExpanded = false;
 
   // ── Quote list state ──────────────────────────────────────────────────────
   @track _quotes = [];
@@ -94,6 +113,25 @@ export default class NexusQuoteBuilder extends LightningElement {
   }
 
   connectedCallback() {
+    // Load admin-configurable quote settings from CMT
+    getQuoteSettings()
+      .then((s) => {
+        if (s) {
+          this._settings = s;
+          // Pre-fill per-quote terms with CMT defaults
+          this._quoteTerms = {
+            validityDays: s.defaultValidityDays || 30,
+            paymentTerms: s.defaultPaymentTerms || "Net 30",
+            bulkDiscount: s.defaultBulkDiscount != null ? s.defaultBulkDiscount : 10,
+            signatureDeadlineDays: s.signatureDeadlineDays || 14,
+            generalTerms: s.generalTerms || ""
+          };
+        }
+      })
+      .catch(() => {
+        /* silent — static defaults already applied */
+      });
+
     if (!this.recordId) {
       this._loadAllQuotes();
       this._loadRequests();
@@ -124,7 +162,7 @@ export default class NexusQuoteBuilder extends LightningElement {
             r.customerCounterPrice != null && r.customerCounterPrice > 0,
           counterOfferLabel:
             r.customerCounterPrice != null
-              ? r.customerCounterPrice.toLocaleString("fr-FR", {
+              ? r.customerCounterPrice.toLocaleString("en-US", {
                   style: "currency",
                   currency: "EUR"
                 })
@@ -184,21 +222,21 @@ export default class NexusQuoteBuilder extends LightningElement {
         hasMrr: q.mrr != null && q.mrr > 0,
         formattedMrr:
           q.mrr != null
-            ? q.mrr.toLocaleString("fr-FR", {
+            ? q.mrr.toLocaleString("en-US", {
                 style: "currency",
                 currency: "EUR"
               })
             : null,
         formattedOneTime:
           q.oneTimeTotal != null
-            ? q.oneTimeTotal.toLocaleString("fr-FR", {
+            ? q.oneTimeTotal.toLocaleString("en-US", {
                 style: "currency",
                 currency: "EUR"
               })
             : null,
         formattedRecurring:
           q.recurringTotal != null
-            ? q.recurringTotal.toLocaleString("fr-FR", {
+            ? q.recurringTotal.toLocaleString("en-US", {
                 style: "currency",
                 currency: "EUR"
               })
@@ -211,13 +249,133 @@ export default class NexusQuoteBuilder extends LightningElement {
           q.customerCounterPrice != null && q.customerCounterPrice > 0,
         counterOfferLabel:
           q.customerCounterPrice != null
-            ? q.customerCounterPrice.toLocaleString("fr-FR", {
+            ? q.customerCounterPrice.toLocaleString("en-US", {
                 style: "currency",
                 currency: "EUR"
               })
-            : null
+            : null,
+        isEscalated: !!(
+          q.counterMessage &&
+          String(q.counterMessage).startsWith("ESCALATION")
+        ),
+        escalationNote:
+          q.counterMessage &&
+          String(q.counterMessage).startsWith("ESCALATION")
+            ? String(q.counterMessage).replace(/^ESCALATION \[.*?\]:\s*/, "")
+            : null,
+        escalationComboA: q.escalationComboA || null,
+        escalationComboB: q.escalationComboB || null,
+        requestedPaymentTerms: q.requestedPaymentTerms || null,
+        comboAData: q.escalationComboA
+          ? this._parseCombo(q.escalationComboA)
+          : null,
+        comboBData: q.escalationComboB
+          ? this._parseCombo(q.escalationComboB)
+          : null,
+        ...(() => {
+          const note = q.counterMessage || "";
+          const isEsc = String(note).startsWith("ESCALATION");
+          let riskLevel = null, riskLevelCls = "", riskLevelLabel = "";
+          if (isEsc) {
+            if (note.includes("High-value") || note.includes("Net 90") || note.includes("Deep discount")) {
+              riskLevel = "HIGH";
+              riskLevelCls = "qb-risk-badge qb-risk-high";
+              riskLevelLabel = "HIGH RISK";
+            } else {
+              riskLevel = "MEDIUM";
+              riskLevelCls = "qb-risk-badge qb-risk-medium";
+              riskLevelLabel = "MEDIUM RISK";
+            }
+          }
+          const comboAData = q.escalationComboA ? this._parseCombo(q.escalationComboA) : null;
+          const comboBData = q.escalationComboB ? this._parseCombo(q.escalationComboB) : null;
+          let aiRecommendation = null, aiRecommendationReason = null;
+          if (comboAData && comboBData) {
+            if (comboAData.price >= comboBData.price) {
+              aiRecommendation = "A";
+              aiRecommendationReason = "Higher revenue — conservative terms near floor price";
+            } else {
+              aiRecommendation = "B";
+              aiRecommendationReason = "Better close rate — customer-friendly terms at 93% of list";
+            }
+          }
+          return { riskLevel, riskLevelCls, riskLevelLabel, aiRecommendation, aiRecommendationReason };
+        })()
       };
     });
+  }
+
+  // ── Combo string parser — format: "Combo A: 9612.00 € (11.0% discount) | Net 45 | Validity: 30 days"
+  _parseCombo(str) {
+    if (!str) return null;
+    try {
+      const priceMatch = str.match(/([\d,.]+)\s*€/);
+      const termsMatch = str.match(/\|\s*(Net \d+)\s*\|/);
+      const validityMatch = str.match(/Validity:\s*(\d+)/);
+      const discountMatch = str.match(/\(([\d.]+)%/);
+      return {
+        price: priceMatch ? parseFloat(priceMatch[1].replace(",", ".")) : null,
+        terms: termsMatch ? termsMatch[1] : null,
+        validity: validityMatch ? parseInt(validityMatch[1], 10) : 30,
+        discount: discountMatch ? parseFloat(discountMatch[1]) : null,
+        label: str
+      };
+    } catch (e) {
+      return { label: str, price: null, terms: null, validity: 30 };
+    }
+  }
+
+  _approveCombo(combo) {
+    if (!combo || !this.selectedQuote) return;
+    this._comboApproving = true;
+    applyNegotiatedTerms({
+      quoteId: this.selectedQuote.quoteId,
+      approvedPrice: combo.price,
+      approvedPaymentTerms: combo.terms,
+      approvedValidityDays: combo.validity,
+      salesNote: this._comboSalesNote || ""
+    })
+      .then(() => {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Approved",
+            message: "Negotiated terms applied and customer notified.",
+            variant: "success"
+          })
+        );
+        this._comboApproving = false;
+        this._comboSalesNote = "";
+        this._showComboCustom = false;
+        this._selectedQuote = null;
+        this._view = "list";
+        this._loadAllQuotes();
+      })
+      .catch((err) => {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Error",
+            message: err.body ? err.body.message : "Could not apply terms.",
+            variant: "error"
+          })
+        );
+        this._comboApproving = false;
+      });
+  }
+
+  handleApproveComboA() {
+    this._approveCombo(this.selectedQuote.comboAData);
+  }
+
+  handleApproveComboB() {
+    this._approveCombo(this.selectedQuote.comboBData);
+  }
+
+  handleComboSalesNoteChange(e) {
+    this._comboSalesNote = e.target.value;
+  }
+
+  handleToggleComboCustom() {
+    this._showComboCustom = !this._showComboCustom;
   }
 
   // ── Product search ────────────────────────────────────────────────────────
@@ -289,6 +447,79 @@ export default class NexusQuoteBuilder extends LightningElement {
     }));
   }
 
+  // ── Settings accessors ────────────────────────────────────────────────────
+  // Live discount uses the per-quote override (edited by admin in builder)
+  get _bulkDiscountPct() {
+    return this._quoteTerms.bulkDiscount != null
+      ? this._quoteTerms.bulkDiscount
+      : 10;
+  }
+
+  // ── Terms panel: toggle & field getters ──────────────────────────────────
+  get termsExpanded() {
+    return this._termsExpanded;
+  }
+  get termsToggleIcon() {
+    return this._termsExpanded ? "utility:chevronup" : "utility:chevrondown";
+  }
+  get quoteTermsValidityDays() {
+    return this._quoteTerms.validityDays;
+  }
+  get quoteTermsPaymentTerms() {
+    return this._quoteTerms.paymentTerms;
+  }
+  get quoteTermsBulkDiscount() {
+    return this._quoteTerms.bulkDiscount;
+  }
+  get quoteTermsSignatureDeadline() {
+    return this._quoteTerms.signatureDeadlineDays;
+  }
+  get quoteTermsGeneralTerms() {
+    return this._quoteTerms.generalTerms;
+  }
+  get isTermsPaymentNet30() {
+    return this._quoteTerms.paymentTerms === "Net 30";
+  }
+  get isTermsPaymentNet45() {
+    return this._quoteTerms.paymentTerms === "Net 45";
+  }
+  get isTermsPaymentNet60() {
+    return this._quoteTerms.paymentTerms === "Net 60";
+  }
+  get isTermsPaymentNet90() {
+    return this._quoteTerms.paymentTerms === "Net 90";
+  }
+  get isTermsPaymentImmediate() {
+    return this._quoteTerms.paymentTerms === "Immediate";
+  }
+
+  // ── Terms panel: event handlers ───────────────────────────────────────────
+  handleToggleTerms() {
+    this._termsExpanded = !this._termsExpanded;
+  }
+  handleTermValidityChange(e) {
+    const val = parseInt(e.target.value, 10);
+    if (val > 0) this._quoteTerms = { ...this._quoteTerms, validityDays: val };
+  }
+  handleTermPaymentChange(e) {
+    this._quoteTerms = { ...this._quoteTerms, paymentTerms: e.target.value };
+  }
+  handleTermDiscountChange(e) {
+    const val = parseFloat(e.target.value);
+    if (!isNaN(val) && val >= 0 && val <= 100) {
+      this._quoteTerms = { ...this._quoteTerms, bulkDiscount: val };
+    }
+  }
+  handleTermSignatureChange(e) {
+    const val = parseInt(e.target.value, 10);
+    if (val > 0)
+      this._quoteTerms = { ...this._quoteTerms, signatureDeadlineDays: val };
+  }
+  handleTermsTextChange(e) {
+    const val = e.detail ? e.detail.value : e.target.value;
+    this._quoteTerms = { ...this._quoteTerms, generalTerms: val };
+  }
+
   // ── Computed: pricing preview ─────────────────────────────────────────────
   get subtotal() {
     return this._cart.reduce(
@@ -298,7 +529,7 @@ export default class NexusQuoteBuilder extends LightningElement {
   }
 
   get discountAmount() {
-    return this.subtotal * (BULK_DISCOUNT / 100);
+    return this.subtotal * (this._bulkDiscountPct / 100);
   }
 
   get grandTotal() {
@@ -315,10 +546,55 @@ export default class NexusQuoteBuilder extends LightningElement {
     return this._fmt(this.grandTotal);
   }
   get paymentTermsLabel() {
-    return PAYMENT_TERMS;
+    return this._quoteTerms.paymentTerms || "Net 30";
   }
   get bulkDiscountLabel() {
-    return BULK_DISCOUNT + "%";
+    return this._bulkDiscountPct + "%";
+  }
+
+  // ── Computed: one-time vs recurring split ─────────────────────────────────
+  get _oneTimeSubtotal() {
+    return this._cart
+      .filter((c) => c.product.productType !== "Recurring")
+      .reduce((s, c) => s + (c.product.price || 0) * c.quantity, 0);
+  }
+  get _recurringSubtotal() {
+    return this._cart
+      .filter((c) => c.product.productType === "Recurring")
+      .reduce((s, c) => s + (c.product.price || 0) * c.quantity, 0);
+  }
+  get _monthlyRecurring() {
+    return this._cart
+      .filter((c) => c.product.productType === "Recurring")
+      .reduce((s, c) => {
+        const lineTotal = (c.product.price || 0) * c.quantity;
+        return (
+          s +
+          (c.product.billingFrequency === "Annual" ? lineTotal / 12 : lineTotal)
+        );
+      }, 0);
+  }
+  get hasOneTimeItems() {
+    return this._oneTimeSubtotal > 0;
+  }
+  get hasRecurringItems() {
+    return this._recurringSubtotal > 0;
+  }
+  get hasMixedItems() {
+    return this.hasOneTimeItems && this.hasRecurringItems;
+  }
+  get formattedOneTimeNet() {
+    return this._fmt(this._oneTimeSubtotal * (1 - this._bulkDiscountPct / 100));
+  }
+  get formattedRecurringNet() {
+    return this._fmt(
+      this._recurringSubtotal * (1 - this._bulkDiscountPct / 100)
+    );
+  }
+  get formattedMonthlyRecurring() {
+    return this._fmt(
+      this._monthlyRecurring * (1 - this._bulkDiscountPct / 100)
+    );
   }
 
   get cartItems() {
@@ -529,7 +805,7 @@ export default class NexusQuoteBuilder extends LightningElement {
             ? "< 1h"
             : ageHours < 24
               ? ageHours + "h"
-              : Math.floor(ageHours / 24) + "j";
+              : Math.floor(ageHours / 24) + "d";
         const round = r.negotiationRound || 0;
         const roundsLeft =
           r.roundsRemaining != null ? r.roundsRemaining : 3 - round;
@@ -679,6 +955,36 @@ export default class NexusQuoteBuilder extends LightningElement {
     return this._fmt(this.editGrandTotal);
   }
 
+  // ── Generated view: computed terms from per-quote editable overrides ───────
+  get generatedExpiryDate() {
+    const days = this._quoteTerms.validityDays || 30;
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  }
+  get generatedValidityLabel() {
+    return (this._quoteTerms.validityDays || 30) + " days";
+  }
+  get generatedPaymentTerms() {
+    return this._quoteTerms.paymentTerms || "Net 30";
+  }
+  get generatedBulkDiscount() {
+    return this._quoteTerms.bulkDiscount + "%";
+  }
+  get generatedSignatureDeadline() {
+    return (this._quoteTerms.signatureDeadlineDays || 14) + " days";
+  }
+  get generatedTermsText() {
+    return this._quoteTerms.generalTerms || null;
+  }
+  get hasGeneratedTerms() {
+    return !!this.generatedTermsText;
+  }
+
   // ── AI probability display for generated quote ────────────────────────────
   get aiProbStyle() {
     if (!this._generated) return "width:0%";
@@ -727,6 +1033,10 @@ export default class NexusQuoteBuilder extends LightningElement {
 
   disconnectedCallback() {
     this._stopAutoRefresh();
+  }
+
+  handleWidgetApproval() {
+    this._loadAllQuotes();
   }
 
   handleBackToList() {
@@ -834,15 +1144,18 @@ export default class NexusQuoteBuilder extends LightningElement {
 
     this._generating = true;
 
+    const validityDays = this._quoteTerms.validityDays || 30;
     const expiry = new Date();
-    expiry.setDate(expiry.getDate() + VALIDITY_DAYS);
+    expiry.setDate(expiry.getDate() + validityDays);
     const expiryStr = expiry.toISOString().split("T")[0];
 
     const request = {
       opportunityId,
-      bulkDiscount: BULK_DISCOUNT,
-      paymentTerms: PAYMENT_TERMS,
+      bulkDiscount: this._bulkDiscountPct,
+      paymentTerms: this._quoteTerms.paymentTerms || "Net 30",
       expirationDate: expiryStr,
+      generalTerms: this._quoteTerms.generalTerms || "",
+      signatureDeadlineDays: this._quoteTerms.signatureDeadlineDays || 14,
       lineItems: this._cart.map((c) => ({
         product2Id: c.product.productId,
         productName: c.product.name,
@@ -981,7 +1294,10 @@ export default class NexusQuoteBuilder extends LightningElement {
   }
 
   handleEditDiscount(e) {
-    this._editDiscount = parseFloat(e.target.value) || 0;
+    const val = parseFloat(e.target.value);
+    if (!isNaN(val) && val >= 0 && val <= 100) {
+      this._editDiscount = val;
+    }
   }
   handleEditPaymentTerms(e) {
     this._editPaymentTerms = e.target.value;
@@ -1082,6 +1398,34 @@ export default class NexusQuoteBuilder extends LightningElement {
       });
   }
 
+  // ── Escalation panel state ────────────────────────────────────────────────
+  @track _comboApproving = false;
+  @track _comboSalesNote = "";
+  @track _showComboCustom = false;
+  @track _customCounterPrice = "";
+  @track _customCounterTerms = "Net 30";
+  @track _customCounterValidity = 30;
+
+  get customCounterPrice() { return this._customCounterPrice; }
+  get customCounterTerms() { return this._customCounterTerms; }
+  get customCounterValidity() { return this._customCounterValidity; }
+  get comboApproving() { return this._comboApproving; }
+
+  handleCustomCounterPriceChange(e) { this._customCounterPrice = e.target.value; }
+  handleCustomCounterTermsChange(e) { this._customCounterTerms = e.target.value; }
+  handleCustomCounterValidityChange(e) {
+    this._customCounterValidity = parseInt(e.target.value, 10) || 30;
+  }
+  handleApplyCustomCounter() {
+    const price = parseFloat(this._customCounterPrice);
+    if (!price || price <= 0 || !this.selectedQuote) return;
+    this._approveCombo({
+      price,
+      terms: this._customCounterTerms || "Net 30",
+      validity: this._customCounterValidity || 30
+    });
+  }
+
   // ── Manual finalize (when DocuSign Connect not wired) ────────────────────────
   @track _finalizing = false;
   get canManualFinalize() {
@@ -1127,7 +1471,7 @@ export default class NexusQuoteBuilder extends LightningElement {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   _fmt(val) {
-    return (val || 0).toLocaleString("fr-FR", {
+    return (val || 0).toLocaleString("en-US", {
       style: "currency",
       currency: "EUR",
       minimumFractionDigits: 2

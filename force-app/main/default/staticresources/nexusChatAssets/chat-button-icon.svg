@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <radialGradient id="btnBg" cx="38%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Green circle background with gradient -->
+  <circle cx="60" cy="60" r="60" fill="url(#btnBg)"/>
+
+  <!-- Inner glow ring -->
+  <circle cx="60" cy="55" r="38" fill="#34D399" opacity="0.15"/>
+
+  <!-- Chat bubble -->
+  <path d="M22 36 C22 29 27 24 34 24 L86 24 C93 24 98 29 98 36 L98 66 C98 73 93 78 86 78 L64 78 L40 96 L40 78 L34 78 C27 78 22 73 22 66 Z" fill="#FFFFFF"/>
+
+  <!-- Typing indicator dots -->
+  <circle cx="42" cy="51" r="6" fill="#059669"/>
+  <circle cx="60" cy="51" r="6" fill="#059669"/>
+  <circle cx="78" cy="51" r="6" fill="#059669"/>
+</svg>

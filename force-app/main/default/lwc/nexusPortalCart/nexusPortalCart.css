@@ -161,6 +161,22 @@
   font-size: 1.5rem;
   font-weight: 900;
 }
+.npcart-modal-ai-badge {
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.4);
+}
+.npcart-modal-sub--strong {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #4f46e5;
+  margin: 0;
+}
 .npcart-modal-close {
   width: 2rem;
   height: 2rem;
@@ -243,9 +259,19 @@
   cursor: pointer;
   transition: background 0.2s;
   margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 .npcart-quotes-btn:hover {
   background: #047857;
+}
+.npcart-quotes-btn--ai {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+}
+.npcart-quotes-btn--ai:hover {
+  background: linear-gradient(135deg, #3730a3, #6d28d9);
 }
 .npcart-modal-error-icon {
   width: 3rem;
@@ -264,4 +290,29 @@
 }
 .npcart-stat--blue {
   color: #4f46e5;
+}
+
+/* ── Note step ── */
+.npcart-note-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.npcart-note-textarea {
+  width: 100%;
+  min-height: 96px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: #0f172a;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.npcart-note-textarea:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }

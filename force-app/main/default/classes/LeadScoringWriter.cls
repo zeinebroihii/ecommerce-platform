@@ -58,5 +58,13 @@ public without sharing class LeadScoringWriter {
         l.AIReason__c      = label + '. Signaux : ' + String.join(signals, ', ') + '.';
         l.AdminDecision__c = 'Pending';
         update l;
+
+        if (pts >= 80) {
+            NotificationController.pushAdminBell(
+                'Hot Lead: ' + l.Company + ' (score ' + pts + '/100)',
+                label + ' — Conversion recommandée.',
+                l.Id
+            );
+        }
     }
 }

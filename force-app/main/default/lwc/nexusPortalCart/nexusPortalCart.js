@@ -103,7 +103,6 @@ export default class NexusPortalCart extends LightningElement {
     this.showQuoteResult = false;
     this.quoteError = null;
 
-    // Build cart payload for Apex
     const cartPayload = this.cartItems.map((item) => ({
       productId: item.productId || null,
       name: item.name,
@@ -112,12 +111,12 @@ export default class NexusPortalCart extends LightningElement {
       unitPrice: parseFloat(String(item.unitPrice).replace(/[^0-9.]/g, "")) || 0
     }));
 
-    requestQuoteFromCart({ cartJSON: JSON.stringify(cartPayload) })
-      .then((quoteId) => {
+    requestQuoteFromCart({ cartJSON: JSON.stringify(cartPayload), customerNote: "" })
+      .then((result) => {
         this.isGeneratingQuote = false;
         this.showQuoteResult = true;
-        this.generatedQuoteId = quoteId;
-        // Clear the cart once quote is submitted
+        this.generatedQuoteId = result.quoteId;
+        this.generatedQuoteName = result.quoteName || "";
         this.cartItems = [];
         this._saveCart();
       })
@@ -140,7 +139,11 @@ export default class NexusPortalCart extends LightningElement {
     this.dispatchEvent(
       new CustomEvent("navigate", {
         bubbles: true,
-        detail: { tab: "quotations" }
+        detail: {
+          tab: "quotations",
+          quoteId: this.generatedQuoteId,
+          quoteName: this.generatedQuoteName
+        }
       })
     );
   }

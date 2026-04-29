@@ -1,5 +1,9 @@
 <template>
   <div class="qb-root">
+
+    <!-- ── Main content area ── -->
+    <div class="qb-main">
+
     <!-- ══════════════════════════════════════════════════════════════
          LIST VIEW
     ══════════════════════════════════════════════════════════════ -->
@@ -786,6 +790,31 @@
 
               <!-- Pricing summary -->
               <div class="qb-price-box">
+                <!-- One-time / Recurring split rows -->
+                <template if:true={hasOneTimeItems}>
+                  <div class="qb-price-line qb-price-split">
+                    <span class="qb-price-label">
+                      <span class="qb-charge-badge qb-charge-onetime">One-time</span>
+                    </span>
+                    <span class="qb-price-val">{formattedOneTimeNet}</span>
+                  </div>
+                </template>
+                <template if:true={hasRecurringItems}>
+                  <div class="qb-price-line qb-price-split">
+                    <span class="qb-price-label">
+                      <span class="qb-charge-badge qb-charge-recurring">Recurring</span>
+                    </span>
+                    <span class="qb-price-val">{formattedRecurringNet}</span>
+                  </div>
+                  <div class="qb-price-line qb-price-mrr">
+                    <span class="qb-price-label qb-price-label-muted">Monthly (MRR)</span>
+                    <span class="qb-mrr-val">{formattedMonthlyRecurring}/mo</span>
+                  </div>
+                </template>
+                <template if:true={hasMixedItems}>
+                  <div class="qb-price-divider"></div>
+                </template>
+
                 <div class="qb-price-line">
                   <span class="qb-price-label">Subtotal</span>
                   <span class="qb-price-val">{formattedSubtotal}</span>
@@ -811,6 +840,86 @@
                 </div>
               </div>
             </template>
+
+            <!-- ── Quote Terms (editable, pre-filled from CMT) ── -->
+            <div class="qb-terms-section">
+              <button class="qb-terms-toggle" onclick={handleToggleTerms}>
+                <lightning-icon
+                  icon-name="utility:settings"
+                  size="x-small"
+                  class="qb-terms-toggle-ico"
+                ></lightning-icon>
+                <span class="qb-terms-toggle-label">Quote Terms</span>
+                <span class="qb-terms-prefilled-chip">CMT defaults</span>
+                <lightning-icon
+                  icon-name={termsToggleIcon}
+                  size="x-small"
+                  class="qb-terms-toggle-chevron"
+                ></lightning-icon>
+              </button>
+              <template if:true={termsExpanded}>
+                <div class="qb-terms-edit-form">
+                  <div class="qb-tef-row">
+                    <div class="qb-tef-field">
+                      <label class="qb-tef-label">Validity (days)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        class="qb-tef-input"
+                        value={quoteTermsValidityDays}
+                        onchange={handleTermValidityChange}
+                      />
+                    </div>
+                    <div class="qb-tef-field">
+                      <label class="qb-tef-label">Payment Terms</label>
+                      <select
+                        class="qb-tef-select"
+                        onchange={handleTermPaymentChange}
+                      >
+                        <option value="Net 30" selected={isTermsPaymentNet30}>Net 30</option>
+                        <option value="Net 45" selected={isTermsPaymentNet45}>Net 45</option>
+                        <option value="Net 60" selected={isTermsPaymentNet60}>Net 60</option>
+                        <option value="Net 90" selected={isTermsPaymentNet90}>Net 90</option>
+                        <option value="Immediate" selected={isTermsPaymentImmediate}>Immediate</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="qb-tef-row">
+                    <div class="qb-tef-field">
+                      <label class="qb-tef-label">Bulk Discount (%)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        class="qb-tef-input"
+                        value={quoteTermsBulkDiscount}
+                        onchange={handleTermDiscountChange}
+                      />
+                    </div>
+                    <div class="qb-tef-field">
+                      <label class="qb-tef-label">Signature Deadline (days)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        class="qb-tef-input"
+                        value={quoteTermsSignatureDeadline}
+                        onchange={handleTermSignatureChange}
+                      />
+                    </div>
+                  </div>
+                  <div class="qb-tef-field qb-tef-full">
+                    <lightning-textarea
+                      label="General Terms &amp; Conditions"
+                      value={quoteTermsGeneralTerms}
+                      placeholder="Enter T&amp;Cs for this quote..."
+                      onchange={handleTermsTextChange}
+                      class="qb-tef-ltextarea"
+                    ></lightning-textarea>
+                  </div>
+                </div>
+              </template>
+            </div>
 
             <div class="qb-generate-wrap">
               <button
@@ -903,6 +1012,49 @@
           <div class="qb-metric-card qb-metric-blue">
             <div class="qb-metric-label">MRR</div>
             <div class="qb-metric-value qb-metric-main">{generated.mrr} €</div>
+          </div>
+        </div>
+
+        <!-- Quote Terms summary (sourced from CMT — no manual entry needed) -->
+        <div class="qb-terms-panel">
+          <div class="qb-terms-panel-header">
+            <lightning-icon
+              icon-name="utility:settings"
+              size="x-small"
+              class="qb-terms-ico"
+            ></lightning-icon>
+            <span class="qb-terms-panel-title">Quote Terms &amp; Conditions</span>
+            <span class="qb-terms-source-chip">Set in builder</span>
+          </div>
+          <div class="qb-terms-grid">
+            <div class="qb-terms-item">
+              <div class="qb-terms-label">Validity</div>
+              <div class="qb-terms-val">{generatedValidityLabel}</div>
+              <div class="qb-terms-sub">Expires {generatedExpiryDate}</div>
+            </div>
+            <div class="qb-terms-item">
+              <div class="qb-terms-label">Payment Terms</div>
+              <div class="qb-terms-val">{generatedPaymentTerms}</div>
+            </div>
+            <div class="qb-terms-item">
+              <div class="qb-terms-label">Bulk Discount</div>
+              <div class="qb-terms-val qb-terms-green">{generatedBulkDiscount}</div>
+            </div>
+            <div class="qb-terms-item">
+              <div class="qb-terms-label">Signature Deadline</div>
+              <div class="qb-terms-val">{generatedSignatureDeadline}</div>
+              <div class="qb-terms-sub">after contract is sent</div>
+            </div>
+          </div>
+          <template if:true={hasGeneratedTerms}>
+            <div class="qb-terms-gtc-block">
+              <div class="qb-terms-label">General Terms &amp; Conditions</div>
+              <div class="qb-terms-gtc-text">{generatedTermsText}</div>
+            </div>
+          </template>
+          <div class="qb-terms-edit-hint">
+            <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+            These terms were set in the Quote Builder. Global defaults are managed via Custom Metadata Types → Quote Settings.
           </div>
         </div>
 
@@ -1191,6 +1343,144 @@
                   <div class="qb-fin-value">{selectedQuote.versionLabel}</div>
                 </div>
               </div>
+
+              <!-- Escalation alert — shown when AI agent escalated this deal -->
+              <template if:true={selectedQuote.isEscalated}>
+                <div class="qb-esc-panel">
+                  <div class="qb-esc-header">
+                    <span class="qb-esc-title">Escalation — Action Required</span>
+                    <template if:true={selectedQuote.riskLevel}>
+                      <span class={selectedQuote.riskLevelCls}>{selectedQuote.riskLevelLabel}</span>
+                    </template>
+                  </div>
+                  <p class="qb-esc-note">{selectedQuote.escalationNote}</p>
+
+                  <div class="qb-esc-meta">
+                    <template if:true={selectedQuote.requestedPaymentTerms}>
+                      <div class="qb-esc-row">
+                        <span class="qb-esc-label">Requested terms</span>
+                        <span class="qb-esc-val">{selectedQuote.requestedPaymentTerms}</span>
+                      </div>
+                    </template>
+                    <template if:true={selectedQuote.hasCounterOffer}>
+                      <div class="qb-esc-row">
+                        <span class="qb-esc-label">Customer offer</span>
+                        <span class="qb-esc-val qb-esc-val-price">{selectedQuote.counterOfferLabel}</span>
+                      </div>
+                    </template>
+                    <div class="qb-esc-row">
+                      <span class="qb-esc-label">Negotiation round</span>
+                      <span class="qb-esc-val">{selectedQuote.negotiationRound}</span>
+                    </div>
+                    <div class="qb-esc-row">
+                      <span class="qb-esc-label">AI score</span>
+                      <span class="qb-esc-val">{selectedQuote.acceptanceProbability}%</span>
+                    </div>
+                  </div>
+
+                  <!-- AI combo proposals -->
+                  <template if:true={selectedQuote.escalationComboA}>
+                    <div class="qb-esc-combos">
+                      <p class="qb-esc-combos-title">AI-Proposed Options</p>
+
+                      <div class="qb-combo-compare">
+                        <template if:true={selectedQuote.comboAData}>
+                          <div class="qb-combo-card qb-combo-a">
+                            <div class="qb-combo-label">Option A</div>
+                            <div class="qb-combo-price">{selectedQuote.comboAData.price} €</div>
+                            <div class="qb-combo-detail">
+                              <span class="qb-combo-terms">{selectedQuote.comboAData.terms}</span>
+                              <span class="qb-combo-validity">{selectedQuote.comboAData.validity} days</span>
+                            </div>
+                            <button
+                              class="qb-combo-btn qb-combo-btn-a"
+                              onclick={handleApproveComboA}
+                            >Approve A</button>
+                          </div>
+                        </template>
+
+                        <template if:true={selectedQuote.comboBData}>
+                          <div class="qb-combo-card qb-combo-b">
+                            <div class="qb-combo-label">Option B</div>
+                            <div class="qb-combo-price">{selectedQuote.comboBData.price} €</div>
+                            <div class="qb-combo-detail">
+                              <span class="qb-combo-terms">{selectedQuote.comboBData.terms}</span>
+                              <span class="qb-combo-validity">{selectedQuote.comboBData.validity} days</span>
+                            </div>
+                            <button
+                              class="qb-combo-btn qb-combo-btn-b"
+                              onclick={handleApproveComboB}
+                            >Approve B</button>
+                          </div>
+                        </template>
+                      </div>
+
+                      <template if:true={selectedQuote.aiRecommendation}>
+                        <p class="qb-ai-rec">AI recommends <strong>Option {selectedQuote.aiRecommendation}</strong> — {selectedQuote.aiRecommendationReason}</p>
+                      </template>
+
+                      <button
+                        class="qb-combo-btn qb-combo-btn-custom"
+                        onclick={handleToggleComboCustom}
+                      >Custom Counter</button>
+
+                      <template if:true={_showComboCustom}>
+                        <div class="qb-combo-custom">
+                          <div class="qb-custom-row">
+                            <label class="qb-custom-label">Custom Price (€)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              class="qb-custom-input"
+                              value={customCounterPrice}
+                              oninput={handleCustomCounterPriceChange}
+                              placeholder="e.g. 9 500"
+                            />
+                          </div>
+                          <div class="qb-custom-row">
+                            <label class="qb-custom-label">Payment Terms</label>
+                            <select class="qb-custom-select" onchange={handleCustomCounterTermsChange}>
+                              <option value="Net 30">Net 30</option>
+                              <option value="Net 45">Net 45</option>
+                              <option value="Net 60">Net 60</option>
+                              <option value="Net 90">Net 90</option>
+                            </select>
+                          </div>
+                          <div class="qb-custom-row">
+                            <label class="qb-custom-label">Validity (days)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              class="qb-custom-input"
+                              value={customCounterValidity}
+                              oninput={handleCustomCounterValidityChange}
+                            />
+                          </div>
+                          <lightning-textarea
+                            label="Note to customer"
+                            value={_comboSalesNote}
+                            onchange={handleComboSalesNoteChange}
+                            placeholder="E.g. We pushed internally and got you a better deal…"
+                          ></lightning-textarea>
+                          <button
+                            class="qb-combo-btn qb-combo-btn-a"
+                            onclick={handleApplyCustomCounter}
+                            disabled={comboApproving}
+                          >Apply Custom Terms</button>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+
+                  <template if:false={selectedQuote.escalationComboA}>
+                    <p class="qb-esc-hint">
+                      Review the details, create a new version with revised terms,
+                      then use Send to Customer to reply.
+                    </p>
+                  </template>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -1350,5 +1640,13 @@
         </div>
       </div>
     </template>
+
+    </div><!-- /qb-main -->
+
+    <!-- ── Right sidebar — Escalation queue + Messages ── -->
+    <div class="qb-sidebar">
+      <c-nexus-escalation-widget onapprovecomplete={handleWidgetApproval}></c-nexus-escalation-widget>
+    </div>
+
   </div>
 </template>

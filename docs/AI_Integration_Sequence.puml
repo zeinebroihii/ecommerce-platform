@@ -1,0 +1,61 @@
+@startuml AI Integration Flow
+title AI Integration Sequence
+
+actor User
+participant LWC as "Any UI Component"
+participant Controller as "AIController"
+participant Service as "AIService"
+participant Einstein as "Einstein AI Platform"
+participant Database as "Salesforce DB"
+
+== Product Recommendations ==
+User -> LWC: Browse products
+LWC -> Controller: getProductRecommendations(userId, category)
+Controller -> Service: analyzeUserBehavior(userId)
+
+Service -> Database: SELECT OrderHistory__c, ViewedProducts__c
+Database --> Service: User behavior data
+Service -> Einstein: Predict product recommendations
+Einstein --> Service: AI recommendations
+
+Service -> Database: SELECT recommended Product__c
+Database --> Service: Product details
+Service --> Controller: RecommendationResponse
+Controller --> LWC: Recommended products
+LWC --> User: Show recommendations
+
+== Quote Scoring ==
+User -> LWC: Generate quote
+LWC -> Service: scoreQuoteAcceptance(quoteData)
+Service -> Einstein: Analyze quote factors
+note right: Factors: discount %, products, customer history,\nindustry, deal size, negotiation status
+
+Einstein --> Service: Acceptance probability + reasoning
+Service -> Database: UPDATE TALEXO_Quote__c SET AcceptanceProbability__c, AIReason__c
+Database --> Service: Updated
+
+Service --> LWC: Score + insights
+LWC --> User: Show AI insights
+
+== Combo Package Suggestions ==
+User -> LWC: View combo packages
+LWC -> Service: getAISuggestedPackages(userProfile)
+Service -> Database: SELECT user Order__c, Product__c preferences
+Database --> Service: User data
+
+Service -> Einstein: Suggest optimal combo packages
+note right: Based on: purchase history, budget,\nproduct categories, discount preferences
+
+Einstein --> Service: Package recommendations
+Service --> LWC: AI suggestions
+LWC --> User: Highlight recommended packages
+
+== Predictive Analytics ==
+Service -> Database: SELECT sales data, trends
+Database --> Service: Historical data
+Service -> Einstein: Predict future demand
+Einstein --> Service: Demand forecasts
+
+Service -> Database: UPDATE Product__c SET PredictedDemand__c
+Service -> Admin: Send forecast reports
+@enduml

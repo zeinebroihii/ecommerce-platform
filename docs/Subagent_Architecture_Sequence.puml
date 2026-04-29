@@ -1,0 +1,110 @@
+@startuml Subagent Architecture
+title Agentforce Subagent Workflow Architecture
+
+actor Customer
+participant MainAgent as "Main Agentforce Agent"
+participant Router as "Intent Router"
+participant QuoteSub as "QuoteGeneration Subagent"
+participant ComboSub as "ComboPackage Subagent"
+participant OrderSub as "OrderSupport Subagent"
+participant ProductSub as "ProductRecommendation Subagent"
+participant HumanHandoff as "Human Agent Handoff"
+
+== Intent Classification ==
+Customer -> MainAgent: "I need help with my order"
+MainAgent -> Router: Classify intent + extract entities
+Router -> Router: Analyze message context
+
+alt Quote-related intent
+    Router -> QuoteSub: Delegate to Quote Subagent
+    note right: Triggers: "quote", "pricing", "discount", "proposal"
+else Combo Package intent
+    Router -> ComboSub: Delegate to Combo Subagent
+    note right: Triggers: "bundle", "package", "combo", "kit"
+else Order Support intent
+    Router -> OrderSub: Delegate to Order Subagent
+    note right: Triggers: "order", "tracking", "status", "return"
+else Product intent
+    Router -> ProductSub: Delegate to Product Subagent
+    note right: Triggers: "product", "recommend", "buy", "compare"
+end
+
+== Subagent Processing ==
+
+QuoteSub -> QuoteSub: Access specialized knowledge
+note right: Quote Subagent Capabilities:
+- Generate TALEXO_Quote__c
+- Calculate bulk discounts
+- Apply AI scoring
+- Handle negotiation workflow
+
+QuoteSub -> MainAgent: Quote generated + summary
+MainAgent -> Customer: "Your quote is ready! Total: $X with Y% discount"
+
+ComboSub -> ComboSub: Combo package expertise
+note right: Combo Subagent Capabilities:
+- Access ComboPackage__c data
+- Compare packages
+- Calculate savings
+- Recommend based on needs
+
+ComboSub -> MainAgent: Package recommendations
+MainAgent -> Customer: "Best match: Computing Bundle - saves you $200"
+
+OrderSub -> OrderSub: Order management logic
+note right: Order Subagent Capabilities:
+- Track Order__c status
+- Handle returns/refunds
+- Update shipping info
+- Process cancellations
+
+OrderSub -> MainAgent: Order status update
+MainAgent -> Customer: "Your order #1234 shipped yesterday"
+
+ProductSub -> ProductSub: Product intelligence
+note right: Product Subagent Capabilities:
+- Real-time inventory
+- Cross-sell recommendations
+- Compare products
+- Price optimization
+
+ProductSub -> MainAgent: Product suggestions
+MainAgent -> Customer: "You might also like our extended warranty"
+
+== Escalation Logic ==
+note over MainAgent
+    **Escalation Triggers:**
+    - Customer frustration detected
+    - Complex technical issues
+    - High-value transactions (>$5K)
+    - Subagent confidence < 70%
+    - Customer requests human help
+end note
+
+MainAgent -> MainAgent: Evaluate escalation criteria
+
+alt Needs human assistance
+    MainAgent -> HumanHandoff: Transfer with full context
+    HumanHandoff -> Customer: "Let me connect you with a specialist"
+else Subagent can handle
+    MainAgent -> Customer: Continue automated assistance
+end
+
+== Context Preservation ==
+note over Router, HumanHandoff
+    **Context Handover Includes:**
+    - Full conversation history
+    - Customer profile data
+    - Current intent + entities
+    - Subagent recommendations
+    - Sentiment analysis
+    - Session metadata
+end note
+
+== Performance Monitoring ==
+Router -> Router: Track subagent performance
+note right: Metrics: success rate, response time,\ncustomer satisfaction, escalation rate
+
+Router -> MainAgent: Performance insights
+MainAgent -> MainAgent: Optimize routing logic
+@enduml

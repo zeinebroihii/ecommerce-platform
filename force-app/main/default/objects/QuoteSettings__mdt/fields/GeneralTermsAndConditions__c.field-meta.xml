@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>GeneralTermsAndConditions__c</fullName>
+    <description>General Terms and Conditions text displayed on every quote in the customer portal. Edit here — no deployment required.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>General Terms and Conditions</label>
+    <length>32768</length>
+    <type>LongTextArea</type>
+    <visibleLines>10</visibleLines>
+</CustomField>

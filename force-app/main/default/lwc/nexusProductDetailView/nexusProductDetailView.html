@@ -25,7 +25,7 @@
             <div class="npdv-sticky-nav">
                 <div class="npdv-sticky-inner">
                     <button class={tab1Cls} data-tab="specs"    onclick={handleTabClick}>Specifications</button>
-                    <button class={tab2Cls} data-tab="reviews"  onclick={handleTabClick}>Reviews (39)</button>
+                    <button class={tab2Cls} data-tab="reviews"  onclick={handleTabClick}>Reviews {reviewCountLabel}</button>
                     <button class={tab3Cls} data-tab="similar"  onclick={handleTabClick}>Similar Products</button>
                     <button class={tab4Cls} data-tab="warranty" onclick={handleTabClick}>Warranty &amp; Returns</button>
                 </div>
@@ -109,15 +109,15 @@
                         <h1 class="npdv-product-name">{productName}</h1>
                         <div class="npdv-rating-row">
                             <div class="npdv-stars">
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                                <span class="npdv-star npdv-star--off">&#9733;</span>
+                                <template for:each={sidebarStars} for:item="s">
+                                    <span key={s.val} class={s.cls}>&#9733;</span>
+                                </template>
                             </div>
-                            <span class="npdv-review-count">(39 Reviews)</span>
-                            <div class="npdv-sep"></div>
-                            <button class="npdv-write-review" onclick={handleWriteReview}>Write a Review</button>
+                            <span class="npdv-review-count">{reviewCountLabel}</span>
+                            <template if:true={canWriteReview}>
+                                <div class="npdv-sep"></div>
+                                <button class="npdv-write-review" onclick={handleWriteReview}>Write a Review</button>
+                            </template>
                         </div>
                     </div>
 
@@ -194,69 +194,101 @@
                 <section id="section-reviews" class="npdv-section">
                     <div class="npdv-reviews-header">
                         <h2 class="npdv-section-title">Customer Reviews</h2>
-                        <button class="npdv-write-review-btn" onclick={handleWriteReview}>Write a Review</button>
+                        <!-- Write Review button: only if eligible -->
+                        <template if:true={canWriteReview}>
+                            <button class="npdv-write-review-btn" onclick={handleWriteReview}>Write a Review</button>
+                        </template>
+                        <!-- Not purchased -->
+                        <template if:true={showPurchaseRequiredMsg}>
+                            <span class="npdv-review-gate-msg">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Only customers who purchased this product can write a review.
+                            </span>
+                        </template>
+                        <!-- Already reviewed -->
+                        <template if:true={showAlreadyReviewedMsg}>
+                            <span class="npdv-review-gate-msg npdv-review-gate-msg--done">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                You have already reviewed this product.
+                            </span>
+                        </template>
+                        <!-- Guest -->
+                        <template if:false={isAuthenticated}>
+                            <button class="npdv-write-review-btn" onclick={handleWriteReview}>Write a Review</button>
+                        </template>
                     </div>
-                    <div class="npdv-reviews-grid">
-                        <!-- Score -->
-                        <div class="npdv-score-card">
-                            <div class="npdv-score-num">4.9</div>
-                            <div class="npdv-score-stars">
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                                <span class="npdv-star npdv-star--on">&#9733;</span>
-                            </div>
-                            <p class="npdv-score-sub">Based on 39 Verified Purchases</p>
+
+                    <!-- Loading state -->
+                    <template if:true={_reviewsLoading}>
+                        <div class="npdv-reviews-loading">
+                            <div class="npdv-reviews-spinner"></div>
+                            <span>Loading reviews…</span>
                         </div>
-                        <!-- Review cards -->
-                        <div class="npdv-review-list">
-                            <div class="npdv-review-card">
-                                <div class="npdv-review-top">
-                                    <div class="npdv-reviewer">
-                                        <div class="npdv-avatar">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                        </div>
-                                        <div>
-                                            <div class="npdv-reviewer-name">Verified Professional</div>
-                                            <div class="npdv-reviewer-date">March 2026</div>
-                                        </div>
-                                    </div>
-                                    <div class="npdv-review-stars">
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                    </div>
+                    </template>
+
+                    <template if:false={_reviewsLoading}>
+                        <div class="npdv-reviews-grid">
+
+                            <!-- ── Score Card ── -->
+                            <div class="npdv-score-card">
+                                <div class="npdv-score-num">{formattedAvgRating}</div>
+                                <div class="npdv-score-stars">
+                                    <template for:each={scoreStars} for:item="s">
+                                        <span key={s.val} class={s.cls}>&#9733;</span>
+                                    </template>
                                 </div>
-                                <h4 class="npdv-review-title">Exceptional Performance</h4>
-                                <p class="npdv-review-body">The integration was seamless and the performance gains were immediate. Highly recommend for any enterprise-grade deployment.</p>
+                                <p class="npdv-score-sub">{reviewScoreSubLabel}</p>
+                                <template if:true={hasVerifiedInfo}>
+                                    <p class="npdv-score-verified">{verifiedPercentLabel}</p>
+                                </template>
                             </div>
-                            <div class="npdv-review-card">
-                                <div class="npdv-review-top">
-                                    <div class="npdv-reviewer">
-                                        <div class="npdv-avatar">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+
+                            <!-- ── Review list ── -->
+                            <div class="npdv-review-list">
+                                <template if:true={hasReviews}>
+                                    <template for:each={_reviews} for:item="rev">
+                                        <div key={rev.reviewId} class="npdv-review-card">
+                                            <div class="npdv-review-top">
+                                                <div class="npdv-reviewer">
+                                                    <div class="npdv-avatar npdv-avatar--initials">
+                                                        {rev.initials}
+                                                    </div>
+                                                    <div>
+                                                        <div class="npdv-reviewer-name">{rev.customerName}</div>
+                                                        <div class="npdv-reviewer-date">{rev.createdDate}</div>
+                                                    </div>
+                                                </div>
+                                                <div class="npdv-review-right">
+                                                    <div class="npdv-review-stars">
+                                                        <template for:each={rev.stars} for:item="s">
+                                                            <span key={s.val} class={s.cls}>&#9733;</span>
+                                                        </template>
+                                                    </div>
+                                                    <template if:true={rev.verifiedPurchase}>
+                                                        <span class="npdv-verified-badge">
+                                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                                            Verified Purchase
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                            <template if:true={rev.reviewTitle}>
+                                                <h4 class="npdv-review-title">{rev.reviewTitle}</h4>
+                                            </template>
+                                            <p class="npdv-review-body">{rev.reviewBody}</p>
                                         </div>
-                                        <div>
-                                            <div class="npdv-reviewer-name">Enterprise Client</div>
-                                            <div class="npdv-reviewer-date">February 2026</div>
-                                        </div>
+                                    </template>
+                                </template>
+                                <template if:false={hasReviews}>
+                                    <div class="npdv-no-reviews">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                                        <p>No reviews yet. Be the first to share your experience!</p>
                                     </div>
-                                    <div class="npdv-review-stars">
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                        <span class="npdv-star npdv-star--sm npdv-star--on">&#9733;</span>
-                                    </div>
-                                </div>
-                                <h4 class="npdv-review-title">Outstanding Build Quality</h4>
-                                <p class="npdv-review-body">Deployed across 12 facilities with zero issues. The support team is world-class and the hardware lives up to every specification.</p>
+                                </template>
                             </div>
+
                         </div>
-                    </div>
+                    </template>
                 </section>
 
                 <!-- ── Similar Products ── -->
@@ -386,6 +418,11 @@
                         </button>
                     </div>
                     <div class="npdv-quote-body">
+                        <!-- Verified purchase notice -->
+                        <div class="npdv-review-verified-notice">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Your review will be marked as a <strong>Verified Purchase</strong>.
+                        </div>
                         <!-- Star selector -->
                         <div class="npdv-qfield">
                             <label class="npdv-qlabel">Your Rating</label>
@@ -402,10 +439,17 @@
                             <input type="text" class="npdv-qinput" placeholder="Summarize your experience" data-field="title" oninput={handleReviewField}/>
                         </div>
                         <div class="npdv-qfield">
-                            <label class="npdv-qlabel">Your Review</label>
+                            <label class="npdv-qlabel">Your Review <span class="npdv-required">*</span></label>
                             <textarea class="npdv-qinput npdv-qtextarea" placeholder="Tell others what you think about this product..." data-field="body" oninput={handleReviewField}></textarea>
                         </div>
-                        <button class="npdv-qsubmit" onclick={handleReviewSubmit}>Submit Review</button>
+                        <!-- Error message -->
+                        <template if:true={_submitError}>
+                            <div class="npdv-review-error">{_submitError}</div>
+                        </template>
+                        <button class="npdv-qsubmit" onclick={handleReviewSubmit} disabled={_submitLoading}>
+                            <template if:true={_submitLoading}>Submitting…</template>
+                            <template if:false={_submitLoading}>Submit Review</template>
+                        </button>
                     </div>
                 </div>
             </div>

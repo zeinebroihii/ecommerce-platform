@@ -63,6 +63,11 @@ public without sharing class LeadController {
 
       insert l;
 
+      NotificationController.pushAdminBell(
+        'New Lead: ' + company,
+        firstName + ' ' + lastName + ' — ' + (String.isNotBlank(intent) ? intent : 'Interest'),
+        l.Id
+      );
       sendCustomerEmail(firstName, lastName, salutation, email);
       LeadManagementController.notifyAdminNewLead(l);
     } catch (Exception e) {

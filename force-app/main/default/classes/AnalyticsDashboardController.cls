@@ -278,6 +278,141 @@ public without sharing class AnalyticsDashboardController {
     return sh;
   }
 
+  // ── Lead KPI Summary ──────────────────────────────────────────────────────
+  public class LeadKpiSummary {
+    @AuraEnabled
+    public Integer totalLeads;
+    @AuraEnabled
+    public Integer convertedLeads;
+    @AuraEnabled
+    public Decimal conversionRate;
+    @AuraEnabled
+    public Decimal avgAIScore;
+    @AuraEnabled
+    public Integer pendingDecision;
+  }
+
+  @AuraEnabled(cacheable=true)
+  public static LeadKpiSummary getLeadKpiSummary() {
+    LeadKpiSummary lk = new LeadKpiSummary();
+    lk.totalLeads = [SELECT COUNT() FROM Lead];
+    lk.convertedLeads = [SELECT COUNT() FROM Lead WHERE IsConverted = true];
+    lk.pendingDecision = [
+      SELECT COUNT()
+      FROM Lead
+      WHERE AdminDecision__c = 'Pending' AND IsConverted = false
+    ];
+    AggregateResult ar = [
+      SELECT AVG(AIScore__c) avg
+      FROM Lead
+      WHERE AIScore__c != NULL
+    ];
+    lk.avgAIScore = ar.get('avg') != null
+      ? ((Decimal) ar.get('avg')).setScale(0)
+      : 0;
+    lk.conversionRate = lk.totalLeads > 0
+      ? ((Decimal) lk.convertedLeads / lk.totalLeads * 100).setScale(1)
+      : 0;
+    return lk;
+  }
+
+  // ── Lead Source Breakdown ─────────────────────────────────────────────────
+  public class LeadSourceStat {
+    @AuraEnabled
+    public String source;
+    @AuraEnabled
+    public Integer leadCount;
+    @AuraEnabled
+    public String color;
+  }
+
+  @AuraEnabled(cacheable=true)
+  public static List<LeadSourceStat> getLeadSourceBreakdown() {
+    List<String> colors = new List<String>{
+      '#4f46e5',
+      '#0891b2',
+      '#10b981',
+      '#f59e0b',
+      '#ef4444',
+      '#8b5cf6',
+      '#ec4899',
+      '#64748b'
+    };
+    List<LeadSourceStat> result = new List<LeadSourceStat>();
+    Integer i = 0;
+    for (AggregateResult ar : [
+      SELECT LeadSource src, COUNT(Id) cnt
+      FROM Lead
+      GROUP BY LeadSource
+      ORDER BY COUNT(Id) DESC NULLS LAST
+      LIMIT 8
+    ]) {
+      LeadSourceStat ls = new LeadSourceStat();
+      ls.source = (String) ar.get('src') != null
+        ? (String) ar.get('src')
+        : 'Non défini';
+      ls.leadCount = Integer.valueOf(ar.get('cnt'));
+      ls.color = colors[Math.mod(i, colors.size())];
+      result.add(ls);
+      i++;
+    }
+    return result;
+  }
+
+  // ── AI Score Distribution (buckets: 0-20, 21-40, 41-60, 61-80, 81-100) ───
+  public class AIScoreBucket {
+    @AuraEnabled
+    public String label;
+    @AuraEnabled
+    public Integer cnt;
+    @AuraEnabled
+    public String color;
+    @AuraEnabled
+    public String bucketKey;
+  }
+
+  @AuraEnabled(cacheable=true)
+  public static List<AIScoreBucket> getAIScoreDistribution() {
+    List<String> labels = new List<String>{
+      '0–20',
+      '21–40',
+      '41–60',
+      '61–80',
+      '81–100'
+    };
+    List<String> colors = new List<String>{
+      '#ef4444',
+      '#f97316',
+      '#f59e0b',
+      '#84cc16',
+      '#10b981'
+    };
+    List<Integer> counts = new List<Integer>{ 0, 0, 0, 0, 0 };
+    for (Lead l : [SELECT AIScore__c FROM Lead WHERE AIScore__c != NULL]) {
+      Integer score = l.AIScore__c.intValue();
+      if (score <= 20)
+        counts[0]++;
+      else if (score <= 40)
+        counts[1]++;
+      else if (score <= 60)
+        counts[2]++;
+      else if (score <= 80)
+        counts[3]++;
+      else
+        counts[4]++;
+    }
+    List<AIScoreBucket> result = new List<AIScoreBucket>();
+    for (Integer j = 0; j < 5; j++) {
+      AIScoreBucket b = new AIScoreBucket();
+      b.label = labels[j];
+      b.cnt = counts[j];
+      b.color = colors[j];
+      b.bucketKey = 'bucket' + j;
+      result.add(b);
+    }
+    return result;
+  }
+
   private static String monthLabel(Integer m) {
     List<String> months = new List<String>{
       'Jan',

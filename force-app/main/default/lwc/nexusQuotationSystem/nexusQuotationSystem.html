@@ -1,4 +1,17 @@
 <template>
+  <!-- ── Floating new-message notification ── -->
+  <template if:true={_floatingNotif}>
+    <div class="nqs-notif-bubble">
+      <div class="nqs-notif-avatar">S</div>
+      <div class="nqs-notif-body">
+        <div class="nqs-notif-title">New message from your advisor</div>
+        <div class="nqs-notif-sub">{_floatingNotif.quoteName}</div>
+      </div>
+      <button class="nqs-notif-view-btn" data-id={_floatingNotif.quoteId} onclick={handleNotifView}>View</button>
+      <button class="nqs-notif-dismiss-btn" onclick={handleNotifDismiss}>✕</button>
+    </div>
+  </template>
+
   <!-- ── Testimonial popup (fires after quote acceptance) ── -->
   <template if:true={_showTestimonialForm}>
     <c-nexus-testimonial-form
@@ -27,7 +40,7 @@
           </template>
         </div>
         <template if:true={hasQuotes}>
-          <span class="nqs-quote-count">{filteredQuotes.length} devis</span>
+          <span class="nqs-quote-count">{filteredQuotes.length} quotes</span>
         </template>
       </div>
       <button class="nqs-new-btn" onclick={handleOpenNewForm}>
@@ -74,9 +87,9 @@
           <thead>
             <tr class="nqs-thead-row">
               <th class="nqs-th-col">Reference</th>
-              <th class="nqs-th-col">Date d'expiration</th>
-              <th class="nqs-th-col nqs-th-right">Montant</th>
-              <th class="nqs-th-col nqs-th-center">Statut</th>
+              <th class="nqs-th-col">Expiry Date</th>
+              <th class="nqs-th-col nqs-th-right">Amount</th>
+              <th class="nqs-th-col nqs-th-center">Status</th>
               <th class="nqs-th-col nqs-th-right">Actions</th>
             </tr>
           </thead>
@@ -93,7 +106,12 @@
                       ></lightning-icon>
                     </div>
                     <div>
-                      <div class="nqs-ref-name">{q.name}</div>
+                      <div class="nqs-ref-name">
+                        {q.name}
+                        <template if:true={q.hasUnreadMsg}>
+                          <span class="nqs-unread-dot"></span>
+                        </template>
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -181,7 +199,7 @@
                   size="x-small"
                   variant="inverse"
                 ></lightning-icon>
-                &nbsp;Signature DocuSign en cours — vérifiez votre email
+                &nbsp;DocuSign signing in progress — check your email
               </span>
             </template>
 
@@ -192,7 +210,7 @@
                   icon-name="utility:clock"
                   size="x-small"
                 ></lightning-icon>
-                &nbsp;Contrat en préparation…
+                &nbsp;Contract being prepared…
               </span>
             </template>
 
@@ -213,21 +231,21 @@
                 onclick={handleAcceptQuote}
                 disabled={decideDisabled}
               >
-                ✓ Accepter
+                ✓ Accept
               </button>
               <button
                 class="nqs-counter-btn"
                 onclick={handleShowCounterForm}
                 disabled={decideDisabled}
               >
-                ↔ Contre-offre
+                ↔ Counter Offer
               </button>
               <button
                 class="nqs-reject-btn"
                 onclick={handleShowRejectForm}
                 disabled={decideDisabled}
               >
-                ✕ Refuser
+                ✕ Reject
               </button>
             </template>
             <button class="nqs-close-x-btn" onclick={handleCloseDetail}>
@@ -255,6 +273,9 @@
                 variant={tabMessagesVariant}
               ></lightning-icon>
               <span class="nqs-mtab-label">Messages</span>
+              <template if:true={hasUnreadMessages}>
+                <span class="nqs-tab-badge">{unreadBadgeLabel}</span>
+              </template>
             </button>
             <button class={tabHistoryCls} onclick={handleTabHistory}>
               <lightning-icon
@@ -277,15 +298,16 @@
                   <template if:true={selectedQuoteHasProducts}>
                     <div class="nqs-detail-card nqs-p0">
                       <div class="nqs-detail-card-title">
-                        Produits &amp; Services
+                        Products &amp; Services
                       </div>
                       <div class="nqs-prod-table-wrap">
                         <table class="nqs-prod-table">
                           <thead>
                             <tr>
                               <th class="nqs-th">Description</th>
-                              <th class="nqs-th nqs-th-center">Qté</th>
-                              <th class="nqs-th nqs-th-right">Prix unit.</th>
+                              <th class="nqs-th nqs-th-center">Qty</th>
+                              <th class="nqs-th nqs-th-center">Type</th>
+                              <th class="nqs-th nqs-th-right">Unit Price</th>
                               <th class="nqs-th nqs-th-right">Total</th>
                             </tr>
                           </thead>
@@ -298,11 +320,20 @@
                                 <td class="nqs-td">
                                   <div class="nqs-prod-cell">
                                     <div class="nqs-prod-img-wrap">
-                                      <img
-                                        src={item.productImage}
-                                        alt={item.productName}
-                                        class="nqs-prod-img"
-                                      />
+                                      <template if:true={item.hasImage}>
+                                        <img
+                                          src={item.productImage}
+                                          alt={item.productName}
+                                          class="nqs-prod-img"
+                                        />
+                                      </template>
+                                      <template if:false={item.hasImage}>
+                                        <lightning-icon
+                                          icon-name="standard:product"
+                                          size="small"
+                                          class="nqs-prod-icon"
+                                        ></lightning-icon>
+                                      </template>
                                     </div>
                                     <div>
                                       <div class="nqs-prod-name">
@@ -316,6 +347,12 @@
                                 </td>
                                 <td class="nqs-td nqs-td-center nqs-prod-qty">
                                   {item.quantity}
+                                </td>
+                                <td class="nqs-td nqs-td-center">
+                                  <span class={item.chargeTypeBadgeCls}>{item.chargeType}</span>
+                                  <template if:true={item.billingLabel}>
+                                    <span class="nqs-billing-label">{item.billingLabel}</span>
+                                  </template>
                                 </td>
                                 <td class="nqs-td nqs-td-right nqs-prod-unit">
                                   {item.unitPrice}
@@ -337,19 +374,19 @@
                       <div class="nqs-detail-card-title">Quote Details</div>
                       <div class="nqs-detail-card-body">
                         <div class="nqs-detail-row">
-                          <span class="nqs-detail-label">Référence</span>
+                          <span class="nqs-detail-label">Reference</span>
                           <span class="nqs-detail-val"
                             >{selectedQuote.name}</span
                           >
                         </div>
                         <div class="nqs-detail-row">
-                          <span class="nqs-detail-label">Opportunité</span>
+                          <span class="nqs-detail-label">Opportunity</span>
                           <span class="nqs-detail-val"
                             >{selectedQuote.opportunityName}</span
                           >
                         </div>
                         <div class="nqs-detail-row">
-                          <span class="nqs-detail-label">Expiration</span>
+                          <span class="nqs-detail-label">Expiry</span>
                           <span class="nqs-detail-val"
                             >{selectedQuote.displayDate}</span
                           >
@@ -369,33 +406,47 @@
                   <!-- Commercial terms (always shown) -->
                   <div class="nqs-detail-card">
                     <div class="nqs-detail-card-title">
-                      Conditions Commerciales
+                      Commercial Terms
                     </div>
                     <div class="nqs-detail-card-body nqs-terms-grid">
                       <div>
                         <div class="nqs-detail-label">
-                          Conditions de paiement
+                          Payment Terms
                         </div>
                         <div class="nqs-terms-val">
-                          Net 30 jours à réception
+                          {selectedQuote.paymentTerms}
                         </div>
                       </div>
                       <div>
                         <div class="nqs-detail-label">
-                          Validité de l&#39;offre
+                          Offer Validity
                         </div>
                         <div class="nqs-terms-val">
                           {selectedQuote.displayDate}
                         </div>
                       </div>
-                      <div class="nqs-terms-full">
-                        <div class="nqs-detail-label">Notes spéciales</div>
-                        <div class="nqs-terms-note">
-                          Remise exceptionnelle de 10% appliquée sur le volume
-                          total. Installation et configuration initiales
-                          incluses.
+                      <template if:true={signatureDeadlineLabel}>
+                        <div>
+                          <div class="nqs-detail-label">Signature Deadline</div>
+                          <div class="nqs-terms-val">{signatureDeadlineLabel}</div>
                         </div>
-                      </div>
+                      </template>
+                      <template if:true={selectedQuote.description}>
+                        <div class="nqs-terms-full">
+                          <div class="nqs-detail-label">Special Notes</div>
+                          <div class="nqs-terms-note">
+                            {selectedQuote.description}
+                          </div>
+                        </div>
+                      </template>
+                      <template if:true={hasGeneralTerms}>
+                        <div class="nqs-terms-full nqs-terms-gtc-wrap">
+                          <div class="nqs-detail-label">General Terms &amp; Conditions</div>
+                          <div class="nqs-terms-gtc">
+                            {generalTerms}
+                          </div>
+                        </div>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -406,6 +457,35 @@
                   <div class="nqs-summary-card">
                     <div class="nqs-detail-card-title">Financial Summary</div>
                     <div class="nqs-detail-card-body">
+                      <!-- One-time / Recurring split -->
+                      <template if:true={selectedQuote.hasOneTime}>
+                        <div class="nqs-detail-row">
+                          <span class="nqs-detail-label">
+                            <span class="nqs-charge-badge nqs-charge-onetime">One-time</span>
+                          </span>
+                          <span class="nqs-detail-val">{selectedQuote.formattedOneTime}</span>
+                        </div>
+                      </template>
+                      <template if:true={selectedQuote.hasRecurring}>
+                        <div class="nqs-detail-row">
+                          <span class="nqs-detail-label">
+                            <span class="nqs-charge-badge nqs-charge-recurring">Recurring</span>
+                          </span>
+                          <span class="nqs-detail-val">{selectedQuote.formattedRecurring}</span>
+                        </div>
+                        <template if:true={selectedQuote.hasMrr}>
+                          <div class="nqs-detail-row">
+                            <span class="nqs-detail-label nqs-muted">Monthly (MRR)</span>
+                            <span class="nqs-mrr-val">{selectedQuote.formattedMrr}/mo</span>
+                          </div>
+                        </template>
+                      </template>
+                      <template if:true={selectedQuote.hasOneTime}>
+                        <template if:true={selectedQuote.hasRecurring}>
+                          <div class="nqs-summary-divider"></div>
+                        </template>
+                      </template>
+
                       <div class="nqs-detail-row">
                         <span class="nqs-detail-label">Subtotal</span>
                         <span class="nqs-detail-val"
@@ -494,21 +574,20 @@
                   <template if:true={showCounterForm}>
                     <div class="nqs-counter-form-card">
                       <div class="nqs-detail-card-title">
-                        Soumettre une contre-offre
+                        Submit a Counter Offer
                       </div>
                       <div class="nqs-detail-card-body">
                         <p class="nqs-counter-hint">
-                          Proposez votre prix — notre système répond
-                          instantanément : si votre offre est proche du seuil,
-                          un prix intermédiaire vous sera automatiquement
-                          proposé.
+                          Propose your price — our system responds instantly:
+                          if your offer is close to the threshold, a mid-point
+                          price will be automatically proposed.
                         </p>
                         <div class="nqs-counter-input-row">
-                          <label class="nqs-detail-label">Votre prix (€)</label>
+                          <label class="nqs-detail-label">Your price (€)</label>
                           <input
                             type="number"
                             class="nqs-counter-input"
-                            placeholder="ex. 45 000"
+                            placeholder="e.g. 45000"
                             value={_counterPrice}
                             oninput={handleCounterPriceInput}
                             min="1"
@@ -516,11 +595,11 @@
                         </div>
                         <div class="nqs-counter-input-row">
                           <label class="nqs-detail-label"
-                            >Message (optionnel)</label
+                            >Message (optional)</label
                           >
                           <textarea
                             class="nqs-counter-textarea"
-                            placeholder="Expliquez votre raisonnement..."
+                            placeholder="Explain your reasoning..."
                             oninput={handleCounterMessageInput}
                           ></textarea>
                         </div>
@@ -529,7 +608,7 @@
                             class="nqs-cancel-btn"
                             onclick={handleCancelCounter}
                           >
-                            Annuler
+                            Cancel
                           </button>
                           <button
                             class="nqs-submit-counter-btn"
@@ -556,7 +635,7 @@
                         icon-name="utility:chat"
                         size="medium"
                       ></lightning-icon>
-                      <p>Démarrez la conversation avec votre conseiller.</p>
+                      <p>Start the conversation with your advisor.</p>
                     </div>
                   </template>
                   <template if:true={hasMessages}>
@@ -575,7 +654,7 @@
                   <input
                     type="text"
                     class="nqs-msg-input"
-                    placeholder="Posez une question à votre conseiller..."
+                    placeholder="Ask your advisor a question..."
                     value={messageInput}
                     onchange={handleMessageInput}
                     onkeydown={handleMessageKeydown}
@@ -600,7 +679,7 @@
                     <div class="nqs-history-item">
                       <div class="nqs-history-dot nqs-history-dot-active"></div>
                       <div class="nqs-history-content">
-                        <div class="nqs-history-label">Statut actuel</div>
+                        <div class="nqs-history-label">Current Status</div>
                         <div class="nqs-history-status">
                           {selectedQuote.status}
                         </div>
@@ -624,9 +703,9 @@
                 <template if:true={selectedQuoteHasVersions}>
                   <!-- Version history header -->
                   <div class="nqs-vh-header">
-                    <h3 class="nqs-vh-title">Historique des Versions</h3>
+                    <h3 class="nqs-vh-title">Version History</h3>
                     <span class="nqs-badge nqs-badge-primary"
-                      >{selectedQuote.versionCount} Révisions</span
+                      >{selectedQuote.versionCount} Revisions</span
                     >
                   </div>
 
@@ -639,10 +718,10 @@
                             <div class={v.iconCls}>{v.versionLabel}</div>
                             <div>
                               <div class="nqs-vh-name">
-                                Révision {v.versionLabel}
+                                Revision {v.versionLabel}
                                 <template if:true={v.isCurrentVersion}>
                                   <span class="nqs-vh-current-chip"
-                                    >Actuelle</span
+                                    >Current</span
                                   >
                                 </template>
                               </div>
@@ -653,7 +732,7 @@
                           </div>
                           <div class="nqs-vh-card-right">
                             <div class="nqs-vh-total-block">
-                              <div class="nqs-detail-label">Montant</div>
+                              <div class="nqs-detail-label">Amount</div>
                               <div class="nqs-vh-total">{v.displayTotal}</div>
                             </div>
                             <div class="nqs-vh-actions">
@@ -664,7 +743,7 @@
                                   data-id={v.quoteId}
                                   onclick={handleViewVersion}
                                 >
-                                  👁 Voir
+                                  👁 View
                                 </button>
                               </template>
                               <!-- Mock version: expand/collapse product list -->
@@ -698,7 +777,7 @@
                               class="nqs-detail-label"
                               style="margin-bottom: 0.5rem"
                             >
-                              Lignes de cette révision
+                              Lines in this revision
                             </div>
                             <template for:each={v.expandProducts} for:item="ep">
                               <div key={ep.key} class="nqs-vh-line">
@@ -727,10 +806,10 @@
         <template if:true={showRejectForm}>
           <div class="nqs-reject-panel">
             <div class="nqs-reject-inner">
-              <h4 class="nqs-reject-title">Motif de refus (optionnel)</h4>
+              <h4 class="nqs-reject-title">Reason for rejection (optional)</h4>
               <textarea
                 class="nqs-reject-textarea"
-                placeholder="Expliquez la raison du refus..."
+                placeholder="Explain the reason for rejection..."
                 value={rejectReason}
                 onchange={handleRejectReason}
               ></textarea>
@@ -840,10 +919,10 @@
               </div>
             </div>
             <div class="nqs-form-field">
-              <label class="nqs-form-label">Message (optionnel)</label>
+              <label class="nqs-form-label">Message (optional)</label>
               <textarea
                 class="nqs-form-textarea"
-                placeholder="Décrivez vos besoins, produits souhaités, délais..."
+                placeholder="Describe your needs, desired products, timelines..."
                 value={formMessage}
                 onchange={handleFormMessage}
               ></textarea>
@@ -870,10 +949,10 @@
             </div>
             <h3 class="nqs-success-title">Request Received!</h3>
             <p class="nqs-success-msg">
-              Notre équipe a bien reçu votre demande. Un conseiller dédié vous
-              contactera à
+              Our team has received your request. A dedicated advisor will
+              contact you at
               <span class="nqs-success-email">{formEmail}</span>
-              dans les 2 heures ouvrées.
+              within 2 business hours.
             </p>
             <button class="nqs-submit-btn" onclick={handleCloseNewForm}>
               Back to Portal

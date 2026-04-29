@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SignatureDeadlineDays__c</fullName>
+    <description>Number of days the customer has to sign the contract after it is sent (e.g. 14).</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Signature Deadline (Days)</label>
+    <precision>5</precision>
+    <scale>0</scale>
+    <type>Number</type>
+</CustomField>

@@ -46,6 +46,8 @@ public class DocuSignService {
         PaymentTerms__c,
         ExpirationDate__c,
         Description__c,
+        GeneralTerms__c,
+        SignatureDeadlineDays__c,
         CreatedById,
         Opportunity__r.AccountId,
         Opportunity__r.Account.Name,
@@ -328,6 +330,15 @@ public class DocuSignService {
     String payTerms = String.isNotBlank(q.PaymentTerms__c)
       ? q.PaymentTerms__c
       : 'Net 30';
+    String generalTerms = String.isNotBlank(q.GeneralTerms__c)
+      ? q.GeneralTerms__c
+      : 'This contract is governed by applicable commercial law. '
+        + 'The service provider undertakes to deliver the products and services described within agreed timelines. '
+        + 'The client undertakes to settle all amounts per the payment terms above. '
+        + 'This electronic signature via DocuSign constitutes a legally binding commitment per eIDAS regulations.';
+    String sigDeadline = q.SignatureDeadlineDays__c != null
+      ? String.valueOf(q.SignatureDeadlineDays__c.intValue()) + ' days after sending'
+      : '14 days after sending';
     String accountName = q.Opportunity__r?.Account?.Name != null
       ? q.Opportunity__r.Account.Name
       : customerName;
@@ -516,6 +527,9 @@ public class DocuSignService {
       '<tr><td class="totals-label">Payment Terms</td><td class="totals-value">' +
       payTerms +
       '</td></tr>' +
+      '<tr><td class="totals-label">Signature Deadline</td><td class="totals-value">' +
+      sigDeadline +
+      '</td></tr>' +
       '<tr><td class="totals-label">Contract Duration</td><td class="totals-value">12 months</td></tr>' +
       '<tr style="border-top:2px solid #94a3b8"><td class="totals-grand">TOTAL AMOUNT (VAT INCL.)</td><td class="totals-grand" style="text-align:right">' +
       total +
@@ -523,10 +537,8 @@ public class DocuSignService {
       '</table>' +
       // ── TERMS ────────────────────────────────────────────────────────────────────
       '<div style="font-size:9.5pt;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;padding:10px 16px;margin:14px 0;line-height:1.6">' +
-      '<strong>General Terms &amp; Conditions:</strong> This contract is governed by applicable commercial law. ' +
-      'The service provider undertakes to deliver the products and services described within agreed timelines. ' +
-      'The client undertakes to settle all amounts per the payment terms above. ' +
-      'This electronic signature via DocuSign constitutes a legally binding commitment per eIDAS regulations.' +
+      '<strong>General Terms &amp; Conditions:</strong> ' +
+      generalTerms.replace('\n', '<br/>') +
       '</div>' +
       // ── SIGNATURES ───────────────────────────────────────────────────────────────
       '<div class="section-title">Electronic Signatures</div>' +

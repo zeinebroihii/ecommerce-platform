@@ -1,0 +1,109 @@
+@startuml Agentforce Chatbot Integration
+title Agentforce Chatbot with Subagents
+
+actor Customer
+participant Chatbot as "Agentforce Chatbot"
+participant SubAgent as "Specialized Subagent"
+participant Controller as "Apex Controller"
+participant Service as "Business Service"
+participant Database as "Salesforce DB"
+participant HumanAgent as "Human Support Agent"
+
+== Initial Customer Interaction ==
+Customer -> Chatbot: "Help me find combo packages"
+Chatbot -> Chatbot: Process natural language
+note right: Agentforce uses your system prompt + conversation context
+
+== Combo Package Assistance ==
+Chatbot -> Controller: getAllPackages() via Apex action
+Controller -> Database: SELECT FROM ComboPackage__c WITH SECURITY_ENFORCED
+Database --> Controller: Package data
+Controller --> Chatbot: PackageWrapper[]
+
+Chatbot -> Customer: "I found these packages: Computing Bundle ($500), Connectivity Pack ($300)..."
+
+Customer -> Chatbot: "Tell me more about the Computing Bundle"
+Chatbot -> Controller: getPackageDetails(packageId)
+Controller --> Chatbot: Detailed package info
+Chatbot -> Customer: Package breakdown + pricing + recommendations
+
+== Subagent Delegation for Complex Tasks ==
+Customer -> Chatbot: "I need a custom quote for 50 units"
+Chatbot -> Chatbot: Evaluate complexity
+note right: Agentforce determines if subagent needed
+
+Chatbot -> SubAgent: Delegate quote generation
+note right: Subagent: "QuoteGenerationSubagent"
+
+SubAgent -> Service: generateQuote(requestData)
+Service -> Database: INSERT TALEXO_Quote__c + NexusQuoteLineItem__c
+Database --> Service: Quote created
+
+Service -> SubAgent: QuoteResponse
+SubAgent -> Chatbot: Formatted quote summary
+Chatbot -> Customer: "I've created a quote for you. Total: $12,500 with 10% discount..."
+
+== AI-Powered Recommendations ==
+Customer -> Chatbot: "What should I buy?"
+Chatbot -> Controller: getProductRecommendations(userId)
+Controller -> Service: analyzeUserBehavior()
+Service -> Database: SELECT OrderHistory__c, preferences
+Database --> Service: User data
+
+Service -> Chatbot: AI recommendations
+Chatbot -> Customer: "Based on your computing needs, I'd recommend our AI Bundle..."
+
+== Handover to Human Agent ==
+Customer -> Chatbot: "This is too complex, I need to speak to someone"
+Chatbot -> Chatbot: Assess handover criteria
+note right: Criteria: quote value >$10K, custom requirements, customer frustration
+
+Chatbot -> HumanAgent: Create support case + context
+note right: Transfers: conversation history, customer data, current context
+
+HumanAgent -> Customer: Live chat takeover
+note right: Seamless transition with full context
+
+== Post-Interaction Follow-up ==
+Chatbot -> Database: Log conversation + outcomes
+Database --> Chatbot: Logged
+
+alt Successful interaction
+    Chatbot -> Customer: "Is there anything else I can help you with?"
+else Needs follow-up
+    Chatbot -> Customer: "I'll have a specialist contact you within 24 hours"
+    Chatbot -> HumanAgent: Schedule follow-up
+end
+
+== Subagent Capabilities ==
+note over SubAgent
+    **Available Subagents:**
+    - QuoteGenerationSubagent
+    - ComboPackageSubagent
+    - OrderSupportSubagent
+    - ProductRecommendationSubagent
+    - AccountManagementSubagent
+
+    **Subagent Benefits:**
+    - Specialized expertise
+    - Complex task handling
+    - Fallback for chatbot limits
+    - Maintains conversation flow
+end note
+
+== Integration Points ==
+note over Controller, Service
+    **Chatbot Integrates With:**
+    - ComboPackageController
+    - QuoteGenerationService
+    - ProductController
+    - OrderService
+    - AccountController
+
+    **Data Access:**
+    - Real-time inventory
+    - Live pricing
+    - Customer history
+    - AI recommendations
+end note
+@enduml

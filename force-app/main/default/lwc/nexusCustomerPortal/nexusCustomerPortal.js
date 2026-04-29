@@ -693,16 +693,16 @@ export default class NexusCustomerPortal extends LightningElement {
         icon: "utility:truck",
         hasBadge: false
       },
-      ...(this.isB2C
-        ? []
-        : [
+      ...(this.isB2B
+        ? [
             {
               id: "quotations",
               label: "Quotes & Contracts",
               icon: "utility:file",
               hasBadge: false
             }
-          ]),
+          ]
+        : []),
       {
         id: "cart",
         label: "My Cart",
@@ -721,18 +721,23 @@ export default class NexusCustomerPortal extends LightningElement {
 
   get toolsNavTabs() {
     return this._mapTabs([
-      {
-        id: "swap",
-        label: "Nexus Swap",
-        icon: "utility:sync",
-        hasBadge: false
-      },
-      {
-        id: "passport",
-        label: "Digital Passport",
-        icon: "utility:identity",
-        hasBadge: false
-      },
+      // Swap and Digital Passport: B2C only (hidden for B2B)
+      ...(this.isB2B
+        ? []
+        : [
+            {
+              id: "swap",
+              label: "Nexus Swap",
+              icon: "utility:sync",
+              hasBadge: false
+            },
+            {
+              id: "passport",
+              label: "Digital Passport",
+              icon: "utility:identity",
+              hasBadge: false
+            }
+          ]),
       {
         id: "timeline",
         label: "Timeline 360°",
@@ -1094,9 +1099,7 @@ export default class NexusCustomerPortal extends LightningElement {
   }
 
   handleViewOfferFromRec(e) {
-    this.template
-      .querySelector("c-nexus-engagement-system")
-      .openOffer(e.detail);
+    this._openProductDetailById((e.detail && e.detail.id) || null);
   }
 
   handleViewProductFromRec(e) {
@@ -1110,9 +1113,8 @@ export default class NexusCustomerPortal extends LightningElement {
       (p) => p.id === productId || p.productId === productId
     );
     if (!product) return;
-    // Leave the current tab intact — overlay renders on top of any tab
-    // except full-catalog/checkout view, so switch to dashboard in those cases
-    if (this.activeTab === "catalog" || this.activeTab === "checkout") {
+    // The detail overlay lives inside the dashboard template — always switch
+    if (this.activeTab !== "dashboard") {
       this.activeTab = "dashboard";
       this._pushNavUpdate();
     }
@@ -1285,7 +1287,31 @@ export default class NexusCustomerPortal extends LightningElement {
       clearTimeout(this._browsePopupTimer);
       this._browsePopupTimer = null;
     }
-    this._openProductDetailById(this._browsePopupProduct.productId);
+    const popup = this._browsePopupProduct;
+    // Try to find the full product from the loaded catalog
+    let product = this._products.find(
+      (p) => p.id === popup.productId || p.productId === popup.productId
+    );
+    // Fall back to building from popup data so it never silently fails
+    if (!product) {
+      product = {
+        id: popup.productId,
+        name: popup.productName,
+        image: popup.imageUrl,
+        price: popup.price || 0,
+        family: popup.productFamily || "",
+        description: popup.reason || "",
+        features: [],
+        rating: 0,
+        reviews: 0
+      };
+    }
+    // The overlay lives inside the dashboard template — always switch
+    if (this.activeTab !== "dashboard") {
+      this.activeTab = "dashboard";
+      this._pushNavUpdate();
+    }
+    this.detailProduct = product;
   }
 
   handleAddToCartFromRec(event) {
@@ -1389,7 +1415,7 @@ export default class NexusCustomerPortal extends LightningElement {
 
   // ── Handlers — Cart (nexusPortalCart child events) ────────────────────────
   handleNavigateFromCart(e) {
-    const { tab, appliedSparks } = e.detail || {};
+    const { tab, appliedSparks, quoteId, quoteName } = e.detail || {};
     this.activeTab = tab;
     if (appliedSparks > 0) {
       this.sparksBalance = Math.max(0, this.sparksBalance - appliedSparks);
@@ -1400,8 +1426,52 @@ export default class NexusCustomerPortal extends LightningElement {
     // After a cart quote submission navigating to quotations, force a cache bypass
     if (tab === "quotations") {
       this._quotationsRefreshKey = (this._quotationsRefreshKey || 0) + 1;
+      if (quoteId) {
+        this._openNegotiationChat(quoteId, quoteName);
+      }
     }
     this._pushNavUpdate();
+  }
+
+  handleOpenNegotiationChat() {
+    this._openNegotiationChat(null, null);
+  }
+
+  _openNegotiationChat(quoteId, quoteName) {
+    // Delay lets the tab/modal transition finish before triggering chat
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    setTimeout(() => {
+      // Try modern MIAW bootstrap API first
+      try {
+        const bs = window.embeddedservice_bootstrap;
+        if (bs && bs.utilAPI) {
+          try {
+            if (bs.prechatAPI) {
+              const fields = {};
+              if (this.profileAccountId) fields.AccountId = this.profileAccountId;
+              if (quoteId) fields.QuoteId = quoteId;
+              if (quoteName) fields.QuoteName = quoteName;
+              if (Object.keys(fields).length > 0) {
+                bs.prechatAPI.setHiddenPrechatFields(fields);
+              }
+            }
+          } catch (e) { /* prechatAPI not available on this deployment */ }
+          bs.utilAPI.launchChat();
+          return;
+        }
+      } catch (e) { /* fall through to DOM fallback */ }
+
+      // Fallback: classic Embedded Service Chat — click the help button
+      try {
+        const btn =
+          document.querySelector(".embeddedServiceHelpButton button") ||
+          document.querySelector('[class*="helpButton"] button') ||
+          document.querySelector("button.startButton");
+        if (btn) btn.click();
+      } catch (e2) {
+        console.error("Chat launch error:", e2);
+      }
+    }, 500);
   }
 
   get sparksDiscount() {

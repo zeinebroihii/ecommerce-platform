@@ -1,5 +1,8 @@
 import { LightningElement, api, track } from 'lwc';
 import isGuest from '@salesforce/user/isGuest';
+import getProductReviews       from '@salesforce/apex/ProductReviewController.getProductReviews';
+import checkPurchaseEligibility from '@salesforce/apex/ProductReviewController.checkPurchaseEligibility';
+import submitProductReview      from '@salesforce/apex/ProductReviewController.submitProductReview';
 
 export default class NexusProductDetailView extends LightningElement {
 
@@ -14,8 +17,16 @@ export default class NexusProductDetailView extends LightningElement {
     @track showClientTypeModal = false;
     @track showReviewForm      = false;
     @track _quoteData          = {};
-    @track _reviewData      = {};
-    @track _reviewRating    = 5;
+    @track _reviewData         = {};
+    @track _reviewRating       = 5;
+
+    // ── Dynamic review state ──
+    @track _reviews        = [];
+    @track _reviewStats    = null;
+    @track _eligibility    = { canReview: false, alreadyReviewed: false };
+    @track _reviewsLoading = false;
+    @track _submitLoading  = false;
+    @track _submitError    = null;
 
     /* ── Public product setter ── */
     @api
@@ -29,6 +40,14 @@ export default class NexusProductDetailView extends LightningElement {
         this.showClientTypeModal = false;
         this.showReviewForm      = false;
         this._scrollToTop        = true;
+        // Reset review state and load fresh data
+        this._reviews        = [];
+        this._reviewStats    = null;
+        this._eligibility    = { canReview: false, alreadyReviewed: false };
+        this._submitError    = null;
+        if (value && value.id) {
+            this._loadReviewData(value.id);
+        }
     }
 
     renderedCallback() {
@@ -37,6 +56,34 @@ export default class NexusProductDetailView extends LightningElement {
             const wrap = this.template.querySelector('.npdv-wrap');
             if (wrap) wrap.scrollTop = 0;
         }
+    }
+
+    /* ── Load reviews + eligibility ── */
+    _loadReviewData(productId) {
+        this._reviewsLoading = true;
+
+        const reviewsPromise = getProductReviews({ productId })
+            .then(result => {
+                this._reviews     = result.reviews || [];
+                this._reviewStats = result.stats;
+            })
+            .catch(() => {
+                this._reviews     = [];
+                this._reviewStats = null;
+            });
+
+        let eligPromise = Promise.resolve();
+        if (!isGuest) {
+            eligPromise = checkPurchaseEligibility({ productId })
+                .then(res => { this._eligibility = res; })
+                .catch(err => {
+                    console.error('[ProductReview] eligibility check failed:', err?.body?.message || err);
+                    this._eligibility = { canReview: false, alreadyReviewed: false };
+                });
+        }
+
+        Promise.all([reviewsPromise, eligPromise])
+            .finally(() => { this._reviewsLoading = false; });
     }
 
     /* ─────────────────────────────────────
@@ -114,7 +161,19 @@ export default class NexusProductDetailView extends LightningElement {
     ───────────────────────────────────── */
     get specEntries() {
         if (!this._product || !this._product.specs) return [];
-        return Object.entries(this._product.specs).map(([key, value]) => ({ key, value }));
+        const specs = this._product.specs;
+        // If specs is a pipe-separated string (e.g. "GPU: ... | CPU: ..."), parse it
+        if (typeof specs === 'string') {
+            return specs.split('|').map(entry => {
+                const colonIdx = entry.indexOf(':');
+                if (colonIdx === -1) return { key: entry.trim(), value: '' };
+                return {
+                    key:   entry.slice(0, colonIdx).trim(),
+                    value: entry.slice(colonIdx + 1).trim()
+                };
+            }).filter(e => e.key);
+        }
+        return Object.entries(specs).map(([key, value]) => ({ key, value }));
     }
 
     /* ─────────────────────────────────────
@@ -141,7 +200,7 @@ export default class NexusProductDetailView extends LightningElement {
     }
 
     /* ─────────────────────────────────────
-       DERIVED: review star selector
+       DERIVED: review star selector (form)
     ───────────────────────────────────── */
     get reviewStars() {
         return [1, 2, 3, 4, 5].map(v => ({
@@ -150,6 +209,83 @@ export default class NexusProductDetailView extends LightningElement {
                 ? 'npdv-rstar npdv-rstar--on'
                 : 'npdv-rstar'
         }));
+    }
+
+    /* ─────────────────────────────────────
+       DERIVED: dynamic review display
+    ───────────────────────────────────── */
+    get hasReviews() {
+        return this._reviews && this._reviews.length > 0;
+    }
+
+    get reviewCountLabel() {
+        const c = this._reviewStats ? this._reviewStats.totalCount : 0;
+        return `(${c} Review${c !== 1 ? 's' : ''})`;
+    }
+
+    get formattedAvgRating() {
+        if (!this._reviewStats || this._reviewStats.totalCount === 0) return '—';
+        return this._reviewStats.formattedRating || '—';
+    }
+
+    get reviewScoreSubLabel() {
+        if (!this._reviewStats || this._reviewStats.totalCount === 0) {
+            return 'No reviews yet';
+        }
+        return `Based on ${this._reviewStats.totalCount} review${this._reviewStats.totalCount !== 1 ? 's' : ''}`;
+    }
+
+    get verifiedPercentLabel() {
+        if (!this._reviewStats || this._reviewStats.totalCount === 0) return null;
+        return `${this._reviewStats.verifiedPercent}% of reviewers bought this product`;
+    }
+
+    get hasVerifiedInfo() {
+        return !!(this._reviewStats && this._reviewStats.totalCount > 0);
+    }
+
+    // Stars for the score card (score section)
+    get scoreStars() {
+        const avg = (this._reviewStats && this._reviewStats.totalCount > 0)
+            ? this._reviewStats.averageRating
+            : 0;
+        const rounded = Math.round(avg);
+        return [1, 2, 3, 4, 5].map(v => ({
+            val: v,
+            cls: v <= rounded ? 'npdv-star npdv-star--on' : 'npdv-star npdv-star--off'
+        }));
+    }
+
+    // Stars for the sidebar header
+    get sidebarStars() {
+        return this.scoreStars;
+    }
+
+    /* ─────────────────────────────────────
+       DERIVED: review eligibility
+    ───────────────────────────────────── */
+    get isAuthenticated() { return !isGuest; }
+
+    get canWriteReview() {
+        return !isGuest
+            && this._eligibility
+            && this._eligibility.canReview
+            && !this._eligibility.alreadyReviewed;
+    }
+
+    get showPurchaseRequiredMsg() {
+        // Authenticated user who has NOT purchased this product
+        return !isGuest
+            && !this._reviewsLoading
+            && this._eligibility
+            && !this._eligibility.canReview;
+    }
+
+    get showAlreadyReviewedMsg() {
+        return !isGuest
+            && !this._reviewsLoading
+            && this._eligibility
+            && this._eligibility.alreadyReviewed;
     }
 
     /* ─────────────────────────────────────
@@ -164,13 +300,6 @@ export default class NexusProductDetailView extends LightningElement {
         return this.activeTab === id
             ? 'npdv-tab npdv-tab--active'
             : 'npdv-tab';
-    }
-
-    /* ─────────────────────────────────────
-       AUTH HELPER
-    ───────────────────────────────────── */
-    get isAuthenticated() {
-        return !isGuest;
     }
 
     _requireAuth(mode = 'login') {
@@ -239,23 +368,13 @@ export default class NexusProductDetailView extends LightningElement {
     }
 
     /* ── Client type selection (B2B / B2C) ── */
-    handleQuoteTypeOpen() {
-        this.showClientTypeModal = true;
-    }
-
-    handleClientTypeClose() {
-        this.showClientTypeModal = false;
-    }
+    handleQuoteTypeOpen() { this.showClientTypeModal = true; }
+    handleClientTypeClose() { this.showClientTypeModal = false; }
 
     handleClientTypeBackdropClick(event) {
-        if (event.target === event.currentTarget) {
-            this.showClientTypeModal = false;
-        }
+        if (event.target === event.currentTarget) this.showClientTypeModal = false;
     }
-
-    handleClientTypeModalClick(event) {
-        event.stopPropagation();
-    }
+    handleClientTypeModalClick(event) { event.stopPropagation(); }
 
     handleClientTypeSelect(event) {
         const clientType = event.currentTarget.dataset.type;
@@ -267,32 +386,19 @@ export default class NexusProductDetailView extends LightningElement {
         }));
     }
 
-    handleQuoteRequest() {
-        this._quoteData    = {};
-        this.showQuoteForm = true;
-    }
-
-    handleQuoteClose() {
-        this.showQuoteForm = false;
-    }
+    handleQuoteRequest() { this._quoteData = {}; this.showQuoteForm = true; }
+    handleQuoteClose()   { this.showQuoteForm = false; }
 
     handleQuoteBackdropClick(event) {
-        if (event.target === event.currentTarget) {
-            this.showQuoteForm = false;
-        }
+        if (event.target === event.currentTarget) this.showQuoteForm = false;
     }
-
-    handleQuoteModalClick(event) {
-        event.stopPropagation();
-    }
+    handleQuoteModalClick(event) { event.stopPropagation(); }
 
     handleQuoteField(event) {
-        const field = event.currentTarget.dataset.field;
-        this._quoteData[field] = event.target.value;
+        this._quoteData[event.currentTarget.dataset.field] = event.target.value;
     }
 
     handleQuoteSubmit() {
-        console.log('Quote Request Submitted:', this._quoteData);
         this.showQuoteForm = false;
     }
 
@@ -302,24 +408,19 @@ export default class NexusProductDetailView extends LightningElement {
             this._requireAuth();
             return;
         }
-        this._reviewData   = {};
+        if (!this.canWriteReview) return;
+        this._reviewData   = { title: '', body: '' };
         this._reviewRating = 5;
+        this._submitError  = null;
         this.showReviewForm = true;
     }
 
-    handleReviewClose() {
-        this.showReviewForm = false;
-    }
+    handleReviewClose() { this.showReviewForm = false; }
 
     handleReviewBackdropClick(event) {
-        if (event.target === event.currentTarget) {
-            this.showReviewForm = false;
-        }
+        if (event.target === event.currentTarget) this.showReviewForm = false;
     }
-
-    handleReviewModalClick(event) {
-        event.stopPropagation();
-    }
+    handleReviewModalClick(event) { event.stopPropagation(); }
 
     handleReviewStar(event) {
         this._reviewRating = parseInt(event.currentTarget.dataset.val, 10);
@@ -327,12 +428,37 @@ export default class NexusProductDetailView extends LightningElement {
 
     handleReviewField(event) {
         const field = event.currentTarget.dataset.field;
-        this._reviewData[field] = event.target.value;
+        this._reviewData = { ...this._reviewData, [field]: event.target.value };
     }
 
     handleReviewSubmit() {
-        console.log('Review Submitted:', { rating: this._reviewRating, ...this._reviewData });
-        this.showReviewForm = false;
+        if (!this._reviewData.body || !this._reviewData.body.trim()) {
+            this._submitError = 'Please write your review before submitting.';
+            return;
+        }
+        this._submitLoading = true;
+        this._submitError   = null;
+
+        submitProductReview({
+            productId: this._product.id,
+            rating:    this._reviewRating,
+            title:     this._reviewData.title || '',
+            body:      this._reviewData.body
+        })
+        .then(() => {
+            this.showReviewForm    = false;
+            this._submitLoading    = false;
+            // Mark as reviewed; can no longer write again
+            this._eligibility      = { canReview: true, alreadyReviewed: true };
+            // Reload reviews to show the new one
+            this._loadReviewData(this._product.id);
+        })
+        .catch(err => {
+            this._submitLoading = false;
+            this._submitError   = (err && err.body && err.body.message)
+                ? err.body.message
+                : 'An error occurred. Please try again.';
+        });
     }
 
     /* ── Similar Products ── */

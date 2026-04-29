@@ -103,12 +103,12 @@ public class LeadConversionEmailAction {
       // ── Purple gradient header ──
       '<div style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);padding:32px 36px;">' +
       '<table style="width:100%;border-collapse:collapse;"><tr>' +
-      '<td><span style="font-size:22px;font-weight:800;color:#fff;letter-spacing:0.12em;">TALCORE</span>' +
+      '<td><span style="font-size:22px;font-weight:800;color:#fff;letter-spacing:0.12em;">NEXUS</span>' +
       '<br><span style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:0.06em;">IT &amp; Enterprise Solutions</span></td>' +
       '<td style="text-align:right;vertical-align:middle;">' +
       '<span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);' +
       'color:#fff;font-size:11px;font-weight:700;letter-spacing:0.06em;padding:5px 13px;border-radius:100px;">' +
-      '&#x1F389; BIENVENUE</span></td></tr></table>' +
+      '&#x1F389; WELCOME</span></td></tr></table>' +
       '</div>' +
       // ── White body ──
       '<div style="background:#fff;padding:36px;">' +
@@ -118,14 +118,14 @@ public class LeadConversionEmailAction {
       fullName +
       ',</p>' +
       '<p style="color:#475569;line-height:1.7;font-size:14px;margin:0 0 14px;">' +
-      'Nous vous remercions de votre confiance en <strong style="color:#6366f1;">TALCORE</strong>. ' +
-      'Nous sommes ravis de vous accueillir dans notre communaut\u00e9.</p>' +
+      'Thank you for your trust in <strong style="color:#6366f1;">Nexus</strong>. ' +
+      'We are delighted to welcome you to our community.</p>' +
       '<p style="color:#475569;line-height:1.7;font-size:14px;margin:0 0 28px;">' +
-      'Votre demande a \u00e9t\u00e9 valid\u00e9e par notre \u00e9quipe. ' +
-      'Votre espace personnel est d\u00e9sormais actif et pr\u00eat \u00e0 \u00eatre utilis\u00e9.</p>' +
+      'Your request has been validated by our team. ' +
+      'Your personal portal is now active and ready to use.</p>' +
       // ── Login info card (indigo accent) ──
       '<div style="background:#f8fafc;border-left:4px solid #6366f1;border-radius:0 12px 12px 0;padding:18px 24px;margin:0 0 18px;">' +
-      '<div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Identifiant de connexion</div>' +
+      '<div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Login Credentials</div>' +
       '<table style="border-collapse:collapse;">' +
       '<tr>' +
       '<td style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding-right:16px;">Email</td>' +
@@ -136,16 +136,15 @@ public class LeadConversionEmailAction {
       '</div>' +
       // ── Password card (purple accent) ──
       '<div style="background:#faf5ff;border-left:4px solid #7c3aed;border-radius:0 12px 12px 0;padding:18px 24px;margin:0 0 28px;">' +
-      '<div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Mot de passe — Premi\u00e8re connexion</div>' +
+      '<div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Password — First Login</div>' +
       '<p style="margin:0 0 14px;color:#334155;font-size:14px;line-height:1.6;">' +
-      'Cliquez sur le bouton ci-dessous pour d\u00e9finir votre mot de passe et acc\u00e9der ' +
-      '\u00e0 votre espace pour la premi\u00e8re fois :</p>' +
+      'Click the button below to set your password and access your portal for the first time:</p>' +
       '<div style="text-align:center;">' +
       '<a href="' +
       pwdUrl +
       '" style="background:#7c3aed;color:#fff;text-decoration:none;' +
       'padding:11px 28px;border-radius:8px;font-weight:700;font-size:13px;display:inline-block;">' +
-      'D\u00e9finir mon mot de passe &rarr;</a>' +
+      'Set my password &rarr;</a>' +
       '</div>' +
       '</div>' +
       // ── Main CTA ──
@@ -154,18 +153,18 @@ public class LeadConversionEmailAction {
       url +
       '" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;' +
       'text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block;">' +
-      'Acc\u00e9der \u00e0 mon espace TALCORE &rarr;</a>' +
+      'Access my Nexus portal &rarr;</a>' +
       '</div>' +
       // ── Support line ──
       '<div style="border-top:1px solid #e2e8f0;padding-top:20px;">' +
       '<p style="color:#94a3b8;font-size:13px;text-align:center;margin:0;">' +
-      'Des questions ? Contactez notre \u00e9quipe support &mdash; nous sommes l\u00e0 pour vous.</p>' +
+      'Questions? Contact our support team &mdash; we are here to help.</p>' +
       '</div>' +
       '</div>' +
       // ── Dark footer ──
       '<div style="background:#1e293b;padding:18px 36px;text-align:center;">' +
-      '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 TALCORE &bull; IT &amp; Enterprise Solutions</p>' +
-      '<p style="color:#475569;font-size:11px;margin:0;">Ne pas r\u00e9pondre \u00e0 cet email automatique</p>' +
+      '<p style="color:#64748b;font-size:12px;margin:0 0 4px;">&copy; 2026 Nexus &bull; IT &amp; Enterprise Solutions</p>' +
+      '<p style="color:#475569;font-size:11px;margin:0;">Do not reply to this automated email</p>' +
       '</div>' +
       '</div></body></html>';
   }

@@ -9,6 +9,8 @@ import processQuoteDecision from "@salesforce/apex/QuoteController.processQuoteD
 import requestQuote from "@salesforce/apex/QuoteController.requestQuote";
 import getSignedContractBase64 from "@salesforce/apex/QuoteController.getSignedContractBase64";
 import submitCounterOffer from "@salesforce/apex/QuoteController.submitCounterOffer";
+import getQuoteSettings from "@salesforce/apex/NexusQuoteController.getQuoteSettings";
+import postCustomerMessage from "@salesforce/apex/NexusQuoteController.postCustomerMessage";
 
 // ── Status maps ──────────────────────────────────────────────────────────────
 const PROB_MAP = {
@@ -46,6 +48,32 @@ export default class NexusQuotationSystem extends LightningElement {
   @track _quotesWireResult;
   @track _sfDataLoaded = false;
 
+  // ── Quote settings (CMT — fallback when no per-quote terms stored) ────────
+  @track _quoteSettings = null;
+
+  @wire(getQuoteSettings)
+  wiredSettings({ data }) {
+    if (data) this._quoteSettings = data;
+  }
+
+  // Per-quote T&Cs: prefer what was set in the builder and stored on the record;
+  // fall back to the CMT global default only when the quote has none.
+  get generalTerms() {
+    const q = this.selectedQuote;
+    if (q && q.generalTerms) return q.generalTerms;
+    return this._quoteSettings ? this._quoteSettings.generalTerms : null;
+  }
+  get hasGeneralTerms() {
+    return !!this.generalTerms;
+  }
+  get signatureDeadlineLabel() {
+    const q = this.selectedQuote;
+    const days = q && q.signatureDeadlineDays != null
+      ? q.signatureDeadlineDays
+      : (this._quoteSettings ? this._quoteSettings.signatureDeadlineDays : 14);
+    return days ? days + " days after contract is sent" : null;
+  }
+
   // ── List state ────────────────────────────────────────────────────────────
   @track filter = "All";
 
@@ -74,6 +102,11 @@ export default class NexusQuotationSystem extends LightningElement {
   @track _counterPrice = "";
   @track _counterMessage = "";
   @track _counterSubmitting = false;
+
+  // ── Unread message tracking ───────────────────────────────────────────────
+  @track _seenCounts = {};      // quoteId → message count when Messages tab last opened
+  @track _floatingNotif = null; // { quoteId, quoteName } when new sales msg arrives
+  _prevMsgCounts = {};          // quoteId → count on last wire result (not reactive)
 
   // ── New quote request form ─────────────────────────────────────────────────
   @track _showNewForm = false;
@@ -112,6 +145,21 @@ export default class NexusQuotationSystem extends LightningElement {
     this._quotesWireResult = result;
     if (result.data) {
       this._sfDataLoaded = true;
+      // Detect new incoming sales messages for the floating notification
+      result.data.forEach((q) => {
+        if (!q.messageThread) return;
+        let msgs;
+        try { msgs = JSON.parse(q.messageThread); } catch (e) { return; }
+        const prev = this._prevMsgCounts[q.quoteId] || 0;
+        const curr = msgs.length;
+        if (prev > 0 && curr > prev) {
+          const newest = msgs[curr - 1];
+          if (newest && newest.sender === "sales" && this._selectedQuoteId !== q.quoteId) {
+            this._floatingNotif = { quoteId: q.quoteId, quoteName: q.name };
+          }
+        }
+        this._prevMsgCounts[q.quoteId] = curr;
+      });
       this._quotes = result.data;
       if (this._needsRefresh) {
         this._needsRefresh = false;
@@ -201,7 +249,8 @@ export default class NexusQuotationSystem extends LightningElement {
           badgeCls: BADGE_MAP[q.status] || "nqs-badge nqs-badge-secondary",
           displayTotal: q.formattedTotal || "—",
           displayDate: q.expirationDate || "—",
-          probWidth: "width:" + prob + "%"
+          probWidth: "width:" + prob + "%",
+          hasUnreadMsg: this._salesUnreadFor(q.quoteId) > 0
         };
       });
   }
@@ -211,6 +260,32 @@ export default class NexusQuotationSystem extends LightningElement {
   }
   get hasQuotes() {
     return this.filteredQuotes.length > 0;
+  }
+
+  // ── Unread message helpers ─────────────────────────────────────────────────
+  _salesUnreadFor(quoteId) {
+    const q = this.activeQuotes.find((r) => r.quoteId === quoteId);
+    if (!q || !q.messageThread) return 0;
+    const msgs = this._parseThread(q.messageThread);
+    let lastCustIdx = -1;
+    msgs.forEach((m, i) => {
+      if (m.sender === "customer" || m.sender === "user") lastCustIdx = i;
+    });
+    return msgs.slice(lastCustIdx + 1).filter((m) => m.sender === "sales").length;
+  }
+
+  get selectedQuoteUnread() {
+    if (!this._selectedQuoteId) return 0;
+    const raw = this._salesUnreadFor(this._selectedQuoteId);
+    const seen = this._seenCounts[this._selectedQuoteId] || 0;
+    return Math.max(0, raw - seen);
+  }
+  get hasUnreadMessages() {
+    return this.selectedQuoteUnread > 0;
+  }
+  get unreadBadgeLabel() {
+    const u = this.selectedQuoteUnread;
+    return u > 9 ? "9+" : String(u);
   }
 
   // ── Computed: selected quote ───────────────────────────────────────────────
@@ -282,7 +357,20 @@ export default class NexusQuotationSystem extends LightningElement {
       approvalStatus: q.approvalStatus || "Not Required",
       needsApproval: q.approvalStatus === "Pending Approval",
       isApproved: q.approvalStatus === "Approved",
-      volumeDiscountApplied: q.volumeDiscountApplied || false
+      volumeDiscountApplied: q.volumeDiscountApplied || false,
+      paymentTerms: q.paymentTerms || "Net 30",
+      // ── Per-quote terms set in builder ───────────────────────────────────
+      generalTerms: q.generalTerms || null,
+      signatureDeadlineDays: q.signatureDeadlineDays || null,
+      // ── One-time vs recurring split ──────────────────────────────────────
+      hasOneTime: q.oneTimeTotal != null && q.oneTimeTotal > 0,
+      hasRecurring: q.recurringTotal != null && q.recurringTotal > 0,
+      formattedOneTime:
+        q.oneTimeTotal != null ? this._fmtCurrency(q.oneTimeTotal) : null,
+      formattedRecurring:
+        q.recurringTotal != null ? this._fmtCurrency(q.recurringTotal) : null,
+      formattedMrr: q.mrr != null ? this._fmtCurrency(q.mrr) : null,
+      hasMrr: q.mrr != null && q.mrr > 0
     };
   }
 
@@ -365,15 +453,29 @@ export default class NexusQuotationSystem extends LightningElement {
 
     // Real Salesforce data — use lineItems from QuoteController wrapper
     if (!q.isMock && q.lineItems && q.lineItems.length > 0) {
-      return q.lineItems.map((li, i) => ({
-        key: String(i),
-        productName: li.productName || "—",
-        productFamily: li.productFamily || "—",
-        productImage: null,
-        quantity: li.quantity,
-        unitPrice: this._fmtCurrency(li.unitPrice || li.listPrice),
-        totalPrice: this._fmtCurrency(li.netTotal)
-      }));
+      return q.lineItems.map((li, i) => {
+        const isRecurring = li.chargeType === "Recurring";
+        return {
+          key: String(i),
+          productName: li.productName || "—",
+          productFamily: li.productFamily || "—",
+          productImage: null,
+          hasImage: false,
+          quantity: li.quantity,
+          unitPrice: this._fmtCurrency(li.unitPrice || li.listPrice),
+          totalPrice: this._fmtCurrency(li.netTotal),
+          chargeType: li.chargeType || "One-time",
+          billingFrequency: li.billingFrequency || "N/A",
+          isRecurring,
+          chargeTypeBadgeCls: isRecurring
+            ? "nqs-charge-badge nqs-charge-recurring"
+            : "nqs-charge-badge nqs-charge-onetime",
+          billingLabel:
+            isRecurring && li.billingFrequency && li.billingFrequency !== "N/A"
+              ? li.billingFrequency
+              : null
+        };
+      });
     }
 
     // Mock data fallback — use versions structure
@@ -383,11 +485,11 @@ export default class NexusQuotationSystem extends LightningElement {
       key: item.product.id || String(i),
       productName: item.product.name,
       productFamily: item.product.family,
-      productImage: item.product.image,
+      productImage: item.product.image || null,
+      hasImage: !!item.product.image,
       quantity: item.quantity,
-      unitPrice: "$" + item.product.price.toLocaleString("fr-FR"),
-      totalPrice:
-        "$" + (item.product.price * item.quantity).toLocaleString("fr-FR")
+      unitPrice: this._fmtCurrency(item.product.price),
+      totalPrice: this._fmtCurrency(item.product.price * item.quantity)
     }));
   }
 
@@ -469,22 +571,17 @@ export default class NexusQuotationSystem extends LightningElement {
     return this._messages.length > 0;
   }
   get formattedMessages() {
-    return this._messages.map((m) => ({
-      ...m,
-      rowCls:
-        m.sender === "user" ? "nqs-msg-row nqs-msg-row-user" : "nqs-msg-row",
-      bubbleCls:
-        m.sender === "user"
-          ? "nqs-bubble nqs-bubble-user"
-          : "nqs-bubble nqs-bubble-rep",
-      timeCls:
-        m.sender === "user" ? "nqs-msg-time nqs-msg-time-user" : "nqs-msg-time",
-      avatarCls:
-        m.sender === "user"
-          ? "nqs-avatar nqs-avatar-user"
-          : "nqs-avatar nqs-avatar-rep",
-      avatarInitial: m.sender === "user" ? "M" : "S"
-    }));
+    return this._messages.map((m) => {
+      const isCustomer = m.sender === "customer" || m.sender === "user";
+      return {
+        ...m,
+        rowCls: isCustomer ? "nqs-msg-row nqs-msg-row-user" : "nqs-msg-row",
+        bubbleCls: isCustomer ? "nqs-bubble nqs-bubble-user" : "nqs-bubble nqs-bubble-rep",
+        timeCls: isCustomer ? "nqs-msg-time nqs-msg-time-user" : "nqs-msg-time",
+        avatarCls: isCustomer ? "nqs-avatar nqs-avatar-user" : "nqs-avatar nqs-avatar-rep",
+        avatarInitial: isCustomer ? "C" : "S"
+      };
+    });
   }
 
   // ── Computed: misc ─────────────────────────────────────────────────────────
@@ -507,7 +604,7 @@ export default class NexusQuotationSystem extends LightningElement {
     return this._formSubmitting;
   }
   get formSubmitLabel() {
-    return this._formSubmitting ? "Envoi en cours..." : "Soumettre la Demande";
+    return this._formSubmitting ? "Submitting..." : "Submit Request";
   }
   get messageInput() {
     return this._messageInput;
@@ -539,12 +636,9 @@ export default class NexusQuotationSystem extends LightningElement {
     this._rejectReason = "";
     this._expandedVersion = null;
 
-    // Seed messages from quote data (mock initial conversation)
+    // Seed messages from the persisted thread JSON on the quote
     const q = this.activeQuotes.find((r) => r.quoteId === id);
-    this._messages =
-      q && q.messages
-        ? q.messages.map((m, i) => ({ ...m, id: m.id || String(i) }))
-        : [];
+    this._messages = this._parseThread(q ? q.messageThread : null);
     this._msgCounter = this._messages.length;
     this._messageInput = "";
   }
@@ -561,6 +655,11 @@ export default class NexusQuotationSystem extends LightningElement {
   }
   handleTabMessages() {
     this._modalTab = "messages";
+    const unread = this._salesUnreadFor(this._selectedQuoteId);
+    this._seenCounts = { ...this._seenCounts, [this._selectedQuoteId]: unread };
+    if (this._floatingNotif && this._floatingNotif.quoteId === this._selectedQuoteId) {
+      this._floatingNotif = null;
+    }
   }
   handleTabHistory() {
     this._modalTab = "history";
@@ -592,37 +691,73 @@ export default class NexusQuotationSystem extends LightningElement {
     this._sendMessage();
   }
 
+  handleNotifView(e) {
+    const id = e.currentTarget.dataset.id;
+    const q = this.activeQuotes.find((r) => r.quoteId === id);
+    if (!q) return;
+    this._selectedQuoteId = id;
+    this._messages = this._parseThread(q.messageThread);
+    this._msgCounter = this._messages.length;
+    this._modalTab = "messages";
+    const unread = this._salesUnreadFor(id);
+    this._seenCounts = { ...this._seenCounts, [id]: unread };
+    this._floatingNotif = null;
+  }
+
+  handleNotifDismiss() {
+    this._floatingNotif = null;
+  }
+
+  _parseThread(threadJson) {
+    if (!threadJson) return [];
+    try {
+      const parsed = JSON.parse(threadJson);
+      return Array.isArray(parsed)
+        ? parsed.map((m, i) => ({
+            ...m,
+            id: m.id || String(i),
+            time: m.time
+              ? new Date(m.time).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })
+              : ""
+          }))
+        : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   _sendMessage() {
     const txt = this._messageInput.trim();
-    if (!txt) return;
-    this._messages = [
-      ...this._messages,
-      {
-        id: String(++this._msgCounter),
-        sender: "user",
-        text: txt,
-        time: new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit"
-        })
-      }
-    ];
+    if (!txt || !this._selectedQuoteId) return;
+
+    const optimistic = {
+      id: "opt-" + String(++this._msgCounter),
+      sender: "customer",
+      text: txt,
+      time: new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    };
+    this._messages = [...this._messages, optimistic];
     this._messageInput = "";
-    // eslint-disable-next-line @lwc/lwc/no-async-operation
-    setTimeout(() => {
-      this._messages = [
-        ...this._messages,
-        {
-          id: String(++this._msgCounter),
-          sender: "rep",
-          text: "Thank you for your message. Our sales team will get back to you shortly.",
-          time: new Date().toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit"
-          })
-        }
-      ];
-    }, 1500);
+    const inputEl = this.template.querySelector(".nqs-msg-input");
+    if (inputEl) inputEl.value = "";
+
+    postCustomerMessage({ quoteId: this._selectedQuoteId, messageText: txt }).catch(
+      () => {
+        // Remove optimistic message on failure
+        this._messages = this._messages.filter((m) => m.id !== optimistic.id);
+        this._toast(
+          "Message Failed",
+          "Could not send your message. Please try again.",
+          "error"
+        );
+      }
+    );
   }
 
   // ── Handlers: PDF ─────────────────────────────────────────────────────────
@@ -637,13 +772,13 @@ export default class NexusQuotationSystem extends LightningElement {
   }
   _downloadSignedPDF(quoteId) {
     if (!quoteId) return;
-    this._toast("PDF", "Récupération du contrat signé...", "info");
+    this._toast("PDF", "Retrieving signed contract...", "info");
     getSignedContractBase64({ quoteId })
       .then((result) => {
         if (!result || !result.base64) {
           this._toast(
             "PDF",
-            "Aucun contrat signé disponible pour ce devis.",
+            "No signed contract available for this quote.",
             "warning"
           );
           return;
@@ -658,7 +793,7 @@ export default class NexusQuotationSystem extends LightningElement {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = result.filename || "Contrat_Signe.pdf";
+        a.download = result.filename || "Signed_Contract.pdf";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -666,7 +801,7 @@ export default class NexusQuotationSystem extends LightningElement {
       })
       .catch((err) => {
         console.error("PDF download error", err);
-        this._toast("PDF", "Impossible de télécharger le contrat.", "error");
+        this._toast("PDF", "Unable to download the contract.", "error");
       });
   }
 
@@ -678,8 +813,8 @@ export default class NexusQuotationSystem extends LightningElement {
       this._updateMockStatus(this._selectedQuoteId, "Accepted");
       this._selectedQuoteId = null;
       this._toast(
-        "Devis Accepté ✓",
-        "Votre acceptation a été enregistrée.",
+        "Quote Accepted ✓",
+        "Your acceptance has been recorded.",
         "success"
       );
       return;
@@ -697,8 +832,8 @@ export default class NexusQuotationSystem extends LightningElement {
         const acceptedName = this.selectedQuote ? this.selectedQuote.name : "";
         this._selectedQuoteId = null;
         this._toast(
-          "Devis Accepté ✓",
-          "Votre acceptation a été enregistrée. Notre équipe va vous préparer le contrat.",
+          "Quote Accepted ✓",
+          "Your acceptance has been recorded. Our team will prepare your contract.",
           "success"
         );
         // Show testimonial popup after a brief delay so the toast is seen first
@@ -712,8 +847,8 @@ export default class NexusQuotationSystem extends LightningElement {
       .catch((err) => {
         this._isDeciding = false;
         this._toast(
-          "Erreur",
-          err.body?.message || "Une erreur est survenue.",
+          "Error",
+          err.body?.message || "An unexpected error occurred.",
           "error"
         );
       });
@@ -796,8 +931,8 @@ export default class NexusQuotationSystem extends LightningElement {
     const price = parseFloat(this._counterPrice);
     if (!price || price <= 0) {
       this._toast(
-        "Montant invalide",
-        "Veuillez saisir un prix de contre-offre valide.",
+        "Invalid Amount",
+        "Please enter a valid counter-offer price.",
         "error"
       );
       return;
@@ -813,20 +948,20 @@ export default class NexusQuotationSystem extends LightningElement {
         this._showCounterForm = false;
         if (outcome === "ACCEPTED") {
           this._toast(
-            "Contre-offre acceptée automatiquement",
-            "Votre prix a été accepté. Le contrat est en cours de préparation.",
+            "Counter Offer Automatically Accepted",
+            "Your price has been accepted. The contract is being prepared.",
             "success"
           );
         } else if (outcome === "COUNTERED") {
           this._toast(
-            "Nouvelle proposition reçue",
-            "Notre système a calculé un prix intermédiaire. Consultez votre devis mis à jour.",
+            "New Proposal Received",
+            "Our system calculated an intermediate price. Check your updated quote.",
             "info"
           );
         } else {
           this._toast(
-            "Contre-offre refusée",
-            "Votre prix est trop éloigné du seuil minimal. Vous pouvez accepter le devis ou contacter notre équipe.",
+            "Counter Offer Rejected",
+            "Your price is too far from the minimum threshold. You can accept the quote or contact our team.",
             "warning"
           );
         }
@@ -835,16 +970,16 @@ export default class NexusQuotationSystem extends LightningElement {
       .catch((err) => {
         this._counterSubmitting = false;
         this._toast(
-          "Erreur",
-          err.body?.message || "Une erreur est survenue.",
+          "Error",
+          err.body?.message || "An unexpected error occurred.",
           "error"
         );
       });
   }
   get counterSubmitLabel() {
     return this._counterSubmitting
-      ? "Envoi en cours…"
-      : "Soumettre ma contre-offre";
+      ? "Submitting…"
+      : "Submit Counter Offer";
   }
 
   // ── Handlers: new quote form ───────────────────────────────────────────────

@@ -2,6 +2,17 @@
   display: block;
 }
 
+/* Hide the default Salesforce Embedded Messaging button — we use our own FAB */
+.embeddedServiceHelpButton,
+.helpButton,
+.fab-container {
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+}
+
 /* ── FAB (floating action button) ───────────────────────────────────────── */
 .nsc-fab {
   position: fixed;

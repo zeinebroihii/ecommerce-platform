@@ -64,9 +64,9 @@
                 <div class="npcart-spinner">
                   <div class="npcart-spinner-ring"></div>
                 </div>
-                <h3 class="npcart-modal-h">Salesforce Flow Active</h3>
+                <h3 class="npcart-modal-h">AI is building your quote...</h3>
                 <p class="npcart-modal-sub">
-                  Generating Quote Object &amp; PDF...
+                  Applying volume pricing, AI scoring &amp; floor calculation
                 </p>
               </div>
             </template>
@@ -84,10 +84,10 @@
                       &#x2715;
                     </button>
                   </div>
-                  <h3 class="npcart-modal-h">Demande échouée</h3>
+                  <h3 class="npcart-modal-h">Request Failed</h3>
                   <p class="npcart-modal-sub npcart-error-msg">{quoteError}</p>
                   <button class="npcart-done-btn" onclick={handleCloseModal}>
-                    Fermer
+                    Close
                   </button>
                 </div>
               </template>
@@ -95,7 +95,13 @@
               <template if:false={hasError}>
                 <div class="npcart-modal-result">
                   <div class="npcart-modal-top">
-                    <div class="npcart-modal-check">&#10003;</div>
+                    <div class="npcart-modal-ai-badge">
+                      <lightning-icon
+                        icon-name="utility:sparkles"
+                        size="x-small"
+                        variant="inverse"
+                      ></lightning-icon>
+                    </div>
                     <button
                       class="npcart-modal-close"
                       onclick={handleCloseModal}
@@ -103,31 +109,41 @@
                       &#x2715;
                     </button>
                   </div>
-                  <h3 class="npcart-modal-h">Demande envoyée !</h3>
+                  <h3 class="npcart-modal-h">Your quote is ready!</h3>
+                  <p class="npcart-modal-sub npcart-modal-sub--strong">
+                    {generatedQuoteName}
+                  </p>
                   <p class="npcart-modal-sub">
-                    Notre équipe commerciale va examiner votre demande et vous
-                    envoyer un devis officiel sous peu.
+                    AI-generated &amp; presented instantly. Our agent is ready
+                    to negotiate pricing and terms with you right now.
                   </p>
                   <div class="npcart-modal-stats">
                     <div class="npcart-stat">
-                      <div class="npcart-stat-label">Statut</div>
-                      <div class="npcart-stat-value npcart-stat--blue">
-                        En cours d'examen
+                      <div class="npcart-stat-label">Status</div>
+                      <div class="npcart-stat-value npcart-stat--green">
+                        Presented
                       </div>
                     </div>
                     <div class="npcart-stat">
-                      <div class="npcart-stat-label">Délai estimé</div>
-                      <div class="npcart-stat-value">24 – 48h</div>
+                      <div class="npcart-stat-label">Response time</div>
+                      <div class="npcart-stat-value npcart-stat--green">
+                        Instant
+                      </div>
                     </div>
                   </div>
-                  <button class="npcart-quotes-btn" onclick={handleGoToQuotes}>
-                    Voir mes devis →
+                  <button class="npcart-quotes-btn npcart-quotes-btn--ai" onclick={handleGoToQuotes}>
+                    <lightning-icon
+                      icon-name="utility:einstein"
+                      size="x-small"
+                      variant="inverse"
+                    ></lightning-icon>
+                    Negotiate with AI →
                   </button>
                   <button
                     class="npcart-done-btn npcart-done-ghost"
                     onclick={handleCloseModal}
                   >
-                    Fermer
+                    View later
                   </button>
                 </div>
               </template>

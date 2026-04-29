@@ -1,5 +1,5 @@
 import { LightningElement, track, wire } from "lwc";
-import getApprovedTestimonials from "@salesforce/apex/TestimonialController.getApprovedTestimonials";
+import getCombinedTestimonials from "@salesforce/apex/TestimonialController.getCombinedTestimonials";
 
 const FALLBACK = [
   {
@@ -45,7 +45,7 @@ export default class NexusReviews extends LightningElement {
   @track _page = 0;
   @track _data = null; // null = loading; [] = loaded empty; [...] = real data
 
-  @wire(getApprovedTestimonials)
+  @wire(getCombinedTestimonials)
   wiredTestimonials({ error, data }) {
     if (data) {
       this._data = data.length > 0 ? data : [];

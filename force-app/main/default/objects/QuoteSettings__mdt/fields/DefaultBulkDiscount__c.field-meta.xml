@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DefaultBulkDiscount__c</fullName>
+    <description>Default bulk discount percentage applied to all B2B quotes (e.g. 10 for 10%).</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Default Bulk Discount (%)</label>
+    <precision>5</precision>
+    <scale>2</scale>
+    <type>Number</type>
+</CustomField>

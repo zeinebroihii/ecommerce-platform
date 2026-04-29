@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomMetadata
+  xmlns="http://soap.sforce.com/2006/04/metadata"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+>
+    <label>Default</label>
+    <protected>false</protected>
+    <values>
+        <field>DefaultValidityDays__c</field>
+        <value xsi:type="xsd:double">30</value>
+    </values>
+    <values>
+        <field>DefaultPaymentTerms__c</field>
+        <value xsi:type="xsd:string">Net 30</value>
+    </values>
+    <values>
+        <field>DefaultBulkDiscount__c</field>
+        <value xsi:type="xsd:double">10</value>
+    </values>
+    <values>
+        <field>SignatureDeadlineDays__c</field>
+        <value xsi:type="xsd:double">14</value>
+    </values>
+    <values>
+        <field>GeneralTermsAndConditions__c</field>
+        <value xsi:type="xsd:string">This quote is valid for the period indicated above. Prices are exclusive of applicable taxes. Payment is due within the specified payment terms from the invoice date. Nexus reserves the right to withdraw this offer if not accepted before the expiry date. All recurring services are billed in advance on the agreed billing cycle. Either party may terminate recurring services with 30 days written notice. This document constitutes a binding commercial proposal subject to final contract execution.</value>
+    </values>
+</CustomMetadata>

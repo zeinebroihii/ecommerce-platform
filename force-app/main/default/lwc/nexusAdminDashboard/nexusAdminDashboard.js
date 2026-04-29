@@ -21,12 +21,18 @@ export default class NexusAdminDashboard extends NavigationMixin(
   get isQuotes() {
     return this.activeTab === "quotes";
   }
+  get isPackages() {
+    return this.activeTab === "packages";
+  }
 
   get tabCrmClass() {
     return this.activeTab === "crm" ? "nad-tab nad-tab-active" : "nad-tab";
   }
   get tabQuoteClass() {
     return this.activeTab === "quotes" ? "nad-tab nad-tab-active" : "nad-tab";
+  }
+  get tabPackagesClass() {
+    return this.activeTab === "packages" ? "nad-tab nad-tab-active" : "nad-tab";
   }
 
   handleTabClick(event) {

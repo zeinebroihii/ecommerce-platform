@@ -130,6 +130,33 @@ export default class NexusStockWarRoom extends LightningElement {
     return !this.isLoading && this._items.length === 0;
   }
 
+  // ── Stat card active-state CSS classes ────────────────────────────────────
+  get criticalCardCls() {
+    return this.activeFilter === 'Critical'
+      ? 'nswr-stat-card nswr-stat-active'
+      : 'nswr-stat-card';
+  }
+  get atRiskCardCls() {
+    return this.activeFilter === 'At Risk'
+      ? 'nswr-stat-card nswr-stat-active'
+      : 'nswr-stat-card';
+  }
+  get healthyCardCls() {
+    return this.activeFilter === 'Healthy'
+      ? 'nswr-stat-card nswr-stat-active'
+      : 'nswr-stat-card';
+  }
+  get overstockCardCls() {
+    return this.activeFilter === 'Overstock'
+      ? 'nswr-stat-card nswr-stat-active'
+      : 'nswr-stat-card';
+  }
+  get allBtnCls() {
+    return this.activeFilter === 'All'
+      ? 'nswr-all-btn nswr-all-active'
+      : 'nswr-all-btn';
+  }
+
   // ── Item enrichment ────────────────────────────────────────────────────────
 
   _enrichItem(i) {
@@ -215,7 +242,16 @@ export default class NexusStockWarRoom extends LightningElement {
       quoteValueLabel: formatCurrency(i.relatedQuoteValue),
       aiSummaryShort,
       aiExpanded: expanded,
-      aiExpandLabel: expanded ? "▲ Less" : "▼ More"
+      aiExpandLabel: expanded ? "▲ Less" : "▼ More",
+      initials: (i.productName || "?")[0].toUpperCase(),
+      thumbCls:
+        risk === "Critical"
+          ? "nswr-thumb nswr-thumb-critical"
+          : risk === "At Risk"
+            ? "nswr-thumb nswr-thumb-atrisk"
+            : risk === "Overstock"
+              ? "nswr-thumb nswr-thumb-overstock"
+              : "nswr-thumb nswr-thumb-healthy"
     };
   }
 
