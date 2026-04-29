@@ -6,20 +6,31 @@
     <label>Approval Status</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
-    <!-- v2 -->
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
-            <value><fullName>Not Required</fullName><default
-        >true</default><label>Not Required</label></value>
-            <value><fullName>Pending Approval</fullName><default
-        >false</default><label>Pending Approval</label></value>
-            <value><fullName>Approved</fullName><default>false</default><label
-        >Approved</label></value>
-            <value><fullName>Rejected by Manager</fullName><default
-        >false</default><label>Rejected by Manager</label></value>
+            <value>
+                <fullName>Not Required</fullName>
+                <default>true</default>
+                <label>Not Required</label>
+            </value>
+            <value>
+                <fullName>Pending Approval</fullName>
+                <default>false</default>
+                <label>Pending Approval</label>
+            </value>
+            <value>
+                <fullName>Approved</fullName>
+                <default>false</default>
+                <label>Approved</label>
+            </value>
+            <value>
+                <fullName>Rejected by Manager</fullName>
+                <default>false</default>
+                <label>Rejected by Manager</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

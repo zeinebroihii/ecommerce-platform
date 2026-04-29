@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Total_Contract_Days__c</fullName>
+    <description
+  >Total duration of the contract in days. Defaults to 365 if dates not set.</description>
+    <externalId>false</externalId>
+    <formula
+  >IF(Contract_End_Date__c != null &amp;&amp; Contract_Start_Date__c != null, Contract_End_Date__c - Contract_Start_Date__c, 365)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Total Contract Days</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MRR_Contribution__c</fullName>
+    <description
+  >Monthly Recurring Revenue contribution of this line. Recurring-Monthly = NetTotal. Recurring-Annual = NetTotal/12. One-time = 0.</description>
+    <formula
+  >IF(TEXT(Product_Type__c) = &quot;Recurring&quot;, IF(TEXT(Billing_Frequency__c) = &quot;Annual&quot;, NetTotal__c / 12, NetTotal__c), 0)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>MRR Contribution</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

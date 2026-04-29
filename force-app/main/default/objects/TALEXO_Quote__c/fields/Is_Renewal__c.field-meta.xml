@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Is_Renewal__c</fullName>
-    <description>True when this quote is an auto-generated renewal of an expiring contract.</description>
-    <label>Is Renewal</label>
-    <type>Checkbox</type>
     <defaultValue>false</defaultValue>
+    <description
+  >True when this quote is an auto-generated renewal of an expiring contract.</description>
+    <label>Is Renewal</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
 </CustomField>

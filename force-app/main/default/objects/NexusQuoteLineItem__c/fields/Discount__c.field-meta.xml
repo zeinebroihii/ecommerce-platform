@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Discount__c</fullName>
-    <label>Discount (%)</label>
-    <type>Percent</type>
+    <description>Percentage discount applied</description>
+    <label>Discount Percent</label>
     <precision>5</precision>
+    <required>false</required>
     <scale>2</scale>
-    <defaultValue>10</defaultValue>
-    <description
-  >Line-level discount percentage (mirrors Quote BulkDiscount__c).</description>
+    <trackTrending>false</trackTrending>
+    <type>Percent</type>
 </CustomField>

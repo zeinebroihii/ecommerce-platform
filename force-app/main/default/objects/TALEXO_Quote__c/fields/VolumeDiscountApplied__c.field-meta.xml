@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>VolumeDiscountApplied__c</fullName>
+    <defaultValue>false</defaultValue>
     <description
   >True when the system automatically applied a volume-based discount on this quote.</description>
     <label>Volume Discount Applied</label>
-    <defaultValue>false</defaultValue>
-    <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
-    <!-- v2 -->
 </CustomField>

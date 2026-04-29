@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>NetTotal__c</fullName>
-    <description>Quantity x UnitPrice after discount</description>
-    <label>Net Total</label>
+    <fullName>Prorated_Net_Total__c</fullName>
+    <description
+  >Net total adjusted for remaining contract term. Populated by ContractAmendmentService. Equals NetTotal__c * proration factor.</description>
+    <label>Prorated Net Total</label>
     <precision>18</precision>
     <required>false</required>
     <scale>2</scale>
