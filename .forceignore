@@ -17,3 +17,7 @@ package.xml
 # Standard Salesforce apps - cannot be deployed via Metadata API
 **/applications/standard__*.app-meta.xml
 
+# Features not available in QA/Prod DE orgs
+**/flows/NexusAgentforceRoutingFlow.flow-meta.xml
+**/brandingSets/NexusBranding.brandingSet-meta.xml
+
