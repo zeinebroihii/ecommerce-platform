@@ -21,3 +21,18 @@ package.xml
 **/flows/NexusAgentforceRoutingFlow.flow-meta.xml
 **/brandingSets/NexusBranding.brandingSet-meta.xml
 
+# Agentforce bots - require Einstein license not in DE orgs
+**/bots/**
+
+# Standard value sets - cannot be inserted via API
+**/standardValueSets/ProductFamily.standardValueSet-meta.xml
+
+# Guest User profile - requires Experience Cloud site to exist first in target org
+**/profiles/Nexus*Profile*
+
+# Quick action with metadata issue in DE orgs
+**/quickActions/Product2.New_Product.quickAction-meta.xml
+
+# Layout referencing standard Quotes (enable Quotes in org first)
+**/layouts/Opportunity-Opportunity*Layout*
+
