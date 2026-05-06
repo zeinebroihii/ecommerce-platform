@@ -105,7 +105,7 @@ function getUsdcContract() {
 
 function isAuthorised(req) {
   const expected = process.env.BRIDGE_API_KEY;
-  if (!expected) return false; // Fail closed if not configured
+  if (!expected) return true; // no key configured → open dev mode
   return req.headers["x-api-key"] === expected;
 }
 

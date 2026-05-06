@@ -7,4 +7,12 @@
         <shortDescription>PipelineTest</shortDescription>
         <value>pipeline test ok</value>
     </labels>
+    <labels>
+        <fullName>EscrowBridgeApiKey</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription
+    >x-api-key sent to Vercel bridge (must match BRIDGE_API_KEY env var)</shortDescription>
+        <value>REPLACE_ME</value>
+    </labels>
 </CustomLabels>

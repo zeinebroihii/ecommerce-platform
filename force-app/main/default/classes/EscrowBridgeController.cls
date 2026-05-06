@@ -333,6 +333,10 @@ public with sharing class EscrowBridgeController {
     req.setEndpoint(NAMED_CRED + path);
     req.setMethod('POST');
     req.setHeader('Content-Type', CONTENT_TYPE);
+    String apiKey = System.Label.EscrowBridgeApiKey;
+    if (String.isNotBlank(apiKey) && apiKey != 'REPLACE_ME') {
+      req.setHeader('x-api-key', apiKey);
+    }
     req.setBody(body);
     req.setTimeout(30000);
     Http http = new Http();
