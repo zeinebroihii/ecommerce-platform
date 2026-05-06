@@ -994,3 +994,234 @@
   line-height: 1.55;
   margin: 0;
 }
+
+/* ── Escrow Payment Section ─────────────────────────────────────────────────── */
+
+.nos-escrow-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+  border: 1px solid #dbeafe;
+  border-radius: 1.25rem;
+}
+
+.nos-escrow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* State badge */
+.nos-escrow-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid currentColor;
+}
+.nos-escrow-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+  animation: nosPulse 1.8s ease-in-out infinite;
+}
+.nos-escrow-badge-funded {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.nos-escrow-badge-delivered {
+  color: #059669;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+.nos-escrow-badge-disputed {
+  color: #d97706;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+.nos-escrow-badge-frozen {
+  color: #7c3aed;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+.nos-escrow-badge-released {
+  color: #10b981;
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+.nos-escrow-badge-refunded {
+  color: #6b7280;
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+/* Amount display */
+.nos-escrow-amount-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.nos-escrow-label {
+  font-size: 0.5625rem;
+  font-weight: 900;
+  color: var(--nos-slate-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.nos-escrow-amount {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #1e3a8a;
+  letter-spacing: -0.02em;
+}
+
+/* Countdown timer */
+.nos-escrow-timer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #fff;
+  border: 1px solid #dbeafe;
+  border-radius: 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+.nos-escrow-timer-icon {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+/* Action buttons */
+.nos-escrow-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.nos-confirm-receipt-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #10b981;
+  border: none;
+  border-radius: 0.875rem;
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+.nos-confirm-receipt-btn:hover:not([disabled]) {
+  background: #059669;
+  transform: translateY(-1px);
+}
+.nos-confirm-receipt-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nos-dispute-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border: 2px solid #f59e0b;
+  border-radius: 0.875rem;
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #d97706;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nos-dispute-btn:hover:not([disabled]) {
+  background: #fffbeb;
+}
+.nos-dispute-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status banners */
+.nos-escrow-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.nos-escrow-banner-warn {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+.nos-escrow-banner-success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+.nos-escrow-banner-info {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #075985;
+}
+
+/* ── Payment choice buttons (footer) ─────────────────────────────────────────── */
+
+.nos-stripe-btn {
+  padding: 0.65rem 1.25rem;
+  background: #635bff;
+  border: none;
+  border-radius: 0.875rem;
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.nos-stripe-btn:hover {
+  background: #4f46e5;
+}
+
+.nos-usdc-btn {
+  padding: 0.65rem 1.25rem;
+  background: #2775ca;
+  border: none;
+  border-radius: 0.875rem;
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.nos-usdc-btn:hover {
+  background: #1d5fa8;
+}

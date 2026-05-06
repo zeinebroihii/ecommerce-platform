@@ -185,6 +185,80 @@
               </div>
             </div>
 
+            <!-- ── Escrow Payment Status (USDC Escrow orders only) ────────── -->
+            <template if:true={selectedOrder.isEscrowOrder}>
+              <div class="nos-escrow-section">
+                <!-- Header row: state badge + locked amount -->
+                <div class="nos-escrow-header">
+                  <div class={escrowBadgeClass}>
+                    <span class="nos-escrow-dot"></span>
+                    <span>{escrowStateLabel}</span>
+                  </div>
+                  <div class="nos-escrow-amount-wrap">
+                    <span class="nos-escrow-label">Secured in Escrow</span>
+                    <span class="nos-escrow-amount"
+                      >{selectedOrder.formattedTotal}</span
+                    >
+                  </div>
+                </div>
+
+                <!-- Countdown timer — shown when delivery confirmed, delay running -->
+                <template if:true={escrowCountdownLabel}>
+                  <div class="nos-escrow-timer">
+                    <lightning-icon
+                      icon-name="utility:clock"
+                      size="x-small"
+                      class="nos-escrow-timer-icon"
+                    ></lightning-icon>
+                    <span>Auto-release in {escrowCountdownLabel}</span>
+                  </div>
+                </template>
+
+                <!-- Buyer action buttons -->
+                <div class="nos-escrow-actions">
+                  <template if:true={canConfirmReceipt}>
+                    <button
+                      class="nos-confirm-receipt-btn"
+                      onclick={handleConfirmReceipt}
+                      disabled={escrowActionLoading}
+                    >
+                      <lightning-icon
+                        icon-name="utility:check"
+                        size="x-small"
+                        variant="inverse"
+                      ></lightning-icon>
+                      Confirm Receipt &amp; Release Payment
+                    </button>
+                  </template>
+
+                  <template if:true={canDispute}>
+                    <button
+                      class="nos-dispute-btn"
+                      onclick={handleRaiseDispute}
+                      disabled={escrowActionLoading}
+                    >
+                      <lightning-icon
+                        icon-name="utility:warning"
+                        size="x-small"
+                      ></lightning-icon>
+                      Report an Issue
+                    </button>
+                  </template>
+                </div>
+
+                <!-- Frozen / released / refunded status banners -->
+                <template if:true={escrowStatusBanner}>
+                  <div class={escrowBannerClass}>
+                    <lightning-icon
+                      icon-name={escrowBannerIcon}
+                      size="x-small"
+                    ></lightning-icon>
+                    <span>{escrowStatusBanner}</span>
+                  </div>
+                </template>
+              </div>
+            </template>
+
             <!-- Two columns: history + items -->
             <div class="nos-detail-cols">
               <!-- Tracking History -->
@@ -282,6 +356,16 @@
 
           <!-- Modal Footer -->
           <div class="nos-modal-footer">
+            <!-- Payment choice — only shown for Draft orders with no payment yet -->
+            <template if:true={selectedOrder.isPendingPayment}>
+              <button class="nos-stripe-btn" onclick={handlePayStripe}>
+                Pay with Card
+              </button>
+              <button class="nos-usdc-btn" onclick={handlePayUsdc}>
+                Pay with USDC Escrow
+              </button>
+            </template>
+
             <button class="nos-outline-btn" onclick={handleCloseDetail}>
               Close
             </button>
