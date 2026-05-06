@@ -785,9 +785,16 @@
   background: var(--nos-slate-05);
   border-top: 1px solid var(--nos-slate-1);
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.875rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.nos-footer-right {
+  display: flex;
+  gap: 0.875rem;
+  align-items: center;
 }
 .nos-outline-btn {
   padding: 0.65rem 1.5rem;
@@ -1192,36 +1199,85 @@
 
 /* ── Payment choice buttons (footer) ─────────────────────────────────────────── */
 
-.nos-stripe-btn {
-  padding: 0.65rem 1.25rem;
-  background: #635bff;
+.nos-payment-group {
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-right: auto;
+}
+
+.nos-stripe-btn,
+.nos-usdc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.6rem 1.125rem;
   border: none;
   border-radius: 0.875rem;
-  font-size: 0.65rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #fff;
+  font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s;
+  transition:
+    background 0.15s,
+    transform 0.1s,
+    opacity 0.15s;
+  min-width: 8.5rem;
 }
-.nos-stripe-btn:hover {
+
+.nos-stripe-btn {
+  background: #635bff;
+  color: #fff;
+}
+.nos-stripe-btn:hover:not([disabled]) {
   background: #4f46e5;
+  transform: translateY(-1px);
 }
 
 .nos-usdc-btn {
-  padding: 0.65rem 1.25rem;
   background: #2775ca;
-  border: none;
-  border-radius: 0.875rem;
+  color: #fff;
+}
+.nos-usdc-btn:hover:not([disabled]) {
+  background: #1d5fa8;
+  transform: translateY(-1px);
+}
+
+.nos-stripe-btn[disabled],
+.nos-usdc-btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.nos-btn-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+.nos-btn-main {
   font-size: 0.65rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.15s;
+  letter-spacing: 0.07em;
+  line-height: 1.2;
 }
-.nos-usdc-btn:hover {
-  background: #1d5fa8;
+.nos-btn-hint {
+  font-size: 0.5rem;
+  font-weight: 600;
+  opacity: 0.7;
+  letter-spacing: 0.03em;
+  margin-top: 0.1rem;
+  text-transform: none;
+}
+.nos-pay-icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 0.75rem;
+  opacity: 0.9;
+}
+.nos-usdc-icon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
 }

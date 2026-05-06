@@ -1267,6 +1267,12 @@ export default class NexusCustomerPortal extends LightningElement {
     document.dispatchEvent(new CustomEvent("nexuscartreveal"));
   }
 
+  // ── Order payment events ──────────────────────────────────────────────────
+  handlePayStripeEvent() {
+    this.activeTab = "checkout";
+    this._pushNavUpdate();
+  }
+
   // ── Cart slider events ────────────────────────────────────────────────────
   handleCartSliderCheckout() {
     this.activeTab = "checkout";

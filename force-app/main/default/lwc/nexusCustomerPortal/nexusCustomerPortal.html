@@ -547,7 +547,9 @@
         <!-- ─ Commandes ────────────────────────────────────────────────── -->
         <template if:true={isOrders}>
           <div class="ncp-section ncp-fullbleed">
-            <c-nexus-order-system></c-nexus-order-system>
+            <c-nexus-order-system
+              onpaystripe={handlePayStripeEvent}
+            ></c-nexus-order-system>
           </div>
         </template>
 

@@ -356,22 +356,65 @@
 
           <!-- Modal Footer -->
           <div class="nos-modal-footer">
-            <!-- Payment choice — only shown for Draft orders with no payment yet -->
+            <!-- Payment choice — only shown for orders with no payment method yet -->
             <template if:true={selectedOrder.isPendingPayment}>
-              <button class="nos-stripe-btn" onclick={handlePayStripe}>
-                Pay with Card
-              </button>
-              <button class="nos-usdc-btn" onclick={handlePayUsdc}>
-                Pay with USDC Escrow
-              </button>
+              <div class="nos-payment-group">
+                <button
+                  class="nos-stripe-btn"
+                  onclick={handlePayStripe}
+                  disabled={fundingLoading}
+                >
+                  <svg
+                    class="nos-pay-icon"
+                    viewBox="0 0 24 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="1" y="1" width="22" height="14" rx="2" />
+                    <path d="M1 5h22" />
+                  </svg>
+                  <span class="nos-btn-inner">
+                    <span class="nos-btn-main">Pay with Card</span>
+                    <span class="nos-btn-hint">Stripe · instant</span>
+                  </span>
+                </button>
+
+                <button
+                  class="nos-usdc-btn"
+                  onclick={handlePayUsdc}
+                  disabled={fundingLoading}
+                >
+                  <template if:true={fundingLoading}>
+                    <lightning-spinner
+                      size="x-small"
+                      alternative-text="Locking funds..."
+                      variant="inverse"
+                    ></lightning-spinner>
+                  </template>
+                  <template if:false={fundingLoading}>
+                    <span class="nos-usdc-icon">&#9830;</span>
+                  </template>
+                  <span class="nos-btn-inner">
+                    <span class="nos-btn-main">{usdcBtnLabel}</span>
+                    <span class="nos-btn-hint"
+                      >USDC · Polygon · 5 min delay</span
+                    >
+                  </span>
+                </button>
+              </div>
             </template>
 
-            <button class="nos-outline-btn" onclick={handleCloseDetail}>
-              Close
-            </button>
-            <button class="nos-primary-btn" onclick={handleDownloadInvoice}>
-              Download Invoice
-            </button>
+            <div class="nos-footer-right">
+              <button class="nos-outline-btn" onclick={handleCloseDetail}>
+                Close
+              </button>
+              <button class="nos-primary-btn" onclick={handleDownloadInvoice}>
+                Download Invoice
+              </button>
+            </div>
           </div>
         </div>
       </div>

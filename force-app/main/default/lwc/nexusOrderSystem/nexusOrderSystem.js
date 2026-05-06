@@ -1,9 +1,11 @@
 import { LightningElement, wire, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { refreshApex } from "@salesforce/apex";
 import getMyOrders from "@salesforce/apex/OrderManagementController.getMyOrders";
 import getEscrowStatus from "@salesforce/apex/EscrowBridgeController.getEscrowStatus";
 import confirmReceiptFromBuyer from "@salesforce/apex/EscrowBridgeController.confirmReceiptFromBuyer";
 import raiseDisputeFromBuyer from "@salesforce/apex/EscrowBridgeController.raiseDisputeFromBuyer";
+import fundEscrowForOrder from "@salesforce/apex/EscrowBridgeController.fundEscrowForOrder";
 
 const STATUS_MAP = {
   Draft: { label: "Processing", progress: 20 },
@@ -139,13 +141,17 @@ export default class NexusOrderSystem extends LightningElement {
   @track _showFullMap = false;
   @track _realOrders = [];
   @track _loaded = false;
-  @track _escrowData = null; // Escrow status for the currently open order
+  @track _escrowData = null;
   @track _escrowLoading = false;
-  @track _escrowActionLoading = false; // True while confirm/dispute callout runs
+  @track _escrowActionLoading = false;
+  @track _fundingLoading = false;
   _countdownInterval = null;
+  _wiredOrdersResult;
 
   @wire(getMyOrders)
-  wiredOrders({ data, error }) {
+  wiredOrders(result) {
+    this._wiredOrdersResult = result;
+    const { data, error } = result;
     if (data) {
       this._realOrders = data.map(mapSfOrder);
       this._loaded = true;
@@ -254,6 +260,14 @@ export default class NexusOrderSystem extends LightningElement {
 
   get escrowActionLoading() {
     return this._escrowActionLoading;
+  }
+
+  get fundingLoading() {
+    return this._fundingLoading;
+  }
+
+  get usdcBtnLabel() {
+    return this._fundingLoading ? "Locking Funds..." : "Pay with USDC";
   }
 
   // Status banners for terminal / blocked states
@@ -397,12 +411,40 @@ export default class NexusOrderSystem extends LightningElement {
   }
 
   handlePayUsdc() {
-    this.dispatchEvent(
-      new CustomEvent("payusdc", {
-        detail: { orderId: this._selectedOrderId },
-        bubbles: true
+    if (!this._selectedOrderId || this._fundingLoading) return;
+    this._fundingLoading = true;
+    fundEscrowForOrder({ orderNumber: this._selectedOrderId })
+      .then((result) => {
+        if (result && result.success) {
+          const shortHash = result.txHash
+            ? result.txHash.slice(0, 10) + "..."
+            : "";
+          this._dispatchToast(
+            "Payment Secured",
+            "USDC locked in escrow." + (shortHash ? " Tx: " + shortHash : ""),
+            "success"
+          );
+          refreshApex(this._wiredOrdersResult).then(() => {
+            this._loadEscrowStatus(this._selectedOrderId);
+          });
+        }
+        this._dispatchToast(
+          "Escrow Error",
+          (result && result.error) || "Could not lock funds.",
+          "error"
+        );
       })
-    );
+      .catch((err) => {
+        this._dispatchToast(
+          "Error",
+          (err && err.body && err.body.message) ||
+            "Could not process escrow payment.",
+          "error"
+        );
+      })
+      .finally(() => {
+        this._fundingLoading = false;
+      });
   }
 
   _dispatchToast(title, message, variant) {

@@ -37,15 +37,18 @@ module.exports = async function handler(req, res) {
   if (!isAuthorised(req)) return sendError(res, 401, "Unauthorized");
   if (req.method !== "POST") return sendError(res, 405, "Method not allowed");
 
-  const { orderId, buyer, seller, amount, deadline } = req.body || {};
+  const body = req.body || {};
+  const { orderId, amount, deadline } = body;
+
+  // buyer/seller default to the platform wallet (invisible UX on testnet)
+  const { getSigner } = require("../../lib/escrow");
+  const platformAddress = await getSigner().getAddress();
+  const buyer = ethers.isAddress(body.buyer) ? body.buyer : platformAddress;
+  const seller = ethers.isAddress(body.seller) ? body.seller : platformAddress;
 
   // ── Input validation ──────────────────────────────────────────────────────
   if (!orderId || typeof orderId !== "string")
     return sendError(res, 400, "orderId is required");
-  if (!buyer || !ethers.isAddress(buyer))
-    return sendError(res, 400, "buyer must be a valid Ethereum address");
-  if (!seller || !ethers.isAddress(seller))
-    return sendError(res, 400, "seller must be a valid Ethereum address");
   if (!amount || isNaN(Number(amount)) || BigInt(amount) <= 0n)
     return sendError(
       res,

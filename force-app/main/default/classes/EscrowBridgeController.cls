@@ -163,6 +163,62 @@ public with sharing class EscrowBridgeController {
     };
   }
 
+  // ── Fund Escrow (called from LWC — buyer chooses USDC Escrow payment) ───────
+  // Locks USDC on-chain and marks the Order as PaymentMethod = USDC_Escrow.
+  // Returns the on-chain tx hash and escrow amount so the UI can update.
+
+  @AuraEnabled
+  public static Map<String, Object> fundEscrowForOrder(String orderNumber) {
+    // Query the Order to get amount + status
+    Order[] orders = [
+      SELECT Id, OrderNumber, TotalAmount, Status
+      FROM Order
+      WHERE OrderNumber = :orderNumber
+      LIMIT 1
+    ];
+    if (orders.isEmpty()) {
+      return new Map<String, Object>{
+        'success' => false,
+        'error' => 'Order not found: ' + orderNumber
+      };
+    }
+    Order o = orders[0];
+
+    // USDC has 6 decimals — convert EUR total to USDC base units
+    Long usdcAmount = (Long) (o.TotalAmount * 1000000);
+
+    // Deadline: 30 days from now (Unix seconds)
+    Long deadline = (DateTime.now().getTime() / 1000) + (30 * 24 * 3600);
+
+    Map<String, Object> payload = new Map<String, Object>{
+      'orderId' => orderNumber,
+      'amount' => String.valueOf(usdcAmount),
+      'deadline' => deadline
+    };
+
+    HttpResponse res = doPost('/api/escrow/fund', JSON.serialize(payload));
+
+    if (res.getStatusCode() == 200) {
+      // Mark the Order as paid via USDC Escrow
+      o.PaymentMethod__c = 'USDC_Escrow';
+      update o;
+
+      Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(
+        res.getBody()
+      );
+      data.put('success', true);
+      return data;
+    }
+
+    return new Map<String, Object>{
+      'success' => false,
+      'error' => 'Bridge error ' +
+      res.getStatusCode() +
+      ': ' +
+      res.getBody()
+    };
+  }
+
   // ── Get Escrow Status (synchronous read — no state change) ────────────────
   // Called by portal LWC imperatively when order detail modal opens.
 
