@@ -15,6 +15,7 @@
     <tabs>NexusAnalyticsDashboard</tabs>
     <tabs>NexusQuoteBuilder</tabs>
     <tabs>NexusComboPackages</tabs>
+    <tabs>BundleSuggestion__c</tabs>
     <tabs>NexusStockWarRoom</tabs>
     <tabs>standard-Lead</tabs>
     <tabs>standard-Opportunity</tabs>

@@ -20,7 +20,7 @@ function parseCombo(str) {
       validity: validityMatch ? parseInt(validityMatch[1], 10) : 30,
       discount: discountMatch ? parseFloat(discountMatch[1]) : null
     };
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -47,8 +47,10 @@ function ageLabel(createdAt) {
 function buildSummary(esc) {
   const parts = [];
   if (esc.escalationNote) parts.push(esc.escalationNote);
-  if (esc.requestedPaymentTerms) parts.push("Requested " + esc.requestedPaymentTerms);
-  if (esc.customerCounterPrice) parts.push("Counter: " + fmtEur(esc.customerCounterPrice));
+  if (esc.requestedPaymentTerms)
+    parts.push("Requested " + esc.requestedPaymentTerms);
+  if (esc.customerCounterPrice)
+    parts.push("Counter: " + fmtEur(esc.customerCounterPrice));
   return parts.join(" · ") || "Customer escalated this deal for review.";
 }
 
@@ -56,9 +58,15 @@ function buildPreviewMessage(esc, comboData, salesNote) {
   if (!comboData) return "";
   const name = esc.accountName || "there";
   let msg =
-    "Hi " + name + " team, I've reviewed your request. We can offer " +
-    fmtEur(comboData.price) + " with " + comboData.terms +
-    " payment terms, valid for " + comboData.validity + " days.";
+    "Hi " +
+    name +
+    " team, I've reviewed your request. We can offer " +
+    fmtEur(comboData.price) +
+    " with " +
+    comboData.terms +
+    " payment terms, valid for " +
+    comboData.validity +
+    " days.";
   if (salesNote && salesNote.trim()) msg += " " + salesNote.trim();
   return msg;
 }
@@ -74,18 +82,25 @@ function enrichEscalation(q, expandedIds, customData, approvingIds) {
     if (comboBData.price <= comboAData.price) {
       // B is the trade-off: better price in exchange for faster terms
       aiRecommendation = "B";
-      const saving = (comboAData.price - comboBData.price);
-      const savingFmt = saving > 0 ? fmtEur(saving) + " extra savings" : "best available price";
+      const saving = comboAData.price - comboBData.price;
+      const savingFmt =
+        saving > 0 ? fmtEur(saving) + " extra savings" : "best available price";
       aiRecommendationReason =
-        "Trade-off: " + savingFmt + " if customer upgrades to " +
-        comboBData.terms + " — higher close probability";
+        "Trade-off: " +
+        savingFmt +
+        " if customer upgrades to " +
+        comboBData.terms +
+        " — higher close probability";
     } else {
       // A is floor, B costs more because customer's terms are too slow for extra discount
       aiRecommendation = "A";
-      const extraCost = (comboBData.price - comboAData.price);
+      const extraCost = comboBData.price - comboAData.price;
       aiRecommendationReason =
-        "Revenue protection: floor price at " + comboAData.terms +
-        " — B costs " + fmtEur(extraCost) + " more due to slow-payment penalty";
+        "Revenue protection: floor price at " +
+        comboAData.terms +
+        " — B costs " +
+        fmtEur(extraCost) +
+        " more due to slow-payment penalty";
     }
   } else if (comboAData) {
     aiRecommendation = "A";
@@ -97,7 +112,9 @@ function enrichEscalation(q, expandedIds, customData, approvingIds) {
     (q.counterMessage || "").includes("Net 90") ||
     (q.counterMessage || "").includes("Deep discount");
   const riskLabel = isHighRisk ? "HIGH RISK" : "MEDIUM RISK";
-  const riskBadgeCls = isHighRisk ? "ew-risk-badge ew-risk-high" : "ew-risk-badge ew-risk-medium";
+  const riskBadgeCls = isHighRisk
+    ? "ew-risk-badge ew-risk-high"
+    : "ew-risk-badge ew-risk-medium";
 
   const cust = customData[q.quoteId] || {};
   const customPrice = cust.price || "";
@@ -132,8 +149,9 @@ function enrichEscalation(q, expandedIds, customData, approvingIds) {
       customerCounterPrice: q.customerCounterPrice
     }),
     requestedTermsLabel: q.requestedPaymentTerms || null,
-    formattedCounter:
-      q.customerCounterPrice ? "Counter: " + fmtEur(q.customerCounterPrice) : null,
+    formattedCounter: q.customerCounterPrice
+      ? "Counter: " + fmtEur(q.customerCounterPrice)
+      : null,
     lineItems: q.lineItems || [],
     comboAData,
     comboBData,
@@ -145,10 +163,12 @@ function enrichEscalation(q, expandedIds, customData, approvingIds) {
     isAiB: aiRecommendation === "B",
     comboAPriceLabel: comboAData ? fmtEur(comboAData.price) : null,
     comboBPriceLabel: comboBData ? fmtEur(comboBData.price) : null,
-    comboACardCls: aiRecommendation === "A" ? "ew-combo-card ew-combo-ai" : "ew-combo-card",
-    comboBCardCls: aiRecommendation === "B" ? "ew-combo-card ew-combo-ai" : "ew-combo-card",
+    comboACardCls:
+      aiRecommendation === "A" ? "ew-combo-card ew-combo-ai" : "ew-combo-card",
+    comboBCardCls:
+      aiRecommendation === "B" ? "ew-combo-card ew-combo-ai" : "ew-combo-card",
     salesNote,
-    showCustom: !!(cust.showCustom),
+    showCustom: !!cust.showCustom,
     customPrice,
     customTerms,
     customValidity,
@@ -157,7 +177,9 @@ function enrichEscalation(q, expandedIds, customData, approvingIds) {
     customTermsNet60: customTerms === "Net 60",
     customTermsNet90: customTerms === "Net 90",
     expanded: !!expandedIds[q.quoteId],
-    expandIcon: !!expandedIds[q.quoteId] ? "utility:chevronup" : "utility:chevrondown",
+    expandIcon: expandedIds[q.quoteId]
+      ? "utility:chevronup"
+      : "utility:chevrondown",
     approving: !!approvingIds[q.quoteId]
   };
 }
@@ -177,14 +199,16 @@ function parseThread(threadJson) {
             minute: "2-digit"
           })
         : "",
-      rowCls: m.sender === "sales"
-        ? "ew-msg-row ew-msg-row-sales"
-        : "ew-msg-row ew-msg-row-customer",
-      bubbleCls: m.sender === "sales"
-        ? "ew-bubble ew-bubble-sales"
-        : "ew-bubble ew-bubble-customer"
+      rowCls:
+        m.sender === "sales"
+          ? "ew-msg-row ew-msg-row-sales"
+          : "ew-msg-row ew-msg-row-customer",
+      bubbleCls:
+        m.sender === "sales"
+          ? "ew-bubble ew-bubble-sales"
+          : "ew-bubble ew-bubble-customer"
     }));
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -202,7 +226,9 @@ function enrichConversation(q, expandedIds, replyData, sendingIds) {
   const dealSummary = [
     q.grandTotal ? fmtEur(q.grandTotal) : null,
     q.paymentTerms || null
-  ].filter(Boolean).join(" · ");
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return {
     quoteId: q.quoteId,
@@ -216,7 +242,7 @@ function enrichConversation(q, expandedIds, replyData, sendingIds) {
     replyText: rd.text !== undefined ? rd.text : "",
     sending: !!sendingIds[q.quoteId],
     expanded: !!expandedIds[q.quoteId],
-    expandIcon: !!expandedIds[q.quoteId]
+    expandIcon: expandedIds[q.quoteId]
       ? "utility:chevronup"
       : "utility:chevrondown"
   };
@@ -228,15 +254,15 @@ export default class NexusEscalationWidget extends LightningElement {
   @track _raw = [];
   @track _loading = false;
   @track _trayOpen = true;
-  @track _expandedIds = {};   // { quoteId: true }
-  @track _approvingIds = {};  // { quoteId: true }
-  @track _customData = {};    // quoteId → {price, terms, validity, note, showCustom}
+  @track _expandedIds = {}; // { quoteId: true }
+  @track _approvingIds = {}; // { quoteId: true }
+  @track _customData = {}; // quoteId → {price, terms, validity, note, showCustom}
 
   @track _convRaw = [];
   @track _convExpandedIds = {};
   @track _convSendingIds = {};
-  @track _convReplyData = {};  // quoteId → { text }
-  @track _convFilter = 'all';  // 'all' | 'awaiting'
+  @track _convReplyData = {}; // quoteId → { text }
+  @track _convFilter = "all"; // 'all' | 'awaiting'
 
   _refreshTimer = null;
 
@@ -271,7 +297,12 @@ export default class NexusEscalationWidget extends LightningElement {
 
   get escalations() {
     return this._raw.map((q) =>
-      enrichEscalation(q, this._expandedIds, this._customData, this._approvingIds)
+      enrichEscalation(
+        q,
+        this._expandedIds,
+        this._customData,
+        this._approvingIds
+      )
     );
   }
 
@@ -341,9 +372,16 @@ export default class NexusEscalationWidget extends LightningElement {
 
   get conversations() {
     const all = this._convRaw.map((q) =>
-      enrichConversation(q, this._convExpandedIds, this._convReplyData, this._convSendingIds)
+      enrichConversation(
+        q,
+        this._convExpandedIds,
+        this._convReplyData,
+        this._convSendingIds
+      )
     );
-    return this._convFilter === 'awaiting' ? all.filter((c) => c.awaitingReply) : all;
+    return this._convFilter === "awaiting"
+      ? all.filter((c) => c.awaitingReply)
+      : all;
   }
 
   get hasConversations() {
@@ -355,15 +393,15 @@ export default class NexusEscalationWidget extends LightningElement {
   }
 
   get allFilterCls() {
-    return this._convFilter === 'all'
-      ? 'ew-conv-filter-btn ew-conv-filter-active'
-      : 'ew-conv-filter-btn';
+    return this._convFilter === "all"
+      ? "ew-conv-filter-btn ew-conv-filter-active"
+      : "ew-conv-filter-btn";
   }
 
   get awaitingFilterCls() {
-    return this._convFilter === 'awaiting'
-      ? 'ew-conv-filter-btn ew-conv-filter-active'
-      : 'ew-conv-filter-btn';
+    return this._convFilter === "awaiting"
+      ? "ew-conv-filter-btn ew-conv-filter-active"
+      : "ew-conv-filter-btn";
   }
 
   handleConvFilter(e) {
@@ -399,7 +437,14 @@ export default class NexusEscalationWidget extends LightningElement {
 
     postSalesReply({ quoteId, messageText: text })
       .then(() => {
-        this._convReplyData = { ...this._convReplyData, [quoteId]: { text: "" } };
+        this._convReplyData = {
+          ...this._convReplyData,
+          [quoteId]: { text: "" }
+        };
+        const textarea = this.template.querySelector(
+          `textarea[data-id="${quoteId}"]`
+        );
+        if (textarea) textarea.value = "";
         const s = { ...this._convSendingIds };
         delete s[quoteId];
         this._convSendingIds = s;
@@ -426,7 +471,12 @@ export default class NexusEscalationWidget extends LightningElement {
     if (!esc) return;
 
     let price, terms, validity;
-    const enriched = enrichEscalation(esc, this._expandedIds, this._customData, this._approvingIds);
+    const enriched = enrichEscalation(
+      esc,
+      this._expandedIds,
+      this._customData,
+      this._approvingIds
+    );
 
     if (combo === "A" && enriched.comboAData) {
       price = enriched.comboAData.price;
@@ -470,7 +520,9 @@ export default class NexusEscalationWidget extends LightningElement {
           new ShowToastEvent({
             title: "Approved",
             message:
-              "Terms applied and message sent to " + (esc.accountName || "customer") + ".",
+              "Terms applied and message sent to " +
+              (esc.accountName || "customer") +
+              ".",
             variant: "success"
           })
         );
@@ -481,7 +533,9 @@ export default class NexusEscalationWidget extends LightningElement {
         this._raw = this._raw.filter((q) => q.quoteId !== quoteId);
         this._load();
         // Notify parent Quote Builder to reload the main quote list
-        this.dispatchEvent(new CustomEvent("approvecomplete", { bubbles: true, composed: true }));
+        this.dispatchEvent(
+          new CustomEvent("approvecomplete", { bubbles: true, composed: true })
+        );
       })
       .catch((err) => {
         this.dispatchEvent(

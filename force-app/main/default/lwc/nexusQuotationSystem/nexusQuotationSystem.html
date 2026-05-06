@@ -7,8 +7,16 @@
         <div class="nqs-notif-title">New message from your advisor</div>
         <div class="nqs-notif-sub">{_floatingNotif.quoteName}</div>
       </div>
-      <button class="nqs-notif-view-btn" data-id={_floatingNotif.quoteId} onclick={handleNotifView}>View</button>
-      <button class="nqs-notif-dismiss-btn" onclick={handleNotifDismiss}>✕</button>
+      <button
+        class="nqs-notif-view-btn"
+        data-id={_floatingNotif.quoteId}
+        onclick={handleNotifView}
+      >
+        View
+      </button>
+      <button class="nqs-notif-dismiss-btn" onclick={handleNotifDismiss}>
+        ✕
+      </button>
     </div>
   </template>
 
@@ -43,9 +51,6 @@
           <span class="nqs-quote-count">{filteredQuotes.length} quotes</span>
         </template>
       </div>
-      <button class="nqs-new-btn" onclick={handleOpenNewForm}>
-        + Request a Quote
-      </button>
     </div>
 
     <!-- Loading state -->
@@ -74,9 +79,6 @@
             manager or submit a new request to get started.
           </p>
         </div>
-        <button class="nqs-new-btn" onclick={handleOpenNewForm}>
-          Request a Quote
-        </button>
       </div>
     </template>
 
@@ -349,9 +351,13 @@
                                   {item.quantity}
                                 </td>
                                 <td class="nqs-td nqs-td-center">
-                                  <span class={item.chargeTypeBadgeCls}>{item.chargeType}</span>
+                                  <span class={item.chargeTypeBadgeCls}
+                                    >{item.chargeType}</span
+                                  >
                                   <template if:true={item.billingLabel}>
-                                    <span class="nqs-billing-label">{item.billingLabel}</span>
+                                    <span class="nqs-billing-label"
+                                      >{item.billingLabel}</span
+                                    >
                                   </template>
                                 </td>
                                 <td class="nqs-td nqs-td-right nqs-prod-unit">
@@ -405,22 +411,16 @@
 
                   <!-- Commercial terms (always shown) -->
                   <div class="nqs-detail-card">
-                    <div class="nqs-detail-card-title">
-                      Commercial Terms
-                    </div>
+                    <div class="nqs-detail-card-title">Commercial Terms</div>
                     <div class="nqs-detail-card-body nqs-terms-grid">
                       <div>
-                        <div class="nqs-detail-label">
-                          Payment Terms
-                        </div>
+                        <div class="nqs-detail-label">Payment Terms</div>
                         <div class="nqs-terms-val">
                           {selectedQuote.paymentTerms}
                         </div>
                       </div>
                       <div>
-                        <div class="nqs-detail-label">
-                          Offer Validity
-                        </div>
+                        <div class="nqs-detail-label">Offer Validity</div>
                         <div class="nqs-terms-val">
                           {selectedQuote.displayDate}
                         </div>
@@ -428,7 +428,9 @@
                       <template if:true={signatureDeadlineLabel}>
                         <div>
                           <div class="nqs-detail-label">Signature Deadline</div>
-                          <div class="nqs-terms-val">{signatureDeadlineLabel}</div>
+                          <div class="nqs-terms-val">
+                            {signatureDeadlineLabel}
+                          </div>
                         </div>
                       </template>
                       <template if:true={selectedQuote.description}>
@@ -441,10 +443,10 @@
                       </template>
                       <template if:true={hasGeneralTerms}>
                         <div class="nqs-terms-full nqs-terms-gtc-wrap">
-                          <div class="nqs-detail-label">General Terms &amp; Conditions</div>
-                          <div class="nqs-terms-gtc">
-                            {generalTerms}
+                          <div class="nqs-detail-label">
+                            General Terms &amp; Conditions
                           </div>
+                          <div class="nqs-terms-gtc">{generalTerms}</div>
                         </div>
                       </template>
                     </div>
@@ -461,22 +463,34 @@
                       <template if:true={selectedQuote.hasOneTime}>
                         <div class="nqs-detail-row">
                           <span class="nqs-detail-label">
-                            <span class="nqs-charge-badge nqs-charge-onetime">One-time</span>
+                            <span class="nqs-charge-badge nqs-charge-onetime"
+                              >One-time</span
+                            >
                           </span>
-                          <span class="nqs-detail-val">{selectedQuote.formattedOneTime}</span>
+                          <span class="nqs-detail-val"
+                            >{selectedQuote.formattedOneTime}</span
+                          >
                         </div>
                       </template>
                       <template if:true={selectedQuote.hasRecurring}>
                         <div class="nqs-detail-row">
                           <span class="nqs-detail-label">
-                            <span class="nqs-charge-badge nqs-charge-recurring">Recurring</span>
+                            <span class="nqs-charge-badge nqs-charge-recurring"
+                              >Recurring</span
+                            >
                           </span>
-                          <span class="nqs-detail-val">{selectedQuote.formattedRecurring}</span>
+                          <span class="nqs-detail-val"
+                            >{selectedQuote.formattedRecurring}</span
+                          >
                         </div>
                         <template if:true={selectedQuote.hasMrr}>
                           <div class="nqs-detail-row">
-                            <span class="nqs-detail-label nqs-muted">Monthly (MRR)</span>
-                            <span class="nqs-mrr-val">{selectedQuote.formattedMrr}/mo</span>
+                            <span class="nqs-detail-label nqs-muted"
+                              >Monthly (MRR)</span
+                            >
+                            <span class="nqs-mrr-val"
+                              >{selectedQuote.formattedMrr}/mo</span
+                            >
                           </div>
                         </template>
                       </template>
@@ -578,8 +592,8 @@
                       </div>
                       <div class="nqs-detail-card-body">
                         <p class="nqs-counter-hint">
-                          Propose your price — our system responds instantly:
-                          if your offer is close to the threshold, a mid-point
+                          Propose your price — our system responds instantly: if
+                          your offer is close to the threshold, a mid-point
                           price will be automatically proposed.
                         </p>
                         <div class="nqs-counter-input-row">

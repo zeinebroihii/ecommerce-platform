@@ -876,6 +876,8 @@ public without sharing class LeadManagementController {
       LastName = ln,
       Alias = alias,
       CommunityNickname = nick,
+      // SAML bridge: Okta sends <NameID>email</NameID> — Salesforce matches it here
+      FederationIdentifier = c.Email,
       TimeZoneSidKey = 'Europe/London',
       LocaleSidKey = 'en_GB',
       EmailEncodingKey = 'UTF-8',
@@ -1007,15 +1009,34 @@ public without sharing class LeadManagementController {
       throw new AuraHandledException('Ce lead n\'a pas d\'adresse email.');
     }
 
-    // 2. Idempotency — skip user creation if portal user already exists, but still send email
+    // 2. Idempotency — skip user creation if portal user already exists, but still send email.
+    // Also check by email/FederationIdentifier to catch JIT-provisioned users whose
+    // ContactId may differ from ConvertedContactId (created by JIT before conversion).
     List<User> existing = [
-      SELECT Id, Username
+      SELECT Id, Username, ContactId
       FROM User
-      WHERE ContactId = :l.ConvertedContactId AND IsActive = TRUE
+      WHERE
+        (ContactId = :l.ConvertedContactId
+        OR FederationIdentifier = :l.Email
+        OR Username = :l.Email)
+        AND IsActive = TRUE
       LIMIT 1
     ];
     if (!existing.isEmpty()) {
-      // User already provisioned — resend setup email with a fresh reset token
+      // Link the JIT/SCIM user to the converted contact if not already linked
+      if (
+        existing[0].ContactId != l.ConvertedContactId &&
+        l.ConvertedContactId != null
+      ) {
+        try {
+          update new User(
+            Id = existing[0].Id,
+            ContactId = l.ConvertedContactId
+          );
+        } catch (Exception ignored) {
+        }
+      }
+      // Resend setup email with a fresh reset token
       Contact cx = [
         SELECT Id, FirstName, LastName, Email
         FROM Contact
@@ -1104,6 +1125,8 @@ public without sharing class LeadManagementController {
       LastName = ln,
       Alias = alias,
       CommunityNickname = nick,
+      // SAML bridge: Okta sends <NameID>email</NameID> — Salesforce matches it here
+      FederationIdentifier = c.Email,
       TimeZoneSidKey = 'Europe/London',
       LocaleSidKey = 'en_GB',
       EmailEncodingKey = 'UTF-8',

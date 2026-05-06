@@ -92,6 +92,8 @@ public without sharing class QuoteController {
     public String chargeType; // 'One-time' | 'Recurring'
     @AuraEnabled
     public String billingFrequency; // 'Monthly' | 'Annual' | 'Quarterly' | 'N/A'
+    @AuraEnabled
+    public String imageUrl;
   }
 
   public class CartItemInput {
@@ -104,11 +106,20 @@ public without sharing class QuoteController {
 
   // ── Get all quotes for a customer's account ───────────────────────────────
 
-  @AuraEnabled(cacheable=true)
+  @AuraEnabled(cacheable=false)
   public static List<QuoteWrapper> getAccountQuotes(Id accountId) {
     List<QuoteWrapper> result = new List<QuoteWrapper>();
     if (accountId == null)
       return result;
+
+    Map<String, String> imageByName = new Map<String, String>();
+    for (Product2 p : [
+      SELECT Name, Image_URL__c
+      FROM Product2
+      WHERE Image_URL__c != NULL
+    ]) {
+      imageByName.put(p.Name, p.Image_URL__c);
+    }
 
     Date today = Date.today();
     for (TALEXO_Quote__c q : [
@@ -148,12 +159,12 @@ public without sharing class QuoteController {
             Discount__c,
             NetTotal__c,
             Product_Type__c,
-            Billing_Frequency__c
+            Billing_Frequency__c,
+            Product__r.Image_URL__c
           FROM NexusQuoteLineItems__r
         )
       FROM TALEXO_Quote__c
-      WHERE Opportunity__r.AccountId = :accountId
-        AND IsPrimary__c = true
+      WHERE Opportunity__r.AccountId = :accountId AND IsPrimary__c = TRUE
       ORDER BY CreatedDate DESC
       LIMIT 20
     ]) {
@@ -208,7 +219,8 @@ public without sharing class QuoteController {
       w.bulkDiscount = q.BulkDiscount__c;
       w.generalTerms = q.GeneralTerms__c;
       w.signatureDeadlineDays = q.SignatureDeadlineDays__c != null
-        ? Integer.valueOf(q.SignatureDeadlineDays__c) : null;
+        ? Integer.valueOf(q.SignatureDeadlineDays__c)
+        : null;
       w.messageThread = q.MessageThread__c;
       w.versionNumber = q.VersionNumber__c != null
         ? Integer.valueOf(q.VersionNumber__c)
@@ -226,9 +238,15 @@ public without sharing class QuoteController {
         lw.discount = li.Discount__c;
         lw.netTotal = li.NetTotal__c;
         lw.chargeType = String.isNotBlank(li.Product_Type__c)
-          ? li.Product_Type__c : 'One-time';
+          ? li.Product_Type__c
+          : 'One-time';
         lw.billingFrequency = String.isNotBlank(li.Billing_Frequency__c)
-          ? li.Billing_Frequency__c : 'N/A';
+          ? li.Billing_Frequency__c
+          : 'N/A';
+        lw.imageUrl = (li.Product__r != null &&
+          li.Product__r.Image_URL__c != null)
+          ? li.Product__r.Image_URL__c
+          : imageByName.get(li.ProductName__c);
         w.lineItems.add(lw);
       }
       result.add(w);
@@ -239,7 +257,10 @@ public without sharing class QuoteController {
   // ── Customer: request a quote from their portal cart ──────────────────────
 
   @AuraEnabled
-  public static Map<String, String> requestQuoteFromCart(String cartJSON, String customerNote) {
+  public static Map<String, String> requestQuoteFromCart(
+    String cartJSON,
+    String customerNote
+  ) {
     // 1. Get current customer's account
     User u = [
       SELECT Id, AccountId, Account.Name, Email
@@ -305,8 +326,7 @@ public without sharing class QuoteController {
       : 'Not Required';
 
     // Read admin-configurable settings from CMT
-    QuoteSettingsService.QuoteSettingsWrapper settings =
-      QuoteSettingsService.getSettings();
+    QuoteSettingsService.QuoteSettingsWrapper settings = QuoteSettingsService.getSettings();
 
     // 6. Create Quote instantly as Presented so AI negotiation can start immediately
     TALEXO_Quote__c q = new TALEXO_Quote__c(
@@ -325,10 +345,14 @@ public without sharing class QuoteController {
       NegotiationStatus__c = 'Submitted',
       Description__c = 'AI-generated quote for ' +
         u.Account.Name +
-        ' · ' + items.size() + ' item(s)' +
+        ' · ' +
+        items.size() +
+        ' item(s)' +
         (volApplied ? ' · Volume discount ' + volDiscount + '% applied' : '') +
         ' · Auto-presented for immediate AI negotiation' +
-        (String.isNotBlank(customerNote) ? '\n\nCustomer Note: ' + customerNote : '')
+        (String.isNotBlank(customerNote)
+          ? '\n\nCustomer Note: ' + customerNote
+          : '')
     );
     insert q;
     q = [SELECT Id, Name FROM TALEXO_Quote__c WHERE Id = :q.Id LIMIT 1];
@@ -397,12 +421,19 @@ public without sharing class QuoteController {
       mail.setPlainTextBody(
         'Hello,\n\n' +
           'An AI-generated quote has been automatically created and presented to ' +
-          u.Account.Name + '.\n\n' +
-          'Products:\n' + productList +
-          '\nTotal: ' + discountedTotal.setScale(2) + ' €' +
+          u.Account.Name +
+          '.\n\n' +
+          'Products:\n' +
+          productList +
+          '\nTotal: ' +
+          discountedTotal.setScale(2) +
+          ' €' +
           (volApplied ? ' (after ' + volDiscount + '% volume discount)' : '') +
-          '\nFloor price (min): ' + (discountedTotal * 0.75).setScale(2) + ' €' +
-          '\n\nQuote: ' + q.Name +
+          '\nFloor price (min): ' +
+          (discountedTotal * 0.75).setScale(2) +
+          ' €' +
+          '\n\nQuote: ' +
+          q.Name +
           '\nStatus: Presented — AI negotiation is now LIVE\n\n' +
           'The customer can now negotiate directly with Agentforce. Monitor escalations in Quote Builder.\n\n' +
           'Best regards,\nNexus AI Platform'
@@ -422,15 +453,24 @@ public without sharing class QuoteController {
 
     NotificationController.pushAdminBell(
       'AI Quote Live: ' + u.Account.Name,
-      u.Account.Name + ' — ' + q.Name + ' auto-generated & presented · ' + discountedTotal.setScale(2) + ' € · AI negotiation is live.',
+      u.Account.Name +
+        ' — ' +
+        q.Name +
+        ' auto-generated & presented · ' +
+        discountedTotal.setScale(2) +
+        ' € · AI negotiation is live.',
       q.Id
     );
 
     // Customer portal bell: quote is ready for immediate AI negotiation
     try {
       List<User> custUsers = [
-        SELECT Id FROM User
-        WHERE AccountId = :u.AccountId AND IsActive = true AND UserType = 'PowerCustomerSuccess'
+        SELECT Id
+        FROM User
+        WHERE
+          AccountId = :u.AccountId
+          AND IsActive = TRUE
+          AND UserType = 'PowerCustomerSuccess'
         LIMIT 1
       ];
       if (!custUsers.isEmpty()) {
@@ -442,7 +482,9 @@ public without sharing class QuoteController {
           '/ss/s/mes-offres'
         );
       }
-    } catch (Exception nx) { /* non-blocking */ }
+    } catch (Exception nx) {
+      /* non-blocking */
+    }
 
     return new Map<String, String>{ 'quoteId' => q.Id, 'quoteName' => q.Name };
   }
@@ -561,7 +603,10 @@ public without sharing class QuoteController {
         : 'Quote Rejected: ' + accName,
       decision == 'Accepted'
         ? accName + ' accepted ' + q.Name + '. DocuSign sent automatically.'
-        : accName + ' rejected ' + q.Name + (String.isNotBlank(reason) ? ' — ' + reason : ''),
+        : accName +
+          ' rejected ' +
+          q.Name +
+          (String.isNotBlank(reason) ? ' — ' + reason : ''),
       q.Id
     );
 
@@ -736,8 +781,7 @@ public without sharing class QuoteController {
           oppId = opp.Id;
         }
         Integer qtyInt = String.isNotBlank(qty) ? Integer.valueOf(qty) : 1;
-        QuoteSettingsService.QuoteSettingsWrapper qs =
-          QuoteSettingsService.getSettings();
+        QuoteSettingsService.QuoteSettingsWrapper qs = QuoteSettingsService.getSettings();
         TALEXO_Quote__c newQ = new TALEXO_Quote__c(
           Opportunity__c = oppId,
           Status__c = 'Requested',
@@ -818,7 +862,9 @@ public without sharing class QuoteController {
     if (quoteTarget != null) {
       NotificationController.pushAdminBell(
         'New Quote Request: ' + companyName,
-        companyName + ' submitted a quote request via the portal' + (String.isNotBlank(qty) ? ' · Qty: ' + qty : ''),
+        companyName +
+          ' submitted a quote request via the portal' +
+          (String.isNotBlank(qty) ? ' · Qty: ' + qty : ''),
         quoteTarget
       );
     }
@@ -848,7 +894,7 @@ public without sharing class QuoteController {
 
   // ── Multi-term negotiation result wrapper ─────────────────────────────────
   public class NegotiationResult {
-    public String outcome;           // ACCEPTED / COUNTERED / REJECTED / ESCALATED
+    public String outcome; // ACCEPTED / COUNTERED / REJECTED / ESCALATED
     public Decimal newTotal;
     public String proposedPaymentTerms;
     public Integer proposedValidityDays;
@@ -859,10 +905,14 @@ public without sharing class QuoteController {
 
   // ── Payment terms risk score (higher = riskier) ────────────────────────────
   private static Integer termsRisk(String terms) {
-    if (terms == null) return 0;
-    if (terms.containsIgnoreCase('90')) return 3;
-    if (terms.containsIgnoreCase('60')) return 2;
-    if (terms.containsIgnoreCase('45')) return 1;
+    if (terms == null)
+      return 0;
+    if (terms.containsIgnoreCase('90'))
+      return 3;
+    if (terms.containsIgnoreCase('60'))
+      return 2;
+    if (terms.containsIgnoreCase('45'))
+      return 1;
     return 0; // Net 30 or anything else
   }
 
@@ -878,14 +928,31 @@ public without sharing class QuoteController {
 
     TALEXO_Quote__c q = [
       SELECT
-        Id, Name, Status__c, GrandTotal__c, FloorPrice__c,
-        BulkDiscount__c, PaymentTerms__c, VersionNumber__c,
-        NegotiationRound__c, ExpirationDate__c, SignatureDeadlineDays__c,
-        Opportunity__c, Opportunity__r.AccountId,
+        Id,
+        Name,
+        Status__c,
+        GrandTotal__c,
+        FloorPrice__c,
+        BulkDiscount__c,
+        PaymentTerms__c,
+        VersionNumber__c,
+        NegotiationRound__c,
+        ExpirationDate__c,
+        SignatureDeadlineDays__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
         Opportunity__r.Account.Name,
-        (SELECT ProductName__c, ProductFamily__c, Quantity__c,
-                ListPrice__c, UnitPrice__c, Discount__c, NetTotal__c
-         FROM NexusQuoteLineItems__r)
+        (
+          SELECT
+            ProductName__c,
+            ProductFamily__c,
+            Quantity__c,
+            ListPrice__c,
+            UnitPrice__c,
+            Discount__c,
+            NetTotal__c
+          FROM NexusQuoteLineItems__r
+        )
       FROM TALEXO_Quote__c
       WHERE Id = :quoteId
       LIMIT 1
@@ -893,28 +960,40 @@ public without sharing class QuoteController {
 
     if (q.Status__c != 'Presented') {
       res.outcome = 'ERROR';
-      res.responseMessage = 'This quote is not in a negotiable state (status: ' + q.Status__c + ').';
+      res.responseMessage =
+        'This quote is not in a negotiable state (status: ' +
+        q.Status__c +
+        ').';
       return res;
     }
 
-    Decimal floor = (q.FloorPrice__c != null && q.FloorPrice__c > 0)
+    Decimal floor = (q.FloorPrice__c != null &&
+      q.FloorPrice__c > 0)
       ? q.FloorPrice__c
       : (q.GrandTotal__c != null ? q.GrandTotal__c * 0.85 : 0);
 
     // Normalise inputs
-    Decimal price = (counterPrice != null && counterPrice > 0)
-      ? counterPrice : q.GrandTotal__c;
+    Decimal price = (counterPrice != null &&
+      counterPrice > 0)
+      ? counterPrice
+      : q.GrandTotal__c;
     String reqTerms = String.isNotBlank(requestedPaymentTerms)
-      ? requestedPaymentTerms.trim() : q.PaymentTerms__c;
-    Integer reqValidity = (requestedValidityDays != null && requestedValidityDays > 0)
-      ? requestedValidityDays : 30;
+      ? requestedPaymentTerms.trim()
+      : q.PaymentTerms__c;
+    Integer reqValidity = (requestedValidityDays != null &&
+      requestedValidityDays > 0)
+      ? requestedValidityDays
+      : 30;
     Integer risk = termsRisk(reqTerms);
 
     // ── Hard escalation triggers ──────────────────────────────────────────────
-    Boolean bigDeal   = q.GrandTotal__c != null && q.GrandTotal__c > 100000 && price < floor;
-    Boolean net90     = risk >= 3;
+    Boolean bigDeal =
+      q.GrandTotal__c != null &&
+      q.GrandTotal__c > 100000 &&
+      price < floor;
+    Boolean net90 = risk >= 3;
     Boolean longValidity = reqValidity > 45;
-    Boolean deepDisc  = price < floor * 0.80;
+    Boolean deepDisc = price < floor * 0.80;
 
     if (bigDeal || net90 || longValidity || deepDisc) {
       // ── TRADE-OFF ENGINE ────────────────────────────────────────────────────
@@ -927,17 +1006,34 @@ public without sharing class QuoteController {
 
       // Combo A: strict floor price — accept their terms, this is our absolute minimum
       Decimal comboAPrice = floor.setScale(2);
-      Integer comboADays  = Math.min(reqValidity, 30);
-      String  comboA = buildCombo('A', comboAPrice, reqTerms, comboADays, q.GrandTotal__c);
+      Integer comboADays = Math.min(reqValidity, 30);
+      String comboA = buildCombo(
+        'A',
+        comboAPrice,
+        reqTerms,
+        comboADays,
+        q.GrandTotal__c
+      );
 
       // Combo B: trade-off — upgrade terms one tier, reward with extra discount
       // (Net 90→Net 45 = +5% | Net 60→Net 30 = +3% | Net 45→Net 30 = +2% | Net 30→Net 15 = +3%)
-      String  comboBTerms = upgradePaymentTerms(reqTerms);
-      Decimal comboBDisc  = Math.min(15.0, basePct + termsUpgradeReward(reqTerms));
-      Decimal comboBPrice = (q.GrandTotal__c * (1 - comboBDisc / 100)).setScale(2);
-      if (comboBPrice < floor) comboBPrice = floor.setScale(2);
-      Integer comboBDays  = Math.min(reqValidity, 45);
-      String  comboB = buildCombo('B', comboBPrice, comboBTerms, comboBDays, q.GrandTotal__c);
+      String comboBTerms = upgradePaymentTerms(reqTerms);
+      Decimal comboBDisc = Math.min(
+        15.0,
+        basePct + termsUpgradeReward(reqTerms)
+      );
+      Decimal comboBPrice = (q.GrandTotal__c * (1 - comboBDisc / 100))
+        .setScale(2);
+      if (comboBPrice < floor)
+        comboBPrice = floor.setScale(2);
+      Integer comboBDays = Math.min(reqValidity, 45);
+      String comboB = buildCombo(
+        'B',
+        comboBPrice,
+        comboBTerms,
+        comboBDays,
+        q.GrandTotal__c
+      );
 
       // Write to quote record
       TALEXO_Quote__c upd = new TALEXO_Quote__c(
@@ -947,8 +1043,15 @@ public without sharing class QuoteController {
         EscalationComboA__c = comboA,
         EscalationComboB__c = comboB,
         CounterMessage__c = 'ESCALATION [' +
-          DateTime.now().format('dd/MM/yyyy HH:mm') + ']: ' +
-          (String.isNotBlank(message) ? message : 'Customer requested ' + reqTerms + ' and ' + price.setScale(2) + ' €')
+          DateTime.now().format('dd/MM/yyyy HH:mm') +
+          ']: ' +
+          (String.isNotBlank(message)
+            ? message
+            : 'Customer requested ' +
+              reqTerms +
+              ' and ' +
+              price.setScale(2) +
+              ' €')
       );
       update upd;
 
@@ -957,66 +1060,114 @@ public without sharing class QuoteController {
         SlackNotificationService.sendEscalationAlert(
           String.valueOf(q.Id),
           q.Name,
-          q.Opportunity__r.Account.Name != null ? q.Opportunity__r.Account.Name : 'Unknown',
+          q.Opportunity__r.Account.Name != null
+            ? q.Opportunity__r.Account.Name
+            : 'Unknown',
           q.GrandTotal__c != null ? q.GrandTotal__c : 0,
           price,
           reqTerms,
           comboA,
           comboB
         );
-      } catch (Exception slk) { /* Slack alert is non-blocking */ }
+      } catch (Exception slk) {
+        /* Slack alert is non-blocking */
+      }
 
       // Admin bell notification for escalation
       try {
         String accountName = q.Opportunity__r.Account.Name != null
-          ? q.Opportunity__r.Account.Name : 'Unknown Account';
+          ? q.Opportunity__r.Account.Name
+          : 'Unknown Account';
         Decimal dropPct = q.GrandTotal__c > 0
-          ? ((q.GrandTotal__c - price) / q.GrandTotal__c * 100).setScale(1) : 0;
-        String escReason = bigDeal ? 'High-value deal > ' + q.GrandTotal__c.setScale(0) + ' € below floor'
-          : net90 ? 'Net 90 terms requested — cash-flow risk exceeds auto-approval threshold'
-          : longValidity ? 'Extended validity (' + reqValidity + ' days) — exceeds 45-day limit'
-          : 'Deep discount requested — ' + price.setScale(2) + ' € (' + dropPct + '% below list)';
+          ? ((q.GrandTotal__c - price) / q.GrandTotal__c * 100).setScale(1)
+          : 0;
+        String escReason = bigDeal
+          ? 'High-value deal > ' +
+            q.GrandTotal__c.setScale(0) +
+            ' € below floor'
+          : net90
+              ? 'Net 90 terms requested — cash-flow risk exceeds auto-approval threshold'
+              : longValidity
+                  ? 'Extended validity (' +
+                    reqValidity +
+                    ' days) — exceeds 45-day limit'
+                  : 'Deep discount requested — ' +
+                    price.setScale(2) +
+                    ' € (' +
+                    dropPct +
+                    '% below list)';
         insert new TALEXO_Notification__c(
-          Title__c   = 'Escalation Required: ' + q.Name,
-          Message__c = accountName + ' — ' + escReason +
-            '\nOption A (Floor / Keep Terms): ' + comboA +
-            '\nOption B (Trade-off, Recommended): ' + comboB,
-          Type__c    = 'Quote',
-          IsRead__c  = false
+          Title__c = 'Escalation Required: ' + q.Name,
+          Message__c = accountName +
+            ' — ' +
+            escReason +
+            '\nOption A (Floor / Keep Terms): ' +
+            comboA +
+            '\nOption B (Trade-off, Recommended): ' +
+            comboB,
+          Type__c = 'Quote',
+          IsRead__c = false
         );
-      } catch (Exception nx) { /* notification is non-blocking */ }
+      } catch (Exception nx) {
+        /* notification is non-blocking */
+      }
 
       // Escalation email to System Admin
       try {
         List<User> admins = [
-          SELECT Email FROM User
-          WHERE Profile.Name = 'System Administrator' AND IsActive = true
+          SELECT Email
+          FROM User
+          WHERE Profile.Name = 'System Administrator' AND IsActive = TRUE
           LIMIT 1
         ];
         if (!admins.isEmpty()) {
           Messaging.SingleEmailMessage alert = new Messaging.SingleEmailMessage();
           alert.setToAddresses(new List<String>{ admins[0].Email });
-          alert.setSubject('🚨 Nexus Escalation: ' + q.Name + ' needs your review');
+          alert.setSubject(
+            '🚨 Nexus Escalation: ' + q.Name + ' needs your review'
+          );
           alert.setPlainTextBody(
             'A quote negotiation requires your approval:\n\n' +
-            '  Quote: ' + q.Name + '\n' +
-            '  Account: ' + (q.Opportunity__r.Account.Name != null ? q.Opportunity__r.Account.Name : 'N/A') + '\n' +
-            '  Customer offer: ' + price.setScale(2) + ' € | ' + reqTerms + '\n\n' +
-            'AI Trade-off Engine — Two options generated:\n\n' +
-            '  OPTION A (Floor Price / Keep Terms):\n' +
-            '  ' + comboA + '\n' +
-            '  → We hold the floor price and accept the customer\'s payment terms.\n\n' +
-            '  OPTION B (Recommended — Terms Trade-off):\n' +
-            '  ' + comboB + '\n' +
-            '  → We offer a bigger discount IF the customer upgrades to ' + comboBTerms + '.\n' +
-            '  → Rule: ' + comboBDisc.setScale(1) + '% discount authorized ONLY IF customer accepts ' + comboBTerms + '.\n\n' +
-            'Core rule: We do NOT grant maximum discount AND slow payment simultaneously.\n\n' +
-            'Open the Nexus Admin Quote Builder to approve an option.\n\n' +
-            '— Nexus AI Negotiation System'
+              '  Quote: ' +
+              q.Name +
+              '\n' +
+              '  Account: ' +
+              (q.Opportunity__r.Account.Name != null
+                ? q.Opportunity__r.Account.Name
+                : 'N/A') +
+              '\n' +
+              '  Customer offer: ' +
+              price.setScale(2) +
+              ' € | ' +
+              reqTerms +
+              '\n\n' +
+              'AI Trade-off Engine — Two options generated:\n\n' +
+              '  OPTION A (Floor Price / Keep Terms):\n' +
+              '  ' +
+              comboA +
+              '\n' +
+              '  → We hold the floor price and accept the customer\'s payment terms.\n\n' +
+              '  OPTION B (Recommended — Terms Trade-off):\n' +
+              '  ' +
+              comboB +
+              '\n' +
+              '  → We offer a bigger discount IF the customer upgrades to ' +
+              comboBTerms +
+              '.\n' +
+              '  → Rule: ' +
+              comboBDisc.setScale(1) +
+              '% discount authorized ONLY IF customer accepts ' +
+              comboBTerms +
+              '.\n\n' +
+              'Core rule: We do NOT grant maximum discount AND slow payment simultaneously.\n\n' +
+              'Open the Nexus Admin Quote Builder to approve an option.\n\n' +
+              '— Nexus AI Negotiation System'
           );
           Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ alert });
         }
-      } catch (Exception em) { /* email is non-blocking */ }
+      } catch (Exception em) {
+        /* email is non-blocking */
+      }
 
       res.outcome = 'ESCALATED';
       res.comboA = comboA;
@@ -1043,12 +1194,28 @@ public without sharing class QuoteController {
         res.proposedPaymentTerms = 'Net 45';
         res.proposedValidityDays = reqValidity;
         res.newTotal = price;
-        res.comboA = buildCombo('A', price, 'Net 45', reqValidity, q.GrandTotal__c);
-        res.comboB = buildCombo('B', net60Price, 'Net 60', reqValidity, q.GrandTotal__c);
+        res.comboA = buildCombo(
+          'A',
+          price,
+          'Net 45',
+          reqValidity,
+          q.GrandTotal__c
+        );
+        res.comboB = buildCombo(
+          'B',
+          net60Price,
+          'Net 60',
+          reqValidity,
+          q.GrandTotal__c
+        );
         res.responseMessage =
           'We can offer two options: ' +
-          'Option A — your requested price of ' + price.setScale(2) + ' € with Net 45 terms. ' +
-          'Option B — Net 60 terms with a price of ' + net60Price + ' €. ' +
+          'Option A — your requested price of ' +
+          price.setScale(2) +
+          ' € with Net 45 terms. ' +
+          'Option B — Net 60 terms with a price of ' +
+          net60Price +
+          ' €. ' +
           'Which works better for you?';
         return res;
       }
@@ -1072,8 +1239,11 @@ public without sharing class QuoteController {
       );
       update upd;
 
-      processQuoteDecision(quoteId, 'Accepted',
-        'Accepted via AI negotiation — price and terms within approved limits.');
+      processQuoteDecision(
+        quoteId,
+        'Accepted',
+        'Accepted via AI negotiation — price and terms within approved limits.'
+      );
 
       res.outcome = 'ACCEPTED';
       res.newTotal = price;
@@ -1081,32 +1251,52 @@ public without sharing class QuoteController {
       res.proposedValidityDays = reqValidity;
       res.responseMessage =
         'Great news — your offer has been accepted! ' +
-        'Total: ' + price.setScale(2) + ' € | Payment: ' + approvedTerms +
-        ' | Valid for ' + reqValidity + ' days. ' +
+        'Total: ' +
+        price.setScale(2) +
+        ' € | Payment: ' +
+        approvedTerms +
+        ' | Valid for ' +
+        reqValidity +
+        ' days. ' +
         'You\'ll receive the updated quote and DocuSign link shortly.';
-
     } else if (price >= floor * 0.85) {
       // AUTO-COUNTER: midpoint price, grant the terms
       Decimal midpoint = ((price + q.GrandTotal__c) / 2).setScale(2);
-      createAutoCounterVersionMultiTerm(q, midpoint, approvedTerms, reqValidity, message);
+      createAutoCounterVersionMultiTerm(
+        q,
+        midpoint,
+        approvedTerms,
+        reqValidity,
+        message
+      );
 
       res.outcome = 'COUNTERED';
       res.newTotal = midpoint;
       res.proposedPaymentTerms = approvedTerms;
       res.proposedValidityDays = reqValidity;
       res.responseMessage =
-        'We can meet you halfway: ' + midpoint + ' € with ' + approvedTerms + ' terms' +
-        ' and ' + reqValidity + ' days validity. ' +
+        'We can meet you halfway: ' +
+        midpoint +
+        ' € with ' +
+        approvedTerms +
+        ' terms' +
+        ' and ' +
+        reqValidity +
+        ' days validity. ' +
         'Would you like to accept this counter-proposal?';
-
     } else {
       // AUTO-REJECT
-      processQuoteDecision(quoteId, 'Rejected',
-        'Price automatically rejected — below minimum threshold.');
+      processQuoteDecision(
+        quoteId,
+        'Rejected',
+        'Price automatically rejected — below minimum threshold.'
+      );
       res.outcome = 'REJECTED';
       res.responseMessage =
         'Unfortunately we\'re unable to go below our minimum price for this configuration. ' +
-        'The current best offer is ' + floor.setScale(2) + ' €. ' +
+        'The current best offer is ' +
+        floor.setScale(2) +
+        ' €. ' +
         'Would you like to accept that, or shall I escalate to our sales team?';
     }
 
@@ -1114,43 +1304,71 @@ public without sharing class QuoteController {
   }
 
   private static String buildCombo(
-    String label, Decimal price, String terms, Integer validityDays, Decimal originalTotal
+    String label,
+    Decimal price,
+    String terms,
+    Integer validityDays,
+    Decimal originalTotal
   ) {
     Decimal discountPct = originalTotal > 0
       ? ((originalTotal - price) / originalTotal * 100).setScale(1)
       : 0;
-    return 'Combo ' + label + ': ' + price.setScale(2) + ' € (' + discountPct + '% discount)' +
-      ' | ' + terms + ' | Validity: ' + validityDays + ' days';
+    return 'Combo ' +
+      label +
+      ': ' +
+      price.setScale(2) +
+      ' € (' +
+      discountPct +
+      '% discount)' +
+      ' | ' +
+      terms +
+      ' | Validity: ' +
+      validityDays +
+      ' days';
   }
 
   // Trade-off: upgrade customer's payment terms by one tier (used for Combo B offer)
   // Net 90→Net 45 | Net 60→Net 30 | Net 45→Net 30 | Net 30→Net 15 | ≤Net 15→unchanged
   private static String upgradePaymentTerms(String terms) {
-    if (terms == null) return 'Net 30';
-    if (terms.containsIgnoreCase('90')) return 'Net 45';
-    if (terms.containsIgnoreCase('60')) return 'Net 30';
-    if (terms.containsIgnoreCase('45')) return 'Net 30';
-    if (terms.containsIgnoreCase('30')) return 'Net 15';
+    if (terms == null)
+      return 'Net 30';
+    if (terms.containsIgnoreCase('90'))
+      return 'Net 45';
+    if (terms.containsIgnoreCase('60'))
+      return 'Net 30';
+    if (terms.containsIgnoreCase('45'))
+      return 'Net 30';
+    if (terms.containsIgnoreCase('30'))
+      return 'Net 15';
     return terms;
   }
 
   // Trade-off reward: extra discount % authorized ONLY IF customer accepts the upgraded terms
   // Bigger jumps in terms quality = bigger discount reward
   private static Decimal termsUpgradeReward(String terms) {
-    if (terms == null) return 2.0;
-    if (terms.containsIgnoreCase('90')) return 5.0; // Net 90→Net 45: 2-tier jump, big reward
-    if (terms.containsIgnoreCase('60')) return 3.0; // Net 60→Net 30: solid reward
-    if (terms.containsIgnoreCase('45')) return 2.0; // Net 45→Net 30: standard reward
-    if (terms.containsIgnoreCase('30')) return 3.0; // Net 30→Net 15: premium for fastest tier
+    if (terms == null)
+      return 2.0;
+    if (terms.containsIgnoreCase('90'))
+      return 5.0; // Net 90→Net 45: 2-tier jump, big reward
+    if (terms.containsIgnoreCase('60'))
+      return 3.0; // Net 60→Net 30: solid reward
+    if (terms.containsIgnoreCase('45'))
+      return 2.0; // Net 45→Net 30: standard reward
+    if (terms.containsIgnoreCase('30'))
+      return 3.0; // Net 30→Net 15: premium for fastest tier
     return 2.0;
   }
 
   private static void createAutoCounterVersionMultiTerm(
-    TALEXO_Quote__c q, Decimal midpointPrice,
-    String approvedTerms, Integer validityDays, String customerMessage
+    TALEXO_Quote__c q,
+    Decimal midpointPrice,
+    String approvedTerms,
+    Integer validityDays,
+    String customerMessage
   ) {
     Integer nextVersion = q.VersionNumber__c != null
-      ? Integer.valueOf(q.VersionNumber__c) + 1 : 2;
+      ? Integer.valueOf(q.VersionNumber__c) + 1
+      : 2;
 
     update new TALEXO_Quote__c(Id = q.Id, IsPrimary__c = false);
 
@@ -1160,40 +1378,51 @@ public without sharing class QuoteController {
       NegotiationStatus__c = 'Auto Counter',
       GrandTotal__c = midpointPrice,
       FloorPrice__c = q.FloorPrice__c,
-      BulkDiscount__c = q.BulkDiscount__c != null ? Math.min(100, q.BulkDiscount__c) : 0,
+      BulkDiscount__c = q.BulkDiscount__c != null
+        ? Math.min(100, q.BulkDiscount__c)
+        : 0,
       PaymentTerms__c = approvedTerms,
       ExpirationDate__c = Date.today().addDays(validityDays),
       SignatureDeadlineDays__c = Math.min(validityDays - 7, 21),
       IsPrimary__c = true,
       VersionNumber__c = nextVersion,
-      NegotiationRound__c = (q.NegotiationRound__c != null ? q.NegotiationRound__c : 0) + 1,
+      NegotiationRound__c = (q.NegotiationRound__c != null
+          ? q.NegotiationRound__c
+          : 0) + 1,
       IsFinalOffer__c = false,
       CustomerCounterPrice__c = null,
       CounterMessage__c = null,
       Description__c = 'AI counter-proposal — midpoint price with negotiated terms.' +
-        (String.isNotBlank(customerMessage) ? ' Customer: ' + customerMessage : '')
+        (String.isNotBlank(customerMessage)
+          ? ' Customer: ' + customerMessage
+          : '')
     );
     insert newQ;
 
     List<NexusQuoteLineItem__c> newItems = new List<NexusQuoteLineItem__c>();
     for (NexusQuoteLineItem__c li : q.NexusQuoteLineItems__r) {
-      newItems.add(new NexusQuoteLineItem__c(
-        Quote__c = newQ.Id,
-        ProductName__c = li.ProductName__c,
-        ProductFamily__c = li.ProductFamily__c,
-        Quantity__c = li.Quantity__c,
-        ListPrice__c = li.ListPrice__c,
-        UnitPrice__c = li.UnitPrice__c,
-        Discount__c = li.Discount__c,
-        NetTotal__c = li.NetTotal__c
-      ));
+      newItems.add(
+        new NexusQuoteLineItem__c(
+          Quote__c = newQ.Id,
+          ProductName__c = li.ProductName__c,
+          ProductFamily__c = li.ProductFamily__c,
+          Quantity__c = li.Quantity__c,
+          ListPrice__c = li.ListPrice__c,
+          UnitPrice__c = li.UnitPrice__c,
+          Discount__c = li.Discount__c,
+          NetTotal__c = li.NetTotal__c
+        )
+      );
     }
-    if (!newItems.isEmpty()) insert newItems;
+    if (!newItems.isEmpty())
+      insert newItems;
 
     try {
       QuoteAIScoringAction.ScoreInput inp = new QuoteAIScoringAction.ScoreInput();
       inp.quoteId = newQ.Id;
-      QuoteAIScoringAction.scoreQuote(new List<QuoteAIScoringAction.ScoreInput>{ inp });
+      QuoteAIScoringAction.scoreQuote(
+        new List<QuoteAIScoringAction.ScoreInput>{ inp }
+      );
     } catch (Exception ex) {
       System.debug(LoggingLevel.WARN, 'AI rescore skipped: ' + ex.getMessage());
     }
@@ -1292,7 +1521,9 @@ public without sharing class QuoteController {
       NegotiationStatus__c = 'Auto Counter',
       GrandTotal__c = midpointPrice,
       FloorPrice__c = q.FloorPrice__c,
-      BulkDiscount__c = q.BulkDiscount__c != null ? Math.min(100, q.BulkDiscount__c) : 0,
+      BulkDiscount__c = q.BulkDiscount__c != null
+        ? Math.min(100, q.BulkDiscount__c)
+        : 0,
       PaymentTerms__c = q.PaymentTerms__c,
       ExpirationDate__c = Date.today().addDays(7),
       IsPrimary__c = true,
@@ -1430,9 +1661,7 @@ public without sharing class QuoteController {
         ContentDocument.Title,
         ContentDocument.FileExtension
       FROM ContentDocumentLink
-      WHERE
-        LinkedEntityId = :quoteId
-        AND ContentDocument.FileExtension = 'pdf'
+      WHERE LinkedEntityId = :quoteId AND ContentDocument.FileExtension = 'pdf'
       ORDER BY ContentDocument.CreatedDate DESC
       LIMIT 1
     ];

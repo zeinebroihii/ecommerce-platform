@@ -14,7 +14,7 @@ function fmt(n) {
   );
 }
 
-// Fallback: auto-generate combos from product catalog when no packages exist
+// Fallback: auto-generate combos from product catalog when no real packages exist
 function buildCombos(products) {
   const COMBO_FAMILIES = [
     "Computing",
@@ -37,7 +37,6 @@ function buildCombos(products) {
   ];
 
   for (const fam of families) {
-    if (combos.length >= 4) break;
     const famProds = byFamily[fam];
     if (!famProds || famProds.length < 2) continue;
     const selected = famProds.slice(0, Math.min(4, famProds.length));
@@ -67,45 +66,11 @@ function buildCombos(products) {
     });
   }
 
-  if (combos.length < 4) {
-    const usedIds = new Set(
-      combos.flatMap((c) => c.productsWithIndex.map((p) => p.id))
-    );
-    const leftover = products.filter((p) => !usedIds.has(p.productId));
-    while (combos.length < 4 && leftover.length >= 2) {
-      const selected = leftover.splice(0, Math.min(3, leftover.length));
-      const origTotal = selected.reduce((s, p) => s + (p.unitPrice || 0), 0);
-      const savings = origTotal * SAVINGS_PCT;
-      const comboPrice = origTotal - savings;
-      combos.push({
-        id: "combo-" + ++comboIdx,
-        brand: "Multi-Category",
-        title: "Bundle — " + selected.length + " products",
-        savings,
-        savingsFormatted: savings.toFixed(2),
-        price: comboPrice,
-        priceFormatted: fmt(comboPrice),
-        originalPrice: origTotal,
-        originalPriceFormatted: fmt(origTotal),
-        productsWithIndex: selected.map((p, idx) => ({
-          id: p.productId,
-          productId: p.productId,
-          name: p.name,
-          image: p.imageUrl || "",
-          price: p.unitPrice || 0,
-          priceFormatted: fmt(p.unitPrice || 0),
-          family: p.family || "",
-          idx
-        }))
-      });
-    }
-  }
-
   return combos;
 }
 
-// Map Apex PackageWrapper → combo deal shape for the template
-function packageToCombo(pkg) {
+// Map Apex PackageWrapper → combo deal shape, using product catalog for missing images
+function packageToCombo(pkg, productMap) {
   return {
     id: pkg.id,
     brand: pkg.category || "Bundle",
@@ -116,31 +81,35 @@ function packageToCombo(pkg) {
     priceFormatted: fmt(pkg.totalPrice || 0),
     originalPrice: pkg.originalPrice || 0,
     originalPriceFormatted: fmt(pkg.originalPrice || 0),
-    productsWithIndex: (pkg.items || []).map((item, idx) => ({
-      id: item.productId || item.id,
-      productId: item.productId || item.id,
-      name: item.productName,
-      image: item.productImageUrl || "",
-      price: item.productPrice || 0,
-      priceFormatted: fmt(item.productPrice || 0),
-      family: item.productFamily || "",
-      idx
-    }))
+    productsWithIndex: (pkg.items || []).map((item, idx) => {
+      const productId = item.productId || item.id;
+      const catalogProduct = productMap.get(productId) || {};
+      return {
+        id: productId,
+        productId,
+        name: item.productName,
+        image: item.productImageUrl || catalogProduct.imageUrl || "",
+        price: item.productPrice || 0,
+        priceFormatted: fmt(item.productPrice || 0),
+        family: item.productFamily || "",
+        idx
+      };
+    })
   };
 }
 
 export default class NexusComboDeals extends LightningElement {
   @track _combos = [];
-  @track _hasPackages = false;
+  _hasPackages = false;
+  _rawPackages = null;
+  _productMap = new Map();
 
   @wire(getActivePackages)
   wiredPackages({ data, error }) {
     if (data) {
-      if (data.length > 0) {
-        this._hasPackages = true;
-        this._combos = data.map(packageToCombo);
-      }
-      // if no packages, fallback wired products will fill _combos
+      this._hasPackages = true;
+      this._rawPackages = data;
+      this._rebuildFromPackages();
     } else if (error) {
       console.error("NexusComboDeals getActivePackages error", error);
     }
@@ -148,11 +117,23 @@ export default class NexusComboDeals extends LightningElement {
 
   @wire(getProductsWithStock, { searchTerm: null, category: null })
   wiredProducts({ data, error }) {
-    if (data && !this._hasPackages) {
-      this._combos = buildCombos(data);
+    if (data) {
+      this._productMap = new Map(data.map((p) => [p.productId, p]));
+      if (this._hasPackages) {
+        // Re-enrich package images now that catalog is available
+        this._rebuildFromPackages();
+      } else {
+        this._combos = buildCombos(data);
+      }
     } else if (error && !this._hasPackages) {
       console.error("NexusComboDeals wire error", error);
     }
+  }
+
+  _rebuildFromPackages() {
+    this._combos = (this._rawPackages || [])
+      .map((pkg) => packageToCombo(pkg, this._productMap))
+      .filter((combo) => combo.productsWithIndex.length > 0);
   }
 
   get comboDeals() {

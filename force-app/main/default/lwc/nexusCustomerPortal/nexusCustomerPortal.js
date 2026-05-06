@@ -37,7 +37,7 @@ const PORTAL_NAV_ITEMS = [
   {
     id: "combo-deals",
     label: "Combo Deals",
-    icon: "utility:zap",
+    icon: "utility:package",
     scrollId: ""
   },
   { id: "swap", label: "Nexus Swap", icon: "utility:sync", scrollId: "" },
@@ -82,7 +82,9 @@ function apexToPortalProduct(p) {
     isPopular: false,
     colors: [],
     status: p.availabilityStatus || (p.isOutOfStock ? "Épuisé" : "En stock"),
-    stockLevel: p.quantityAvailable || 0
+    stockLevel: p.quantityAvailable || 0,
+    visibilityScore: p.visibilityScore != null ? p.visibilityScore : null,
+    stockStatus: p.stockStatus || null
   };
 }
 
@@ -188,6 +190,9 @@ export default class NexusCustomerPortal extends LightningElement {
   get profilePostalCode() {
     return this._userProfile.postalCode || "";
   }
+  get profileCountry() {
+    return this._userProfile.country || "";
+  }
   get profileAccountId() {
     return this._userProfile.accountId || "";
   }
@@ -204,6 +209,53 @@ export default class NexusCustomerPortal extends LightningElement {
   }
   get isB2B() {
     return this._userProfile.customerType === "B2B";
+  }
+  get profileTier() {
+    return this._userProfile.customerTier || null;
+  }
+  get hasTierBadge() {
+    return !!this._userProfile.customerTier;
+  }
+  get tierBadgeClass() {
+    const t = (this._userProfile.customerTier || "").toLowerCase();
+    if (t === "platinum") return "ncp-tier-badge ncp-tier-platinum";
+    if (t === "gold") return "ncp-tier-badge ncp-tier-gold";
+    return "ncp-tier-badge ncp-tier-standard";
+  }
+  get tierBadgeIcon() {
+    const t = (this._userProfile.customerTier || "").toLowerCase();
+    if (t === "platinum") return "★ PLATINUM";
+    if (t === "gold") return "★ GOLD";
+    return "STANDARD";
+  }
+
+  // ── Stock Intelligence stats (computed from loaded products) ─────────────
+  get stockBoostedCount() {
+    return this._products.filter((p) => p.stockStatus === "Boosted").length;
+  }
+  get stockBuriedCount() {
+    return this._products.filter((p) => p.stockStatus === "Buried").length;
+  }
+  get stockNormalCount() {
+    return this._products.filter((p) => p.stockStatus === "Normal").length;
+  }
+  get stockVisibleCount() {
+    return this.tierFilteredProducts.length;
+  }
+
+  // ── Tier-based catalog filter (Phase 2.3 — Boost & Bury override) ─────────
+  // Platinum: all products visible (VIP bypass)
+  // Gold:     show if VisibilityScore > 20 (or unscored)
+  // Standard: show only VisibilityScore > 50 (or unscored)
+  get tierFilteredProducts() {
+    const tier = (this._userProfile.customerTier || "").toLowerCase();
+    if (tier === "platinum") return this._products;
+    return this._products.filter((p) => {
+      const score = p.visibilityScore;
+      if (score == null) return true; // unscored → always visible
+      if (tier === "gold") return score > 20;
+      return score > 50; // Standard (default)
+    });
   }
 
   // ── Password change getters ────────────────────────────────────────────────
@@ -713,7 +765,7 @@ export default class NexusCustomerPortal extends LightningElement {
       {
         id: "combo-deals",
         label: "Combo Deals",
-        icon: "utility:zap",
+        icon: "utility:package",
         hasBadge: false
       }
     ]);
@@ -739,12 +791,6 @@ export default class NexusCustomerPortal extends LightningElement {
             }
           ]),
       {
-        id: "timeline",
-        label: "Timeline 360°",
-        icon: "utility:date_time",
-        hasBadge: false
-      },
-      {
         id: "war-room",
         label: "War Room",
         icon: "utility:strategy",
@@ -766,12 +812,6 @@ export default class NexusCustomerPortal extends LightningElement {
         id: "my-reviews",
         label: "My Reviews",
         icon: "utility:rating",
-        hasBadge: false
-      },
-      {
-        id: "settings",
-        label: "Settings",
-        icon: "utility:settings",
         hasBadge: false
       }
     ]);
@@ -1099,7 +1139,12 @@ export default class NexusCustomerPortal extends LightningElement {
   }
 
   handleViewOfferFromRec(e) {
-    this._openProductDetailById((e.detail && e.detail.id) || null);
+    const id = (e.detail && e.detail.id) || null;
+    if (!id) return;
+    this._selectedProductId = id;
+    const p = this._products.find((pr) => pr.id === id);
+    this._modalActiveColor =
+      p && p.colors && p.colors[0] ? p.colors[0].name : null;
   }
 
   handleViewProductFromRec(e) {
@@ -1448,25 +1493,32 @@ export default class NexusCustomerPortal extends LightningElement {
           try {
             if (bs.prechatAPI) {
               const fields = {};
-              if (this.profileAccountId) fields.AccountId = this.profileAccountId;
+              if (this.profileAccountId)
+                fields.AccountId = this.profileAccountId;
               if (quoteId) fields.QuoteId = quoteId;
               if (quoteName) fields.QuoteName = quoteName;
               if (Object.keys(fields).length > 0) {
                 bs.prechatAPI.setHiddenPrechatFields(fields);
               }
             }
-          } catch (e) { /* prechatAPI not available on this deployment */ }
+          } catch {
+            /* prechatAPI not available on this deployment */
+          }
           bs.utilAPI.launchChat();
           return;
         }
-      } catch (e) { /* fall through to DOM fallback */ }
+      } catch {
+        /* fall through to DOM fallback */
+      }
 
       // Fallback: classic Embedded Service Chat — click the help button
       try {
+        /* eslint-disable @lwc/lwc/no-document-query */
         const btn =
           document.querySelector(".embeddedServiceHelpButton button") ||
           document.querySelector('[class*="helpButton"] button') ||
           document.querySelector("button.startButton");
+        /* eslint-enable @lwc/lwc/no-document-query */
         if (btn) btn.click();
       } catch (e2) {
         console.error("Chat launch error:", e2);

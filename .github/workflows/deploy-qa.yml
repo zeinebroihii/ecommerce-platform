@@ -1,0 +1,34 @@
+name: Deploy to QA
+
+on:
+  push:
+    branches: [qa]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authenticate to QA org
+        run: |
+          echo "${{ secrets.SF_AUTH_URL_QA }}" > auth.url
+          sf org login sfdx-url --sfdx-url-file auth.url --alias qa-org
+
+      - name: Deploy to QA
+        run: |
+          sf project deploy start \
+            --target-org qa-org \
+            --source-dir force-app \
+            --test-level RunLocalTests
+
+      - name: Notify success
+        if: success()
+        run: echo "Deployed to QA successfully"
+
+      - name: Notify failure
+        if: failure()
+        run: echo "QA deployment failed - check logs"

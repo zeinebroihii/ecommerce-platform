@@ -859,6 +859,31 @@
         <name>WorkCalibrationUser</name>
     </userPermissions>
     <fieldPermissions>
+        <field>BundleSuggestion__c.CoOccurrenceScore__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>BundleSuggestion__c.OverstockedProduct__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>BundleSuggestion__c.PairedProduct__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>BundleSuggestion__c.Status__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>BundleSuggestion__c.SuggestedDiscount__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
         <field>ComboPackage__c.Description__c</field>
         <readable>true</readable>
         <editable>true</editable>
@@ -908,6 +933,10 @@
         <readable>true</readable>
         <editable>true</editable>
     </fieldPermissions>
+    <tabVisibilities>
+        <tab>BundleSuggestion__c</tab>
+        <visibility>DefaultOn</visibility>
+    </tabVisibilities>
     <tabVisibilities>
         <tab>NexusComboPackages</tab>
         <visibility>DefaultOn</visibility>

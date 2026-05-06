@@ -57,6 +57,12 @@ export default class NexusAuthView extends LightningElement {
     this._startUrl = val || PORTAL_HOME;
   }
 
+  // SAML SSO config ID from Salesforce Setup → Single Sign-On Settings.
+  // After saving the SSO config in Setup, copy the record ID (15-char) here
+  // or set it via Experience Builder page properties.
+  // Format of the SP-initiated URL: /ss/login?so=<this-value>
+  @api ssoProviderId = "0LEg5000000hqub";
+
   // @api initialMode — allows parent modal to set the starting mode
   _initialMode = "login";
   @api
@@ -326,6 +332,15 @@ export default class NexusAuthView extends LightningElement {
   handleB2CSignup(event) {
     event.stopPropagation();
     this.mode = "signup-b2c";
+  }
+
+  // ── Enterprise SSO (Okta / SAML) ──────────────────────────────────────────
+  // Triggers SP-initiated SAML flow: browser → Salesforce → Okta → back.
+  // The ssoProviderId is the record ID of the SSO config in Salesforce Setup.
+  // If not configured yet, shows an informational toast instead of a broken redirect.
+  handleSSOLogin() {
+    window.location.href =
+      "https://integrator-4902175.okta.com/app/integrator-4902175_nexusportal_1/exk12j0klgzlvLBON698/sso/saml";
   }
 
   // ── B2C direct registration ───────────────────────────────────────────────

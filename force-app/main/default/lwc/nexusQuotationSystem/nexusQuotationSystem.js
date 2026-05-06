@@ -1,6 +1,5 @@
 import { LightningElement, wire, track, api } from "lwc";
 import { getRecord } from "lightning/uiRecordApi";
-import { refreshApex } from "@salesforce/apex";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import userId from "@salesforce/user/Id";
 import USER_ACCOUNT_FIELD from "@salesforce/schema/User.AccountId";
@@ -45,7 +44,6 @@ export default class NexusQuotationSystem extends LightningElement {
   // ── Salesforce data ────────────────────────────────────────────────────────
   @track accountId;
   @track _quotes = [];
-  @track _quotesWireResult;
   @track _sfDataLoaded = false;
 
   // ── Quote settings (CMT — fallback when no per-quote terms stored) ────────
@@ -68,9 +66,12 @@ export default class NexusQuotationSystem extends LightningElement {
   }
   get signatureDeadlineLabel() {
     const q = this.selectedQuote;
-    const days = q && q.signatureDeadlineDays != null
-      ? q.signatureDeadlineDays
-      : (this._quoteSettings ? this._quoteSettings.signatureDeadlineDays : 14);
+    const days =
+      q && q.signatureDeadlineDays != null
+        ? q.signatureDeadlineDays
+        : this._quoteSettings
+          ? this._quoteSettings.signatureDeadlineDays
+          : 14;
     return days ? days + " days after contract is sent" : null;
   }
 
@@ -104,9 +105,10 @@ export default class NexusQuotationSystem extends LightningElement {
   @track _counterSubmitting = false;
 
   // ── Unread message tracking ───────────────────────────────────────────────
-  @track _seenCounts = {};      // quoteId → message count when Messages tab last opened
+  @track _seenCounts = {}; // quoteId → message count when Messages tab last opened
   @track _floatingNotif = null; // { quoteId, quoteName } when new sales msg arrives
-  _prevMsgCounts = {};          // quoteId → count on last wire result (not reactive)
+  _prevMsgCounts = {}; // quoteId → count on last wire result (not reactive)
+  _msgPollTimer = null; // interval handle for real-time message polling
 
   // ── New quote request form ─────────────────────────────────────────────────
   @track _showNewForm = false;
@@ -118,17 +120,9 @@ export default class NexusQuotationSystem extends LightningElement {
   @track _formSubmitting = false;
 
   // ── Public API: refresh trigger from parent ────────────────────────────────
-  _needsRefresh = false;
   @api
   set refreshTrigger(val) {
-    if (val > 0) {
-      if (this._quotesWireResult) {
-        refreshApex(this._quotesWireResult);
-      } else {
-        // Wire hasn't resolved yet; refresh as soon as first result arrives
-        this._needsRefresh = true;
-      }
-    }
+    if (val > 0) this._loadQuotes();
   }
   get refreshTrigger() {
     return this._refreshTrigger || 0;
@@ -137,40 +131,62 @@ export default class NexusQuotationSystem extends LightningElement {
   // ── Wires ─────────────────────────────────────────────────────────────────
   @wire(getRecord, { recordId: userId, fields: [USER_ACCOUNT_FIELD] })
   wiredUser({ data }) {
-    if (data) this.accountId = data.fields.AccountId.value;
+    if (data) {
+      this.accountId = data.fields.AccountId.value;
+      this._loadQuotes();
+    }
   }
 
-  @wire(getAccountQuotes, { accountId: "$accountId" })
-  wiredQuotes(result) {
-    this._quotesWireResult = result;
-    if (result.data) {
-      this._sfDataLoaded = true;
-      // Detect new incoming sales messages for the floating notification
-      result.data.forEach((q) => {
-        if (!q.messageThread) return;
-        let msgs;
-        try { msgs = JSON.parse(q.messageThread); } catch (e) { return; }
-        const prev = this._prevMsgCounts[q.quoteId] || 0;
-        const curr = msgs.length;
-        if (prev > 0 && curr > prev) {
-          const newest = msgs[curr - 1];
-          if (newest && newest.sender === "sales" && this._selectedQuoteId !== q.quoteId) {
-            this._floatingNotif = { quoteId: q.quoteId, quoteName: q.name };
+  disconnectedCallback() {
+    this._stopMsgPoll();
+  }
+
+  _loadQuotes() {
+    if (!this.accountId) return;
+    getAccountQuotes({ accountId: this.accountId })
+      .then((data) => {
+        this._sfDataLoaded = true;
+        data.forEach((q) => {
+          if (!q.messageThread) return;
+          let msgs;
+          try {
+            msgs = JSON.parse(q.messageThread);
+          } catch {
+            return;
+          }
+          const prev = this._prevMsgCounts[q.quoteId] || 0;
+          const curr = msgs.length;
+          if (prev > 0 && curr > prev) {
+            const newest = msgs[curr - 1];
+            if (
+              newest &&
+              newest.sender === "sales" &&
+              this._selectedQuoteId !== q.quoteId
+            ) {
+              this._floatingNotif = { quoteId: q.quoteId, quoteName: q.name };
+            }
+          }
+          this._prevMsgCounts[q.quoteId] = curr;
+        });
+        this._quotes = data;
+        // If messages tab is open, sync _messages from server (picks up new sales replies)
+        if (this._modalTab === "messages" && this._selectedQuoteId) {
+          const q = data.find((r) => r.quoteId === this._selectedQuoteId);
+          if (q) {
+            const serverMsgs = this._parseThread(q.messageThread);
+            // Keep any optimistic messages not yet confirmed by the server
+            const serverIds = new Set(serverMsgs.map((m) => m.id));
+            const optimistics = this._messages.filter(
+              (m) => m.id.startsWith("opt-") && !serverIds.has(m.id)
+            );
+            this._messages = [...serverMsgs, ...optimistics];
           }
         }
-        this._prevMsgCounts[q.quoteId] = curr;
+      })
+      .catch(() => {
+        this._sfDataLoaded = true;
+        this._quotes = [];
       });
-      this._quotes = result.data;
-      if (this._needsRefresh) {
-        this._needsRefresh = false;
-        refreshApex(result);
-      }
-    }
-    if (result.error) {
-      this._sfDataLoaded = true;
-      this._quotes = [];
-      this._needsRefresh = false;
-    }
   }
 
   get isLoading() {
@@ -186,11 +202,12 @@ export default class NexusQuotationSystem extends LightningElement {
   get filterOptions() {
     const labels = {
       All: "ALL",
+      Presented: "PRESENTED",
+      Signed: "SIGNED",
       Accepted: "ACCEPTED",
-      Sent: "SENT",
-      Draft: "DRAFT"
+      Rejected: "REJECTED"
     };
-    return ["All", "Accepted", "Sent", "Draft"].map((f) => ({
+    return ["All", "Presented", "Signed", "Accepted", "Rejected"].map((f) => ({
       id: f,
       label: labels[f],
       cls:
@@ -271,7 +288,8 @@ export default class NexusQuotationSystem extends LightningElement {
     msgs.forEach((m, i) => {
       if (m.sender === "customer" || m.sender === "user") lastCustIdx = i;
     });
-    return msgs.slice(lastCustIdx + 1).filter((m) => m.sender === "sales").length;
+    return msgs.slice(lastCustIdx + 1).filter((m) => m.sender === "sales")
+      .length;
   }
 
   get selectedQuoteUnread() {
@@ -459,8 +477,8 @@ export default class NexusQuotationSystem extends LightningElement {
           key: String(i),
           productName: li.productName || "—",
           productFamily: li.productFamily || "—",
-          productImage: null,
-          hasImage: false,
+          productImage: li.imageUrl || null,
+          hasImage: !!li.imageUrl,
           quantity: li.quantity,
           unitPrice: this._fmtCurrency(li.unitPrice || li.listPrice),
           totalPrice: this._fmtCurrency(li.netTotal),
@@ -576,9 +594,13 @@ export default class NexusQuotationSystem extends LightningElement {
       return {
         ...m,
         rowCls: isCustomer ? "nqs-msg-row nqs-msg-row-user" : "nqs-msg-row",
-        bubbleCls: isCustomer ? "nqs-bubble nqs-bubble-user" : "nqs-bubble nqs-bubble-rep",
+        bubbleCls: isCustomer
+          ? "nqs-bubble nqs-bubble-user"
+          : "nqs-bubble nqs-bubble-rep",
         timeCls: isCustomer ? "nqs-msg-time nqs-msg-time-user" : "nqs-msg-time",
-        avatarCls: isCustomer ? "nqs-avatar nqs-avatar-user" : "nqs-avatar nqs-avatar-rep",
+        avatarCls: isCustomer
+          ? "nqs-avatar nqs-avatar-user"
+          : "nqs-avatar nqs-avatar-rep",
         avatarInitial: isCustomer ? "C" : "S"
       };
     });
@@ -644,6 +666,7 @@ export default class NexusQuotationSystem extends LightningElement {
   }
   handleCloseDetail() {
     this._selectedQuoteId = null;
+    this._stopMsgPoll();
   }
   handleStopProp(e) {
     e.stopPropagation();
@@ -652,17 +675,26 @@ export default class NexusQuotationSystem extends LightningElement {
   // ── Handlers: modal tabs ──────────────────────────────────────────────────
   handleTabDetails() {
     this._modalTab = "details";
+    this._stopMsgPoll();
   }
   handleTabMessages() {
     this._modalTab = "messages";
     const unread = this._salesUnreadFor(this._selectedQuoteId);
     this._seenCounts = { ...this._seenCounts, [this._selectedQuoteId]: unread };
-    if (this._floatingNotif && this._floatingNotif.quoteId === this._selectedQuoteId) {
+    if (
+      this._floatingNotif &&
+      this._floatingNotif.quoteId === this._selectedQuoteId
+    ) {
       this._floatingNotif = null;
     }
+    // Start polling so new admin messages appear without a page refresh
+    this._stopMsgPoll();
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    this._msgPollTimer = setInterval(() => this._loadQuotes(), 8000);
   }
   handleTabHistory() {
     this._modalTab = "history";
+    this._stopMsgPoll();
   }
 
   // ── Handlers: version toggle (mock) / view version (SF) ──────────────────
@@ -724,8 +756,15 @@ export default class NexusQuotationSystem extends LightningElement {
               : ""
           }))
         : [];
-    } catch (e) {
+    } catch {
       return [];
+    }
+  }
+
+  _stopMsgPoll() {
+    if (this._msgPollTimer) {
+      clearInterval(this._msgPollTimer);
+      this._msgPollTimer = null;
     }
   }
 
@@ -747,17 +786,18 @@ export default class NexusQuotationSystem extends LightningElement {
     const inputEl = this.template.querySelector(".nqs-msg-input");
     if (inputEl) inputEl.value = "";
 
-    postCustomerMessage({ quoteId: this._selectedQuoteId, messageText: txt }).catch(
-      () => {
-        // Remove optimistic message on failure
-        this._messages = this._messages.filter((m) => m.id !== optimistic.id);
-        this._toast(
-          "Message Failed",
-          "Could not send your message. Please try again.",
-          "error"
-        );
-      }
-    );
+    postCustomerMessage({
+      quoteId: this._selectedQuoteId,
+      messageText: txt
+    }).catch(() => {
+      // Remove optimistic message on failure
+      this._messages = this._messages.filter((m) => m.id !== optimistic.id);
+      this._toast(
+        "Message Failed",
+        "Could not send your message. Please try again.",
+        "error"
+      );
+    });
   }
 
   // ── Handlers: PDF ─────────────────────────────────────────────────────────
@@ -825,7 +865,9 @@ export default class NexusQuotationSystem extends LightningElement {
       decision: "Accepted",
       reason: ""
     })
-      .then(() => refreshApex(this._quotesWireResult))
+      .then(() => {
+        this._loadQuotes();
+      })
       .then(() => {
         this._isDeciding = false;
         const acceptedId = this._selectedQuoteId;
@@ -891,7 +933,7 @@ export default class NexusQuotationSystem extends LightningElement {
       .then(() => {
         this._showRejectForm = false;
         this._rejectReason = "";
-        return refreshApex(this._quotesWireResult);
+        this._loadQuotes();
       })
       .then(() => {
         this._isDeciding = false;
@@ -965,7 +1007,7 @@ export default class NexusQuotationSystem extends LightningElement {
             "warning"
           );
         }
-        return refreshApex(this._quotesWireResult);
+        this._loadQuotes();
       })
       .catch((err) => {
         this._counterSubmitting = false;
@@ -977,9 +1019,7 @@ export default class NexusQuotationSystem extends LightningElement {
       });
   }
   get counterSubmitLabel() {
-    return this._counterSubmitting
-      ? "Submitting…"
-      : "Submit Counter Offer";
+    return this._counterSubmitting ? "Submitting…" : "Submit Counter Offer";
   }
 
   // ── Handlers: new quote form ───────────────────────────────────────────────
@@ -1021,6 +1061,7 @@ export default class NexusQuotationSystem extends LightningElement {
       .then(() => {
         this._formSubmitting = false;
         this._formStep = "success";
+        this._loadQuotes();
       })
       .catch((err) => {
         this._formSubmitting = false;

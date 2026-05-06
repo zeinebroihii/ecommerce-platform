@@ -386,11 +386,19 @@ public without sharing class NexusQuoteController {
     String salesNote
   ) {
     try {
-      applyNegotiatedTermsCore(quoteId, approvedPrice, approvedPaymentTerms, approvedValidityDays, salesNote);
+      applyNegotiatedTermsCore(
+        quoteId,
+        approvedPrice,
+        approvedPaymentTerms,
+        approvedValidityDays,
+        salesNote
+      );
     } catch (AuraHandledException ahe) {
       throw ahe;
     } catch (Exception e) {
-      throw new AuraHandledException('Failed to apply negotiated terms: ' + e.getMessage());
+      throw new AuraHandledException(
+        'Failed to apply negotiated terms: ' + e.getMessage()
+      );
     }
   }
 
@@ -405,14 +413,25 @@ public without sharing class NexusQuoteController {
     if (approvedPrice == null || approvedPrice <= 0)
       throw new IllegalArgumentException('Invalid approved price.');
 
-    Integer validDays = (approvedValidityDays != null && approvedValidityDays > 0)
-      ? approvedValidityDays : 30;
+    Integer validDays = (approvedValidityDays != null &&
+      approvedValidityDays > 0)
+      ? approvedValidityDays
+      : 30;
 
     TALEXO_Quote__c q = [
-      SELECT Id, Name, Status__c, Opportunity__c, Opportunity__r.AccountId,
-             Opportunity__r.Account.Name,
-             GrandTotal__c, VersionNumber__c, BulkDiscount__c,
-             EscalationComboA__c, EscalationComboB__c, MessageThread__c
+      SELECT
+        Id,
+        Name,
+        Status__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        Opportunity__r.Account.Name,
+        GrandTotal__c,
+        VersionNumber__c,
+        BulkDiscount__c,
+        EscalationComboA__c,
+        EscalationComboB__c,
+        MessageThread__c
       FROM TALEXO_Quote__c
       WHERE Id = :quoteId
       LIMIT 1
@@ -421,76 +440,140 @@ public without sharing class NexusQuoteController {
     // Update the existing quote in-place — keeps the same Name (e.g. QUOTE-0165)
     // so the customer portal always shows the correct record without confusion.
     update new TALEXO_Quote__c(
-      Id                      = q.Id,
-      Status__c               = 'Presented',
-      NegotiationStatus__c    = 'Sales Approved',
-      GrandTotal__c           = approvedPrice,
+      Id = q.Id,
+      Status__c = 'Presented',
+      NegotiationStatus__c = 'Sales Approved',
+      GrandTotal__c = approvedPrice,
       FinalNegotiatedPrice__c = approvedPrice,
-      FloorPrice__c           = approvedPrice,
-      PaymentTerms__c         = approvedPaymentTerms,
-      ExpirationDate__c       = Date.today().addDays(validDays),
-      IsPrimary__c            = true,
-      IsFinalOffer__c         = true,
-      CounterMessage__c       = null,
-      EscalationComboA__c     = null,
-      EscalationComboB__c     = null,
-      Description__c          = 'Sales-approved final offer.' +
+      FloorPrice__c = approvedPrice,
+      PaymentTerms__c = approvedPaymentTerms,
+      ExpirationDate__c = Date.today().addDays(validDays),
+      IsPrimary__c = true,
+      IsFinalOffer__c = true,
+      CounterMessage__c = null,
+      EscalationComboA__c = null,
+      EscalationComboB__c = null,
+      Description__c = 'Sales-approved final offer.' +
         (String.isNotBlank(salesNote) ? ' Note: ' + salesNote : '')
     );
 
     // Admin bell notification
     try {
       insert new TALEXO_Notification__c(
-        Title__c   = 'Combo Approved: ' + q.Name,
-        Message__c = 'Sales approved ' + approvedPrice.setScale(2) + ' € | ' +
-                     approvedPaymentTerms + ' for ' + q.Opportunity__r.Account.Name +
-                     (String.isNotBlank(salesNote) ? ' — ' + salesNote : ''),
-        Type__c    = 'Quote',
-        IsRead__c  = false
+        Title__c = 'Combo Approved: ' + q.Name,
+        Message__c = 'Sales approved ' +
+          approvedPrice.setScale(2) +
+          ' € | ' +
+          approvedPaymentTerms +
+          ' for ' +
+          q.Opportunity__r.Account.Name +
+          (String.isNotBlank(salesNote) ? ' — ' + salesNote : ''),
+        Type__c = 'Quote',
+        IsRead__c = false
       );
-    } catch (Exception nx) { /* notification is non-blocking */ }
+    } catch (Exception nx) {
+      /* notification is non-blocking */
+    }
 
     // Email the customer + build chat message
     List<User> custUsers = [
       SELECT Id, Email, FirstName
       FROM User
-      WHERE AccountId = :q.Opportunity__r.AccountId
-        AND IsActive = TRUE AND UserType = 'PowerCustomerSuccess'
+      WHERE
+        AccountId = :q.Opportunity__r.AccountId
+        AND IsActive = TRUE
+        AND UserType = 'PowerCustomerSuccess'
       LIMIT 1
     ];
 
-    String custFirstName = custUsers.isEmpty() ? 'there' : custUsers[0].FirstName;
-    String salesMsg = String.isNotBlank(salesNote) ? salesNote :
-      'Hi ' + custFirstName + ', I\'ve reviewed your request. ' +
-      'We can offer ' + approvedPrice.setScale(2) + ' € with ' +
-      approvedPaymentTerms + ' payment terms, valid for ' + validDays + ' days.';
+    String custFirstName = custUsers.isEmpty()
+      ? 'there'
+      : custUsers[0].FirstName;
+    String salesMsg = String.isNotBlank(salesNote)
+      ? salesNote
+      : 'Hi ' +
+        custFirstName +
+        ', I\'ve reviewed your request. ' +
+        'We can offer ' +
+        approvedPrice.setScale(2) +
+        ' € with ' +
+        approvedPaymentTerms +
+        ' payment terms, valid for ' +
+        validDays +
+        ' days.';
 
     // Append sales reply to the message thread on the same quote
-    String existingThread = String.isNotBlank(q.MessageThread__c) ? q.MessageThread__c : '[]';
+    String existingThread = String.isNotBlank(q.MessageThread__c)
+      ? q.MessageThread__c
+      : '[]';
     String msgId = 's' + String.valueOf(DateTime.now().getTime());
     String msgTime = DateTime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
-    String newEntry = '{"id":"' + msgId + '","sender":"sales","text":' +
-      JSON.serialize(salesMsg) + ',"time":"' + msgTime + '"}';
+    String newEntry =
+      '{"id":"' +
+      msgId +
+      '","sender":"sales","text":' +
+      JSON.serialize(salesMsg) +
+      ',"time":"' +
+      msgTime +
+      '"}';
     String updatedThread = existingThread == '[]'
       ? '[' + newEntry + ']'
       : existingThread.removeEnd(']') + ',' + newEntry + ']';
     update new TALEXO_Quote__c(Id = q.Id, MessageThread__c = updatedThread);
 
-    if (!custUsers.isEmpty() && String.isNotBlank(custUsers[0].Email)) {
-      Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-      mail.setToAddresses(new List<String>{ custUsers[0].Email });
-      mail.setSubject('Nexus — Your negotiated quote is ready: ' + q.Name);
-      mail.setPlainTextBody(
-        'Dear ' + custUsers[0].FirstName + ',\n\n' +
-        'Great news! Our sales team reviewed your request and approved a special offer:\n\n' +
-        '  • Total: ' + approvedPrice.setScale(2).toPlainString() + ' €\n' +
-        '  • Payment terms: ' + approvedPaymentTerms + '\n' +
-        '  • Valid for: ' + validDays + ' days\n\n' +
-        (String.isNotBlank(salesNote) ? 'Note from our team: ' + salesNote + '\n\n' : '') +
-        'Please log in to your portal to review and sign the updated quote.\n\n' +
-        'Best regards,\nThe Nexus Sales Team'
-      );
-      Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+    if (!custUsers.isEmpty()) {
+      // In-app portal bell notification — non-blocking
+      try {
+        NotificationController.push(
+          custUsers[0].Id,
+          'Your quote ' + q.Name + ' has been updated',
+          'Our sales team approved a special offer: ' +
+            approvedPrice.setScale(2) +
+            ' € | ' +
+            approvedPaymentTerms +
+            '. Log in to review and sign.',
+          'Quote',
+          '/ss/s/mes-offres'
+        );
+      } catch (Exception nx) {
+        /* non-blocking */
+      }
+
+      // Email notification — non-blocking so it never rolls back DML
+      if (String.isNotBlank(custUsers[0].Email)) {
+        try {
+          Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+          mail.setToAddresses(new List<String>{ custUsers[0].Email });
+          mail.setSubject('Nexus — Your negotiated quote is ready: ' + q.Name);
+          mail.setPlainTextBody(
+            'Dear ' +
+              custUsers[0].FirstName +
+              ',\n\n' +
+              'Great news! Our sales team reviewed your request and approved a special offer:\n\n' +
+              '  • Total: ' +
+              approvedPrice.setScale(2).toPlainString() +
+              ' €\n' +
+              '  • Payment terms: ' +
+              approvedPaymentTerms +
+              '\n' +
+              '  • Valid for: ' +
+              validDays +
+              ' days\n\n' +
+              (String.isNotBlank(salesNote)
+                ? 'Note from our team: ' + salesNote + '\n\n'
+                : '') +
+              'Please log in to your portal to review and sign the updated quote.\n\n' +
+              'Best regards,\nThe Nexus Sales Team'
+          );
+          mail.setSaveAsActivity(false);
+          Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+        } catch (Exception emailEx) {
+          System.debug(
+            LoggingLevel.WARN,
+            'applyNegotiatedTermsCore email failed: ' + emailEx.getMessage()
+          );
+        }
+      }
     }
   }
 
@@ -502,35 +585,67 @@ public without sharing class NexusQuoteController {
     // Fetch recent primary presented quotes and filter in Apex.
     List<TALEXO_Quote__c> candidates = [
       SELECT
-        Id, Name, Status__c, NegotiationStatus__c,
-        GrandTotal__c, ExpirationDate__c, PaymentTerms__c,
-        BulkDiscount__c, VersionNumber__c, AcceptanceProbability__c,
-        AIReason__c, IsPrimary__c, CreatedDate,
-        Opportunity__c, Opportunity__r.Name,
-        Opportunity__r.Account.Name, Opportunity__r.AccountId,
-        CustomerCounterPrice__c, CounterMessage__c,
-        EscalationComboA__c, EscalationComboB__c,
-        RequestedPaymentTerms__c, NegotiationRound__c,
-        IsFinalOffer__c, FinalNegotiatedPrice__c,
-        DocuSign_Status__c, Is_Amendment__c, Is_Renewal__c,
-        MRR__c, OneTimeTotal__c, RecurringTotal__c,
-        GeneralTerms__c, SignatureDeadlineDays__c, MessageThread__c,
-        VolumeDiscountApplied__c, ApprovalStatus__c,
+        Id,
+        Name,
+        Status__c,
+        NegotiationStatus__c,
+        GrandTotal__c,
+        ExpirationDate__c,
+        PaymentTerms__c,
+        BulkDiscount__c,
+        VersionNumber__c,
+        AcceptanceProbability__c,
+        AIReason__c,
+        IsPrimary__c,
+        CreatedDate,
+        Opportunity__c,
+        Opportunity__r.Name,
+        Opportunity__r.Account.Name,
+        Opportunity__r.AccountId,
+        CustomerCounterPrice__c,
+        CounterMessage__c,
+        EscalationComboA__c,
+        EscalationComboB__c,
+        RequestedPaymentTerms__c,
+        NegotiationRound__c,
+        IsFinalOffer__c,
+        FinalNegotiatedPrice__c,
+        DocuSign_Status__c,
+        Is_Amendment__c,
+        Is_Renewal__c,
+        MRR__c,
+        OneTimeTotal__c,
+        RecurringTotal__c,
+        GeneralTerms__c,
+        SignatureDeadlineDays__c,
+        MessageThread__c,
+        VolumeDiscountApplied__c,
+        ApprovalStatus__c,
         (
-          SELECT Id, ProductName__c, ProductFamily__c, Quantity__c,
-                 ListPrice__c, UnitPrice__c, Discount__c, NetTotal__c
+          SELECT
+            Id,
+            ProductName__c,
+            ProductFamily__c,
+            Quantity__c,
+            ListPrice__c,
+            UnitPrice__c,
+            Discount__c,
+            NetTotal__c
           FROM NexusQuoteLineItems__r
         )
       FROM TALEXO_Quote__c
-      WHERE IsPrimary__c = true
+      WHERE
+        IsPrimary__c = TRUE
         AND Status__c NOT IN ('Accepted', 'Signed', 'Rejected')
       ORDER BY CreatedDate DESC
       LIMIT 100
     ];
     List<TALEXO_Quote__c> escalated = new List<TALEXO_Quote__c>();
     for (TALEXO_Quote__c q : candidates) {
-      if (String.isNotBlank(q.CounterMessage__c) &&
-          q.CounterMessage__c.startsWith('ESCALATION')) {
+      if (
+        String.isNotBlank(q.CounterMessage__c) &&
+        q.CounterMessage__c.startsWith('ESCALATION')
+      ) {
         escalated.add(q);
       }
     }
@@ -541,18 +656,27 @@ public without sharing class NexusQuoteController {
 
   @AuraEnabled
   public static void postCustomerMessage(Id quoteId, String messageText) {
-    if (String.isBlank(messageText)) return;
+    if (String.isBlank(messageText))
+      return;
     TALEXO_Quote__c q = [
       SELECT Id, MessageThread__c
       FROM TALEXO_Quote__c
       WHERE Id = :quoteId
       LIMIT 1
     ];
-    String existing = String.isNotBlank(q.MessageThread__c) ? q.MessageThread__c : '[]';
+    String existing = String.isNotBlank(q.MessageThread__c)
+      ? q.MessageThread__c
+      : '[]';
     String msgId = 'c' + String.valueOf(DateTime.now().getTime());
     String msgTime = DateTime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
-    String entry = '{"id":"' + msgId + '","sender":"customer","text":' +
-      JSON.serialize(messageText.trim()) + ',"time":"' + msgTime + '"}';
+    String entry =
+      '{"id":"' +
+      msgId +
+      '","sender":"customer","text":' +
+      JSON.serialize(messageText.trim()) +
+      ',"time":"' +
+      msgTime +
+      '"}';
     String updated = existing == '[]'
       ? '[' + entry + ']'
       : existing.removeEnd(']') + ',' + entry + ']';
@@ -563,18 +687,27 @@ public without sharing class NexusQuoteController {
 
   @AuraEnabled
   public static void postSalesReply(Id quoteId, String messageText) {
-    if (String.isBlank(messageText)) return;
+    if (String.isBlank(messageText))
+      return;
     TALEXO_Quote__c q = [
       SELECT Id, MessageThread__c
       FROM TALEXO_Quote__c
       WHERE Id = :quoteId
       LIMIT 1
     ];
-    String existing = String.isNotBlank(q.MessageThread__c) ? q.MessageThread__c : '[]';
+    String existing = String.isNotBlank(q.MessageThread__c)
+      ? q.MessageThread__c
+      : '[]';
     String msgId = 's' + String.valueOf(DateTime.now().getTime());
     String msgTime = DateTime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
-    String entry = '{"id":"' + msgId + '","sender":"sales","text":' +
-      JSON.serialize(messageText.trim()) + ',"time":"' + msgTime + '"}';
+    String entry =
+      '{"id":"' +
+      msgId +
+      '","sender":"sales","text":' +
+      JSON.serialize(messageText.trim()) +
+      ',"time":"' +
+      msgTime +
+      '"}';
     String updated = existing == '[]'
       ? '[' + entry + ']'
       : existing.removeEnd(']') + ',' + entry + ']';
@@ -587,27 +720,57 @@ public without sharing class NexusQuoteController {
   public static List<QuoteDetailWrapper> getOpenConversations() {
     List<TALEXO_Quote__c> candidates = [
       SELECT
-        Id, Name, Status__c, NegotiationStatus__c,
-        GrandTotal__c, ExpirationDate__c, PaymentTerms__c,
-        BulkDiscount__c, VersionNumber__c, AcceptanceProbability__c,
-        AIReason__c, IsPrimary__c, CreatedDate,
-        Opportunity__c, Opportunity__r.Name,
-        Opportunity__r.Account.Name, Opportunity__r.AccountId,
-        CustomerCounterPrice__c, CounterMessage__c,
-        EscalationComboA__c, EscalationComboB__c,
-        RequestedPaymentTerms__c, NegotiationRound__c,
-        IsFinalOffer__c, FinalNegotiatedPrice__c,
-        DocuSign_Status__c, Is_Amendment__c, Is_Renewal__c,
-        MRR__c, OneTimeTotal__c, RecurringTotal__c,
-        GeneralTerms__c, SignatureDeadlineDays__c, MessageThread__c,
-        VolumeDiscountApplied__c, ApprovalStatus__c,
+        Id,
+        Name,
+        Status__c,
+        NegotiationStatus__c,
+        GrandTotal__c,
+        ExpirationDate__c,
+        PaymentTerms__c,
+        BulkDiscount__c,
+        VersionNumber__c,
+        AcceptanceProbability__c,
+        AIReason__c,
+        IsPrimary__c,
+        CreatedDate,
+        Opportunity__c,
+        Opportunity__r.Name,
+        Opportunity__r.Account.Name,
+        Opportunity__r.AccountId,
+        CustomerCounterPrice__c,
+        CounterMessage__c,
+        EscalationComboA__c,
+        EscalationComboB__c,
+        RequestedPaymentTerms__c,
+        NegotiationRound__c,
+        IsFinalOffer__c,
+        FinalNegotiatedPrice__c,
+        DocuSign_Status__c,
+        Is_Amendment__c,
+        Is_Renewal__c,
+        MRR__c,
+        OneTimeTotal__c,
+        RecurringTotal__c,
+        GeneralTerms__c,
+        SignatureDeadlineDays__c,
+        MessageThread__c,
+        VolumeDiscountApplied__c,
+        ApprovalStatus__c,
         (
-          SELECT Id, ProductName__c, ProductFamily__c, Quantity__c,
-                 ListPrice__c, UnitPrice__c, Discount__c, NetTotal__c
+          SELECT
+            Id,
+            ProductName__c,
+            ProductFamily__c,
+            Quantity__c,
+            ListPrice__c,
+            UnitPrice__c,
+            Discount__c,
+            NetTotal__c
           FROM NexusQuoteLineItems__r
         )
       FROM TALEXO_Quote__c
-      WHERE IsPrimary__c = true
+      WHERE
+        IsPrimary__c = TRUE
         AND NegotiationStatus__c = 'Sales Approved'
         AND Status__c NOT IN ('Accepted', 'Signed', 'Rejected')
       ORDER BY LastModifiedDate DESC
@@ -623,8 +786,9 @@ public without sharing class NexusQuoteController {
   }
 
   private static Boolean customerRepliedLast(String thread) {
-    if (String.isBlank(thread)) return false;
-    Integer custIdx  = thread.lastIndexOf('"sender":"customer"');
+    if (String.isBlank(thread))
+      return false;
+    Integer custIdx = thread.lastIndexOf('"sender":"customer"');
     Integer salesIdx = thread.lastIndexOf('"sender":"sales"');
     return custIdx > salesIdx;
   }
@@ -708,7 +872,9 @@ public without sharing class NexusQuoteController {
     return new Map<String, String>{
       'quoteName' => q.Name,
       'recipientEmail' => recipientEmail,
-      'accountName' => q.Opportunity__r != null ? q.Opportunity__r.Account.Name : ''
+      'accountName' => q.Opportunity__r != null
+        ? q.Opportunity__r.Account.Name
+        : ''
     };
   }
 
@@ -2005,6 +2171,48 @@ public without sharing class NexusQuoteController {
         );
       Blob pdfBlob = pdfPage.getContentAsPDF();
 
+      // Save signed contract PDF to Salesforce Files so it appears in Notes & Attachments
+      try {
+        String cvTitle =
+          q.Name.replaceAll('[^A-Za-z0-9_-]', '_') + '_Signed_Contract.pdf';
+        ContentVersion cv = new ContentVersion(
+          Title = cvTitle,
+          PathOnClient = cvTitle,
+          VersionData = pdfBlob,
+          IsMajorVersion = true
+        );
+        insert cv;
+        cv = [
+          SELECT ContentDocumentId
+          FROM ContentVersion
+          WHERE Id = :cv.Id
+          LIMIT 1
+        ];
+        Id oppId = [
+          SELECT Opportunity__c
+          FROM TALEXO_Quote__c
+          WHERE Id = :quoteId
+          LIMIT 1
+        ]
+        .Opportunity__c;
+        Id accId = q.Opportunity__r.AccountId;
+        for (Id entityId : new List<Id>{ quoteId, oppId, accId }) {
+          if (entityId == null)
+            continue;
+          try {
+            insert new ContentDocumentLink(
+              ContentDocumentId = cv.ContentDocumentId,
+              LinkedEntityId = entityId,
+              ShareType = 'V',
+              Visibility = 'AllUsers'
+            );
+          } catch (Exception ce) {
+          }
+        }
+      } catch (Exception ex) {
+        System.debug('PDF save to Files failed: ' + ex.getMessage());
+      }
+
       Messaging.EmailFileAttachment attach = new Messaging.EmailFileAttachment();
       attach.setFileName('Nexus_Contrat_' + q.Name + '.pdf');
       attach.setBody(pdfBlob);
@@ -2110,7 +2318,8 @@ public without sharing class NexusQuoteController {
     w.recurringTotal = q.RecurringTotal__c;
     w.generalTerms = q.GeneralTerms__c;
     w.signatureDeadlineDays = q.SignatureDeadlineDays__c != null
-      ? Integer.valueOf(q.SignatureDeadlineDays__c) : null;
+      ? Integer.valueOf(q.SignatureDeadlineDays__c)
+      : null;
     w.messageThread = q.MessageThread__c;
 
     // UI helpers for AI probability display

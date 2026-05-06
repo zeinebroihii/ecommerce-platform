@@ -101,7 +101,7 @@
     <template if:true={isCatalog}>
       <c-nexus-catalog
         favorites={favorites}
-        all-products={_products}
+        all-products={tierFilteredProducts}
         onaddtocart={handleAddToCartFromCatalog}
         ontogglefavorite={handleToggleFavoriteFromCatalog}
         oncatalogback={handleCatalogBack}
@@ -265,51 +265,55 @@
           <div class="ncp-section ncp-dash-section">
             <!-- AI Hero Banner + Sparks side by side -->
             <div class="ncp-banner-sparks-row">
-              <section class="ncp-ai-banner">
+              <section class="ncp-ai-banner ncp-si-banner">
                 <div class="ncp-ai-inner">
                   <div class="ncp-ai-left">
-                    <div class="ncp-ai-badge">
+                    <div class="ncp-ai-badge ncp-si-badge">
                       <lightning-icon
-                        icon-name="utility:sparkles"
+                        icon-name="utility:chart"
                         size="x-small"
                       ></lightning-icon>
-                      <span>Nexus AI Intelligence</span>
+                      <span>Stock Intelligence · AI Engine</span>
                     </div>
                     <h2 class="ncp-ai-title">
-                      YOUR <span class="ncp-ai-accent">INTELLIGENT</span> PORTAL
+                      REAL-TIME
+                      <span class="ncp-ai-accent">INVENTORY</span> INTELLIGENCE
                     </h2>
                     <p class="ncp-ai-desc">
-                      Nexus AI has analysed your account. Discover your
-                      consumption forecasts and personalised recommendations.
+                      Nexus AI has scored your entire catalog. Products are
+                      dynamically ranked by stock health — Platinum accounts
+                      access the full range.
                     </p>
                     <div class="ncp-ai-btns">
-                      <button class="ncp-ai-cta" onclick={handleGoToInsights}>
-                        View Insights
-                      </button>
-                      <button
-                        class="ncp-ai-cta-secondary"
-                        onclick={handleGoToTimeline}
-                      >
-                        Timeline 360°
+                      <button class="ncp-ai-cta" onclick={handleGoToCatalog}>
+                        Browse Catalog
                       </button>
                     </div>
                   </div>
                   <div class="ncp-ai-stats">
-                    <div class="ncp-stat-mini">
-                      <div class="ncp-stat-value ncp-stat-emerald">98%</div>
-                      <div class="ncp-stat-label">Health Score</div>
+                    <div class="ncp-stat-mini ncp-stat-boosted">
+                      <div class="ncp-stat-value ncp-stat-emerald">
+                        {stockBoostedCount}
+                      </div>
+                      <div class="ncp-stat-label">⬆ Boosted</div>
+                    </div>
+                    <div class="ncp-stat-mini ncp-stat-buried">
+                      <div class="ncp-stat-value ncp-stat-amber">
+                        {stockBuriedCount}
+                      </div>
+                      <div class="ncp-stat-label">⬇ Buried</div>
                     </div>
                     <div class="ncp-stat-mini">
-                      <div class="ncp-stat-value ncp-stat-indigo">15%</div>
-                      <div class="ncp-stat-label">AI Savings</div>
+                      <div class="ncp-stat-value ncp-stat-indigo">
+                        {stockNormalCount}
+                      </div>
+                      <div class="ncp-stat-label">◆ Normal</div>
                     </div>
-                    <div class="ncp-stat-mini">
-                      <div class="ncp-stat-value ncp-stat-amber">+12%</div>
-                      <div class="ncp-stat-label">Forecast Usage</div>
-                    </div>
-                    <div class="ncp-stat-mini">
-                      <div class="ncp-stat-value ncp-stat-emerald">100%</div>
-                      <div class="ncp-stat-label">SLA Status</div>
+                    <div class="ncp-stat-mini ncp-stat-visible">
+                      <div class="ncp-stat-value ncp-stat-emerald">
+                        {stockVisibleCount}
+                      </div>
+                      <div class="ncp-stat-label">Visible to You</div>
                     </div>
                   </div>
                 </div>
@@ -553,16 +557,6 @@
             <c-nexus-quotation-system
               refresh-trigger={_quotationsRefreshKey}
             ></c-nexus-quotation-system>
-            <div class="ncp-ai-chat-cta">
-              <button class="ncp-ai-chat-btn" onclick={handleOpenNegotiationChat}>
-                <lightning-icon
-                  icon-name="utility:einstein"
-                  size="x-small"
-                  class="ncp-ai-chat-ico"
-                ></lightning-icon>
-                Négocier avec l'IA
-              </button>
-            </div>
           </div>
         </template>
 
@@ -623,6 +617,9 @@
               </div>
               <div class="ncp-profile-id">
                 <span class="ncp-verified-badge">Verified Account</span>
+                <template if:true={hasTierBadge}>
+                  <span class={tierBadgeClass}>{tierBadgeIcon}</span>
+                </template>
                 <h2 class="ncp-profile-name">{profileAccountName}</h2>
                 <div class="ncp-profile-email-row">
                   <lightning-icon
@@ -850,16 +847,13 @@
                 <h4 class="ncp-info-title">Location</h4>
                 <div class="ncp-location-grid">
                   <div class="ncp-field">
-                    <label class="ncp-label">Address</label>
+                    <label class="ncp-label">City</label>
                     <input
                       class="ncp-input"
                       type="text"
-                      value={profileStreet}
+                      value={profileCity}
+                      placeholder="City"
                     />
-                  </div>
-                  <div class="ncp-field">
-                    <label class="ncp-label">City</label>
-                    <input class="ncp-input" type="text" value={profileCity} />
                   </div>
                   <div class="ncp-field">
                     <label class="ncp-label">Postal Code</label>
@@ -867,6 +861,16 @@
                       class="ncp-input"
                       type="text"
                       value={profilePostalCode}
+                      placeholder="Postal code"
+                    />
+                  </div>
+                  <div class="ncp-field">
+                    <label class="ncp-label">Country</label>
+                    <input
+                      class="ncp-input"
+                      type="text"
+                      value={profileCountry}
+                      placeholder="Country"
                     />
                   </div>
                 </div>
@@ -1101,7 +1105,7 @@
           </div>
         </template>
 
-        <!-- ─ Réclamations / Support ───────────────────────────────────── -->
+        <!-- ─ Support / Claims ────────────────────────────────────────────── -->
         <template if:true={isCases}>
           <div class="ncp-section">
             <div class="ncp-cases-layout">
@@ -1109,184 +1113,94 @@
               <div class="ncp-cases-main">
                 <div class="ncp-cases-top">
                   <div>
-                    <h2 class="ncp-cases-title">Support &amp; Réclamations</h2>
+                    <h2 class="ncp-cases-title">Support &amp; Claims</h2>
                     <p class="ncp-cases-sub">
-                      Résolution intelligente propulsée par Agentforce.
+                      Our team will follow up within 24 hours.
                     </p>
-                  </div>
-                  <div class="ncp-step-indicators">
-                    <div class={caseStepDot1}></div>
-                    <div class={caseStepDot2}></div>
                   </div>
                 </div>
 
-                <!-- Step 1: AI Agent -->
-                <template if:true={isCaseStep1}>
-                  <div class="ncp-agent-card">
-                    <div class="ncp-agent-header">
-                      <div class="ncp-agent-avatar">
-                        <lightning-icon
-                          icon-name="utility:bot"
-                          size="medium"
-                          variant="inverse"
-                        ></lightning-icon>
-                      </div>
-                      <div>
-                        <h3 class="ncp-agent-name">Nexus Agentforce</h3>
-                        <div class="ncp-agent-status">
-                          <span class="ncp-online-dot"></span>
-                          <span>En ligne &amp; Prêt</span>
-                        </div>
-                      </div>
+                <!-- Expert form -->
+                <div class="ncp-expert-card">
+                  <div class="ncp-expert-hdr">
+                    <div class="ncp-headphones-icon">
+                      <lightning-icon
+                        icon-name="utility:headphones"
+                        size="medium"
+                      ></lightning-icon>
                     </div>
-                    <p class="ncp-agent-quote">
-                      "Hello! I'm the Nexus AI. Describe your situation and I'll
-                      analyze the data in real time to provide you with an
-                      immediate solution."
-                    </p>
-                    <div class="ncp-agent-chat">
-                      <div class="ncp-agent-msg">
-                        <div class="ncp-agent-msg-icon">
-                          <lightning-icon
-                            icon-name="utility:bot"
-                            size="x-small"
-                            variant="inverse"
-                          ></lightning-icon>
-                        </div>
-                        <div class="ncp-agent-bubble">
-                          Comment puis-je accélérer votre demande aujourd'hui ?
-                        </div>
-                      </div>
-                      <div class="ncp-agent-input-wrap">
-                        <input
-                          type="text"
-                          class="ncp-agent-input"
-                          placeholder="Décrivez votre problème..."
-                        />
-                        <button class="ncp-agent-send">
-                          <lightning-icon
-                            icon-name="utility:send"
-                            size="x-small"
-                            variant="inverse"
-                          ></lightning-icon>
+                    <div>
+                      <h3 class="ncp-expert-title">Contact an Expert</h3>
+                      <p class="ncp-expert-sub">
+                        A Nexus administrator will follow up within 24 hours.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="ncp-form-row-2">
+                    <div class="ncp-field">
+                      <label class="ncp-label">Claim Subject</label>
+                      <input
+                        class="ncp-input"
+                        type="text"
+                        placeholder="e.g. Defective product"
+                      />
+                    </div>
+                    <div class="ncp-field">
+                      <label class="ncp-label">Priority</label>
+                      <div class="ncp-prio-group">
+                        <button
+                          class={pLow}
+                          onclick={handlePriority}
+                          data-priority="Low"
+                        >
+                          Low
+                        </button>
+                        <button
+                          class={pMedium}
+                          onclick={handlePriority}
+                          data-priority="Medium"
+                        >
+                          Medium
+                        </button>
+                        <button
+                          class={pHigh}
+                          onclick={handlePriority}
+                          data-priority="High"
+                        >
+                          High
+                        </button>
+                        <button
+                          class={pCritical}
+                          onclick={handlePriority}
+                          data-priority="Critical"
+                        >
+                          Critical
                         </button>
                       </div>
                     </div>
-                    <div class="ncp-quick-tags">
-                      <button class="ncp-quick-tag">Statut Livraison</button>
-                      <button class="ncp-quick-tag">Product Return</button>
-                      <button class="ncp-quick-tag">Facturation</button>
-                      <button class="ncp-quick-tag">Garantie</button>
-                    </div>
-                    <div class="ncp-agent-footer">
-                      <div class="ncp-experts-wrap">
-                        <div class="ncp-expert-dots">
-                          <span class="ncp-edot"></span>
-                          <span class="ncp-edot"></span>
-                          <span class="ncp-edot"></span>
-                        </div>
-                        <span class="ncp-experts-label"
-                          >Experts disponibles</span
-                        >
-                      </div>
-                      <button
-                        class="ncp-human-btn"
-                        onclick={handleNextCaseStep}
-                      >
-                        Parler à un humain ›
-                      </button>
-                    </div>
-                    <div class="ncp-agent-glow1"></div>
-                    <div class="ncp-agent-glow2"></div>
                   </div>
-                </template>
-
-                <!-- Step 2: Expert form -->
-                <template if:true={isCaseStep2}>
-                  <div class="ncp-expert-card">
-                    <div class="ncp-expert-hdr">
-                      <div class="ncp-headphones-icon">
-                        <lightning-icon
-                          icon-name="utility:headphones"
-                          size="medium"
-                        ></lightning-icon>
-                      </div>
-                      <div>
-                        <h3 class="ncp-expert-title">Escalation Expert</h3>
-                        <p class="ncp-expert-sub">
-                          Un administrateur Nexus prendra le relais sous 24h.
-                        </p>
-                      </div>
-                    </div>
-                    <div class="ncp-form-row-2">
-                      <div class="ncp-field">
-                        <label class="ncp-label">Sujet de la réclamation</label>
-                        <input
-                          class="ncp-input"
-                          type="text"
-                          placeholder="Ex: Produit défectueux"
-                        />
-                      </div>
-                      <div class="ncp-field">
-                        <label class="ncp-label">Priorité</label>
-                        <div class="ncp-prio-group">
-                          <button
-                            class={pLow}
-                            onclick={handlePriority}
-                            data-priority="Low"
-                          >
-                            Low
-                          </button>
-                          <button
-                            class={pMedium}
-                            onclick={handlePriority}
-                            data-priority="Medium"
-                          >
-                            Medium
-                          </button>
-                          <button
-                            class={pHigh}
-                            onclick={handlePriority}
-                            data-priority="High"
-                          >
-                            High
-                          </button>
-                          <button
-                            class={pCritical}
-                            onclick={handlePriority}
-                            data-priority="Critical"
-                          >
-                            Critical
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="ncp-field">
-                      <label class="ncp-label">Description détaillée</label>
-                      <textarea
-                        class="ncp-textarea"
-                        rows="5"
-                        placeholder="Détaillez votre demande..."
-                      ></textarea>
-                    </div>
-                    <div class="ncp-upload-area">
-                      <div class="ncp-upload-icon">
-                        <lightning-icon
-                          icon-name="utility:attach"
-                          size="medium"
-                        ></lightning-icon>
-                      </div>
-                      <p class="ncp-upload-title">Joindre des preuves</p>
-                      <p class="ncp-upload-sub">PDF, JPG, PNG (Max 10MB)</p>
-                    </div>
-                    <div class="ncp-expert-btns">
-                      <button class="ncp-back-btn" onclick={handlePrevCaseStep}>
-                        Back
-                      </button>
-                      <button class="ncp-submit-btn">Soumettre</button>
-                    </div>
+                  <div class="ncp-field">
+                    <label class="ncp-label">Detailed Description</label>
+                    <textarea
+                      class="ncp-textarea"
+                      rows="5"
+                      placeholder="Describe your issue in detail..."
+                    ></textarea>
                   </div>
-                </template>
+                  <div class="ncp-upload-area">
+                    <div class="ncp-upload-icon">
+                      <lightning-icon
+                        icon-name="utility:attach"
+                        size="medium"
+                      ></lightning-icon>
+                    </div>
+                    <p class="ncp-upload-title">Attach Evidence</p>
+                    <p class="ncp-upload-sub">PDF, JPG, PNG (Max 10MB)</p>
+                  </div>
+                  <div class="ncp-expert-btns">
+                    <button class="ncp-submit-btn">Submit</button>
+                  </div>
+                </div>
               </div>
 
               <!-- Right: sidebar -->
@@ -1298,18 +1212,18 @@
                     <div class="ncp-ticket-item">
                       <div>
                         <div class="ncp-ticket-id">CAS-9021</div>
-                        <div class="ncp-ticket-subject">Retard Livraison</div>
-                        <div class="ncp-ticket-date">Hier</div>
+                        <div class="ncp-ticket-subject">Delivery Delay</div>
+                        <div class="ncp-ticket-date">Yesterday</div>
                       </div>
-                      <span class="ncp-twarn-badge">En cours</span>
+                      <span class="ncp-twarn-badge">In Progress</span>
                     </div>
                     <div class="ncp-ticket-item">
                       <div>
                         <div class="ncp-ticket-id">CAS-8842</div>
                         <div class="ncp-ticket-subject">Billing Error</div>
-                        <div class="ncp-ticket-date">12 Fév</div>
+                        <div class="ncp-ticket-date">Feb 12</div>
                       </div>
-                      <span class="ncp-tsuccess-badge">Résolu</span>
+                      <span class="ncp-tsuccess-badge">Resolved</span>
                     </div>
                   </div>
                 </div>
@@ -1323,26 +1237,26 @@
                       variant="inverse"
                     ></lightning-icon>
                   </div>
-                  <h4 class="ncp-help-title">Besoin d'aide ?</h4>
-                  <p class="ncp-help-desc">Experts disponibles 24/7.</p>
-                  <button class="ncp-call-btn">Lancer un Appel</button>
+                  <h4 class="ncp-help-title">Need Help?</h4>
+                  <p class="ncp-help-desc">Experts available 24/7.</p>
+                  <button class="ncp-call-btn">Start a Call</button>
                   <div class="ncp-help-glow"></div>
                 </div>
 
-                <!-- Agentforce stats -->
+                <!-- Support stats -->
                 <div class="ncp-agentforce-card">
-                  <div class="ncp-agentforce-label">Activité Agentforce</div>
+                  <div class="ncp-agentforce-label">Support Activity</div>
                   <div class="ncp-agentforce-stat">
                     <span class="ncp-pulse-dot"></span>
-                    <span>124 tickets en cours</span>
+                    <span>124 tickets active</span>
                   </div>
                   <div class="ncp-agentforce-stat">
                     <span class="ncp-pulse-dot"></span>
-                    <span>Résolution : 14min</span>
+                    <span>Avg. Resolution: 14 min</span>
                   </div>
                   <div class="ncp-agentforce-stat">
                     <span class="ncp-pulse-dot"></span>
-                    <span>Satisfaction : 98.4%</span>
+                    <span>Satisfaction: 98.4%</span>
                   </div>
                 </div>
               </div>

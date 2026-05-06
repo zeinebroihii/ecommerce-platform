@@ -10,12 +10,9 @@
             variant="inverse"
           ></lightning-icon>
         </div>
-        <h3 class="ncp-page-title">Recommandations AI</h3>
+        <h3 class="ncp-page-title">AI Recommendations</h3>
       </div>
       <div class="nrec-header-right">
-        <span class="ncp-reco-badge"
-          >Agentforce · Basé sur votre historique</span
-        >
         <button
           class="nrec-refresh-btn"
           onclick={handleRefresh}
@@ -33,20 +30,18 @@
     <template if:true={isLoading}>
       <div class="nrec-loading">
         <lightning-spinner
-          alternative-text="Agentforce analyse..."
+          alternative-text="Analysing..."
           size="small"
         ></lightning-spinner>
-        <p class="nrec-loading-text">Agentforce analyse votre profil...</p>
+        <p class="nrec-loading-text">Analysing your profile...</p>
       </div>
     </template>
 
     <!-- ── Error ── -->
     <template if:true={hasError}>
       <div class="nrec-empty">
-        <p class="nrec-empty-text">
-          Impossible de charger les recommandations.
-        </p>
-        <button class="ncp-reco-btn" onclick={handleRefresh}>Réessayer</button>
+        <p class="nrec-empty-text">Unable to load recommendations.</p>
+        <button class="ncp-reco-btn" onclick={handleRefresh}>Try again</button>
       </div>
     </template>
 
@@ -54,8 +49,7 @@
     <template if:true={isEmpty}>
       <div class="nrec-empty">
         <p class="nrec-empty-text">
-          Naviguez dans le catalogue pour que l'IA personnalise vos
-          recommandations.
+          Browse the catalogue so AI can personalise your recommendations.
         </p>
       </div>
     </template>
@@ -106,7 +100,7 @@
                   data-reason={rec.reason}
                   onclick={handleViewOffer}
                 >
-                  Voir l'offre
+                  View offer
                 </button>
               </div>
             </div>

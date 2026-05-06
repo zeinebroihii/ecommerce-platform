@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source__c</fullName>
+    <label>Source</label>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Rule-Based</fullName>
+                <default>true</default>
+                <label>Rule-Based</label>
+            </value>
+            <value>
+                <fullName>AI-Agent</fullName>
+                <default>false</default>
+                <label>AI-Agent</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

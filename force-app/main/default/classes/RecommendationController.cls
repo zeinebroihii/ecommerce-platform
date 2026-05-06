@@ -385,16 +385,16 @@ public without sharing class RecommendationController {
   }
 
   private static String buildFallbackReason(Product2 p, String recType) {
-    String family = p.Family != null ? p.Family : 'technologie';
+    String family = p.Family != null ? p.Family : 'technology';
     if (recType == 'Cross-Sell') {
-      return 'Ce produit ' +
+      return 'This ' +
         family +
-        ' complète idéalement votre sélection actuelle.';
+        ' product pairs perfectly with your current selection.';
     }
     if (recType == 'Up-Sell') {
-      return 'Une alternative premium avec de meilleures performances pour votre usage.';
+      return 'A premium alternative with better performance for your needs.';
     }
-    return 'Produit similaire très apprécié par des clients ayant le même profil.';
+    return 'Similar product highly rated by customers with the same profile.';
   }
 
   // ── Persistence ───────────────────────────────────────────────────────────

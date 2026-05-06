@@ -68,16 +68,26 @@ global class DocuSignPollJob implements Schedulable {
   }
 
   public static void stop() {
-    for (CronTrigger ct : [
-      SELECT Id
-      FROM CronTrigger
-      WHERE CronJobDetail.Name LIKE 'DocuSignPoll%'
-    ]) {
-      try {
-        System.abortJob(ct.Id);
-      } catch (Exception e) {
+    // Abort in batches of 100 to avoid DML governor limit (150 max)
+    Integer aborted = 0;
+    List<CronTrigger> batch;
+    Integer safety = 0;
+    do {
+      batch = [
+        SELECT Id
+        FROM CronTrigger
+        WHERE CronJobDetail.Name LIKE 'DocuSignPoll%'
+        LIMIT 100
+      ];
+      for (CronTrigger ct : batch) {
+        try {
+          System.abortJob(ct.Id);
+          aborted++;
+        } catch (Exception e) {
+        }
       }
-    }
-    System.debug('[DocuSignPoll] All jobs stopped.');
+      safety++;
+    } while (!batch.isEmpty() && safety < 10);
+    System.debug('[DocuSignPoll] Stopped ' + aborted + ' jobs.');
   }
 }

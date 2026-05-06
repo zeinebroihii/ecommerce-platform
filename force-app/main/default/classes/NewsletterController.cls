@@ -40,7 +40,7 @@ public without sharing class NewsletterController {
       Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
       mail.setToAddresses(new List<String>{ normalEmail });
       mail.setSubject(
-        'Welcome to Nexus Newsletter \u2014 Your exclusives are waiting'
+        'Welcome to Nexus Newsletter — Your exclusives are waiting'
       );
       mail.setHtmlBody(buildWelcomeHtml(featured, token));
       mail.setSenderDisplayName('Nexus Newsletter');
@@ -112,18 +112,26 @@ public without sharing class NewsletterController {
       String token = emailToToken(sub.Email__c);
       Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
       mail.setToAddresses(new List<String>{ sub.Email__c });
-      mail.setSubject('\uD83C\uDD95 New on Nexus: ' + p.Name);
+      mail.setSubject('New on Nexus: ' + p.Name);
       mail.setHtmlBody(buildNewProductHtml(p, token));
       mail.setSenderDisplayName('Nexus Newsletter');
       mail.setReplyTo('no-reply@nexus-systems.com');
       mail.setSaveAsActivity(false);
       mails.add(mail);
     }
-    if (!mails.isEmpty())
-      Messaging.sendEmail(mails);
+    if (!mails.isEmpty()) {
+      try {
+        Messaging.sendEmail(mails, false);
+      } catch (Exception e) {
+        System.debug(
+          LoggingLevel.ERROR,
+          'Newsletter blast error: ' + e.getMessage()
+        );
+      }
+    }
   }
 
-  // ── Token helpers: base64-encode / decode the email ──────────────────────
+  // ── Token helpers ────────────────────────────────────────────────────────
   private static String emailToToken(String email) {
     return EncodingUtil.base64Encode(Blob.valueOf(email))
       .replace('+', '-')
@@ -132,7 +140,6 @@ public without sharing class NewsletterController {
   }
 
   private static String tokenToEmail(String token) {
-    // Restore standard base64 padding
     String b64 = token.replace('-', '+').replace('_', '/');
     Integer pad = Math.mod(4 - Math.mod(b64.length(), 4), 4);
     for (Integer i = 0; i < pad; i++)
@@ -140,7 +147,6 @@ public without sharing class NewsletterController {
     return EncodingUtil.base64Decode(b64).toString().toLowerCase().trim();
   }
 
-  // ── Email validation ─────────────────────────────────────────────────────
   private static Boolean isValidEmail(String email) {
     return Pattern.compile(
         '^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$'
@@ -157,17 +163,21 @@ public without sharing class NewsletterController {
     String token
   ) {
     String html = htmlOpen();
-    html += darkHeader(
-      'Your Newsletter<br/><span style="color:#34d399;">has arrived!</span>',
-      'Discover our latest innovations, exclusive offers and more \u2014 reserved for subscribers.'
+    html += vortexHero(
+      'Welcome to<br/>Nexus.',
+      'You\'re on the list. Get first access to new products, exclusive offers, and Nexus innovations.',
+      CATALOG_URL,
+      'Browse Catalogue'
     );
-    html += greenBand(
-      '&#10003;&nbsp; Subscription confirmed',
-      'Welcome to the Nexus family! You\'ll now receive our best offers first.'
+    html += confirmationBand(
+      'Subscription confirmed.',
+      'You\'ll be the first to know about new arrivals and exclusive deals.'
     );
-    html += productsBlock(products);
+    if (!products.isEmpty()) {
+      html += productsBlock(products);
+    }
     html += whyNexusBlock();
-    html += ctaBlock(CATALOG_URL, 'Browse all products &rarr;');
+    html += ctaBlock(CATALOG_URL, 'Start exploring');
     html += emailFooter(token);
     html += htmlClose();
     return html;
@@ -180,93 +190,26 @@ public without sharing class NewsletterController {
     Decimal price = 0;
     if (!p.PricebookEntries.isEmpty())
       price = p.PricebookEntries[0].UnitPrice;
-    String priceStr = price > 0
-      ? price.setScale(0) + ' \u20ac'
-      : 'Price on request';
+    String priceStr = price > 0 ? price.setScale(0) + ' €' : 'Price on request';
     String family = String.isNotBlank(p.Family)
       ? p.Family.toUpperCase()
       : 'PRODUCT';
     String descText = '';
     if (String.isNotBlank(p.Description))
-      descText = p.Description.length() > 200
-        ? p.Description.substring(0, 200) + '\u2026'
+      descText = p.Description.length() > 220
+        ? p.Description.substring(0, 220) + '…'
         : p.Description;
     String productUrl = SITE_URL + '?productId=' + p.Id;
 
     String html = htmlOpen();
-    html += darkHeader(
-      'New arrival on<br/><span style="color:#34d399;">Nexus</span>',
-      'A brand new product just landed \u2014 be the first to discover it.'
+    html += vortexHero(
+      'New on Nexus.',
+      'A brand new product just landed — exclusive preview for subscribers.',
+      productUrl,
+      'Discover Now'
     );
-    html += greenBand(
-      '&#127381;&nbsp; Just added to the catalogue',
-      'Exclusive preview for Nexus Newsletter subscribers.'
-    );
-
-    html += '<tr><td style="padding:36px 40px 32px;">';
-    html += '<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 32px rgba(0,0,0,0.06);">';
-    html += '<tr><td style="height:5px;background:linear-gradient(90deg,#059669,#34d399,#6366f1,#a855f7);"></td></tr>';
-    html += '<tr><td style="padding:36px 40px;">';
-
-    html += '<table cellpadding="0" cellspacing="0"><tr>';
-    html +=
-      '<td style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:50px;padding:5px 14px;">' +
-      '<span style="color:#059669;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.2em;">' +
-      family +
-      '</span>' +
-      '</td>';
-    if (p.IsNew__c) {
-      html +=
-        '<td width="8">&nbsp;</td>' +
-        '<td style="background:linear-gradient(135deg,#059669,#34d399);border-radius:50px;padding:5px 14px;">' +
-        '<span style="color:#fff;font-size:10px;font-weight:800;text-transform:uppercase;">NEW</span>' +
-        '</td>';
-    }
-    html += '</tr></table>';
-    html +=
-      '<div style="color:#0f172a;font-size:28px;font-weight:900;margin:18px 0 14px;line-height:1.2;">' +
-      escHtml(p.Name) +
-      '</div>';
-    if (String.isNotBlank(descText)) {
-      html +=
-        '<div style="color:#475569;font-size:15px;line-height:1.8;margin-bottom:28px;border-left:3px solid #34d399;padding-left:16px;">' +
-        escHtml(descText) +
-        '</div>';
-    }
-    html +=
-      '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
-      '<td valign="middle">' +
-      '<div style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Price</div>' +
-      '<div style="color:#059669;font-size:34px;font-weight:900;line-height:1;">' +
-      priceStr +
-      '</div>' +
-      '</td>' +
-      '<td align="right" valign="middle">' +
-      '<a href="' +
-      productUrl +
-      '" style="display:inline-block;background:linear-gradient(135deg,#059669,#34d399);color:#ffffff;text-decoration:none;padding:16px 36px;border-radius:12px;font-size:15px;font-weight:800;letter-spacing:0.03em;box-shadow:0 4px 16px rgba(5,150,105,0.35);">Buy now &rarr;</a>' +
-      '</td></tr></table>';
-    html += '</td></tr></table>';
-    html += '</td></tr>';
-
-    html += '<tr><td style="padding:0 40px 36px;">';
-    html += '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:14px;border:1px solid #e2e8f0;">';
-    html += '<tr><td style="padding:22px 28px;">';
-    html += '<table width="100%" cellpadding="0" cellspacing="0"><tr>';
-    html +=
-      '<td valign="middle">' +
-      '<div style="color:#0f172a;font-size:14px;font-weight:700;margin-bottom:4px;">Explore all Nexus products</div>' +
-      '<div style="color:#64748b;font-size:12px;">Browse our full catalogue of IoT &amp; AI innovations</div>' +
-      '</td>';
-    html +=
-      '<td align="right" valign="middle" style="padding-left:16px;">' +
-      '<a href="' +
-      CATALOG_URL +
-      '" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:10px 22px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;">View all &rarr;</a>' +
-      '</td></tr></table>';
-    html += '</td></tr></table>';
-    html += '</td></tr>';
-
+    html += productDetailBlock(p, priceStr, family, descText, productUrl);
+    html += exploreBlock();
     html += emailFooter(token);
     html += htmlClose();
     return html;
@@ -279,221 +222,302 @@ public without sharing class NewsletterController {
   private static String htmlOpen() {
     return '<!DOCTYPE html><html lang="en"><head>' +
       '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-      '</head><body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;">' +
-      '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;">' +
+      '</head><body style="margin:0;padding:0;background:#ebebeb;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" style="background:#ebebeb;">' +
       '<tr><td align="center" style="padding:40px 16px;">' +
-      '<table width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 4px 40px rgba(0,0,0,0.08);">';
+      '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;">';
   }
 
   private static String htmlClose() {
     return '</table></td></tr></table></body></html>';
   }
 
-  private static String darkHeader(String headline, String sub) {
-    return '<tr><td>' +
-      '<div style="height:4px;background:linear-gradient(90deg,#059669 0%,#34d399 25%,#6366f1 60%,#a855f7 100%);"></div>' +
-      '<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(160deg,#020617 0%,#0f172a 60%,#1e1b4b 100%);">' +
-      '<tr><td align="center" style="padding:52px 40px 44px;">' +
-      '<table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;"><tr>' +
-      '<td style="background:linear-gradient(135deg,#059669,#34d399);width:44px;height:44px;border-radius:12px;text-align:center;vertical-align:middle;">' +
-      '<span style="color:#ffffff;font-size:22px;font-weight:900;line-height:44px;">N</span></td>' +
-      '<td style="padding-left:12px;vertical-align:middle;">' +
-      '<span style="color:#ffffff;font-size:24px;font-weight:900;letter-spacing:0.18em;">NEXUS</span></td>' +
+  // Dark hero — Vortex inspired
+  private static String vortexHero(
+    String headline,
+    String sub,
+    String ctaUrl,
+    String ctaLabel
+  ) {
+    return '<tr><td style="background:#0d1117;padding:44px 48px 56px;">' +
+      '<table cellpadding="0" cellspacing="0" style="margin-bottom:64px;"><tr>' +
+      '<td style="background:#16a34a;width:30px;height:30px;border-radius:5px;text-align:center;vertical-align:middle;">' +
+      '<span style="color:#fff;font-size:15px;font-weight:900;line-height:30px;display:block;">N</span></td>' +
+      '<td style="padding-left:10px;vertical-align:middle;">' +
+      '<span style="color:#ffffff;font-size:15px;font-weight:800;letter-spacing:0.22em;">NEXUS</span></td>' +
       '</tr></table>' +
-      '<h1 style="color:#ffffff;font-size:36px;font-weight:900;margin:0 0 14px;line-height:1.1;letter-spacing:-0.02em;">' +
+      '<h1 style="color:#ffffff;font-size:46px;font-weight:900;margin:0 0 18px;line-height:1.05;letter-spacing:-0.025em;">' +
       headline +
       '</h1>' +
-      '<p style="color:#94a3b8;font-size:15px;line-height:1.7;max-width:440px;margin:0 auto;">' +
+      '<p style="color:#9ca3af;font-size:15px;line-height:1.75;margin:0 0 44px;max-width:380px;">' +
       sub +
       '</p>' +
-      '</td></tr></table></td></tr>';
+      '<a href="' +
+      ctaUrl +
+      '" style="display:inline-block;border:2px solid rgba(255,255,255,0.9);color:#ffffff;text-decoration:none;padding:13px 36px;border-radius:50px;font-size:14px;font-weight:700;letter-spacing:0.04em;">' +
+      ctaLabel +
+      ' &rarr;</a>' +
+      '</td></tr>';
   }
 
-  private static String greenBand(String badgeText, String bodyText) {
-    return '<tr><td style="background:linear-gradient(135deg,#022c22,#0f172a);padding:22px 40px;border-bottom:1px solid #e2e8f0;">' +
-      '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">' +
-      '<table cellpadding="0" cellspacing="0" style="margin-bottom:10px;"><tr>' +
-      '<td style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:50px;padding:6px 18px;">' +
-      '<span style="color:#34d399;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.25em;">' +
-      badgeText +
-      '</span>' +
-      '</td></tr></table>' +
-      '<p style="color:#e2e8f0;font-size:14px;margin:0;line-height:1.6;">' +
-      bodyText +
+  // Confirmation band — welcome email only
+  private static String confirmationBand(String title, String body) {
+    return '<tr><td style="background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:26px 48px;">' +
+      '<p style="color:#0a0a0a;font-size:14px;font-weight:700;margin:0 0 5px;">' +
+      title +
       '</p>' +
-      '</td></tr></table></td></tr>';
+      '<p style="color:#6b7280;font-size:13px;margin:0;line-height:1.6;">' +
+      body +
+      '</p>' +
+      '</td></tr>';
   }
 
-  private static String productsBlock(List<Product2> products) {
-    String html =
-      '<tr><td style="padding:40px 40px 28px;">' +
-      '<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:28px;">' +
-      '<span style="display:inline-block;background:#ede9fe;border:1px solid #c4b5fd;color:#6d28d9;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.3em;padding:6px 18px;border-radius:50px;">Featured selection</span>' +
-      '<h2 style="color:#0f172a;font-size:24px;font-weight:900;margin:14px 0 6px;">Our latest products</h2>' +
-      '<p style="color:#64748b;font-size:13px;margin:0;">Innovations built to accelerate your business</p>' +
+  // Product detail card — new product blast email
+  private static String productDetailBlock(
+    Product2 p,
+    String priceStr,
+    String family,
+    String descText,
+    String productUrl
+  ) {
+    String html = '<tr><td style="padding:48px 48px 40px;">';
+
+    html +=
+      '<div style="display:inline-block;background:#0a0a0a;color:#ffffff;' +
+      'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.2em;' +
+      'padding:5px 14px;border-radius:4px;margin-bottom:22px;">' +
+      family +
+      '</div>';
+
+    html +=
+      '<h2 style="color:#0a0a0a;font-size:30px;font-weight:900;margin:0 0 16px;' +
+      'line-height:1.1;letter-spacing:-0.02em;">' +
+      escHtml(p.Name) +
+      '</h2>';
+
+    if (String.isNotBlank(descText)) {
+      html +=
+        '<p style="color:#555555;font-size:15px;line-height:1.75;margin:0 0 32px;' +
+        'border-left:3px solid #e5e7eb;padding-left:18px;">' +
+        escHtml(descText) +
+        '</p>';
+    }
+
+    html +=
+      '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
+      '<td valign="middle">' +
+      '<div style="color:#888888;font-size:10px;font-weight:700;text-transform:uppercase;' +
+      'letter-spacing:0.14em;margin-bottom:6px;">Price</div>' +
+      '<div style="color:#0a0a0a;font-size:38px;font-weight:900;line-height:1;letter-spacing:-0.025em;">' +
+      priceStr +
+      '</div>' +
+      '</td>' +
+      '<td align="right" valign="middle">' +
+      '<a href="' +
+      productUrl +
+      '" style="display:inline-block;background:#0a0a0a;color:#ffffff;' +
+      'text-decoration:none;padding:14px 34px;border-radius:50px;font-size:14px;font-weight:700;' +
+      'letter-spacing:0.03em;">Buy Now</a>' +
       '</td></tr></table>';
 
-    if (!products.isEmpty()) {
-      String[] accents = new List<String>{
-        '#059669',
-        '#6366f1',
-        '#f59e0b',
-        '#ec4899'
-      };
-      String[] lightBgs = new List<String>{
-        '#f0fdf4',
-        '#eef2ff',
-        '#fffbeb',
-        '#fdf2f8'
-      };
-      String[] borders = new List<String>{
-        '#bbf7d0',
-        '#c7d2fe',
-        '#fde68a',
-        '#fbcfe8'
-      };
-      for (Integer i = 0; i < products.size(); i++) {
-        Product2 p = products[i];
-        Decimal price = 0;
-        if (!p.PricebookEntries.isEmpty())
-          price = p.PricebookEntries[0].UnitPrice;
-        String priceStr = price > 0
-          ? price.setScale(0) + ' \u20ac'
-          : 'Price on request';
-        String family = String.isNotBlank(p.Family)
-          ? p.Family.toUpperCase()
-          : 'PRODUCT';
-        String accent = accents[Math.mod(i, 4)];
-        String lightBg = lightBgs[Math.mod(i, 4)];
-        String border = borders[Math.mod(i, 4)];
-        String snippet = '';
-        if (String.isNotBlank(p.Description))
-          snippet = p.Description.length() > 90
-            ? p.Description.substring(0, 90) + '\u2026'
-            : p.Description;
-        String productUrl = SITE_URL + '?productId=' + p.Id;
-
-        html +=
-          '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;"><tr>' +
-          '<td width="5" style="background:' +
-          accent +
-          ';border-radius:6px 0 0 6px;">&nbsp;</td>' +
-          '<td style="background:#ffffff;border:1px solid #e2e8f0;border-left:none;border-radius:0 14px 14px 0;padding:18px 22px;">' +
-          '<table width="100%" cellpadding="0" cellspacing="0"><tr><td valign="top">';
-        if (p.IsNew__c) {
-          html +=
-            '<span style="display:inline-block;background:' +
-            lightBg +
-            ';border:1px solid ' +
-            border +
-            ';color:' +
-            accent +
-            ';font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;padding:2px 10px;border-radius:50px;margin-bottom:6px;">NEW</span><br/>';
-        }
-        html +=
-          '<span style="color:' +
-          accent +
-          ';font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;">' +
-          family +
-          '</span>' +
-          '<div style="color:#0f172a;font-size:15px;font-weight:700;margin:5px 0 5px;line-height:1.3;">' +
-          escHtml(p.Name) +
-          '</div>';
-        if (String.isNotBlank(snippet))
-          html +=
-            '<div style="color:#64748b;font-size:12px;line-height:1.6;margin-bottom:10px;">' +
-            escHtml(snippet) +
-            '</div>';
-        html +=
-          '<span style="color:' +
-          accent +
-          ';font-size:18px;font-weight:900;">' +
-          priceStr +
-          '</span>' +
-          '</td><td width="120" align="right" valign="middle" style="padding-left:14px;">' +
-          '<a href="' +
-          productUrl +
-          '" style="display:inline-block;background:' +
-          accent +
-          ';color:#ffffff;text-decoration:none;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:800;white-space:nowrap;">View &rarr;</a>' +
-          '</td></tr></table></td></tr></table>';
-      }
-    } else {
+    if (
+      String.isNotBlank(p.Image_URL__c) && p.Image_URL__c.startsWith('http')
+    ) {
       html +=
-        '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
-        '<td align="center" style="background:#f8fafc;border-radius:14px;padding:36px;border:1px solid #e2e8f0;">' +
-        '<p style="color:#94a3b8;font-size:14px;margin:0;">New products coming soon!</p>' +
-        '</td></tr></table>';
+        '<div style="margin-top:36px;overflow:hidden;background:#f5f5f5;">' +
+        '<img src="' +
+        escHtml(p.Image_URL__c) +
+        '" width="504" ' +
+        'style="display:block;width:100%;height:auto;" alt="' +
+        escHtml(p.Name) +
+        '" /></div>';
     }
+
     html += '</td></tr>';
     return html;
   }
 
-  private static String whyNexusBlock() {
-    String[][] feats = new List<String[]>{
-      new List<String>{
-        '&#129302;',
-        'Integrated AI',
-        'Predictive analytics &amp; personalised recommendations'
-      },
-      new List<String>{
-        '&#128230;',
-        'Real-time Stock',
-        'Smart B2B inventory management'
-      },
-      new List<String>{
-        '&#128272;',
-        'Max Security',
-        'Protected data, secure transactions'
-      }
-    };
+  // Products list — welcome email, Vortex card style
+  private static String productsBlock(List<Product2> products) {
     String html =
-      '<tr><td style="padding:0 40px 36px;">' +
-      '<h3 style="color:#0f172a;font-size:17px;font-weight:800;margin:0 0 18px;text-align:center;">Why choose Nexus?</h3>' +
-      '<table width="100%" cellpadding="0" cellspacing="0"><tr>';
-    for (String[] f : feats) {
+      '<tr><td style="padding:48px 48px 8px;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;"><tr>' +
+      '<td valign="middle">' +
+      '<h2 style="color:#0a0a0a;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.02em;">Latest products.</h2>' +
+      '</td>' +
+      '<td align="right" valign="middle">' +
+      '<a href="' +
+      CATALOG_URL +
+      '" style="display:inline-block;border:1.5px solid #0a0a0a;' +
+      'color:#0a0a0a;text-decoration:none;padding:8px 20px;border-radius:50px;' +
+      'font-size:12px;font-weight:700;letter-spacing:0.02em;">See All</a>' +
+      '</td></tr></table>' +
+      '</td></tr>';
+
+    for (Product2 p : products) {
+      Decimal price = 0;
+      if (!p.PricebookEntries.isEmpty())
+        price = p.PricebookEntries[0].UnitPrice;
+      String priceStr = price > 0
+        ? price.setScale(0) + ' €'
+        : 'Price on request';
+      String family = String.isNotBlank(p.Family)
+        ? p.Family.toUpperCase()
+        : 'PRODUCT';
+      String snippet = '';
+      if (String.isNotBlank(p.Description))
+        snippet = p.Description.length() > 90
+          ? p.Description.substring(0, 90) + '…'
+          : p.Description;
+      String productUrl = SITE_URL + '?productId=' + p.Id;
+
+      html += '<tr><td style="padding:0 48px 16px;">';
+      html += '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;">';
+
+      if (
+        String.isNotBlank(p.Image_URL__c) && p.Image_URL__c.startsWith('http')
+      ) {
+        html +=
+          '<tr><td colspan="2" style="padding:0;background:#f5f5f5;">' +
+          '<img src="' +
+          escHtml(p.Image_URL__c) +
+          '" width="100%" ' +
+          'style="display:block;width:100%;height:160px;object-fit:cover;" alt="' +
+          escHtml(p.Name) +
+          '" /></td></tr>';
+      }
+
       html +=
-        '<td valign="top" style="padding:0 5px;">' +
-        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;">' +
-        '<tr><td align="center" style="padding:20px 14px;">' +
-        '<div style="font-size:26px;margin-bottom:10px;">' +
-        f[0] +
+        '<tr>' +
+        '<td style="padding:22px 24px;">' +
+        '<div style="color:#888888;font-size:10px;font-weight:700;text-transform:uppercase;' +
+        'letter-spacing:0.15em;margin-bottom:8px;">' +
+        family +
         '</div>' +
-        '<div style="color:#0f172a;font-size:12px;font-weight:700;margin-bottom:5px;">' +
-        f[1] +
+        '<div style="color:#0a0a0a;font-size:17px;font-weight:800;margin-bottom:8px;' +
+        'letter-spacing:-0.01em;">' +
+        escHtml(p.Name) +
+        '</div>';
+
+      if (String.isNotBlank(snippet))
+        html +=
+          '<div style="color:#6b7280;font-size:13px;line-height:1.65;margin-bottom:14px;">' +
+          escHtml(snippet) +
+          '</div>';
+
+      html +=
+        '<div style="color:#0a0a0a;font-size:20px;font-weight:900;letter-spacing:-0.02em;">' +
+        priceStr +
         '</div>' +
-        '<div style="color:#64748b;font-size:11px;line-height:1.6;">' +
-        f[2] +
-        '</div>' +
-        '</td></tr></table></td>';
+        '</td>' +
+        '<td width="130" align="right" valign="bottom" style="padding:22px 24px;">' +
+        '<a href="' +
+        productUrl +
+        '" style="display:inline-block;background:#0a0a0a;color:#ffffff;' +
+        'text-decoration:none;padding:11px 24px;border-radius:50px;font-size:13px;font-weight:700;' +
+        'white-space:nowrap;">Buy Now</a>' +
+        '</td></tr>';
+
+      html += '</table></td></tr>';
     }
-    html += '</tr></table></td></tr>';
+
     return html;
   }
 
+  // Why Nexus — dark section, Vortex dash style
+  private static String whyNexusBlock() {
+    String[][] feats = new List<String[]>{
+      new List<String>{
+        'Integrated AI',
+        'Predictive analytics and personalised recommendations built into every product.'
+      },
+      new List<String>{
+        'Real-time Stock',
+        'Smart B2B inventory management with live availability data.'
+      },
+      new List<String>{
+        'Maximum Security',
+        'End-to-end encrypted data and fully secure transactions, always.'
+      }
+    };
+
+    String html =
+      '<tr><td style="background:#0d1117;padding:52px 48px 44px;">' +
+      '<h2 style="color:#ffffff;font-size:24px;font-weight:900;margin:0 0 40px;' +
+      'letter-spacing:-0.02em;line-height:1.25;">' +
+      'What we love about<br/>Nexus.' +
+      '</h2>';
+
+    for (Integer i = 0; i < feats.size(); i++) {
+      String[] f = feats[i];
+      String mb = (i < feats.size() - 1) ? 'margin-bottom:32px;' : '';
+      html +=
+        '<table width="100%" cellpadding="0" cellspacing="0" style="' +
+        mb +
+        '"><tr>' +
+        '<td width="32" valign="top">' +
+        '<div style="width:20px;height:2px;background:#ffffff;margin-top:9px;"></div>' +
+        '</td>' +
+        '<td>' +
+        '<div style="color:#ffffff;font-size:15px;font-weight:700;margin-bottom:6px;">' +
+        f[0] +
+        '</div>' +
+        '<div style="color:#6b7280;font-size:13px;line-height:1.7;">' +
+        f[1] +
+        '</div>' +
+        '</td></tr></table>';
+    }
+
+    html += '</td></tr>';
+    return html;
+  }
+
+  // CTA block — black pill button
   private static String ctaBlock(String url, String label) {
-    return '<tr><td align="center" style="padding:0 40px 44px;">' +
+    return '<tr><td align="center" style="padding:48px 48px 52px;">' +
       '<a href="' +
       url +
-      '" style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;text-decoration:none;padding:16px 52px;border-radius:14px;font-size:15px;font-weight:800;letter-spacing:0.04em;box-shadow:0 4px 20px rgba(99,102,241,0.3);">' +
+      '" style="display:inline-block;background:#0a0a0a;color:#ffffff;' +
+      'text-decoration:none;padding:16px 48px;border-radius:50px;font-size:15px;font-weight:700;' +
+      'letter-spacing:0.03em;">' +
       label +
-      '</a>' +
+      ' &rarr;</a>' +
       '</td></tr>';
   }
 
+  // Explore block — new product email
+  private static String exploreBlock() {
+    return '<tr><td style="background:#f9fafb;padding:26px 48px;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
+      '<td valign="middle">' +
+      '<div style="color:#0a0a0a;font-size:14px;font-weight:700;margin-bottom:3px;">Explore all Nexus products.</div>' +
+      '<div style="color:#9ca3af;font-size:12px;">Browse our full catalogue of IoT &amp; AI innovations.</div>' +
+      '</td>' +
+      '<td align="right" valign="middle" style="padding-left:16px;">' +
+      '<a href="' +
+      CATALOG_URL +
+      '" style="display:inline-block;background:#0a0a0a;color:#ffffff;' +
+      'text-decoration:none;padding:10px 22px;border-radius:50px;font-size:12px;font-weight:700;' +
+      'white-space:nowrap;">View All</a>' +
+      '</td></tr></table>' +
+      '</td></tr>';
+  }
+
+  // Footer
   private static String emailFooter(String token) {
     String unsubUrl =
       SITE_URL + (String.isNotBlank(token) ? '?unsubscribe=' + token : '');
-    return '<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 40px;text-align:center;">' +
-      '<p style="color:#94a3b8;font-size:12px;margin:0 0 8px;">You are receiving this email because you subscribed to the Nexus newsletter.</p>' +
+    return '<tr><td style="border-top:1px solid #e5e7eb;padding:24px 48px;text-align:center;">' +
+      '<p style="color:#9ca3af;font-size:12px;margin:0 0 8px;line-height:1.6;">' +
+      'You are receiving this email because you subscribed to the Nexus newsletter.</p>' +
       '<p style="margin:0;">' +
       (String.isNotBlank(token)
         ? '<a href="' +
           unsubUrl +
-          '" style="color:#94a3b8;font-size:11px;text-decoration:underline;">Unsubscribe</a>' +
-          '<span style="color:#e2e8f0;margin:0 8px;">&bull;</span>'
+          '" style="color:#9ca3af;font-size:11px;text-decoration:underline;">Unsubscribe</a>' +
+          '<span style="color:#d1d5db;margin:0 8px;">&bull;</span>'
         : '') +
-      '<span style="color:#cbd5e1;font-size:11px;">&copy; 2026 Nexus Systems. All rights reserved.</span>' +
+      '<span style="color:#d1d5db;font-size:11px;">&copy; 2026 Nexus Systems. All rights reserved.</span>' +
       '</p>' +
       '</td></tr>';
   }

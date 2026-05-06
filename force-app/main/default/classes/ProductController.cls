@@ -33,6 +33,10 @@ public without sharing class ProductController {
     public Boolean isNew;
     @AuraEnabled
     public String specs; // JSON string: [{key,value},...]
+    @AuraEnabled
+    public Decimal visibilityScore;
+    @AuraEnabled
+    public String stockStatus;
   }
 
   // ── Wrapper: stock board ──────────────────────────────────────────────────
@@ -151,6 +155,7 @@ public without sharing class ProductController {
     String query =
       'SELECT Id, Name, ProductCode, Description, Family, Subcategory__c, ' +
       'Brand__c, Image_URL__c, AvailabilityStatus__c, Rating__c, Reviews__c, IsNew__c, Specs__c, ' +
+      'Visibility_Score__c, Stock_Status__c, ' +
       '(SELECT Quantity_Available__c FROM Stocks__r LIMIT 1), ' +
       '(SELECT UnitPrice FROM PricebookEntries WHERE IsActive = true LIMIT 1) ' +
       'FROM Product2 WHERE IsActive = true';
@@ -185,6 +190,8 @@ public without sharing class ProductController {
       w.reviews = p.Reviews__c != null ? Integer.valueOf(p.Reviews__c) : 0;
       w.isNew = p.IsNew__c;
       w.specs = p.Specs__c;
+      w.visibilityScore = p.Visibility_Score__c;
+      w.stockStatus = p.Stock_Status__c;
 
       w.unitPrice = 0;
       if (!p.PricebookEntries.isEmpty()) {

@@ -1,0 +1,26 @@
+name: Validate PR
+
+on:
+  pull_request:
+    branches: [qa, main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authenticate
+        run: |
+          echo "${{ secrets.SF_AUTH_URL_QA }}" > auth.url
+          sf org login sfdx-url --sfdx-url-file auth.url --alias target-org
+
+      - name: Validate (dry run)
+        run: |
+          sf project deploy validate \
+            --target-org target-org \
+            --source-dir force-app \
+            --test-level RunLocalTests

@@ -12,22 +12,67 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
     // Pick up:
     //  a) Quotes not yet finalized (Status not Signed/Rejected/Declined)
     //  b) Recently-signed quotes where the PDF attach failed (no ContentDocumentLink)
-    Set<Id> quotesWithPdf = new Set<Id>();
-    for (ContentDocumentLink cdl : [
-      SELECT LinkedEntityId
-      FROM ContentDocumentLink
+    // A quote is considered "fully done" only when its Opportunity ALSO has the
+    // signed PDF (not just the Quote record). This ensures the queueable retries
+    // any quote whose Opportunity link was previously missed.
+    List<TALEXO_Quote__c> recentSigned = [
+      SELECT Id, Opportunity__c
+      FROM TALEXO_Quote__c
       WHERE
-        LinkedEntityId IN (
-          SELECT Id
-          FROM TALEXO_Quote__c
-          WHERE
-            DvelopEnvelopeId__c != NULL
-            AND Status__c = 'Signed'
-            AND LastModifiedDate >= :DateTime.now().addDays(-7)
-        )
-    ]) {
-      quotesWithPdf.add(cdl.LinkedEntityId);
+        DvelopEnvelopeId__c != NULL
+        AND Status__c = 'Signed'
+        AND LastModifiedDate >= :DateTime.now().addDays(-30)
+    ];
+
+    Map<Id, Id> quoteToOpp = new Map<Id, Id>();
+    Set<Id> oppIds = new Set<Id>();
+    Set<Id> quotesWithNoOpp = new Set<Id>();
+    for (TALEXO_Quote__c sq : recentSigned) {
+      if (sq.Opportunity__c != null) {
+        quoteToOpp.put(sq.Id, sq.Opportunity__c);
+        oppIds.add(sq.Opportunity__c);
+      } else {
+        quotesWithNoOpp.add(sq.Id);
+      }
     }
+
+    // Opportunities that already have the signed PDF
+    Set<Id> oppsWithPdf = new Set<Id>();
+    if (!oppIds.isEmpty()) {
+      for (ContentDocumentLink cdl : [
+        SELECT LinkedEntityId
+        FROM ContentDocumentLink
+        WHERE
+          LinkedEntityId IN :oppIds
+          AND ContentDocument.Title LIKE '%_Signed_Contract%'
+      ]) {
+        oppsWithPdf.add(cdl.LinkedEntityId);
+      }
+    }
+
+    // For quotes with no Opportunity, fall back to checking the Quote itself
+    Set<Id> quotesWithPdf = new Set<Id>();
+    if (!quotesWithNoOpp.isEmpty()) {
+      for (ContentDocumentLink cdl : [
+        SELECT LinkedEntityId
+        FROM ContentDocumentLink
+        WHERE
+          LinkedEntityId IN :quotesWithNoOpp
+          AND ContentDocument.Title LIKE '%_Signed_Contract%'
+      ]) {
+        quotesWithPdf.add(cdl.LinkedEntityId);
+      }
+    }
+    // Add quotes whose Opportunity already has the PDF
+    for (Id qId : quoteToOpp.keySet()) {
+      if (oppsWithPdf.contains(quoteToOpp.get(qId))) {
+        quotesWithPdf.add(qId);
+      }
+    }
+
+    System.debug(
+      '[DocuSignPoll] Fully linked quotes (skip): ' + quotesWithPdf.size()
+    );
 
     List<TALEXO_Quote__c> pending = [
       SELECT
@@ -54,9 +99,10 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
         AND (Status__c NOT IN ('Signed')
         OR (Status__c = 'Signed'
         AND Id NOT IN :quotesWithPdf
-        AND LastModifiedDate >= :DateTime.now().addDays(-7)))
+        AND LastModifiedDate >= :DateTime.now().addDays(-30)))
       LIMIT 5
     ];
+    System.debug('[DocuSignPoll] Pending quotes to check: ' + pending.size());
     if (pending.isEmpty())
       return;
 
@@ -170,35 +216,53 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       }
     }
 
-    // 3. Get or create Contract
+    // 3. Get or create Contract — isolated so failure never blocks PDF attachment
     Id accountId = q.Opportunity__r.AccountId;
-    List<Contract> existingC = [
-      SELECT Id
-      FROM Contract
-      WHERE AccountId = :accountId AND StartDate = :contractStart
-      LIMIT 1
-    ];
-    Contract c;
-    if (!existingC.isEmpty()) {
-      c = existingC[0];
-    } else {
-      c = new Contract(
-        AccountId = accountId,
-        Status = 'Draft',
-        StartDate = contractStart,
-        ContractTerm = 12,
-        Description = 'Nexus B2B Contract — ' + q.Name,
-        OwnerId = q.Opportunity__r.OwnerId
-      );
-      insert c;
-      try {
-        update new Contract(Id = c.Id, Status = 'Activated');
-      } catch (Exception e) {
-        System.debug('[DocuSignPoll] Contract activation: ' + e.getMessage());
+    Id contractId = null;
+    String contractRef = 'CTR-' + q.Id.to15().right(6).toUpperCase();
+    try {
+      if (accountId != null) {
+        List<Contract> existingC = [
+          SELECT Id
+          FROM Contract
+          WHERE AccountId = :accountId AND StartDate = :contractStart
+          LIMIT 1
+        ];
+        Contract c;
+        if (!existingC.isEmpty()) {
+          c = existingC[0];
+        } else {
+          c = new Contract(
+            AccountId = accountId,
+            Status = 'Draft',
+            StartDate = contractStart,
+            ContractTerm = 12,
+            Description = 'Nexus B2B Contract — ' + q.Name,
+            OwnerId = q.Opportunity__r.OwnerId
+          );
+          insert c;
+          try {
+            update new Contract(Id = c.Id, Status = 'Activated');
+          } catch (Exception e) {
+            System.debug(
+              '[DocuSignPoll] Contract activation: ' + e.getMessage()
+            );
+          }
+        }
+        contractId = c.Id;
+        contractRef = 'CTR-' + String.valueOf(c.Id).right(6).toUpperCase();
+      } else {
+        System.debug(
+          '[DocuSignPoll] No AccountId on opportunity — skipping Contract creation.'
+        );
       }
+    } catch (Exception e) {
+      System.debug(
+        '[DocuSignPoll] Contract creation failed (PDF will still attach): ' +
+        e.getMessage()
+      );
     }
 
-    String contractRef = 'CTR-' + String.valueOf(c.Id).right(6).toUpperCase();
     String signedAt = DateTime.now().format('dd/MM/yyyy HH:mm') + ' UTC';
 
     // 4. Chatter post
@@ -218,7 +282,7 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       }
     }
 
-    // 5. Attach signed PDF
+    // 5. Attach signed PDF — always runs regardless of contract creation outcome
     if (pdfBlob != null) {
       String filename =
         q.Name.replaceAll('[^A-Za-z0-9_-]', '_') + '_Signed_Contract.pdf';
@@ -236,30 +300,31 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
         LIMIT 1
       ];
 
-      List<ContentDocumentLink> links = new List<ContentDocumentLink>();
-      // Contract
-      links.add(
-        new ContentDocumentLink(
-          ContentDocumentId = cv.ContentDocumentId,
-          LinkedEntityId = c.Id,
-          ShareType = 'V',
-          Visibility = 'AllUsers'
-        )
-      );
-      // Account (visible in Experience Cloud)
+      // Link to every available record individually so one failure doesn't block others
+      if (contractId != null) {
+        try {
+          insert new ContentDocumentLink(
+            ContentDocumentId = cv.ContentDocumentId,
+            LinkedEntityId = contractId,
+            ShareType = 'V',
+            Visibility = 'AllUsers'
+          );
+        } catch (Exception e) {
+          System.debug('[DocuSignPoll] Contract link: ' + e.getMessage());
+        }
+      }
       if (accountId != null) {
-        links.add(
-          new ContentDocumentLink(
+        try {
+          insert new ContentDocumentLink(
             ContentDocumentId = cv.ContentDocumentId,
             LinkedEntityId = accountId,
             ShareType = 'V',
             Visibility = 'AllUsers'
-          )
-        );
+          );
+        } catch (Exception e) {
+          System.debug('[DocuSignPoll] Account link: ' + e.getMessage());
+        }
       }
-      insert links;
-
-      // Quote + Opportunity — wrapped individually (may fail if sharing rules differ)
       try {
         insert new ContentDocumentLink(
           ContentDocumentId = cv.ContentDocumentId,
@@ -270,7 +335,6 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       } catch (Exception e) {
         System.debug('[DocuSignPoll] Quote link: ' + e.getMessage());
       }
-
       if (q.Opportunity__c != null) {
         try {
           insert new ContentDocumentLink(
@@ -287,7 +351,9 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       System.debug(
         '[DocuSignPoll] PDF attached: ' +
           filename +
-          ' → Contract + Account + Quote + Opportunity'
+          ' → Quote + Opportunity' +
+          (accountId != null ? ' + Account' : '') +
+          (contractId != null ? ' + Contract' : '')
       );
     } else {
       System.debug(
@@ -370,6 +436,7 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
     DocuSignConfig_mdt__mdt cfg,
     String envelopeId
   ) {
+    // documents/combined always returns a merged PDF regardless of original format
     HttpRequest req = new HttpRequest();
     req.setMethod('GET');
     req.setEndpoint(
@@ -378,12 +445,18 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
         cfg.Account_Id__c +
         '/envelopes/' +
         envelopeId +
-        '/documents/1'
+        '/documents/combined'
     );
     req.setHeader('Authorization', 'Bearer ' + token);
+    req.setHeader('Accept', 'application/pdf');
     req.setTimeout(30000);
     HttpResponse res = new Http().send(req);
-    System.debug('[DocuSignPoll] PDF download HTTP ' + res.getStatusCode());
+    System.debug(
+      '[DocuSignPoll] PDF download HTTP ' +
+        res.getStatusCode() +
+        ' content-type=' +
+        res.getHeader('Content-Type')
+    );
     return res.getStatusCode() == 200 ? res.getBodyAsBlob() : null;
   }
 

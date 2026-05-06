@@ -283,16 +283,22 @@ public without sharing class AuthController {
           lm.contains('disabled') ||
           lm.contains('access is disabled') ||
           lm.contains('not allowed') ||
-          lm.contains('access is not')
+          lm.contains('access is not') ||
+          lm.contains('login attempt has failed') ||
+          lm.contains('username and password') ||
+          lm.contains('invalid login')
         ) {
-          // Salesforce throws several variants when credentials are correct but
-          // the account is inactive / not enrolled in the community network:
+          // PATH B: Salesforce throws several variants when the user exists but
+          // Site.login cannot authenticate them:
           //   "Your access is not allowed. Contact your site administrator."
           //   "Portal user access is disabled."
-          // Token is confirmed valid — proceed to PATH B
+          //   "Your login attempt has failed. Make sure the username and password are correct."
+          // All of these mean: user exists, skip Site.login, use System.setPassword directly.
           tokenVerifiedViaDisabled = true;
           System.debug(
-            'setFirstPassword PATH B — access disabled, token valid, using System.setPassword'
+            'setFirstPassword PATH B — Site.login rejected (' +
+              lm +
+              '), using System.setPassword'
           );
         } else {
           throw loginEx; // unexpected error — surface it
@@ -444,7 +450,8 @@ public without sharing class AuthController {
               MailingCity,
               MailingPostalCode,
               MailingCountry,
-              Account.Name
+              Account.Name,
+              Account.CustomerTier__c
             FROM Contact
             WHERE Id = :u.ContactId
             LIMIT 1
@@ -469,6 +476,9 @@ public without sharing class AuthController {
           if (c.AccountId != null && c.Account != null) {
             if (c.Account.Name != null) {
               profile.put('accountName', c.Account.Name);
+            }
+            if (c.Account.CustomerTier__c != null) {
+              profile.put('customerTier', c.Account.CustomerTier__c);
             }
 
             // Detect B2C:

@@ -428,7 +428,8 @@ global class DocuSignWebhookController {
         if (dlRes.getStatusCode() == 200) {
           Blob pdfBlob = dlRes.getBodyAsBlob();
           String filename =
-            quoteName.replaceAll('[^A-Za-z0-9_-]', '_') + '_Signed_Contract.pdf';
+            quoteName.replaceAll('[^A-Za-z0-9_-]', '_') +
+            '_Signed_Contract.pdf';
 
           // ── Save as ContentVersion ────────────────────────────────────────
           ContentVersion cv = new ContentVersion(
@@ -440,23 +441,35 @@ global class DocuSignWebhookController {
           insert cv;
           cv = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id];
 
-          // ── Link to Contract ──────────────────────────────────────────────
-          insert new ContentDocumentLink(
-            ContentDocumentId = cv.ContentDocumentId,
-            LinkedEntityId = contractId,
-            ShareType = 'V',
-            Visibility = 'AllUsers'
-          );
-
-          // ── Link to Account (visible in Experience Cloud) ─────────────────
-          insert new ContentDocumentLink(
-            ContentDocumentId = cv.ContentDocumentId,
-            LinkedEntityId = accountId,
-            ShareType = 'V',
-            Visibility = 'AllUsers'
-          );
-
-          // ── Link to Quote (visible in Notes & Attachments on Quote) ─────
+          // Each link is isolated — one failure never blocks the others
+          if (contractId != null) {
+            try {
+              insert new ContentDocumentLink(
+                ContentDocumentId = cv.ContentDocumentId,
+                LinkedEntityId = contractId,
+                ShareType = 'V',
+                Visibility = 'AllUsers'
+              );
+            } catch (Exception ex) {
+              System.debug(
+                '[DocuSignWebhook] Contract link skipped: ' + ex.getMessage()
+              );
+            }
+          }
+          if (accountId != null) {
+            try {
+              insert new ContentDocumentLink(
+                ContentDocumentId = cv.ContentDocumentId,
+                LinkedEntityId = accountId,
+                ShareType = 'V',
+                Visibility = 'AllUsers'
+              );
+            } catch (Exception ex) {
+              System.debug(
+                '[DocuSignWebhook] Account link skipped: ' + ex.getMessage()
+              );
+            }
+          }
           try {
             insert new ContentDocumentLink(
               ContentDocumentId = cv.ContentDocumentId,
@@ -466,11 +479,9 @@ global class DocuSignWebhookController {
             );
           } catch (Exception ex) {
             System.debug(
-              '[DocuSignWebhook] Quote PDF link skipped: ' + ex.getMessage()
+              '[DocuSignWebhook] Quote link skipped: ' + ex.getMessage()
             );
           }
-
-          // ── Link to Opportunity (Notes & Attachments) ────────────────────
           if (opportunityId != null) {
             try {
               insert new ContentDocumentLink(
@@ -481,13 +492,12 @@ global class DocuSignWebhookController {
               );
             } catch (Exception ex) {
               System.debug(
-                '[DocuSignWebhook] Opp PDF link skipped: ' + ex.getMessage()
+                '[DocuSignWebhook] Opp link skipped: ' + ex.getMessage()
               );
             }
           }
-
           System.debug(
-            '[DocuSignWebhook] Signed PDF attached to Contract + Account + Quote + Opportunity.'
+            '[DocuSignWebhook] Signed PDF attached to available records.'
           );
         }
       }

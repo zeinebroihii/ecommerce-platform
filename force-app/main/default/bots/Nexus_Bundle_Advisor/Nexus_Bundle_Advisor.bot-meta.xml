@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Bot xmlns="http://soap.sforce.com/2006/04/metadata">
+    <agentType>AgentforceEmployeeAgent</agentType>
+    <botMlDomain>
+        <label>Nexus Bundle Advisor</label>
+        <name>Nexus_Bundle_Advisor</name>
+    </botMlDomain>
+    <description
+  >Analyses the Nexus product catalog to identify overstocked items and recommends intelligent product bundles. Creates BundleSuggestion records for admin review and promotion to active Combo Packages in the customer portal.</description>
+    <label>Nexus Bundle Advisor</label>
+    <logPrivateConversationData>true</logPrivateConversationData>
+    <richContentEnabled>true</richContentEnabled>
+    <sessionTimeout>0</sessionTimeout>
+    <type>InternalCopilot</type>
+</Bot>

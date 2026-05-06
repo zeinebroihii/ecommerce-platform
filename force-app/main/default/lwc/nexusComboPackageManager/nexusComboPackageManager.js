@@ -5,6 +5,10 @@ import getAllPackages from "@salesforce/apex/ComboPackageController.getAllPackag
 import savePackage from "@salesforce/apex/ComboPackageController.savePackage";
 import deletePackage from "@salesforce/apex/ComboPackageController.deletePackage";
 import togglePackageActive from "@salesforce/apex/ComboPackageController.togglePackageActive";
+import getPendingSuggestions from "@salesforce/apex/ComboPackageController.getPendingSuggestions";
+import promoteSuggestion from "@salesforce/apex/ComboPackageController.promoteSuggestion";
+import dismissSuggestion from "@salesforce/apex/ComboPackageController.dismissSuggestion";
+import generateAIBundles from "@salesforce/apex/ComboPackageController.generateAIBundles";
 import getProductsWithStock from "@salesforce/apex/ProductController.getProductsWithStock";
 
 const CATEGORY_OPTIONS = [
@@ -25,7 +29,13 @@ const PICKER_CATEGORY_OPTIONS = [
 ];
 
 function fmt(n) {
-  return "$" + Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (
+    "$" +
+    Number(n || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  );
 }
 
 export default class NexusComboPackageManager extends LightningElement {
@@ -49,6 +59,99 @@ export default class NexusComboPackageManager extends LightningElement {
   @wire(getProductsWithStock, { searchTerm: null, category: null })
   wiredProducts({ data }) {
     if (data) this._allProducts = data;
+  }
+
+  // ── Suggestions state ─────────────────────────────────────────────────────
+  @track isSuggestions = false;
+  @track _suggestions = [];
+  @track _promotingIds = [];
+  @track isGenerating = false;
+  _wiredSuggestions;
+
+  @wire(getPendingSuggestions)
+  wiredSuggestions(result) {
+    this._wiredSuggestions = result;
+    if (result.data) this._suggestions = result.data;
+  }
+
+  get suggestionCount() {
+    return this._suggestions.length;
+  }
+  get hasSuggestions() {
+    return this._suggestions.length > 0;
+  }
+
+  get suggestionsEnriched() {
+    return this._suggestions.map((s) => ({
+      ...s,
+      scoreLabel: s.score != null ? s.score.toFixed(1) : "—",
+      isPromoting: this._promotingIds.includes(s.id),
+      isAI: s.source === "AI-Agent",
+      aiReason: s.aiReason || "",
+      hasAiReason: !!s.aiReason,
+      sourceBadge: s.source === "AI-Agent" ? "Agentforce" : "Auto",
+      badgeClass:
+        s.source === "AI-Agent"
+          ? "ncpm-sugg-badge ncpm-sugg-badge--agent"
+          : "ncpm-sugg-badge"
+    }));
+  }
+
+  handleShowSuggestions() {
+    this.isSuggestions = true;
+  }
+  handleBackFromSuggestions() {
+    this.isSuggestions = false;
+  }
+
+  async handleGenerateAI() {
+    this.isGenerating = true;
+    try {
+      const count = await generateAIBundles();
+      await refreshApex(this._wiredSuggestions);
+      if (count > 0) {
+        this._toast(
+          `${count} new AI bundle${count > 1 ? "s" : ""} generated!`,
+          "Review them below.",
+          "success"
+        );
+      } else {
+        this._toast(
+          "No new bundles found",
+          "All boosted products are already paired or no compatible products exist.",
+          "info"
+        );
+      }
+    } catch (e) {
+      this._toast("Generation failed", e.body?.message || "", "error");
+    } finally {
+      this.isGenerating = false;
+    }
+  }
+
+  async handlePromoteSuggestion(event) {
+    const id = event.currentTarget.dataset.id;
+    this._promotingIds = [...this._promotingIds, id];
+    try {
+      await promoteSuggestion({ suggestionId: id });
+      this._suggestions = this._suggestions.filter((s) => s.id !== id);
+      await refreshApex(this._wiredResult);
+      this._toast("Bundle added to Combo Packages!", "", "success");
+    } catch (e) {
+      this._toast("Promote failed", e.body?.message || "", "error");
+    } finally {
+      this._promotingIds = this._promotingIds.filter((i) => i !== id);
+    }
+  }
+
+  async handleDismissSuggestion(event) {
+    const id = event.currentTarget.dataset.id;
+    try {
+      await dismissSuggestion({ suggestionId: id });
+      this._suggestions = this._suggestions.filter((s) => s.id !== id);
+    } catch (e) {
+      this._toast("Dismiss failed", e.body?.message || "", "error");
+    }
   }
 
   // ── Editor state ──────────────────────────────────────────────────────────
@@ -76,9 +179,12 @@ export default class NexusComboPackageManager extends LightningElement {
   get packagesEnriched() {
     return this._packages.map((pkg) => ({
       ...pkg,
-      cardClass: "ncpm-pkg-card" + (pkg.isActive ? "" : " ncpm-pkg-card--inactive"),
+      cardClass:
+        "ncpm-pkg-card" + (pkg.isActive ? "" : " ncpm-pkg-card--inactive"),
       statusLabel: pkg.isActive ? "Active" : "Inactive",
-      statusBadgeClass: pkg.isActive ? "ncpm-status ncpm-status--active" : "ncpm-status ncpm-status--inactive",
+      statusBadgeClass: pkg.isActive
+        ? "ncpm-status ncpm-status--active"
+        : "ncpm-status ncpm-status--inactive",
       toggleTitle: pkg.isActive ? "Deactivate" : "Activate",
       noItems: !pkg.items || pkg.items.length === 0,
       totalPriceFormatted: fmt(pkg.totalPrice),
@@ -130,11 +236,17 @@ export default class NexusComboPackageManager extends LightningElement {
 
   // ── Computed: category select options ────────────────────────────────────
   get categoryOptions() {
-    return CATEGORY_OPTIONS.map((o) => ({ ...o, selected: o.value === this.editCategory }));
+    return CATEGORY_OPTIONS.map((o) => ({
+      ...o,
+      selected: o.value === this.editCategory
+    }));
   }
 
   get pickerCategoryOptions() {
-    return PICKER_CATEGORY_OPTIONS.map((o) => ({ ...o, selected: o.value === this.pickerCategory }));
+    return PICKER_CATEGORY_OPTIONS.map((o) => ({
+      ...o,
+      selected: o.value === this.pickerCategory
+    }));
   }
 
   // ── Computed: product picker ──────────────────────────────────────────────
@@ -143,7 +255,8 @@ export default class NexusComboPackageManager extends LightningElement {
     const cat = this.pickerCategory;
     return this._allProducts
       .filter((p) => {
-        const matchSearch = !search || (p.name || "").toLowerCase().includes(search);
+        const matchSearch =
+          !search || (p.name || "").toLowerCase().includes(search);
         const matchCat = !cat || (p.family || "") === cat;
         return matchSearch && matchCat;
       })
@@ -152,7 +265,11 @@ export default class NexusComboPackageManager extends LightningElement {
         id: p.productId,
         priceFormatted: fmt(p.unitPrice),
         isSelected: this.pickerSelected.includes(p.productId),
-        pickerCardClass: "ncpm-picker-card" + (this.pickerSelected.includes(p.productId) ? " ncpm-picker-card--selected" : "")
+        pickerCardClass:
+          "ncpm-picker-card" +
+          (this.pickerSelected.includes(p.productId)
+            ? " ncpm-picker-card--selected"
+            : "")
       }));
   }
 
@@ -210,7 +327,7 @@ export default class NexusComboPackageManager extends LightningElement {
 
   async handleDeletePackage(event) {
     const id = event.currentTarget.dataset.id;
-    // eslint-disable-next-line no-alert
+    // eslint-disable-next-line no-alert, no-restricted-globals
     if (!confirm("Delete this combo package? This cannot be undone.")) return;
     try {
       await deletePackage({ packageId: id });
@@ -234,11 +351,21 @@ export default class NexusComboPackageManager extends LightningElement {
   }
 
   // ── Handlers: editor fields ───────────────────────────────────────────────
-  handleEditName(event) { this.editName = event.target.value; }
-  handleEditDescription(event) { this.editDescription = event.target.value; }
-  handleEditCategory(event) { this.editCategory = event.target.value; }
-  handleEditDiscount(event) { this.editDiscount = parseFloat(event.target.value) || 0; }
-  handleEditIsActive(event) { this.editIsActive = event.target.checked; }
+  handleEditName(event) {
+    this.editName = event.target.value;
+  }
+  handleEditDescription(event) {
+    this.editDescription = event.target.value;
+  }
+  handleEditCategory(event) {
+    this.editCategory = event.target.value;
+  }
+  handleEditDiscount(event) {
+    this.editDiscount = parseFloat(event.target.value) || 0;
+  }
+  handleEditIsActive(event) {
+    this.editIsActive = event.target.checked;
+  }
 
   handleRemoveItem(event) {
     const id = event.currentTarget.dataset.id;
@@ -275,16 +402,29 @@ export default class NexusComboPackageManager extends LightningElement {
   // ── Handlers: product picker ──────────────────────────────────────────────
   handleOpenProductPicker() {
     this.pickerSearch = "";
-    this.pickerCategory = this.editCategory && this.editCategory !== "Multi-Category" ? this.editCategory : "";
+    this.pickerCategory =
+      this.editCategory && this.editCategory !== "Multi-Category"
+        ? this.editCategory
+        : "";
     this.pickerSelected = this.editItems.map((i) => i.productId);
     this.isPickerOpen = true;
   }
 
-  handleClosePicker() { this.isPickerOpen = false; }
-  handleClosePickerOverlay() { this.isPickerOpen = false; }
-  handleModalStopProp(event) { event.stopPropagation(); }
-  handlePickerSearch(event) { this.pickerSearch = event.target.value; }
-  handlePickerCategory(event) { this.pickerCategory = event.target.value; }
+  handleClosePicker() {
+    this.isPickerOpen = false;
+  }
+  handleClosePickerOverlay() {
+    this.isPickerOpen = false;
+  }
+  handleModalStopProp(event) {
+    event.stopPropagation();
+  }
+  handlePickerSearch(event) {
+    this.pickerSearch = event.target.value;
+  }
+  handlePickerCategory(event) {
+    this.pickerCategory = event.target.value;
+  }
 
   handlePickProduct(event) {
     const id = event.currentTarget.dataset.id;
@@ -300,10 +440,14 @@ export default class NexusComboPackageManager extends LightningElement {
     const existingIds = this.editItems.map((i) => i.productId);
 
     // Remove items that were deselected in picker
-    const kept = this.editItems.filter((i) => this.pickerSelected.includes(i.productId));
+    const kept = this.editItems.filter((i) =>
+      this.pickerSelected.includes(i.productId)
+    );
 
     // Add newly selected products
-    const newIds = this.pickerSelected.filter((id) => !existingIds.includes(id));
+    const newIds = this.pickerSelected.filter(
+      (id) => !existingIds.includes(id)
+    );
     const newItems = newIds
       .map((id) => {
         const p = this._allProducts.find((prod) => prod.productId === id);

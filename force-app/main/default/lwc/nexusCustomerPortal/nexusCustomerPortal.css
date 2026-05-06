@@ -415,7 +415,9 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
-  transition: opacity 0.2s, transform 0.15s;
+  transition:
+    opacity 0.2s,
+    transform 0.15s;
 }
 .ncp-ai-chat-btn:hover {
   opacity: 0.88;
@@ -599,6 +601,31 @@
 }
 .ncp-sparks-row {
   min-width: 0;
+}
+
+/* ── Stock Intelligence Banner variant ───────────────────────────────────── */
+.ncp-si-banner {
+  background: linear-gradient(135deg, #0a0f1e 0%, #0d1730 50%, #111827 100%);
+}
+.ncp-si-badge {
+  background: rgba(99, 102, 241, 0.2) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  color: #a5b4fc !important;
+}
+.ncp-si-badge lightning-icon {
+  color: #a5b4fc;
+}
+.ncp-stat-boosted {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  background: rgba(16, 185, 129, 0.07) !important;
+}
+.ncp-stat-buried {
+  border-color: rgba(245, 158, 11, 0.25) !important;
+  background: rgba(245, 158, 11, 0.07) !important;
+}
+.ncp-stat-visible {
+  border-color: rgba(99, 102, 241, 0.25) !important;
+  background: rgba(99, 102, 241, 0.07) !important;
 }
 @media (max-width: 1100px) {
   .ncp-banner-sparks-row {
@@ -1348,6 +1375,35 @@
   color: #059669;
   border-radius: 9999px;
   margin-bottom: 0.5rem;
+}
+.ncp-tier-badge {
+  display: inline-block;
+  font-size: 0.625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.2rem 0.75rem;
+  border-radius: 9999px;
+  margin-left: 0.5rem;
+  margin-bottom: 0.5rem;
+  vertical-align: middle;
+}
+.ncp-tier-platinum {
+  background: linear-gradient(135deg, #e8e0f5 0%, #c9b8e8 100%);
+  color: #5b21b6;
+  border: 1px solid #7c3aed;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.25);
+}
+.ncp-tier-gold {
+  background: linear-gradient(135deg, #fef9c3 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #d97706;
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.2);
+}
+.ncp-tier-standard {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
 }
 .ncp-profile-name {
   font-size: 1.75rem;
@@ -3816,6 +3872,7 @@
   right: 24px;
   z-index: 9999;
   animation: nbp-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  filter: drop-shadow(0 8px 24px rgba(79, 70, 229, 0.12));
 }
 @keyframes nbp-slide-in {
   from {
@@ -3832,9 +3889,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #fff;
-  border: 1.5px solid #e0e7ff;
-  border-left: 4px solid #4f46e5;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+  border: 1px solid #e0e7ff;
+  border-left: 4px solid #818cf8;
   border-radius: 1rem;
   padding: 14px 16px;
   box-shadow: 0 12px 40px rgba(79, 70, 229, 0.18);
@@ -3849,7 +3906,7 @@
 .nbp-popup-icon {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
