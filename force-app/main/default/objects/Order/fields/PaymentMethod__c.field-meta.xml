@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PaymentMethod__c</fullName>
+    <label>Payment Method</label>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>false</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Stripe</fullName>
+                <default>false</default>
+                <label>Stripe</label>
+            </value>
+            <value>
+                <fullName>USDC_Escrow</fullName>
+                <default>false</default>
+                <label>USDC Escrow</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
