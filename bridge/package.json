@@ -1,0 +1,15 @@
+{
+  "name": "nexus-escrow-bridge",
+  "version": "1.0.0",
+  "description": "Vercel serverless API bridge between Salesforce and the NexusEscrow smart contract",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "ethers": "^6.4.0"
+  },
+  "devDependencies": {
+    "vercel": "^44.0.0"
+  }
+}
