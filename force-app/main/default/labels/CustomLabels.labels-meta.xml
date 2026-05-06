@@ -13,6 +13,6 @@
         <protected>true</protected>
         <shortDescription
     >x-api-key sent to Vercel bridge (must match BRIDGE_API_KEY env var)</shortDescription>
-        <value>REPLACE_ME</value>
+        <value>nexus-bridge-2026-secret</value>
     </labels>
 </CustomLabels>
