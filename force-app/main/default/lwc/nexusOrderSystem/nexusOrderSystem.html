@@ -669,11 +669,22 @@
                   variant="inverse"
                 ></lightning-icon>
               </div>
-              <h3 class="nos-epm-success-title">Funds Successfully Secured!</h3>
-              <p class="nos-epm-success-sub">
-                Your USDC is locked in escrow on Polygon. Payment will release
-                automatically after delivery is confirmed.
-              </p>
+              <template if:true={escrowAlreadyFunded}>
+                <h3 class="nos-epm-success-title">Payment Already Secured</h3>
+                <p class="nos-epm-success-sub">
+                  Your funds are already locked in escrow on Polygon from a
+                  previous transaction. No action needed.
+                </p>
+              </template>
+              <template if:false={escrowAlreadyFunded}>
+                <h3 class="nos-epm-success-title">
+                  Funds Successfully Secured!
+                </h3>
+                <p class="nos-epm-success-sub">
+                  Your USDC is locked in escrow on Polygon. Payment will release
+                  automatically after delivery is confirmed.
+                </p>
+              </template>
 
               <div class="nos-epm-locked-badge">
                 <lightning-icon

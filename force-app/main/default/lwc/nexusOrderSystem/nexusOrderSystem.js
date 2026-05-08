@@ -151,6 +151,7 @@ export default class NexusOrderSystem extends LightningElement {
   @track _escrowPayError = null;
   @track _processingStep = 1;
   @track _buyerWalletAddress = "";
+  @track _escrowAlreadyFunded = false;
   _countdownInterval = null;
   _processingTimer = null;
   _wiredOrdersResult;
@@ -321,6 +322,10 @@ export default class NexusOrderSystem extends LightningElement {
 
   get processingStep2Active() {
     return this._processingStep === 2;
+  }
+
+  get escrowAlreadyFunded() {
+    return this._escrowAlreadyFunded;
   }
 
   get escrowPayTxHash() {
@@ -510,6 +515,7 @@ export default class NexusOrderSystem extends LightningElement {
     this._escrowPayError = null;
     this._processingStep = 1;
     this._buyerWalletAddress = "";
+    this._escrowAlreadyFunded = false;
     this._showEscrowPayModal = true;
   }
 
@@ -548,9 +554,17 @@ export default class NexusOrderSystem extends LightningElement {
             this._loadEscrowStatus(this._selectedOrderId);
           });
         } else {
-          this._escrowPayError =
-            (result && result.error) || "Could not lock funds.";
-          this._escrowPayStep = "error";
+          const errMsg = (result && result.error) || "Could not lock funds.";
+          if (errMsg.toLowerCase().includes("already funded")) {
+            this._escrowAlreadyFunded = true;
+            this._escrowPayStep = "success";
+            refreshApex(this._wiredOrdersResult).then(() => {
+              this._loadEscrowStatus(this._selectedOrderId);
+            });
+          } else {
+            this._escrowPayError = errMsg;
+            this._escrowPayStep = "error";
+          }
         }
       })
       .catch((err) => {
@@ -558,10 +572,19 @@ export default class NexusOrderSystem extends LightningElement {
           clearTimeout(this._processingTimer);
           this._processingTimer = null;
         }
-        this._escrowPayError =
+        const errMsg =
           (err && err.body && err.body.message) ||
           "Could not process escrow payment.";
-        this._escrowPayStep = "error";
+        if (errMsg.toLowerCase().includes("already funded")) {
+          this._escrowAlreadyFunded = true;
+          this._escrowPayStep = "success";
+          refreshApex(this._wiredOrdersResult).then(() => {
+            this._loadEscrowStatus(this._selectedOrderId);
+          });
+        } else {
+          this._escrowPayError = errMsg;
+          this._escrowPayStep = "error";
+        }
       })
       .finally(() => {
         this._fundingLoading = false;
@@ -584,6 +607,7 @@ export default class NexusOrderSystem extends LightningElement {
     this._escrowPayTxHash = null;
     this._escrowPayError = null;
     this._buyerWalletAddress = "";
+    this._escrowAlreadyFunded = false;
     this._fundingLoading = false;
   }
 
