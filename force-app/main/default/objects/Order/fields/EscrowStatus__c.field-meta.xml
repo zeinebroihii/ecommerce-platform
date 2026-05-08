@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>EscrowStatus__c</fullName>
+    <label>Escrow Status</label>
+    <type>Text</type>
+    <length>20</length>
+    <description
+  >Mirrors the on-chain escrow state. Values: FUNDED | DELIVERED | DISPUTED | FROZEN | RELEASING | RELEASED | REFUNDING | REFUNDED. Kept in sync by EscrowBridgeController.</description>
+</CustomField>

@@ -36,6 +36,8 @@ public with sharing class EscrowBridgeController {
           ' body: ' +
           res.getBody()
       );
+    } else {
+      syncEscrowStatus(orderNumber, 'DELIVERED');
     }
   }
 
@@ -82,6 +84,8 @@ public with sharing class EscrowBridgeController {
           ' — ' +
           res.getBody()
       );
+    } else {
+      syncEscrowStatus(orderNumber, 'RELEASED');
     }
   }
 
@@ -103,6 +107,8 @@ public with sharing class EscrowBridgeController {
           ' — ' +
           res.getBody()
       );
+    } else {
+      syncEscrowStatus(orderNumber, 'REFUNDED');
     }
   }
 
@@ -143,6 +149,9 @@ public with sharing class EscrowBridgeController {
       new Map<String, Object>{ 'orderId' => orderNumber, 'fromFreeze' => false }
     );
     HttpResponse res = doPost('/api/escrow/release', body);
+    if (res.getStatusCode() == 200) {
+      syncEscrowStatus(orderNumber, 'RELEASED');
+    }
     return new Map<String, Object>{
       'success' => res.getStatusCode() == 200,
       'body' => res.getBody()
@@ -157,6 +166,9 @@ public with sharing class EscrowBridgeController {
       new Map<String, String>{ 'orderId' => orderNumber }
     );
     HttpResponse res = doPost('/api/escrow/freeze', body);
+    if (res.getStatusCode() == 200) {
+      syncEscrowStatus(orderNumber, 'DISPUTED');
+    }
     return new Map<String, Object>{
       'success' => res.getStatusCode() == 200,
       'body' => res.getBody()
@@ -214,6 +226,7 @@ public with sharing class EscrowBridgeController {
     if (res.getStatusCode() == 200) {
       // Mark the Order as paid via USDC Escrow
       o.PaymentMethod__c = 'USDC_Escrow';
+      o.EscrowStatus__c = 'FUNDED';
       update o;
 
       Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(
@@ -339,7 +352,23 @@ public with sharing class EscrowBridgeController {
     return results;
   }
 
-  // ─── Private helper ──────────────────────────────────────────────────────
+  // ─── Private helpers ─────────────────────────────────────────────────────
+
+  private static void syncEscrowStatus(String orderNumber, String newStatus) {
+    List<Order> orders = [
+      SELECT Id
+      FROM Order
+      WHERE OrderNumber = :orderNumber
+      LIMIT 1
+    ];
+    if (orders.isEmpty())
+      return;
+    Order o = new Order(Id = orders[0].Id, EscrowStatus__c = newStatus);
+    if (newStatus == 'DELIVERED') {
+      o.DeliveryConfirmedAt__c = DateTime.now();
+    }
+    update o;
+  }
 
   private static HttpResponse doPost(String path, String body) {
     HttpRequest req = new HttpRequest();
