@@ -183,6 +183,14 @@
                 <div class="nos-info-label">Carrier</div>
                 <div class="nos-info-val">{selectedOrder.carrier}</div>
               </div>
+              <template if:true={selectedOrder.hasPaymentDeadline}>
+                <div class="nos-info-block">
+                  <div class="nos-info-label">Payment Deadline</div>
+                  <div class="nos-info-val nos-info-val-deadline">
+                    {selectedOrder.paymentDeadline}
+                  </div>
+                </div>
+              </template>
             </div>
 
             <!-- ── Escrow Payment Status (USDC Escrow orders only) ────────── -->
@@ -411,9 +419,11 @@
               <button class="nos-outline-btn" onclick={handleCloseDetail}>
                 Close
               </button>
-              <button class="nos-primary-btn" onclick={handleDownloadInvoice}>
-                Download Invoice
-              </button>
+              <template if:true={selectedOrder.showDownloadInvoice}>
+                <button class="nos-primary-btn" onclick={handleDownloadInvoice}>
+                  Download Invoice
+                </button>
+              </template>
             </div>
           </div>
         </div>

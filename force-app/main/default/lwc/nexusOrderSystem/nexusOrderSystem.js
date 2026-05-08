@@ -26,12 +26,21 @@ function buildTrackingHistory(
   const addr = o.shippingAddress || "—";
   const city = addr !== "—" ? addr : "Distribution Center";
 
+  let processingDesc;
+  if (o.paymentMethod === "Stripe") {
+    processingDesc = "Order placed and payment confirmed via Stripe.";
+  } else if (o.paymentMethod === "USDC_Escrow") {
+    processingDesc = "Order placed. USDC secured in escrow on Polygon.";
+  } else {
+    processingDesc = "Order placed, payment pending.";
+  }
+
   // Step always present: Processing
   const stepProcessing = {
     status: "Processing",
     location: addr,
     time: orderDate || "—",
-    description: "Order placed and payment confirmed."
+    description: processingDesc
   };
 
   if (statusLabel === "Processing" || statusLabel === "Cancelled") {
@@ -102,6 +111,7 @@ function mapSfOrder(o) {
     formattedSparksDiscount: o.formattedSparksDiscount || null,
     // Payment method: 'Stripe' | 'USDC_Escrow' | 'Cash' | null (pending choice)
     paymentMethod: o.paymentMethod || null,
+    paymentDeadline: o.paymentDeadline || null,
     isReal: true,
     history,
     products: (o.lineItems || []).map((li, idx) => ({
@@ -359,6 +369,10 @@ export default class NexusOrderSystem extends LightningElement {
   }
 
   get escrowPayDeadline() {
+    if (this._selectedOrderId) {
+      const o = this._realOrders.find((r) => r.id === this._selectedOrderId);
+      if (o && o.paymentDeadline) return o.paymentDeadline;
+    }
     const d = new Date();
     d.setDate(d.getDate() + 30);
     return d.toLocaleDateString("en-GB", {
@@ -408,6 +422,9 @@ export default class NexusOrderSystem extends LightningElement {
       ...o,
       isEscrowOrder: o.paymentMethod === "USDC_Escrow",
       isPendingPayment: !o.paymentMethod && o.status === "Processing",
+      showDownloadInvoice: o.paymentMethod === "Stripe",
+      hasPaymentDeadline: !!o.paymentDeadline,
+      paymentDeadline: o.paymentDeadline || null,
       history: o.history.map((ev, i) => ({
         ...ev,
         isFirst: i === 0,

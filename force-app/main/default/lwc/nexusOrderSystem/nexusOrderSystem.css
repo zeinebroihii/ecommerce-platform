@@ -566,6 +566,9 @@
   color: var(--nos-slate-9);
   line-height: 1.5;
 }
+.nos-info-val-deadline {
+  color: var(--nos-amber);
+}
 .nos-tracking-val {
   font-size: 0.875rem;
   font-weight: 900;

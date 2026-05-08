@@ -37,6 +37,10 @@ public without sharing class OrderManagementController {
     @AuraEnabled
     public String deliveredDate;
     @AuraEnabled
+    public String paymentMethod;
+    @AuraEnabled
+    public String paymentDeadline;
+    @AuraEnabled
     public List<OrderLineItem> lineItems;
   }
 
@@ -244,6 +248,8 @@ public without sharing class OrderManagementController {
         Sparks_Discount__c,
         Shipped_Date__c,
         Delivered_Date__c,
+        PaymentMethod__c,
+        PaymentDeadline__c,
         (
           SELECT
             Product2.Name,
@@ -323,6 +329,8 @@ public without sharing class OrderManagementController {
         Sparks_Discount__c,
         Shipped_Date__c,
         Delivered_Date__c,
+        PaymentMethod__c,
+        PaymentDeadline__c,
         (
           SELECT
             Product2.Name,
@@ -714,6 +722,10 @@ public without sharing class OrderManagementController {
       : null;
     d.deliveredDate = o.Delivered_Date__c != null
       ? o.Delivered_Date__c.format('dd/MM/yyyy HH:mm')
+      : null;
+    d.paymentMethod = o.PaymentMethod__c;
+    d.paymentDeadline = o.PaymentDeadline__c != null
+      ? o.PaymentDeadline__c.format()
       : null;
 
     d.lineItems = new List<OrderLineItem>();
