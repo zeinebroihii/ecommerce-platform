@@ -420,6 +420,256 @@
       </div>
     </template>
 
+    <!-- ══ USDC Escrow Payment Modal ═══════════════════════════════════════════════ -->
+    <template if:true={showEscrowPayModal}>
+      <div class="nos-escrow-modal-overlay" onclick={handleCancelEscrowPay}>
+        <div class="nos-escrow-modal" onclick={handleStopProp}>
+          <!-- ── Step: Review ─────────────────────────────────────────────────── -->
+          <template if:true={escrowPayIsReview}>
+            <div class="nos-epm-header">
+              <div class="nos-epm-step-icon nos-epm-icon-review">
+                <lightning-icon
+                  icon-name="utility:shield"
+                  size="small"
+                  variant="inverse"
+                ></lightning-icon>
+              </div>
+              <div>
+                <h3 class="nos-epm-title">Review Your Escrow Payment</h3>
+                <p class="nos-epm-sub">
+                  Your funds will be locked until delivery is confirmed
+                </p>
+              </div>
+            </div>
+
+            <div class="nos-epm-summary">
+              <div class="nos-epm-row">
+                <span class="nos-epm-row-label">Order</span>
+                <span class="nos-epm-row-val nos-epm-mono"
+                  >{escrowPayOrderId}</span
+                >
+              </div>
+              <div class="nos-epm-row">
+                <span class="nos-epm-row-label">Amount (USDC)</span>
+                <span class="nos-epm-row-val nos-epm-amount"
+                  >{escrowPayOrderAmount}</span
+                >
+              </div>
+              <div class="nos-epm-row">
+                <span class="nos-epm-row-label">Network</span>
+                <span class="nos-epm-row-val">
+                  <span class="nos-epm-network-badge">Polygon Amoy</span>
+                </span>
+              </div>
+              <div class="nos-epm-row">
+                <span class="nos-epm-row-label">Delivery Deadline</span>
+                <span class="nos-epm-row-val">{escrowPayDeadline}</span>
+              </div>
+            </div>
+
+            <div class="nos-epm-how">
+              <div class="nos-epm-how-title">How escrow protects you</div>
+              <div class="nos-epm-how-item">
+                <span class="nos-epm-how-dot nos-epm-dot-blue"></span>
+                <span>Funds are locked on-chain — not held by anyone</span>
+              </div>
+              <div class="nos-epm-how-item">
+                <span class="nos-epm-how-dot nos-epm-dot-green"></span>
+                <span>Payment releases automatically after delivery + 24h</span>
+              </div>
+              <div class="nos-epm-how-item">
+                <span class="nos-epm-how-dot nos-epm-dot-amber"></span>
+                <span
+                  >You can dispute and freeze funds at any time before
+                  release</span
+                >
+              </div>
+            </div>
+
+            <div class="nos-epm-footer">
+              <button
+                class="nos-epm-cancel-btn"
+                onclick={handleCancelEscrowPay}
+              >
+                Cancel
+              </button>
+              <button
+                class="nos-epm-confirm-btn"
+                onclick={handleConfirmEscrowPay}
+              >
+                <lightning-icon
+                  icon-name="utility:lock"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+                Lock Funds in Escrow
+              </button>
+            </div>
+          </template>
+
+          <!-- ── Step: Processing ─────────────────────────────────────────────── -->
+          <template if:true={escrowPayIsProcessing}>
+            <div class="nos-epm-header nos-epm-header-center">
+              <div class="nos-epm-processing-ring">
+                <lightning-spinner
+                  size="medium"
+                  alternative-text="Processing..."
+                  variant="brand"
+                ></lightning-spinner>
+              </div>
+              <h3 class="nos-epm-title">Securing Your Payment</h3>
+              <p class="nos-epm-sub">Please do not close this window</p>
+            </div>
+
+            <div class="nos-epm-steps">
+              <div class="nos-epm-step-row">
+                <template if:true={processingStep1Done}>
+                  <span class="nos-epm-step-check nos-epm-check-done">
+                    <lightning-icon
+                      icon-name="utility:check"
+                      size="x-small"
+                      variant="inverse"
+                    ></lightning-icon>
+                  </span>
+                </template>
+                <template if:false={processingStep1Done}>
+                  <span class="nos-epm-step-check nos-epm-check-active">
+                    <lightning-spinner
+                      size="x-small"
+                      alternative-text="..."
+                      variant="inverse"
+                    ></lightning-spinner>
+                  </span>
+                </template>
+                <div class="nos-epm-step-text">
+                  <span class="nos-epm-step-label"
+                    >Step 1 — Authorising USDC transfer</span
+                  >
+                  <span class="nos-epm-step-hint"
+                    >Granting smart contract permission to move your
+                    tokens</span
+                  >
+                </div>
+              </div>
+
+              <div class="nos-epm-step-connector"></div>
+
+              <div class="nos-epm-step-row">
+                <template if:true={processingStep2Active}>
+                  <span class="nos-epm-step-check nos-epm-check-active">
+                    <lightning-spinner
+                      size="x-small"
+                      alternative-text="..."
+                      variant="inverse"
+                    ></lightning-spinner>
+                  </span>
+                </template>
+                <template if:false={processingStep2Active}>
+                  <span class="nos-epm-step-check nos-epm-check-pending"></span>
+                </template>
+                <div class="nos-epm-step-text">
+                  <span class="nos-epm-step-label"
+                    >Step 2 — Locking funds in escrow</span
+                  >
+                  <span class="nos-epm-step-hint"
+                    >Depositing USDC into the smart contract on Polygon</span
+                  >
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- ── Step: Success ────────────────────────────────────────────────── -->
+          <template if:true={escrowPayIsSuccess}>
+            <div class="nos-epm-success-wrap">
+              <div class="nos-epm-success-ring">
+                <lightning-icon
+                  icon-name="utility:check"
+                  size="large"
+                  variant="inverse"
+                ></lightning-icon>
+              </div>
+              <h3 class="nos-epm-success-title">Funds Successfully Secured!</h3>
+              <p class="nos-epm-success-sub">
+                Your USDC is locked in escrow on Polygon. Payment will release
+                automatically after delivery is confirmed.
+              </p>
+
+              <div class="nos-epm-locked-badge">
+                <lightning-icon
+                  icon-name="utility:lock"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+                <span>Locked in Escrow · Polygon Amoy</span>
+              </div>
+
+              <template if:true={escrowPayTxHash}>
+                <div class="nos-epm-tx-block">
+                  <span class="nos-epm-tx-label">Transaction Hash</span>
+                  <span class="nos-epm-tx-val nos-epm-mono"
+                    >{escrowPayTxShort}</span
+                  >
+                  <a
+                    class="nos-epm-tx-link"
+                    href={escrowPayPolygonscanUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View on Polygonscan ↗
+                  </a>
+                </div>
+              </template>
+            </div>
+
+            <div class="nos-epm-footer nos-epm-footer-center">
+              <button
+                class="nos-epm-confirm-btn"
+                onclick={handleCloseEscrowModal}
+              >
+                Done
+              </button>
+            </div>
+          </template>
+
+          <!-- ── Step: Error ──────────────────────────────────────────────────── -->
+          <template if:true={escrowPayIsError}>
+            <div class="nos-epm-header nos-epm-header-center">
+              <div class="nos-epm-error-icon">
+                <lightning-icon
+                  icon-name="utility:error"
+                  size="large"
+                  variant="inverse"
+                ></lightning-icon>
+              </div>
+              <h3 class="nos-epm-title">Payment Failed</h3>
+              <p class="nos-epm-sub nos-epm-error-msg">{escrowPayError}</p>
+            </div>
+
+            <div class="nos-epm-footer">
+              <button
+                class="nos-epm-cancel-btn"
+                onclick={handleCancelEscrowPay}
+              >
+                Close
+              </button>
+              <button
+                class="nos-epm-confirm-btn"
+                onclick={handleRetryEscrowPay}
+              >
+                <lightning-icon
+                  icon-name="utility:refresh"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+                Try Again
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
     <!-- ══ Full Screen Map Modal ═════════════════════════════════════════════════ -->
     <template if:true={showFullMap}>
       <div class="nos-fullmap-overlay">

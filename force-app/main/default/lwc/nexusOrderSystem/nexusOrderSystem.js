@@ -145,7 +145,13 @@ export default class NexusOrderSystem extends LightningElement {
   @track _escrowLoading = false;
   @track _escrowActionLoading = false;
   @track _fundingLoading = false;
+  @track _showEscrowPayModal = false;
+  @track _escrowPayStep = "review";
+  @track _escrowPayTxHash = null;
+  @track _escrowPayError = null;
+  @track _processingStep = 1;
   _countdownInterval = null;
+  _processingTimer = null;
   _wiredOrdersResult;
 
   @wire(getMyOrders)
@@ -268,6 +274,76 @@ export default class NexusOrderSystem extends LightningElement {
 
   get usdcBtnLabel() {
     return this._fundingLoading ? "Locking Funds..." : "Pay with USDC";
+  }
+
+  // ── Escrow pay modal getters ───────────────────────────────────────────────
+
+  get showEscrowPayModal() {
+    return this._showEscrowPayModal;
+  }
+
+  get escrowPayIsReview() {
+    return this._escrowPayStep === "review";
+  }
+
+  get escrowPayIsProcessing() {
+    return this._escrowPayStep === "processing";
+  }
+
+  get escrowPayIsSuccess() {
+    return this._escrowPayStep === "success";
+  }
+
+  get escrowPayIsError() {
+    return this._escrowPayStep === "error";
+  }
+
+  get processingStep1Done() {
+    return this._processingStep > 1;
+  }
+
+  get processingStep2Active() {
+    return this._processingStep === 2;
+  }
+
+  get escrowPayTxHash() {
+    return this._escrowPayTxHash;
+  }
+
+  get escrowPayTxShort() {
+    return this._escrowPayTxHash
+      ? this._escrowPayTxHash.slice(0, 18) + "..."
+      : "";
+  }
+
+  get escrowPayPolygonscanUrl() {
+    return this._escrowPayTxHash
+      ? "https://amoy.polygonscan.com/tx/" + this._escrowPayTxHash
+      : "#";
+  }
+
+  get escrowPayError() {
+    return this._escrowPayError;
+  }
+
+  get escrowPayOrderAmount() {
+    if (!this._selectedOrderId) return "—";
+    const o = this._realOrders.find((r) => r.id === this._selectedOrderId);
+    return o ? o.formattedTotal : "—";
+  }
+
+  get escrowPayOrderId() {
+    return this._selectedOrderId || "—";
+  }
+
+  get escrowPayDeadline() {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
   }
 
   // Status banners for terminal / blocked states
@@ -411,40 +487,81 @@ export default class NexusOrderSystem extends LightningElement {
   }
 
   handlePayUsdc() {
-    if (!this._selectedOrderId || this._fundingLoading) return;
+    if (!this._selectedOrderId || this._showEscrowPayModal) return;
+    this._escrowPayStep = "review";
+    this._escrowPayTxHash = null;
+    this._escrowPayError = null;
+    this._processingStep = 1;
+    this._showEscrowPayModal = true;
+  }
+
+  handleConfirmEscrowPay() {
+    if (!this._selectedOrderId) return;
+    this._escrowPayStep = "processing";
+    this._processingStep = 1;
     this._fundingLoading = true;
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    this._processingTimer = setTimeout(() => {
+      if (this._escrowPayStep === "processing") {
+        this._processingStep = 2;
+      }
+    }, 3000);
     fundEscrowForOrder({ orderNumber: this._selectedOrderId })
       .then((result) => {
+        if (this._processingTimer) {
+          clearTimeout(this._processingTimer);
+          this._processingTimer = null;
+        }
         if (result && result.success) {
-          const shortHash = result.txHash
-            ? result.txHash.slice(0, 10) + "..."
-            : "";
-          this._dispatchToast(
-            "Payment Secured",
-            "USDC locked in escrow." + (shortHash ? " Tx: " + shortHash : ""),
-            "success"
-          );
+          this._escrowPayTxHash = result.txHash || null;
+          this._escrowPayStep = "success";
           refreshApex(this._wiredOrdersResult).then(() => {
             this._loadEscrowStatus(this._selectedOrderId);
           });
+        } else {
+          this._escrowPayError =
+            (result && result.error) || "Could not lock funds.";
+          this._escrowPayStep = "error";
         }
-        this._dispatchToast(
-          "Escrow Error",
-          (result && result.error) || "Could not lock funds.",
-          "error"
-        );
       })
       .catch((err) => {
-        this._dispatchToast(
-          "Error",
+        if (this._processingTimer) {
+          clearTimeout(this._processingTimer);
+          this._processingTimer = null;
+        }
+        this._escrowPayError =
           (err && err.body && err.body.message) ||
-            "Could not process escrow payment.",
-          "error"
-        );
+          "Could not process escrow payment.";
+        this._escrowPayStep = "error";
       })
       .finally(() => {
         this._fundingLoading = false;
       });
+  }
+
+  handleRetryEscrowPay() {
+    this._escrowPayStep = "review";
+    this._escrowPayError = null;
+    this._processingStep = 1;
+  }
+
+  handleCancelEscrowPay() {
+    if (this._processingTimer) {
+      clearTimeout(this._processingTimer);
+      this._processingTimer = null;
+    }
+    this._showEscrowPayModal = false;
+    this._escrowPayStep = "review";
+    this._escrowPayTxHash = null;
+    this._escrowPayError = null;
+    this._fundingLoading = false;
+  }
+
+  handleCloseEscrowModal() {
+    this._showEscrowPayModal = false;
+    this._escrowPayStep = "review";
+    this._escrowPayTxHash = null;
+    this._escrowPayError = null;
   }
 
   _dispatchToast(title, message, variant) {

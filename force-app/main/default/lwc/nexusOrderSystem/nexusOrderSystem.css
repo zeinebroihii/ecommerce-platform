@@ -1281,3 +1281,407 @@
   line-height: 1;
   flex-shrink: 0;
 }
+
+/* ══ USDC Escrow Payment Modal ════════════════════════════════════════════════ */
+
+.nos-escrow-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9200;
+  padding: 1rem;
+}
+
+.nos-escrow-modal {
+  background: #fff;
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 26rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.nos-epm-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.nos-epm-header-center {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 1.5rem;
+  border-bottom: none;
+}
+
+.nos-epm-step-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nos-epm-icon-review {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+}
+
+.nos-epm-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.2rem;
+  letter-spacing: -0.01em;
+}
+
+.nos-epm-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Summary table ── */
+.nos-epm-summary {
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.nos-epm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nos-epm-row-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nos-epm-row-val {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.nos-epm-mono {
+  font-family: "Courier New", monospace;
+  font-size: 0.72rem;
+}
+
+.nos-epm-amount {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #4f46e5;
+}
+
+.nos-epm-network-badge {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+  border-radius: 9999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── How it works ── */
+.nos-epm-how {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nos-epm-how-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.25rem;
+}
+
+.nos-epm-how-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.nos-epm-how-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+}
+
+.nos-epm-dot-blue {
+  background: #4f46e5;
+}
+.nos-epm-dot-green {
+  background: #10b981;
+}
+.nos-epm-dot-amber {
+  background: #f59e0b;
+}
+
+/* ── Processing steps ── */
+.nos-epm-processing-ring {
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.nos-epm-steps {
+  padding: 1.25rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.nos-epm-step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+}
+
+.nos-epm-step-connector {
+  width: 2px;
+  height: 1.5rem;
+  background: #e2e8f0;
+  margin: 0.25rem 0 0.25rem 0.875rem;
+}
+
+.nos-epm-step-check {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nos-epm-check-done {
+  background: #10b981;
+}
+
+.nos-epm-check-active {
+  background: #4f46e5;
+}
+
+.nos-epm-check-pending {
+  background: #e2e8f0;
+  border: 2px dashed #94a3b8;
+}
+
+.nos-epm-step-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.2rem;
+}
+
+.nos-epm-step-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.nos-epm-step-hint {
+  font-size: 0.65rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* ── Success state ── */
+.nos-epm-success-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1.5rem 1.25rem;
+  gap: 0.75rem;
+}
+
+.nos-epm-success-ring {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.15);
+}
+
+.nos-epm-success-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.nos-epm-success-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 20rem;
+}
+
+.nos-epm-locked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.nos-epm-tx-block {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.nos-epm-tx-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.nos-epm-tx-val {
+  font-size: 0.72rem;
+  color: #334155;
+  word-break: break-all;
+}
+
+.nos-epm-tx-link {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4f46e5;
+  text-decoration: none;
+  margin-top: 0.1rem;
+}
+
+.nos-epm-tx-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Error state ── */
+.nos-epm-error-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.nos-epm-error-msg {
+  color: #f43f5e;
+  font-weight: 600;
+}
+
+/* ── Footer ── */
+.nos-epm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.nos-epm-footer-center {
+  justify-content: center;
+  border-top: none;
+  padding-top: 0.5rem;
+}
+
+.nos-epm-cancel-btn {
+  padding: 0.6rem 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #64748b;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.nos-epm-cancel-btn:hover {
+  background: #f1f5f9;
+}
+
+.nos-epm-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1.375rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+  min-width: 10rem;
+  justify-content: center;
+}
+
+.nos-epm-confirm-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
