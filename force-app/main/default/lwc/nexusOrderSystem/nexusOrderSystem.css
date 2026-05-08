@@ -1681,7 +1681,98 @@
   justify-content: center;
 }
 
-.nos-epm-confirm-btn:hover {
+.nos-epm-confirm-btn:hover:not([disabled]) {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+.nos-epm-confirm-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Wallet step ── */
+.nos-epm-icon-wallet {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+.nos-epm-wallet-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.nos-epm-wallet-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.nos-epm-wallet-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #f8fafc;
+  transition: border-color 0.15s;
+}
+
+.nos-epm-wallet-input-wrap:focus-within {
+  border-color: #4f46e5;
+  background: #fff;
+}
+
+.nos-epm-wallet-prefix {
+  padding: 0.65rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #4f46e5;
+  font-family: "Courier New", monospace;
+  background: #eef2ff;
+  border-right: 1.5px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.nos-epm-wallet-input {
+  flex: 1;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  background: transparent;
+  font-size: 0.72rem;
+  font-family: "Courier New", monospace;
+  color: #0f172a;
+  outline: none;
+  min-width: 0;
+}
+
+.nos-epm-wallet-input::placeholder {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.nos-epm-wallet-valid {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.nos-epm-wallet-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.67rem;
+  color: #64748b;
+  line-height: 1.4;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.625rem;
+  padding: 0.625rem 0.75rem;
 }

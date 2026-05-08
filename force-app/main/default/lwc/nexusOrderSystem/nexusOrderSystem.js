@@ -150,6 +150,7 @@ export default class NexusOrderSystem extends LightningElement {
   @track _escrowPayTxHash = null;
   @track _escrowPayError = null;
   @track _processingStep = 1;
+  @track _buyerWalletAddress = "";
   _countdownInterval = null;
   _processingTimer = null;
   _wiredOrdersResult;
@@ -286,6 +287,10 @@ export default class NexusOrderSystem extends LightningElement {
     return this._escrowPayStep === "review";
   }
 
+  get escrowPayIsWallet() {
+    return this._escrowPayStep === "wallet";
+  }
+
   get escrowPayIsProcessing() {
     return this._escrowPayStep === "processing";
   }
@@ -296,6 +301,18 @@ export default class NexusOrderSystem extends LightningElement {
 
   get escrowPayIsError() {
     return this._escrowPayStep === "error";
+  }
+
+  get isWalletAddressValid() {
+    return /^0x[0-9a-fA-F]{40}$/.test(this._buyerWalletAddress);
+  }
+
+  get walletContinueDisabled() {
+    return !this.isWalletAddressValid;
+  }
+
+  get buyerWalletAddress() {
+    return this._buyerWalletAddress;
   }
 
   get processingStep1Done() {
@@ -492,11 +509,20 @@ export default class NexusOrderSystem extends LightningElement {
     this._escrowPayTxHash = null;
     this._escrowPayError = null;
     this._processingStep = 1;
+    this._buyerWalletAddress = "";
     this._showEscrowPayModal = true;
   }
 
+  handleReviewNext() {
+    this._escrowPayStep = "wallet";
+  }
+
+  handleWalletAddressChange(e) {
+    this._buyerWalletAddress = e.target.value.trim();
+  }
+
   handleConfirmEscrowPay() {
-    if (!this._selectedOrderId) return;
+    if (!this._selectedOrderId || !this.isWalletAddressValid) return;
     this._escrowPayStep = "processing";
     this._processingStep = 1;
     this._fundingLoading = true;
@@ -506,7 +532,10 @@ export default class NexusOrderSystem extends LightningElement {
         this._processingStep = 2;
       }
     }, 3000);
-    fundEscrowForOrder({ orderNumber: this._selectedOrderId })
+    fundEscrowForOrder({
+      orderNumber: this._selectedOrderId,
+      buyerWallet: this._buyerWalletAddress
+    })
       .then((result) => {
         if (this._processingTimer) {
           clearTimeout(this._processingTimer);
@@ -540,7 +569,7 @@ export default class NexusOrderSystem extends LightningElement {
   }
 
   handleRetryEscrowPay() {
-    this._escrowPayStep = "review";
+    this._escrowPayStep = "wallet";
     this._escrowPayError = null;
     this._processingStep = 1;
   }
@@ -554,6 +583,7 @@ export default class NexusOrderSystem extends LightningElement {
     this._escrowPayStep = "review";
     this._escrowPayTxHash = null;
     this._escrowPayError = null;
+    this._buyerWalletAddress = "";
     this._fundingLoading = false;
   }
 

@@ -493,9 +493,89 @@
               >
                 Cancel
               </button>
+              <button class="nos-epm-confirm-btn" onclick={handleReviewNext}>
+                Continue
+                <lightning-icon
+                  icon-name="utility:chevronright"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+              </button>
+            </div>
+          </template>
+
+          <!-- ── Step: Connect Wallet ──────────────────────────────────────────── -->
+          <template if:true={escrowPayIsWallet}>
+            <div class="nos-epm-header">
+              <div class="nos-epm-step-icon nos-epm-icon-wallet">
+                <lightning-icon
+                  icon-name="utility:connected_apps"
+                  size="small"
+                  variant="inverse"
+                ></lightning-icon>
+              </div>
+              <div>
+                <h3 class="nos-epm-title">Connect Your Wallet</h3>
+                <p class="nos-epm-sub">
+                  Enter your USDC wallet address — this is where any refund will
+                  be sent
+                </p>
+              </div>
+            </div>
+
+            <div class="nos-epm-wallet-body">
+              <label class="nos-epm-wallet-label" for="walletInput"
+                >Your Ethereum / Polygon Wallet Address</label
+              >
+              <div class="nos-epm-wallet-input-wrap">
+                <span class="nos-epm-wallet-prefix">0x</span>
+                <input
+                  type="text"
+                  id="walletInput"
+                  class="nos-epm-wallet-input"
+                  placeholder="e.g. 4f3b...d9a2 (40 hex characters)"
+                  value={buyerWalletAddress}
+                  onchange={handleWalletAddressChange}
+                  oninput={handleWalletAddressChange}
+                  maxlength="42"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <template if:true={isWalletAddressValid}>
+                <div class="nos-epm-wallet-valid">
+                  <lightning-icon
+                    icon-name="utility:check"
+                    size="x-small"
+                    variant="success"
+                  ></lightning-icon>
+                  <span>Valid Polygon wallet address</span>
+                </div>
+              </template>
+              <div class="nos-epm-wallet-note">
+                <lightning-icon
+                  icon-name="utility:info"
+                  size="x-small"
+                ></lightning-icon>
+                <span
+                  >Make sure this wallet holds USDC on Polygon and that you
+                  control it — we cannot recover funds sent to a wrong
+                  address.</span
+                >
+              </div>
+            </div>
+
+            <div class="nos-epm-footer">
+              <button
+                class="nos-epm-cancel-btn"
+                onclick={handleCancelEscrowPay}
+              >
+                Cancel
+              </button>
               <button
                 class="nos-epm-confirm-btn"
                 onclick={handleConfirmEscrowPay}
+                disabled={walletContinueDisabled}
               >
                 <lightning-icon
                   icon-name="utility:lock"

@@ -168,7 +168,10 @@ public with sharing class EscrowBridgeController {
   // Returns the on-chain tx hash and escrow amount so the UI can update.
 
   @AuraEnabled
-  public static Map<String, Object> fundEscrowForOrder(String orderNumber) {
+  public static Map<String, Object> fundEscrowForOrder(
+    String orderNumber,
+    String buyerWallet
+  ) {
     // Query the Order to get amount + status
     Order[] orders = [
       SELECT Id, OrderNumber, TotalAmount, Status
@@ -195,6 +198,9 @@ public with sharing class EscrowBridgeController {
       'amount' => String.valueOf(usdcAmount),
       'deadline' => deadline
     };
+    if (String.isNotBlank(buyerWallet)) {
+      payload.put('buyer', buyerWallet);
+    }
 
     HttpResponse res = doPost('/api/escrow/fund', JSON.serialize(payload));
 
