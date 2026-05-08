@@ -174,7 +174,7 @@ public with sharing class EscrowBridgeController {
   ) {
     // Query the Order to get amount + status
     Order[] orders = [
-      SELECT Id, OrderNumber, TotalAmount, Status
+      SELECT Id, OrderNumber, TotalAmount, Status, PaymentDeadline__c
       FROM Order
       WHERE OrderNumber = :orderNumber
       LIMIT 1
@@ -190,8 +190,15 @@ public with sharing class EscrowBridgeController {
     // USDC has 6 decimals — convert EUR total to USDC base units
     Long usdcAmount = (Long) (o.TotalAmount * 1000000);
 
-    // Deadline: 30 days from now (Unix seconds)
-    Long deadline = (DateTime.now().getTime() / 1000) + (30 * 24 * 3600);
+    // Deadline: use contract payment date if available, else 30 days from now
+    Long deadline;
+    if (o.PaymentDeadline__c != null) {
+      deadline =
+        Datetime.newInstance(o.PaymentDeadline__c, Time.newInstance(0, 0, 0, 0))
+          .getTime() / 1000;
+    } else {
+      deadline = (DateTime.now().getTime() / 1000) + (30 * 24 * 3600);
+    }
 
     Map<String, Object> payload = new Map<String, Object>{
       'orderId' => orderNumber,

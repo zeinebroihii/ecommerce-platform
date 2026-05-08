@@ -176,6 +176,15 @@ global class DocuSignWebhookController {
     String contractRef = 'CTR-' + String.valueOf(c.Id).right(6).toUpperCase();
     String signedAt = DateTime.now().format('dd/MM/yyyy HH:mm') + ' UTC';
 
+    // ── Create Salesforce Order from the signed quote ─────────────────────────
+    try {
+      createOrderFromQuote(q.Id, contractStart);
+    } catch (Exception ex) {
+      System.debug(
+        '[manualFinalize] Order creation skipped: ' + ex.getMessage()
+      );
+    }
+
     // Enqueue PDF download + email (Queueable handles callouts correctly)
     try {
       System.enqueueJob(new DocuSignPollQueueable());
@@ -340,6 +349,15 @@ global class DocuSignWebhookController {
     System.debug(
       '[DocuSignWebhook] Contract created: ' + c.Id + ' | ' + contractRef
     );
+
+    // ── Create Salesforce Order from the signed quote ────────────────────────
+    try {
+      createOrderFromQuote(q.Id, contractStart);
+    } catch (Exception ex) {
+      System.debug(
+        '[DocuSignWebhook] Order creation skipped: ' + ex.getMessage()
+      );
+    }
 
     // ── Bell notification to admin — contract signed ─────────────────────────
     NotificationController.pushAdminBell(
@@ -556,6 +574,163 @@ global class DocuSignWebhookController {
 
     if (!emails.isEmpty())
       Messaging.sendEmail(emails);
+  }
+
+  // ── Create Salesforce Order from a signed quote ──────────────────────────────
+  // Deadline = signingDate + net days from PaymentTerms (e.g. "Net 30" → 30 days)
+  public static void createOrderFromQuote(Id quoteId, Date signingDate) {
+    List<TALEXO_Quote__c> qs = [
+      SELECT
+        Id,
+        Name,
+        GrandTotal__c,
+        PaymentTerms__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        (
+          SELECT
+            ProductName__c,
+            ProductFamily__c,
+            Quantity__c,
+            UnitPrice__c,
+            NetTotal__c,
+            Product__c
+          FROM NexusQuoteLineItems__r
+        )
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    if (qs.isEmpty())
+      return;
+    TALEXO_Quote__c q = qs[0];
+
+    // Skip if order already created for this quote
+    if (
+      ![SELECT Id FROM Order WHERE SourceQuote__c = :quoteId LIMIT 1].isEmpty()
+    ) {
+      System.debug('[createOrderFromQuote] Order already exists — skipping.');
+      return;
+    }
+
+    Integer netDays = parseNetDays(q.PaymentTerms__c);
+    Date paymentDeadline = signingDate.addDays(netDays);
+    Id accountId = q.Opportunity__r.AccountId;
+
+    // ── Standard pricebook ────────────────────────────────────────────────────
+    Pricebook2 stdPb = [
+      SELECT Id
+      FROM Pricebook2
+      WHERE IsStandard = TRUE
+      LIMIT 1
+    ];
+
+    // ── Create Order header ───────────────────────────────────────────────────
+    Order o = new Order(
+      AccountId = accountId,
+      EffectiveDate = signingDate,
+      Status = 'Draft',
+      Pricebook2Id = stdPb.Id,
+      PaymentDeadline__c = paymentDeadline,
+      SourceQuote__c = quoteId,
+      Description = 'B2B Contract Order — ' + q.Name
+    );
+    insert o;
+
+    // ── Build OrderItems ──────────────────────────────────────────────────────
+    List<OrderItem> items = new List<OrderItem>();
+    for (NexusQuoteLineItem__c li : q.NexusQuoteLineItems__r) {
+      Id prodId = li.Product__c;
+
+      // Find or create Product2 when lookup not set
+      if (prodId == null && String.isNotBlank(li.ProductName__c)) {
+        List<Product2> prods = [
+          SELECT Id
+          FROM Product2
+          WHERE Name = :li.ProductName__c
+          LIMIT 1
+        ];
+        if (!prods.isEmpty()) {
+          prodId = prods[0].Id;
+        } else {
+          Product2 p = new Product2(
+            Name = li.ProductName__c,
+            Family = String.isNotBlank(li.ProductFamily__c)
+              ? li.ProductFamily__c
+              : 'Other',
+            IsActive = true
+          );
+          insert p;
+          prodId = p.Id;
+        }
+      }
+      if (prodId == null)
+        continue;
+
+      // Find or create PricebookEntry in standard pricebook
+      Decimal unitPrice = li.UnitPrice__c != null ? li.UnitPrice__c : 0;
+      List<PricebookEntry> pbes = [
+        SELECT Id
+        FROM PricebookEntry
+        WHERE Pricebook2Id = :stdPb.Id AND Product2Id = :prodId
+        LIMIT 1
+      ];
+      Id pbeId;
+      if (!pbes.isEmpty()) {
+        pbeId = pbes[0].Id;
+      } else {
+        PricebookEntry pbe = new PricebookEntry(
+          Pricebook2Id = stdPb.Id,
+          Product2Id = prodId,
+          UnitPrice = unitPrice,
+          IsActive = true
+        );
+        insert pbe;
+        pbeId = pbe.Id;
+      }
+
+      items.add(
+        new OrderItem(
+          OrderId = o.Id,
+          PricebookEntryId = pbeId,
+          Quantity = li.Quantity__c != null ? li.Quantity__c : 1,
+          UnitPrice = unitPrice
+        )
+      );
+    }
+
+    if (!items.isEmpty())
+      insert items;
+
+    // Activate the order so it is visible as an active order
+    try {
+      update new Order(Id = o.Id, Status = 'Activated');
+    } catch (Exception ex) {
+      System.debug(
+        '[createOrderFromQuote] Activation skipped: ' + ex.getMessage()
+      );
+    }
+
+    System.debug(
+      '[createOrderFromQuote] Order created: ' +
+        o.Id +
+        ' | deadline: ' +
+        paymentDeadline
+    );
+  }
+
+  // Parses "Net 30" → 30, "Net 60" → 60, etc. Defaults to 30.
+  private static Integer parseNetDays(String paymentTerms) {
+    if (String.isBlank(paymentTerms))
+      return 30;
+    Matcher m = Pattern.compile('(\\d+)').matcher(paymentTerms);
+    if (m.find()) {
+      try {
+        return Integer.valueOf(m.group(1));
+      } catch (Exception ex) {
+      }
+    }
+    return 30;
   }
 
   // ── DocuSign JWT token helper ─────────────────────────────────────────────────

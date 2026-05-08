@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PaymentDeadline__c</fullName>
+    <label>Payment Deadline</label>
+    <type>Date</type>
+    <description
+  >Payment due date = contract signing date + net days from PaymentTerms. Used as escrow deadline.</description>
+</CustomField>
