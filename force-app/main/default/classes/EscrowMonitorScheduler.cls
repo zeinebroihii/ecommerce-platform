@@ -74,7 +74,8 @@ public with sharing class EscrowMonitorScheduler implements Schedulable {
       FROM Order
       WHERE
         PaymentMethod__c = 'USDC_Escrow'
-        AND EscrowStatus__c = 'FUNDED'
+        AND (EscrowStatus__c = 'FUNDED'
+        OR EscrowStatus__c = NULL)
         AND PaymentDeadline__c < :today
       LIMIT 10
     ];

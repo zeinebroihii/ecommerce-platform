@@ -60,6 +60,8 @@ public with sharing class EscrowBridgeController {
           ' — ' +
           res.getBody()
       );
+    } else {
+      syncEscrowStatus(orderNumber, 'FROZEN');
     }
   }
 
