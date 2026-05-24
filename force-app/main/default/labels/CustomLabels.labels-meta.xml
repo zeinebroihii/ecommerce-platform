@@ -5,7 +5,7 @@
         <language>en_US</language>
         <protected>true</protected>
         <shortDescription>PipelineTest</shortDescription>
-        <value>devops-demo-live</value>
+        <value>Nexus v2.0 — promoted via DevOps pipeline</value>
     </labels>
     <labels>
         <fullName>EscrowBridgeApiKey</fullName>
