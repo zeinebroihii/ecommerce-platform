@@ -1,8 +1,16 @@
 public class LiveTrackingConfig {
   // ── Fill these in before demo ────────────────────────────────────────────
   public static final String WEBHOOK_SECRET = 'nexus-track-2026';
-  public static final String TWILIO_SID = ''; // Set via Custom Label: TwilioSID
-  public static final String TWILIO_AUTH_TOKEN = ''; // Set via Custom Label: TwilioAuthToken
+  public static String TWILIO_SID {
+    get {
+      return Label.TwilioSID;
+    }
+  }
+  public static String TWILIO_AUTH_TOKEN {
+    get {
+      return Label.TwilioAuthToken;
+    }
+  }
   // Twilio WhatsApp sandbox number (or your approved sender)
   public static final String TWILIO_FROM = '+14155238886';
   // Your Experience Cloud site base URL (no trailing slash)
