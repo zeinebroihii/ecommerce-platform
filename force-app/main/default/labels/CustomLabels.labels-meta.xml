@@ -5,7 +5,7 @@
         <language>en_US</language>
         <protected>true</protected>
         <shortDescription>PipelineTest</shortDescription>
-        <value>devops center demo - WI-000003</value>
+        <value>devops-demo-live</value>
     </labels>
     <labels>
         <fullName>EscrowBridgeApiKey</fullName>
