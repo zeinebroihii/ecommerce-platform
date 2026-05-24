@@ -7,4 +7,28 @@
         <shortDescription>PipelineTest</shortDescription>
         <value>devops center demo - WI-000003</value>
     </labels>
+    <labels>
+        <fullName>EscrowBridgeApiKey</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription
+    >x-api-key sent to Vercel bridge (must match BRIDGE_API_KEY env var)</shortDescription>
+        <value>nexus-bridge-2026-secret</value>
+    </labels>
+    <labels>
+        <fullName>TwilioSID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >Twilio Account SID — set real value in Setup &gt; Custom Labels</shortDescription>
+        <value>PLACEHOLDER_SET_IN_ORG</value>
+    </labels>
+    <labels>
+        <fullName>TwilioAuthToken</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >Twilio Auth Token — set real value in Setup &gt; Custom Labels</shortDescription>
+        <value>PLACEHOLDER_SET_IN_ORG</value>
+    </labels>
 </CustomLabels>
