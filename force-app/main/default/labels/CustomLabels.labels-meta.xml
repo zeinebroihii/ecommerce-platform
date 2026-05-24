@@ -5,7 +5,7 @@
         <language>en_US</language>
         <protected>true</protected>
         <shortDescription>PipelineTest</shortDescription>
-        <value>pipeline test ok</value>
+        <value>Nexus v2.0 — WI-000004 deployed</value>
     </labels>
     <labels>
         <fullName>EscrowBridgeApiKey</fullName>
