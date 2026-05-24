@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Renewable__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description
+  >TRUE for Software Subscription and Services products that should be included in renewal quotes. FALSE for Hardware and one-time products — excluded from renewals.</description>
+    <label>Is Renewable</label>
+    <trackHistory>false</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

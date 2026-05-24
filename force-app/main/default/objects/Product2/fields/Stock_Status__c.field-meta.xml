@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>AvailabilityStatus__c</fullName>
-    <label>Availability Status</label>
+    <fullName>Stock_Status__c</fullName>
+    <label>Stock Status</label>
     <required>false</required>
     <trackHistory>false</trackHistory>
     <type>Picklist</type>
@@ -10,24 +10,19 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>En stock</fullName>
-                <default>true</default>
-                <label>En stock</label>
+                <fullName>Boosted</fullName>
+                <default>false</default>
+                <label>Boosted</label>
             </value>
             <value>
-                <fullName>En arrivage</fullName>
+                <fullName>Normal</fullName>
                 <default>false</default>
-                <label>En arrivage</label>
+                <label>Normal</label>
             </value>
             <value>
-                <fullName>Épuisé</fullName>
+                <fullName>Buried</fullName>
                 <default>false</default>
-                <label>Épuisé</label>
-            </value>
-            <value>
-                <fullName>Sur commande 48h</fullName>
-                <default>false</default>
-                <label>Sur commande 48h</label>
+                <label>Buried</label>
             </value>
         </valueSetDefinition>
     </valueSet>
