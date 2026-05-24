@@ -63,6 +63,13 @@ export default class NexusAuthView extends LightningElement {
   // Format of the SP-initiated URL: /ss/login?so=<this-value>
   @api ssoProviderId = "0LEg5000000hqub";
 
+  // DeveloperName of the Google Auth Provider in Setup → Auth. Providers
+  @api googleAuthProviderName = "Google";
+
+  get googleAuthUrl() {
+    return `/ss/services/auth/sso/${this.googleAuthProviderName}`;
+  }
+
   // @api initialMode — allows parent modal to set the starting mode
   _initialMode = "login";
   @api
@@ -341,6 +348,11 @@ export default class NexusAuthView extends LightningElement {
   handleSSOLogin() {
     window.location.href =
       "https://integrator-4902175.okta.com/app/integrator-4902175_nexusportal_1/exk12j0klgzlvLBON698/sso/saml";
+  }
+
+  // ── Google OAuth (B2C Individual only) ────────────────────────────────────
+  handleGoogleAuth() {
+    window.location.href = this.googleAuthUrl;
   }
 
   // ── B2C direct registration ───────────────────────────────────────────────

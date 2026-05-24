@@ -859,6 +859,26 @@
         <name>WorkCalibrationUser</name>
     </userPermissions>
     <fieldPermissions>
+        <field>Order.EscrowStatus__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Order.PaymentMethod__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Order.PaymentDeadline__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Order.DeliveryConfirmedAt__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
         <field>BundleSuggestion__c.CoOccurrenceScore__c</field>
         <readable>true</readable>
         <editable>true</editable>

@@ -41,6 +41,14 @@ public without sharing class OrderManagementController {
     @AuraEnabled
     public String paymentDeadline;
     @AuraEnabled
+    public Decimal liveLat;
+    @AuraEnabled
+    public Decimal liveLng;
+    @AuraEnabled
+    public Integer liveEta;
+    @AuraEnabled
+    public String trackingToken;
+    @AuraEnabled
     public List<OrderLineItem> lineItems;
   }
 
@@ -156,6 +164,7 @@ public without sharing class OrderManagementController {
   }
 
   private static Id resolvePortalAccountId() {
+    // Strategy 1: ContactId → Contact.AccountId (standard portal / Person Account)
     try {
       User u = [
         SELECT ContactId, Contact.AccountId
@@ -163,10 +172,42 @@ public without sharing class OrderManagementController {
         WHERE Id = :UserInfo.getUserId()
         LIMIT 1
       ];
-      return u.Contact?.AccountId;
+      if (u.Contact != null && u.Contact.AccountId != null)
+        return u.Contact.AccountId;
     } catch (Exception e) {
-      return null;
+      /* ignore */
     }
+
+    // Strategy 2: PersonEmail on Account (B2C Person Account self-registration)
+    try {
+      String email = UserInfo.getUserEmail();
+      List<SObject> accts = Database.query(
+        'SELECT Id FROM Account WHERE PersonEmail = \'' +
+          String.escapeSingleQuotes(email) +
+          '\' LIMIT 1'
+      );
+      if (!accts.isEmpty())
+        return (Id) accts[0].get('Id');
+    } catch (Exception e) {
+      /* PersonEmail field may not exist in this org */
+    }
+
+    // Strategy 3: Contact.Email → AccountId (B2B portal user created from Lead)
+    try {
+      String email = UserInfo.getUserEmail();
+      List<Contact> contacts = [
+        SELECT AccountId
+        FROM Contact
+        WHERE Email = :email AND AccountId != NULL
+        LIMIT 1
+      ];
+      if (!contacts.isEmpty())
+        return contacts[0].AccountId;
+    } catch (Exception e) {
+      /* ignore */
+    }
+
+    return null;
   }
 
   private static String relativeDateFr(Datetime dt, Datetime now) {
@@ -205,26 +246,7 @@ public without sharing class OrderManagementController {
 
   @AuraEnabled(cacheable=true)
   public static List<OrderDetail> getMyOrders() {
-    Id accountId = null;
-    try {
-      User u = [
-        SELECT ContactId
-        FROM User
-        WHERE Id = :UserInfo.getUserId()
-        LIMIT 1
-      ];
-      if (u.ContactId != null) {
-        Contact c = [
-          SELECT AccountId
-          FROM Contact
-          WHERE Id = :u.ContactId
-          LIMIT 1
-        ];
-        accountId = c.AccountId;
-      }
-    } catch (Exception ex) {
-      /* guest or no contact */
-    }
+    Id accountId = resolvePortalAccountId();
 
     if (accountId == null)
       return new List<OrderDetail>();
@@ -250,6 +272,10 @@ public without sharing class OrderManagementController {
         Delivered_Date__c,
         PaymentMethod__c,
         PaymentDeadline__c,
+        Live_Latitude__c,
+        Live_Longitude__c,
+        Live_ETA__c,
+        Tracking_Token__c,
         (
           SELECT
             Product2.Name,
@@ -331,6 +357,10 @@ public without sharing class OrderManagementController {
         Delivered_Date__c,
         PaymentMethod__c,
         PaymentDeadline__c,
+        Live_Latitude__c,
+        Live_Longitude__c,
+        Live_ETA__c,
+        Tracking_Token__c,
         (
           SELECT
             Product2.Name,
@@ -701,12 +731,23 @@ public without sharing class OrderManagementController {
       (d.totalAmount != null ? d.totalAmount.setScale(2) : 0) + ' €';
     d.status = o.Status;
 
-    List<String> addr = new List<String>();
+    List<String> addrLines = new List<String>();
+    if (String.isNotBlank(o.Shipping_Street__c))
+      addrLines.add(o.Shipping_Street__c);
+    List<String> cityParts = new List<String>();
     if (String.isNotBlank(o.Shipping_City__c))
-      addr.add(o.Shipping_City__c);
+      cityParts.add(o.Shipping_City__c);
+    if (String.isNotBlank(o.Shipping_Zip__c))
+      cityParts.add(o.Shipping_Zip__c);
+    if (!cityParts.isEmpty())
+      addrLines.add(String.join(cityParts, ' '));
+    if (String.isNotBlank(o.Shipping_State__c))
+      addrLines.add(o.Shipping_State__c);
     if (String.isNotBlank(o.Shipping_Country__c))
-      addr.add(o.Shipping_Country__c);
-    d.shippingAddress = addr.isEmpty() ? '—' : String.join(addr, ', ');
+      addrLines.add(o.Shipping_Country__c);
+    d.shippingAddress = addrLines.isEmpty()
+      ? '—'
+      : String.join(addrLines, '\n');
 
     d.shippingAmount = o.Shipping_Amount__c != null ? o.Shipping_Amount__c : 0;
     d.formattedShipping = (d.shippingAmount > 0)
@@ -727,6 +768,10 @@ public without sharing class OrderManagementController {
     d.paymentDeadline = o.PaymentDeadline__c != null
       ? o.PaymentDeadline__c.format()
       : null;
+    d.liveLat = o.Live_Latitude__c;
+    d.liveLng = o.Live_Longitude__c;
+    d.liveEta = o.Live_ETA__c != null ? Integer.valueOf(o.Live_ETA__c) : null;
+    d.trackingToken = o.Tracking_Token__c;
 
     d.lineItems = new List<OrderLineItem>();
     for (OrderItem oi : o.OrderItems) {

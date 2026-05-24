@@ -101,11 +101,17 @@ global class DocuSignWebhookController {
         GrandTotal__c,
         PaymentTerms__c,
         BulkDiscount__c,
+        ExpirationDate__c,
+        Description__c,
         Opportunity__c,
         Opportunity__r.AccountId,
         Opportunity__r.Account.Name,
         Opportunity__r.OwnerId,
-        Opportunity__r.Owner.Email
+        Opportunity__r.Owner.Email,
+        (
+          SELECT ProductName__c, Quantity__c, UnitPrice__c, NetTotal__c
+          FROM NexusQuoteLineItems__r
+        )
       FROM TALEXO_Quote__c
       WHERE Id = :quoteId
       LIMIT 1
@@ -126,10 +132,7 @@ global class DocuSignWebhookController {
       update new TALEXO_Quote__c(
         Id = q.Id,
         Status__c = 'Signed',
-        NegotiationStatus__c = 'Final',
-        DocuSign_Status__c = 'Completed',
-        Contract_Start_Date__c = contractStart,
-        Contract_End_Date__c = contractEnd
+        NegotiationStatus__c = 'Final'
       );
     }
 
@@ -176,6 +179,124 @@ global class DocuSignWebhookController {
     String contractRef = 'CTR-' + String.valueOf(c.Id).right(6).toUpperCase();
     String signedAt = DateTime.now().format('dd/MM/yyyy HH:mm') + ' UTC';
 
+    // ── Chatter post on Opportunity ───────────────────────────────────────────
+    if (q.Opportunity__c != null) {
+      try {
+        insert new FeedItem(
+          ParentId = q.Opportunity__c,
+          Body = '✅ Contract ' +
+            q.Name +
+            ' signed.\n' +
+            'Opportunity moved to Closed Won. Contract ref: ' +
+            contractRef +
+            '.\n' +
+            'Contract active from ' +
+            contractStart.format() +
+            ' to ' +
+            contractEnd.format() +
+            '.'
+        );
+      } catch (Exception ex) {
+        System.debug('[manualFinalize] Chatter Opp: ' + ex.getMessage());
+      }
+    }
+
+    // ── Chatter post on Account ───────────────────────────────────────────────
+    if (q.Opportunity__r.AccountId != null) {
+      try {
+        insert new FeedItem(
+          ParentId = q.Opportunity__r.AccountId,
+          Body = '✅ Contract ' +
+            q.Name +
+            ' signed.\n' +
+            'Contract ref: ' +
+            contractRef +
+            ' | Active from ' +
+            contractStart.format() +
+            ' to ' +
+            contractEnd.format() +
+            '.'
+        );
+      } catch (Exception ex) {
+        System.debug('[manualFinalize] Chatter Account: ' + ex.getMessage());
+      }
+    }
+
+    // ── Attach locally-generated contract document immediately ────────────────
+    // Runs without DocuSign so the PDF is always available on Opp, Account, Contract.
+    try {
+      List<User> custUsers = [
+        SELECT Email, FirstName, LastName
+        FROM User
+        WHERE
+          AccountId = :q.Opportunity__r.AccountId
+          AND IsActive = TRUE
+          AND UserType IN (
+            'PowerCustomerSuccess',
+            'CspLitePortal',
+            'PowerPartner'
+          )
+        LIMIT 1
+      ];
+      String custName = !custUsers.isEmpty()
+        ? custUsers[0].FirstName + ' ' + custUsers[0].LastName
+        : 'Client';
+      String custEmail = !custUsers.isEmpty() ? custUsers[0].Email : '';
+
+      String docBase64 = DocuSignService.buildContractDocument(
+        q,
+        custName,
+        custEmail
+      );
+      Blob docBlob = EncodingUtil.base64Decode(docBase64);
+      String filename =
+        q.Name.replaceAll('[^A-Za-z0-9_-]', '_') + '_Signed_Contract.pdf';
+
+      ContentVersion cv = new ContentVersion(
+        Title = filename,
+        PathOnClient = filename,
+        VersionData = docBlob,
+        IsMajorVersion = true
+      );
+      insert cv;
+      cv = [
+        SELECT ContentDocumentId
+        FROM ContentVersion
+        WHERE Id = :cv.Id
+        LIMIT 1
+      ];
+
+      for (
+        Id linkTarget : new List<Id>{
+          q.Id,
+          q.Opportunity__c,
+          q.Opportunity__r.AccountId,
+          c.Id
+        }
+      ) {
+        if (linkTarget == null)
+          continue;
+        try {
+          insert new ContentDocumentLink(
+            ContentDocumentId = cv.ContentDocumentId,
+            LinkedEntityId = linkTarget,
+            ShareType = 'V',
+            Visibility = 'AllUsers'
+          );
+        } catch (Exception ex) {
+          System.debug(
+            '[manualFinalize] Link skipped (' +
+              linkTarget +
+              '): ' +
+              ex.getMessage()
+          );
+        }
+      }
+      System.debug('[manualFinalize] Contract doc attached: ' + filename);
+    } catch (Exception ex) {
+      System.debug('[manualFinalize] Contract doc failed: ' + ex.getMessage());
+    }
+
     // ── Create Salesforce Order from the signed quote ─────────────────────────
     try {
       createOrderFromQuote(q.Id, contractStart);
@@ -215,12 +336,8 @@ global class DocuSignWebhookController {
       LIMIT 1
     ];
     if (!quotes.isEmpty()) {
-      update new TALEXO_Quote__c(
-        Id = quotes[0].Id,
-        DocuSign_Status__c = newStatus
-      );
       System.debug(
-        '[DocuSignWebhook] Status updated → ' +
+        '[DocuSignWebhook] Status → ' +
           newStatus +
           ' for envelopeId=' +
           envelopeId
@@ -244,7 +361,11 @@ global class DocuSignWebhookController {
         Opportunity__r.AccountId,
         Opportunity__r.Account.Name,
         Opportunity__r.OwnerId,
-        Opportunity__r.Owner.Email
+        Opportunity__r.Owner.Email,
+        (
+          SELECT ProductName__c, Quantity__c, UnitPrice__c, NetTotal__c
+          FROM NexusQuoteLineItems__r
+        )
       FROM TALEXO_Quote__c
       WHERE DvelopEnvelopeId__c = :envelopeId
       LIMIT 1
@@ -257,8 +378,19 @@ global class DocuSignWebhookController {
 
     TALEXO_Quote__c q = quotes[0];
     if (q.Status__c == 'Signed') {
-      System.debug('[DocuSignWebhook] Already Signed — skipping.');
-      return;
+      // Already signed — only skip if the PDF is already attached
+      Integer existingFiles = [
+        SELECT COUNT()
+        FROM ContentDocumentLink
+        WHERE LinkedEntityId = :q.Id
+      ];
+      if (existingFiles > 0) {
+        System.debug('[DocuSignWebhook] Already Signed with PDF — skipping.');
+        return;
+      }
+      System.debug(
+        '[DocuSignWebhook] Already Signed but no PDF — will attach.'
+      );
     }
 
     // ── Update quote — mark signed + stamp contract dates ─────────────────────
@@ -267,10 +399,7 @@ global class DocuSignWebhookController {
     update new TALEXO_Quote__c(
       Id = q.Id,
       Status__c = 'Signed',
-      NegotiationStatus__c = 'Final',
-      DocuSign_Status__c = 'Completed',
-      Contract_Start_Date__c = contractStart,
-      Contract_End_Date__c = contractEnd
+      NegotiationStatus__c = 'Final'
     );
 
     // ── Update opportunity — Closed Won ──────────────────────────────────────
@@ -284,23 +413,47 @@ global class DocuSignWebhookController {
       }
     }
 
-    // ── Chatter post on the Opportunity ───────────────────────────────────────
-    try {
-      FeedItem post = new FeedItem(
-        ParentId = q.Opportunity__c,
-        Body = '✅ Contract ' +
-          q.Name +
-          ' signed via DocuSign.\n' +
-          'Opportunity moved to Closed Won. Payment awaiting (Net 30).\n' +
-          'Contract active from ' +
-          contractStart.format() +
-          ' to ' +
-          contractEnd.format() +
-          '.'
-      );
-      insert post;
-    } catch (Exception ex) {
-      System.debug('[DocuSignWebhook] Chatter post failed: ' + ex.getMessage());
+    // ── Chatter post on Opportunity ───────────────────────────────────────────
+    if (q.Opportunity__c != null) {
+      try {
+        insert new FeedItem(
+          ParentId = q.Opportunity__c,
+          Body = '✅ Contract ' +
+            q.Name +
+            ' signed via DocuSign.\n' +
+            'Opportunity moved to Closed Won. Payment awaiting (Net 30).\n' +
+            'Contract active from ' +
+            contractStart.format() +
+            ' to ' +
+            contractEnd.format() +
+            '.'
+        );
+      } catch (Exception ex) {
+        System.debug(
+          '[DocuSignWebhook] Chatter Opp failed: ' + ex.getMessage()
+        );
+      }
+    }
+
+    // ── Chatter post on Account ───────────────────────────────────────────────
+    if (q.Opportunity__r.AccountId != null) {
+      try {
+        insert new FeedItem(
+          ParentId = q.Opportunity__r.AccountId,
+          Body = '✅ Contract ' +
+            q.Name +
+            ' signed via DocuSign.\n' +
+            'Contract active from ' +
+            contractStart.format() +
+            ' to ' +
+            contractEnd.format() +
+            '.'
+        );
+      } catch (Exception ex) {
+        System.debug(
+          '[DocuSignWebhook] Chatter Account failed: ' + ex.getMessage()
+        );
+      }
     }
 
     // ── Create Contract record (skip if one already exists for this account) ────
@@ -350,6 +503,99 @@ global class DocuSignWebhookController {
       '[DocuSignWebhook] Contract created: ' + c.Id + ' | ' + contractRef
     );
 
+    // ── Attach contract document immediately (no Queueable dependency) ──────────
+    // Ensures PDF is always visible on Opp, Account, and Contract even when the
+    // DocuSign PDF download later fails.
+    try {
+      List<User> custUsers = [
+        SELECT Email, FirstName, LastName
+        FROM User
+        WHERE
+          AccountId = :q.Opportunity__r.AccountId
+          AND IsActive = TRUE
+          AND UserType IN (
+            'PowerCustomerSuccess',
+            'CspLitePortal',
+            'PowerPartner'
+          )
+        LIMIT 1
+      ];
+      String custName = !custUsers.isEmpty()
+        ? custUsers[0].FirstName + ' ' + custUsers[0].LastName
+        : 'Client';
+      String custEmail = !custUsers.isEmpty() ? custUsers[0].Email : '';
+
+      String docBase64 = DocuSignService.buildContractDocument(
+        q,
+        custName,
+        custEmail
+      );
+      Blob docBlob = EncodingUtil.base64Decode(docBase64);
+      String filename =
+        q.Name.replaceAll('[^A-Za-z0-9_-]', '_') + '_Signed_Contract.pdf';
+
+      ContentVersion cv = new ContentVersion(
+        Title = filename,
+        PathOnClient = filename,
+        VersionData = docBlob,
+        IsMajorVersion = true
+      );
+      insert cv;
+      cv = [
+        SELECT ContentDocumentId
+        FROM ContentVersion
+        WHERE Id = :cv.Id
+        LIMIT 1
+      ];
+
+      for (
+        Id linkTarget : new List<Id>{
+          q.Id,
+          q.Opportunity__c,
+          q.Opportunity__r.AccountId,
+          c.Id
+        }
+      ) {
+        if (linkTarget == null)
+          continue;
+        try {
+          insert new ContentDocumentLink(
+            ContentDocumentId = cv.ContentDocumentId,
+            LinkedEntityId = linkTarget,
+            ShareType = 'V',
+            Visibility = 'AllUsers'
+          );
+        } catch (Exception ex) {
+          System.debug(
+            '[DocuSignWebhook] Link skipped (' +
+              linkTarget +
+              '): ' +
+              ex.getMessage()
+          );
+        }
+      }
+      System.debug('[DocuSignWebhook] Contract doc attached: ' + filename);
+    } catch (Exception ex) {
+      System.debug(
+        '[DocuSignWebhook] Contract doc failed: ' +
+          ex.getMessage() +
+          ' | ' +
+          ex.getStackTraceString()
+      );
+      try {
+        insert new FeedItem(
+          ParentId = q.Id,
+          Body = '[PDF ERROR] ' +
+            ex.getMessage() +
+            ' | User:' +
+            UserInfo.getUserId() +
+            ' | Type:' +
+            UserInfo.getUserType()
+        );
+      } catch (Exception fe) {
+      }
+    }
+
     // ── Create Salesforce Order from the signed quote ────────────────────────
     try {
       createOrderFromQuote(q.Id, contractStart);
@@ -359,14 +605,7 @@ global class DocuSignWebhookController {
       );
     }
 
-    // ── Bell notification to admin — contract signed ─────────────────────────
-    NotificationController.pushAdminBell(
-      'Contract Signed: ' + q.Opportunity__r.Account.Name,
-      q.Name + ' signed via e-signature · Opportunity → Closed Won.',
-      q.Id
-    );
-
-    // ── Step 2: Enqueue PDF download (Queueable: callouts happen before DML) ────
+    // ── Step 2: Enqueue PDF download — must run before anything else can throw ──
     try {
       System.enqueueJob(new DocuSignPollQueueable());
     } catch (Exception ex) {
@@ -384,6 +623,19 @@ global class DocuSignWebhookController {
         q.Opportunity__r.Owner.Email,
         q.Opportunity__r.Account.Name,
         q.Name
+      );
+    }
+
+    // ── Bell notification to admin — contract signed ─────────────────────────
+    try {
+      NotificationController.pushAdminBell(
+        'Contract Signed: ' + q.Opportunity__r.Account.Name,
+        q.Name + ' signed via e-signature · Opportunity → Closed Won.',
+        q.Id
+      );
+    } catch (Exception ex) {
+      System.debug(
+        '[DocuSignWebhook] Bell notification failed: ' + ex.getMessage()
       );
     }
   }

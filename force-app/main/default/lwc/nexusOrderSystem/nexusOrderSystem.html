@@ -96,47 +96,82 @@
         <!-- ── Right: Live Tracking + AI Card ─────────────────────────────────── -->
         <div class="nos-side-col">
           <!-- Live Tracking Map -->
-          <div class="nos-map-card">
-            <div class="nos-map-img">
-              <img
-                src="https://picsum.photos/seed/map/800/1200"
-                alt="Live Map"
-                class="nos-map-bg"
-              />
-            </div>
-            <div class="nos-map-overlay"></div>
-            <div class="nos-map-content">
-              <div class="nos-map-top">
+          <template if:true={hasLiveTracking}>
+            <!-- Real GPS map when a rider is active -->
+            <div class="nos-map-card nos-map-card-live">
+              <lightning-map
+                map-markers={liveMapMarkers}
+                zoom-level="14"
+                markers-title="Live Delivery"
+                class="nos-lm-component"
+              ></lightning-map>
+              <div class="nos-lm-header">
                 <div class="nos-live-badge">
+                  <span class="nos-live-dot"></span>
                   <span class="nos-live-text">Live Tracking</span>
                 </div>
-                <span class="nos-live-dot"></span>
               </div>
-              <div class="nos-map-bottom">
-                <div class="nos-last-update">
-                  <div class="nos-update-head">Last Update</div>
-                  <div class="nos-update-body">
-                    <div class="nos-truck-icon">
-                      <lightning-icon
-                        icon-name="utility:truck"
-                        size="small"
-                        variant="inverse"
-                      ></lightning-icon>
-                    </div>
-                    <div>
-                      <div class="nos-update-text">
-                        Left the distribution center
-                      </div>
-                      <div class="nos-update-time">12 minutes ago</div>
-                    </div>
-                  </div>
+              <div class="nos-lm-footer">
+                <div class="nos-lm-eta-block">
+                  <span class="nos-lm-eta-label">ETA</span>
+                  <span class="nos-lm-eta-val">{liveEtaLabel}</span>
                 </div>
-                <button class="nos-fullmap-btn" onclick={handleOpenFullMap}>
-                  Open Full Screen Map
+                <template if:true={liveRiderAddress}>
+                  <span class="nos-lm-address">{liveRiderAddress}</span>
+                </template>
+                <button
+                  class="nos-fullmap-btn nos-fullmap-btn-sm"
+                  onclick={handleOpenFullMap}
+                >
+                  Full Screen
                 </button>
               </div>
             </div>
-          </div>
+          </template>
+          <template if:false={hasLiveTracking}>
+            <!-- Placeholder when no active delivery -->
+            <div class="nos-map-card">
+              <div class="nos-map-img">
+                <img
+                  src="https://picsum.photos/seed/map/800/1200"
+                  alt="Live Map"
+                  class="nos-map-bg"
+                />
+              </div>
+              <div class="nos-map-overlay"></div>
+              <div class="nos-map-content">
+                <div class="nos-map-top">
+                  <div class="nos-live-badge">
+                    <span class="nos-live-text">Live Tracking</span>
+                  </div>
+                  <span class="nos-live-dot"></span>
+                </div>
+                <div class="nos-map-bottom">
+                  <div class="nos-last-update">
+                    <div class="nos-update-head">Status</div>
+                    <div class="nos-update-body">
+                      <div class="nos-truck-icon">
+                        <lightning-icon
+                          icon-name="utility:truck"
+                          size="small"
+                          variant="inverse"
+                        ></lightning-icon>
+                      </div>
+                      <div>
+                        <div class="nos-update-text">No active delivery</div>
+                        <div class="nos-update-time">
+                          Map activates on dispatch
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="nos-fullmap-btn" onclick={handleOpenFullMap}>
+                    Open Full Screen Map
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </template>
@@ -171,7 +206,9 @@
             <div class="nos-info-grid">
               <div class="nos-info-block">
                 <div class="nos-info-label">Shipping Address</div>
-                <div class="nos-info-val">{selectedOrder.shippingAddress}</div>
+                <div class="nos-info-val nos-addr-val">
+                  {selectedOrder.shippingAddress}
+                </div>
               </div>
               <div class="nos-info-block">
                 <div class="nos-info-label">Tracking Number</div>
@@ -262,6 +299,68 @@
                       size="x-small"
                     ></lightning-icon>
                     <span>{escrowStatusBanner}</span>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- ── Delivery Receipt Confirmation (Stripe / non-escrow Delivered orders) ── -->
+            <template if:true={selectedOrder.isConfirmableDelivery}>
+              <div class="nos-delivery-confirm-section">
+                <template if:false={receiptConfirmed}>
+                  <div class="nos-delivery-confirm-inner">
+                    <div class="nos-delivery-confirm-left">
+                      <div class="nos-delivery-confirm-icon">
+                        <lightning-icon
+                          icon-name="utility:package"
+                          size="small"
+                          variant="inverse"
+                        ></lightning-icon>
+                      </div>
+                      <div>
+                        <div class="nos-delivery-confirm-title">
+                          Your order has arrived!
+                        </div>
+                        <div class="nos-delivery-confirm-sub">
+                          Please confirm receipt to finalise your order.
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      class="nos-confirm-receipt-btn"
+                      onclick={handleConfirmReceiptStripe}
+                      disabled={receiptConfirming}
+                    >
+                      <template if:true={receiptConfirming}>
+                        <lightning-spinner
+                          size="x-small"
+                          alternative-text="Confirming..."
+                          variant="inverse"
+                        ></lightning-spinner>
+                        &nbsp;Confirming...
+                      </template>
+                      <template if:false={receiptConfirming}>
+                        <lightning-icon
+                          icon-name="utility:check"
+                          size="x-small"
+                          variant="inverse"
+                        ></lightning-icon>
+                        &nbsp;Confirm Receipt
+                      </template>
+                    </button>
+                  </div>
+                </template>
+                <template if:true={receiptConfirmed}>
+                  <div class="nos-receipt-confirmed-banner">
+                    <lightning-icon
+                      icon-name="utility:success"
+                      size="x-small"
+                      variant="inverse"
+                    ></lightning-icon>
+                    <span
+                      >Receipt confirmed — merci ! Your order is now
+                      complete.</span
+                    >
                   </div>
                 </template>
               </div>
@@ -779,43 +878,178 @@
       </div>
     </template>
 
+    <!-- ══ Dispute Modal ════════════════════════════════════════════════════════ -->
+    <template if:true={showDisputeModal}>
+      <div class="nos-dispute-overlay" onclick={handleCancelDispute}>
+        <div class="nos-dispute-modal" onclick={handleStopProp}>
+          <!-- Success state -->
+          <template if:true={disputeSuccess}>
+            <div class="nos-dm-success-wrap">
+              <div class="nos-dm-success-icon">
+                <lightning-icon
+                  icon-name="utility:check"
+                  size="medium"
+                  variant="inverse"
+                ></lightning-icon>
+              </div>
+              <h3 class="nos-dm-success-title">Payment Frozen</h3>
+              <p class="nos-dm-success-sub">
+                Your dispute has been filed. Case
+                <strong>#{disputeCaseNumber}</strong> has been created and our
+                team will review within 24 hours. The escrow is now frozen — no
+                payment will be released until resolved.
+              </p>
+              <div class="nos-dm-case-badge">
+                <lightning-icon
+                  icon-name="utility:case"
+                  size="x-small"
+                  variant="inverse"
+                ></lightning-icon>
+                <span>Case #{disputeCaseNumber} · Under Review</span>
+              </div>
+            </div>
+            <div class="nos-dm-footer">
+              <button class="nos-dm-confirm-btn" onclick={handleCancelDispute}>
+                Close
+              </button>
+            </div>
+          </template>
+
+          <!-- Form state -->
+          <template if:false={disputeSuccess}>
+            <div class="nos-dm-header">
+              <div class="nos-dm-warn-icon">
+                <lightning-icon
+                  icon-name="utility:warning"
+                  size="small"
+                  variant="inverse"
+                ></lightning-icon>
+              </div>
+              <div>
+                <h3 class="nos-dm-title">Report an Issue</h3>
+                <p class="nos-dm-sub">Order {escrowPayOrderId}</p>
+              </div>
+            </div>
+
+            <div class="nos-dm-body">
+              <div class="nos-dm-alert">
+                <lightning-icon
+                  icon-name="utility:lock"
+                  size="x-small"
+                ></lightning-icon>
+                <span>
+                  Submitting this report will
+                  <strong>immediately freeze</strong>
+                  your escrow payment on-chain. A support case will be opened
+                  and our team will contact you within 24 hours.
+                </span>
+              </div>
+
+              <label class="nos-dm-label" for="disputeTextarea">
+                Describe the issue
+              </label>
+              <textarea
+                id="disputeTextarea"
+                class="nos-dm-textarea"
+                placeholder="e.g. Item received was damaged, wrong product shipped, delivery not received..."
+                value={disputeReason}
+                onchange={handleDisputeReasonChange}
+                rows="4"
+                maxlength="2000"
+              ></textarea>
+              <div class="nos-dm-char-hint">Minimum 10 characters required</div>
+            </div>
+
+            <div class="nos-dm-footer">
+              <button
+                class="nos-dm-cancel-btn"
+                onclick={handleCancelDispute}
+                disabled={disputeSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                class="nos-dm-submit-btn"
+                onclick={handleSubmitDispute}
+                disabled={disputeSubmitDisabled}
+              >
+                <template if:true={disputeSubmitting}>
+                  <lightning-spinner
+                    size="x-small"
+                    alternative-text="Filing dispute..."
+                    variant="inverse"
+                  ></lightning-spinner>
+                </template>
+                <template if:false={disputeSubmitting}>
+                  <lightning-icon
+                    icon-name="utility:freeze"
+                    size="x-small"
+                    variant="inverse"
+                  ></lightning-icon>
+                </template>
+                {disputeSubmitLabel}
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+
     <!-- ══ Full Screen Map Modal ═════════════════════════════════════════════════ -->
     <template if:true={showFullMap}>
       <div class="nos-fullmap-overlay">
         <button class="nos-fullmap-close" onclick={handleCloseFullMap}>
           ✕
         </button>
-        <img
-          src="https://picsum.photos/seed/fullmap/1920/1080"
-          alt="Full Map"
-          class="nos-fullmap-img"
-        />
-        <div class="nos-fullmap-tint"></div>
-        <div class="nos-fullmap-info">
-          <div class="nos-fullmap-info-header">
-            <div class="nos-fullmap-truck">
-              <lightning-icon
-                icon-name="utility:truck"
-                size="small"
-                variant="inverse"
-              ></lightning-icon>
+        <template if:true={hasLiveTracking}>
+          <lightning-map
+            map-markers={liveMapMarkers}
+            zoom-level="16"
+            markers-title="Live Delivery"
+            class="nos-fullmap-lm"
+          ></lightning-map>
+        </template>
+        <template if:false={hasLiveTracking}>
+          <img
+            src="https://picsum.photos/seed/fullmap/1920/1080"
+            alt="Full Map"
+            class="nos-fullmap-img"
+          />
+          <div class="nos-fullmap-tint"></div>
+        </template>
+        <template if:true={hasLiveTracking}>
+          <div class="nos-fullmap-info">
+            <div class="nos-fullmap-info-header">
+              <div class="nos-fullmap-truck">
+                <lightning-icon
+                  icon-name="utility:truck"
+                  size="small"
+                  variant="inverse"
+                ></lightning-icon>
+              </div>
+              <div>
+                <div class="nos-fullmap-order-id">{liveOrderId}</div>
+                <div class="nos-fullmap-order-sub">Live Tracking Active</div>
+              </div>
             </div>
-            <div>
-              <div class="nos-fullmap-order-id">ORD-2024-001</div>
-              <div class="nos-fullmap-order-sub">Live Tracking Active</div>
+            <div class="nos-fullmap-stats">
+              <div class="nos-fullmap-stat">
+                <span class="nos-pulse-dot nos-dot-emerald"></span>
+                <span>ETA : {liveEtaLabel}</span>
+              </div>
+              <template if:true={liveRiderAddress}>
+                <div class="nos-fullmap-stat">
+                  <span class="nos-pulse-dot nos-dot-amber"></span>
+                  <span>{liveRiderAddress}</span>
+                </div>
+              </template>
+              <div class="nos-fullmap-stat">
+                <span class="nos-pulse-dot nos-dot-indigo"></span>
+                <span>Traccar · GPS live · 30 s refresh</span>
+              </div>
             </div>
           </div>
-          <div class="nos-fullmap-stats">
-            <div class="nos-fullmap-stat">
-              <span class="nos-pulse-dot nos-dot-emerald"></span>
-              <span>Speed : 85 km/h</span>
-            </div>
-            <div class="nos-fullmap-stat">
-              <span class="nos-pulse-dot nos-dot-indigo"></span>
-              <span>Destination : Paris, France</span>
-            </div>
-          </div>
-        </div>
+        </template>
       </div>
     </template>
   </div>

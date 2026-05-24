@@ -1,10 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>65.0</apiVersion>
-    <description>Fires when a Lead is created from the web portal. Gets the admin user, creates a follow-up Task, and sends an email notification.</description>
+    <description
+  >Fires when a Lead is created from the web portal. Gets the admin user, creates a follow-up Task, and sends an email notification.</description>
     <label>Lead - Web Portal Notification</label>
     <processType>AutoLaunchedFlow</processType>
-    <status>Active</status>
+    <status>Draft</status>
 
     <!-- ── Trigger: Lead created with LeadSource = Web ───────────────────── -->
     <start>
@@ -32,7 +33,8 @@
         <label>Get Admin User</label>
         <locationX>176</locationX>
         <locationY>120</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <assignNullValuesIfNoRecordsFound
+    >false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>CreateFollowUpTask</targetReference>
         </connector>
@@ -160,13 +162,15 @@
     <formulas>
         <name>frmTaskSubject</name>
         <dataType>String</dataType>
-        <expression>"New Web Lead: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp; " | " &amp; {!$Record.Company}</expression>
+        <expression
+    >"New Web Lead: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp; " | " &amp; {!$Record.Company}</expression>
     </formulas>
 
     <formulas>
         <name>frmTaskBody</name>
         <dataType>String</dataType>
-        <expression>"Name: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp;
+        <expression
+    >"Name: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp;
 " | Email: " &amp; {!$Record.Email} &amp;
 " | Phone: " &amp; {!$Record.Phone} &amp;
 " | Company: " &amp; {!$Record.Company} &amp;
@@ -177,7 +181,8 @@
     <formulas>
         <name>frmEmailSubject</name>
         <dataType>String</dataType>
-        <expression>"[TechStore] New Lead: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp; " from " &amp; {!$Record.Company}</expression>
+        <expression
+    >"[TechStore] New Lead: " &amp; {!$Record.FirstName} &amp; " " &amp; {!$Record.LastName} &amp; " from " &amp; {!$Record.Company}</expression>
     </formulas>
 
     <formulas>

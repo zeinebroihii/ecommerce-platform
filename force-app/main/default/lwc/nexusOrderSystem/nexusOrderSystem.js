@@ -4,8 +4,10 @@ import { refreshApex } from "@salesforce/apex";
 import getMyOrders from "@salesforce/apex/OrderManagementController.getMyOrders";
 import getEscrowStatus from "@salesforce/apex/EscrowBridgeController.getEscrowStatus";
 import confirmReceiptFromBuyer from "@salesforce/apex/EscrowBridgeController.confirmReceiptFromBuyer";
-import raiseDisputeFromBuyer from "@salesforce/apex/EscrowBridgeController.raiseDisputeFromBuyer";
 import fundEscrowForOrder from "@salesforce/apex/EscrowBridgeController.fundEscrowForOrder";
+import raiseDisputeWithReason from "@salesforce/apex/EscrowDisputeController.raiseDisputeWithReason";
+import getLivePosition from "@salesforce/apex/LiveTrackingController.getLivePosition";
+import buyerConfirmReceipt from "@salesforce/apex/LiveTrackingController.buyerConfirmReceipt";
 
 const STATUS_MAP = {
   Draft: { label: "Processing", progress: 20 },
@@ -90,6 +92,7 @@ function mapSfOrder(o) {
   return {
     id: o.orderNumber,
     _sfId: o.orderId,
+    _rawStatus: o.status,
     date: o.orderDate || "—",
     total: o.totalAmount || 0,
     formattedTotal: o.formattedTotal || o.totalAmount + " €",
@@ -109,9 +112,12 @@ function mapSfOrder(o) {
     formattedShipping: o.formattedShipping || "—",
     hasSparksDiscount: o.hasSparksDiscount || false,
     formattedSparksDiscount: o.formattedSparksDiscount || null,
-    // Payment method: 'Stripe' | 'USDC_Escrow' | 'Cash' | null (pending choice)
     paymentMethod: o.paymentMethod || null,
     paymentDeadline: o.paymentDeadline || null,
+    liveLat: o.liveLat != null ? o.liveLat : null,
+    liveLng: o.liveLng != null ? o.liveLng : null,
+    liveEta: o.liveEta != null ? o.liveEta : null,
+    trackingToken: o.trackingToken || null,
     isReal: true,
     history,
     products: (o.lineItems || []).map((li, idx) => ({
@@ -162,9 +168,22 @@ export default class NexusOrderSystem extends LightningElement {
   @track _processingStep = 1;
   @track _buyerWalletAddress = "";
   @track _escrowAlreadyFunded = false;
+  @track _showDisputeModal = false;
+  @track _disputeReason = "";
+  @track _disputeSubmitting = false;
+  @track _disputeSuccess = false;
+  @track _disputeCaseNumber = null;
+  @track _receiptConfirming = false;
+  @track _receiptConfirmed = false;
   _countdownInterval = null;
   _processingTimer = null;
   _wiredOrdersResult;
+  _escrowPollTimer = null;
+
+  // ── Live tracking ──────────────────────────────────────────────────────────
+  @track _livePos = null; // TrackingData from LiveTrackingController
+  _liveTrackPollTimer = null;
+  _liveTrackSfOrderId = null;
 
   @wire(getMyOrders)
   wiredOrders(result) {
@@ -173,6 +192,15 @@ export default class NexusOrderSystem extends LightningElement {
     if (data) {
       this._realOrders = data.map(mapSfOrder);
       this._loaded = true;
+      // Start live-tracking poll for the first In Transit order
+      const active = this._realOrders.find(
+        (o) => o.status === "In Transit" && o._sfId
+      );
+      if (active) {
+        this._startLiveTracking(active._sfId);
+      } else {
+        this._stopLiveTracking();
+      }
     }
     if (error) {
       console.error(
@@ -191,6 +219,43 @@ export default class NexusOrderSystem extends LightningElement {
   }
   get isEmpty() {
     return this._loaded && this._realOrders.length === 0;
+  }
+
+  // ── Live tracking getters ──────────────────────────────────────────────────
+
+  get hasLiveTracking() {
+    return !!(this._livePos && this._livePos.isLive);
+  }
+
+  get liveMapMarkers() {
+    if (!this._livePos) return [];
+    return [
+      {
+        location: {
+          Latitude: this._livePos.lat,
+          Longitude: this._livePos.lng
+        },
+        title: "Rider en route",
+        description: "Mise à jour en direct · " + this.liveEtaLabel
+      }
+    ];
+  }
+
+  get liveEtaLabel() {
+    if (!this._livePos || this._livePos.etaMinutes == null)
+      return "Calcul en cours...";
+    if (this._livePos.etaMinutes <= 1) return "< 1 min";
+    return this._livePos.etaMinutes + " min";
+  }
+
+  get liveOrderId() {
+    return this._livePos ? this._livePos.orderNumber : "—";
+  }
+
+  get liveRiderAddress() {
+    return this._livePos && this._livePos.riderAddress
+      ? this._livePos.riderAddress
+      : null;
   }
 
   _decorate(o) {
@@ -382,6 +447,32 @@ export default class NexusOrderSystem extends LightningElement {
     });
   }
 
+  // ── Dispute modal getters ──────────────────────────────────────────────────
+
+  get showDisputeModal() {
+    return this._showDisputeModal;
+  }
+  get disputeReason() {
+    return this._disputeReason;
+  }
+  get disputeSubmitting() {
+    return this._disputeSubmitting;
+  }
+  get disputeSuccess() {
+    return this._disputeSuccess;
+  }
+  get disputeCaseNumber() {
+    return this._disputeCaseNumber;
+  }
+  get disputeSubmitDisabled() {
+    return this._disputeReason.trim().length < 10 || this._disputeSubmitting;
+  }
+  get disputeSubmitLabel() {
+    return this._disputeSubmitting
+      ? "Freezing Payment..."
+      : "Submit & Freeze Payment";
+  }
+
   // Status banners for terminal / blocked states
   get escrowStatusBanner() {
     const s = this.escrowState;
@@ -414,6 +505,13 @@ export default class NexusOrderSystem extends LightningElement {
 
   // ── Updated selectedOrder getter with escrow + payment props ──────────────
 
+  get receiptConfirming() {
+    return this._receiptConfirming;
+  }
+  get receiptConfirmed() {
+    return this._receiptConfirmed;
+  }
+
   get selectedOrder() {
     if (!this._selectedOrderId) return null;
     const o = this._realOrders.find((r) => r.id === this._selectedOrderId);
@@ -421,6 +519,8 @@ export default class NexusOrderSystem extends LightningElement {
     return {
       ...o,
       isEscrowOrder: o.paymentMethod === "USDC_Escrow",
+      isConfirmableDelivery:
+        o._rawStatus === "Delivered" && o.paymentMethod !== "USDC_Escrow",
       isPendingPayment: !o.paymentMethod && o.status === "Processing",
       showDownloadInvoice: o.paymentMethod === "Stripe",
       hasPaymentDeadline: !!o.paymentDeadline,
@@ -448,6 +548,8 @@ export default class NexusOrderSystem extends LightningElement {
   handleOpenDetail(e) {
     this._selectedOrderId = e.currentTarget.dataset.id;
     this._escrowData = null;
+    this._receiptConfirming = false;
+    this._receiptConfirmed = false;
     const order = this._realOrders.find((r) => r.id === this._selectedOrderId);
     if (order?.paymentMethod === "USDC_Escrow") {
       this._loadEscrowStatus(this._selectedOrderId);
@@ -459,12 +561,99 @@ export default class NexusOrderSystem extends LightningElement {
     getEscrowStatus({ orderNumber })
       .then((data) => {
         this._escrowData = data;
+        const state = Number(data?.state ?? -1);
+        if (state === ESCROW_STATE.DISPUTED || state === ESCROW_STATE.FROZEN) {
+          this._startEscrowPoll(orderNumber);
+        } else {
+          this._stopEscrowPoll();
+        }
       })
       .catch((err) => {
         console.error("[NexusOrderSystem] getEscrowStatus error:", err);
       })
       .finally(() => {
         this._escrowLoading = false;
+      });
+  }
+
+  _startEscrowPoll(orderNumber) {
+    if (this._escrowPollTimer) return;
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    this._escrowPollTimer = setInterval(() => {
+      getEscrowStatus({ orderNumber })
+        .then((data) => {
+          this._escrowData = data;
+          const state = Number(data?.state ?? -1);
+          if (
+            state !== ESCROW_STATE.DISPUTED &&
+            state !== ESCROW_STATE.FROZEN
+          ) {
+            this._stopEscrowPoll();
+            refreshApex(this._wiredOrdersResult);
+          }
+        })
+        .catch(() => {});
+    }, 10000);
+  }
+
+  _stopEscrowPoll() {
+    if (this._escrowPollTimer) {
+      clearInterval(this._escrowPollTimer);
+      this._escrowPollTimer = null;
+    }
+  }
+
+  connectedCallback() {
+    // Wire cache can be stale when order status changes externally (e.g. via dispatch).
+    // Force a server refresh after the wire's initial cached result fires.
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    setTimeout(() => {
+      if (this._wiredOrdersResult) {
+        refreshApex(this._wiredOrdersResult);
+      }
+    }, 800);
+  }
+
+  disconnectedCallback() {
+    this._stopEscrowPoll();
+    this._stopLiveTracking();
+  }
+
+  // ── Live tracking private methods ──────────────────────────────────────────
+
+  _startLiveTracking(sfOrderId) {
+    if (this._liveTrackSfOrderId === sfOrderId && this._liveTrackPollTimer)
+      return;
+    this._stopLiveTracking();
+    this._liveTrackSfOrderId = sfOrderId;
+    this._fetchLivePosition();
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    this._liveTrackPollTimer = setInterval(() => {
+      this._fetchLivePosition();
+    }, 10000);
+  }
+
+  _stopLiveTracking() {
+    if (this._liveTrackPollTimer) {
+      clearInterval(this._liveTrackPollTimer);
+      this._liveTrackPollTimer = null;
+    }
+    this._liveTrackSfOrderId = null;
+  }
+
+  _fetchLivePosition() {
+    if (!this._liveTrackSfOrderId) return;
+    getLivePosition({ orderId: this._liveTrackSfOrderId })
+      .then((data) => {
+        if (data) {
+          this._livePos = data;
+          if (!data.isLive) {
+            this._stopLiveTracking();
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("[NexusOrderSystem] live-track poll error:", err);
       });
   }
 
@@ -478,7 +667,10 @@ export default class NexusOrderSystem extends LightningElement {
           "Funds will be transferred to the seller shortly.",
           "success"
         );
-        this._loadEscrowStatus(this._selectedOrderId);
+        // Optimistically show RELEASED — bridge tx is async so don't re-query
+        this._escrowData = { ...(this._escrowData || {}), state: 5 };
+        this._stopEscrowPoll();
+        refreshApex(this._wiredOrdersResult);
       })
       .catch((err) => {
         this._dispatchToast(
@@ -494,25 +686,81 @@ export default class NexusOrderSystem extends LightningElement {
 
   handleRaiseDispute() {
     if (!this._selectedOrderId) return;
-    this._escrowActionLoading = true;
-    raiseDisputeFromBuyer({ orderNumber: this._selectedOrderId })
-      .then(() => {
-        this._dispatchToast(
-          "Dispute raised",
-          "Payment has been frozen. Our team will review your case.",
-          "warning"
-        );
-        this._loadEscrowStatus(this._selectedOrderId);
+    this._disputeReason = "";
+    this._disputeSuccess = false;
+    this._disputeCaseNumber = null;
+    this._showDisputeModal = true;
+  }
+
+  handleDisputeReasonChange(e) {
+    this._disputeReason = e.target.value;
+  }
+
+  handleSubmitDispute() {
+    if (this._disputeReason.trim().length < 10 || this._disputeSubmitting)
+      return;
+    this._disputeSubmitting = true;
+    raiseDisputeWithReason({
+      orderNumber: this._selectedOrderId,
+      reason: this._disputeReason.trim()
+    })
+      .then((result) => {
+        if (result && result.success) {
+          this._disputeSuccess = true;
+          this._disputeCaseNumber = result.caseNumber;
+          refreshApex(this._wiredOrdersResult).then(() => {
+            this._loadEscrowStatus(this._selectedOrderId);
+          });
+        } else {
+          this._dispatchToast(
+            "Error",
+            result?.error || "Could not file dispute.",
+            "error"
+          );
+        }
       })
       .catch((err) => {
         this._dispatchToast(
           "Error",
-          err?.body?.message || "Could not raise dispute.",
+          err?.body?.message || "Could not file dispute.",
           "error"
         );
       })
       .finally(() => {
-        this._escrowActionLoading = false;
+        this._disputeSubmitting = false;
+      });
+  }
+
+  handleCancelDispute() {
+    this._showDisputeModal = false;
+    this._disputeReason = "";
+    this._disputeSuccess = false;
+    this._disputeCaseNumber = null;
+    if (this._disputeSuccess) this.handleCloseDetail();
+  }
+
+  handleConfirmReceiptStripe() {
+    if (
+      this._receiptConfirming ||
+      this._receiptConfirmed ||
+      !this._selectedOrderId
+    )
+      return;
+    this._receiptConfirming = true;
+    buyerConfirmReceipt({ orderNumber: this._selectedOrderId })
+      .then(() => {
+        this._receiptConfirmed = true;
+        refreshApex(this._wiredOrdersResult);
+      })
+      .catch((err) => {
+        this._dispatchToast(
+          "Error",
+          err?.body?.message || "Could not confirm receipt.",
+          "error"
+        );
+      })
+      .finally(() => {
+        this._receiptConfirming = false;
       });
   }
 
@@ -642,6 +890,7 @@ export default class NexusOrderSystem extends LightningElement {
   handleCloseDetail() {
     this._selectedOrderId = null;
     this._escrowData = null;
+    this._stopEscrowPoll();
   }
   handleStopProp(e) {
     e.stopPropagation();

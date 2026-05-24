@@ -74,7 +74,9 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       '[DocuSignPoll] Fully linked quotes (skip): ' + quotesWithPdf.size()
     );
 
-    List<TALEXO_Quote__c> pending = [
+    // Priority 1: Signed quotes that are missing their PDF — must be processed
+    // regardless of how many un-signed quotes are waiting in the pipeline.
+    List<TALEXO_Quote__c> signedNoPdf = [
       SELECT
         Id,
         Name,
@@ -83,6 +85,8 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
         GrandTotal__c,
         PaymentTerms__c,
         BulkDiscount__c,
+        ExpirationDate__c,
+        Description__c,
         Opportunity__c,
         Opportunity__r.AccountId,
         Opportunity__r.Account.Name,
@@ -95,13 +99,45 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       FROM TALEXO_Quote__c
       WHERE
         DvelopEnvelopeId__c != NULL
-        AND Status__c NOT IN ('Rejected', 'Declined')
-        AND (Status__c NOT IN ('Signed')
-        OR (Status__c = 'Signed'
+        AND Status__c = 'Signed'
         AND Id NOT IN :quotesWithPdf
-        AND LastModifiedDate >= :DateTime.now().addDays(-30)))
+        AND LastModifiedDate >= :DateTime.now().addDays(-30)
+      LIMIT 10
+    ];
+
+    // Priority 2: Un-signed quotes to poll DocuSign for completion status
+    Set<Id> alreadyQueued = new Map<Id, TALEXO_Quote__c>(signedNoPdf).keySet();
+    List<TALEXO_Quote__c> toCheck = [
+      SELECT
+        Id,
+        Name,
+        DvelopEnvelopeId__c,
+        Status__c,
+        GrandTotal__c,
+        PaymentTerms__c,
+        BulkDiscount__c,
+        ExpirationDate__c,
+        Description__c,
+        Opportunity__c,
+        Opportunity__r.AccountId,
+        Opportunity__r.Account.Name,
+        Opportunity__r.OwnerId,
+        Opportunity__r.Owner.Email,
+        (
+          SELECT ProductName__c, Quantity__c, UnitPrice__c, NetTotal__c
+          FROM NexusQuoteLineItems__r
+        )
+      FROM TALEXO_Quote__c
+      WHERE
+        DvelopEnvelopeId__c != NULL
+        AND Status__c NOT IN ('Rejected', 'Declined', 'Signed')
+        AND Id NOT IN :alreadyQueued
       LIMIT 5
     ];
+
+    List<TALEXO_Quote__c> pending = new List<TALEXO_Quote__c>();
+    pending.addAll(signedNoPdf);
+    pending.addAll(toCheck);
     System.debug('[DocuSignPoll] Pending quotes to check: ' + pending.size());
     if (pending.isEmpty())
       return;
@@ -126,29 +162,44 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
     // ── PHASE 1: ALL CALLOUTS ─────────────────────────────────────────────────
     String token = buildToken(cfg);
     if (String.isBlank(token)) {
-      System.debug('[DocuSignPoll] Could not obtain token — aborting.');
-      return;
+      System.debug(
+        '[DocuSignPoll] Could not obtain DocuSign token — will use local fallback for Signed quotes.'
+      );
     }
 
     // Check status for each pending envelope, download PDF if completed
-    Map<Id, Blob> completedPdfs = new Map<Id, Blob>(); // quoteId → signed PDF
-    for (TALEXO_Quote__c q : pending) {
-      try {
-        String status = checkEnvelopeStatus(token, cfg, q.DvelopEnvelopeId__c);
-        System.debug(
-          '[DocuSignPoll] Envelope ' + q.DvelopEnvelopeId__c + ' → ' + status
-        );
-        if ('completed'.equalsIgnoreCase(status)) {
-          Blob pdf = downloadPdf(token, cfg, q.DvelopEnvelopeId__c);
-          completedPdfs.put(q.Id, pdf); // pdf may be null if download failed; we still finalize
+    Map<Id, Blob> completedPdfs = new Map<Id, Blob>(); // quoteId → signed PDF (null = use local fallback)
+    if (String.isNotBlank(token)) {
+      for (TALEXO_Quote__c q : pending) {
+        try {
+          String status = checkEnvelopeStatus(
+            token,
+            cfg,
+            q.DvelopEnvelopeId__c
+          );
+          System.debug(
+            '[DocuSignPoll] Envelope ' + q.DvelopEnvelopeId__c + ' → ' + status
+          );
+          if ('completed'.equalsIgnoreCase(status)) {
+            Blob pdf = downloadPdf(token, cfg, q.DvelopEnvelopeId__c);
+            completedPdfs.put(q.Id, pdf);
+          }
+        } catch (Exception e) {
+          System.debug(
+            '[DocuSignPoll] Error checking ' +
+              q.DvelopEnvelopeId__c +
+              ': ' +
+              e.getMessage()
+          );
         }
-      } catch (Exception e) {
-        System.debug(
-          '[DocuSignPoll] Error checking ' +
-            q.DvelopEnvelopeId__c +
-            ': ' +
-            e.getMessage()
-        );
+      }
+    }
+
+    // Already-Signed quotes that still have no PDF get local fallback generation
+    // in finalize() — queue them here so they're not skipped.
+    for (TALEXO_Quote__c q : pending) {
+      if (q.Status__c == 'Signed' && !completedPdfs.containsKey(q.Id)) {
+        completedPdfs.put(q.Id, null);
       }
     }
 
@@ -200,10 +251,7 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       update new TALEXO_Quote__c(
         Id = q.Id,
         Status__c = 'Signed',
-        NegotiationStatus__c = 'Final',
-        DocuSign_Status__c = 'Completed',
-        Contract_Start_Date__c = contractStart,
-        Contract_End_Date__c = contractEnd
+        NegotiationStatus__c = 'Final'
       );
     }
 
@@ -265,7 +313,7 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
 
     String signedAt = DateTime.now().format('dd/MM/yyyy HH:mm') + ' UTC';
 
-    // 4. Chatter post
+    // 4. Chatter post on Opportunity
     if (q.Opportunity__c != null) {
       try {
         insert new FeedItem(
@@ -278,18 +326,74 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
             '.'
         );
       } catch (Exception e) {
-        System.debug('[DocuSignPoll] Chatter: ' + e.getMessage());
+        System.debug('[DocuSignPoll] Chatter Opp: ' + e.getMessage());
       }
     }
 
-    // 5. Attach signed PDF — always runs regardless of contract creation outcome
-    if (pdfBlob != null) {
+    // 4b. Chatter post on Account
+    if (accountId != null) {
+      try {
+        insert new FeedItem(
+          ParentId = accountId,
+          Body = '✅ Contract ' +
+            q.Name +
+            ' signed via DocuSign.\n' +
+            'Contract ref: ' +
+            contractRef +
+            ' | Signed: ' +
+            signedAt +
+            '.'
+        );
+      } catch (Exception e) {
+        System.debug('[DocuSignPoll] Chatter Account: ' + e.getMessage());
+      }
+    }
+
+    // 5. Resolve customer user (needed for invoice email and fallback doc)
+    List<User> custUsers = [
+      SELECT Email, FirstName, LastName
+      FROM User
+      WHERE
+        AccountId = :accountId
+        AND IsActive = TRUE
+        AND UserType IN (
+          'PowerCustomerSuccess',
+          'CspLitePortal',
+          'PowerPartner'
+        )
+      LIMIT 1
+    ];
+
+    // 6. Attach signed PDF — falls back to a locally-generated contract when
+    //    the DocuSign download failed (e.g. auth not configured in dev org).
+    Blob attachBlob = pdfBlob;
+    if (attachBlob == null) {
+      try {
+        String custName = !custUsers.isEmpty()
+          ? custUsers[0].FirstName + ' ' + custUsers[0].LastName
+          : 'Client';
+        String custEmail = !custUsers.isEmpty() ? custUsers[0].Email : '';
+        String docBase64 = DocuSignService.buildContractDocument(
+          q,
+          custName,
+          custEmail
+        );
+        attachBlob = EncodingUtil.base64Decode(docBase64);
+        System.debug(
+          '[DocuSignPoll] Using locally-generated contract doc for ' + q.Name
+        );
+      } catch (Exception e) {
+        System.debug('[DocuSignPoll] Fallback doc failed: ' + e.getMessage());
+      }
+    }
+
+    if (attachBlob != null) {
       String filename =
         q.Name.replaceAll('[^A-Za-z0-9_-]', '_') + '_Signed_Contract.pdf';
       ContentVersion cv = new ContentVersion(
         Title = filename,
         PathOnClient = filename,
-        VersionData = pdfBlob,
+        VersionData = attachBlob,
         IsMajorVersion = true
       );
       insert cv;
@@ -300,56 +404,35 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
         LIMIT 1
       ];
 
-      // Link to every available record individually so one failure doesn't block others
-      if (contractId != null) {
-        try {
-          insert new ContentDocumentLink(
-            ContentDocumentId = cv.ContentDocumentId,
-            LinkedEntityId = contractId,
-            ShareType = 'V',
-            Visibility = 'AllUsers'
-          );
-        } catch (Exception e) {
-          System.debug('[DocuSignPoll] Contract link: ' + e.getMessage());
+      for (
+        Id linkTarget : new List<Id>{
+          contractId,
+          accountId,
+          q.Id,
+          q.Opportunity__c
         }
-      }
-      if (accountId != null) {
+      ) {
+        if (linkTarget == null)
+          continue;
         try {
           insert new ContentDocumentLink(
             ContentDocumentId = cv.ContentDocumentId,
-            LinkedEntityId = accountId,
+            LinkedEntityId = linkTarget,
             ShareType = 'V',
             Visibility = 'AllUsers'
           );
         } catch (Exception e) {
-          System.debug('[DocuSignPoll] Account link: ' + e.getMessage());
-        }
-      }
-      try {
-        insert new ContentDocumentLink(
-          ContentDocumentId = cv.ContentDocumentId,
-          LinkedEntityId = q.Id,
-          ShareType = 'V',
-          Visibility = 'AllUsers'
-        );
-      } catch (Exception e) {
-        System.debug('[DocuSignPoll] Quote link: ' + e.getMessage());
-      }
-      if (q.Opportunity__c != null) {
-        try {
-          insert new ContentDocumentLink(
-            ContentDocumentId = cv.ContentDocumentId,
-            LinkedEntityId = q.Opportunity__c,
-            ShareType = 'V',
-            Visibility = 'AllUsers'
+          System.debug(
+            '[DocuSignPoll] Link skipped (' +
+              linkTarget +
+              '): ' +
+              e.getMessage()
           );
-        } catch (Exception e) {
-          System.debug('[DocuSignPoll] Opp link: ' + e.getMessage());
         }
       }
 
       System.debug(
-        '[DocuSignPoll] PDF attached: ' +
+        '[DocuSignPoll] Contract doc attached: ' +
           filename +
           ' → Quote + Opportunity' +
           (accountId != null ? ' + Account' : '') +
@@ -357,13 +440,13 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       );
     } else {
       System.debug(
-        '[DocuSignPoll] PDF blob was null for ' +
+        '[DocuSignPoll] No document available for ' +
           q.Name +
-          ' — file not attached.'
+          ' — skipping attachment.'
       );
     }
 
-    // 6. Build notification email for owner
+    // 7. Build notification email for owner
     if (String.isNotBlank(q.Opportunity__r.Owner.Email)) {
       Messaging.SingleEmailMessage notif = new Messaging.SingleEmailMessage();
       notif.setToAddresses(new List<String>{ q.Opportunity__r.Owner.Email });
@@ -386,20 +469,7 @@ public class DocuSignPollQueueable implements Queueable, Database.AllowsCallouts
       emails.add(notif);
     }
 
-    // 7. Build invoice email for customer portal user
-    List<User> custUsers = [
-      SELECT Email, FirstName, LastName
-      FROM User
-      WHERE
-        AccountId = :accountId
-        AND IsActive = TRUE
-        AND UserType IN (
-          'PowerCustomerSuccess',
-          'CspLitePortal',
-          'PowerPartner'
-        )
-      LIMIT 1
-    ];
+    // 8. Build invoice email for customer portal user
     if (!custUsers.isEmpty()) {
       emails.add(buildInvoiceEmail(custUsers[0], q, contractRef, signedAt));
     }

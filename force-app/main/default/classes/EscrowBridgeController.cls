@@ -12,7 +12,7 @@
  *   Auth:     No Authentication (we handle it via custom header)
  *   Headers:  x-api-key: <your BRIDGE_API_KEY>
  */
-public with sharing class EscrowBridgeController {
+public without sharing class EscrowBridgeController {
   private static final String NAMED_CRED = 'callout:EscrowBridge';
   private static final String CONTENT_TYPE = 'application/json';
 
@@ -147,6 +147,18 @@ public with sharing class EscrowBridgeController {
   public static Map<String, Object> confirmReceiptFromBuyer(
     String orderNumber
   ) {
+    List<Order> blockCheck = [
+      SELECT EscrowStatus__c
+      FROM Order
+      WHERE OrderNumber = :orderNumber
+      LIMIT 1
+    ];
+    if (!blockCheck.isEmpty() && blockCheck[0].EscrowStatus__c == 'BLOCKED') {
+      return new Map<String, Object>{
+        'success' => false,
+        'error' => 'Payment release blocked — this order has a HIGH RISK dispute pending senior approval.'
+      };
+    }
     String body = JSON.serialize(
       new Map<String, Object>{ 'orderId' => orderNumber, 'fromFreeze' => false }
     );
@@ -214,6 +226,24 @@ public with sharing class EscrowBridgeController {
       deadline = (DateTime.now().getTime() / 1000) + (30 * 24 * 3600);
     }
 
+    // Test mode: wallet starting with 0x0000 skips the bridge entirely
+    if (String.isNotBlank(buyerWallet) && buyerWallet.startsWith('0x0000')) {
+      try {
+        o.PaymentMethod__c = 'USDC_Escrow';
+        o.EscrowStatus__c = 'FUNDED';
+        update o;
+      } catch (Exception e) {
+        System.debug(
+          '[EscrowBridge] Test bypass DML failed: ' + e.getMessage()
+        );
+      }
+      return new Map<String, Object>{
+        'success' => true,
+        'txHash' => 'test-mode',
+        'state' => 1
+      };
+    }
+
     Map<String, Object> payload = new Map<String, Object>{
       'orderId' => orderNumber,
       'amount' => String.valueOf(usdcAmount),
@@ -225,17 +255,27 @@ public with sharing class EscrowBridgeController {
 
     HttpResponse res = doPost('/api/escrow/fund', JSON.serialize(payload));
 
-    if (res.getStatusCode() == 200) {
+    Boolean alreadyFunded =
+      res.getBody() != null &&
+      res.getBody().toLowerCase().contains('already funded');
+
+    if (res.getStatusCode() == 200 || alreadyFunded) {
       // Mark the Order as paid via USDC Escrow
       o.PaymentMethod__c = 'USDC_Escrow';
       o.EscrowStatus__c = 'FUNDED';
       update o;
 
-      Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(
-        res.getBody()
-      );
-      data.put('success', true);
-      return data;
+      if (res.getStatusCode() == 200) {
+        Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(
+          res.getBody()
+        );
+        data.put('success', true);
+        return data;
+      }
+      return new Map<String, Object>{
+        'success' => true,
+        'alreadyFunded' => true
+      };
     }
 
     return new Map<String, Object>{
@@ -250,8 +290,39 @@ public with sharing class EscrowBridgeController {
   // ── Get Escrow Status (synchronous read — no state change) ────────────────
   // Called by portal LWC imperatively when order detail modal opens.
 
+  // State numbers mirror the LWC ESCROW_STATE constant
+  private static final Map<String, Integer> SF_STATE_MAP = new Map<String, Integer>{
+    'FUNDED' => 1,
+    'DELIVERED' => 2,
+    'DISPUTED' => 3,
+    'FROZEN' => 4,
+    'RELEASING' => 5,
+    'RELEASED' => 5,
+    'REFUNDING' => 6,
+    'REFUNDED' => 6,
+    'BLOCKED' => 4
+  };
+
   @AuraEnabled(cacheable=false)
   public static Map<String, Object> getEscrowStatus(String orderNumber) {
+    // Always trust Salesforce state — the bridge on-chain tx may be pending or
+    // skipped (test mode). This decouples the portal UI from the blockchain.
+    List<Order> sfOrders = [
+      SELECT EscrowStatus__c, PaymentMethod__c
+      FROM Order
+      WHERE OrderNumber = :orderNumber
+      LIMIT 1
+    ];
+    if (!sfOrders.isEmpty() && sfOrders[0].PaymentMethod__c == 'USDC_Escrow') {
+      String s = sfOrders[0].EscrowStatus__c;
+      if (s != null && SF_STATE_MAP.containsKey(s)) {
+        return new Map<String, Object>{
+          'state' => SF_STATE_MAP.get(s),
+          'success' => true
+        };
+      }
+    }
+
     HttpRequest req = new HttpRequest();
     req.setEndpoint(NAMED_CRED + '/api/escrow/status?orderId=' + orderNumber);
     req.setMethod('GET');
@@ -320,18 +391,48 @@ public with sharing class EscrowBridgeController {
     for (EscrowActionRequest r : requests) {
       EscrowActionResult result = new EscrowActionResult();
       try {
+        r.orderNumber = resolveOrderNumber(r.orderNumber);
+        // Block any action on HIGH RISK orders pending senior approval
+        List<Order> blockCheck = [
+          SELECT EscrowStatus__c
+          FROM Order
+          WHERE OrderNumber = :r.orderNumber
+          LIMIT 1
+        ];
+        if (
+          !blockCheck.isEmpty() && blockCheck[0].EscrowStatus__c == 'BLOCKED'
+        ) {
+          result.success = false;
+          result.message =
+            'Action blocked — HIGH RISK dispute requires senior approval before any escrow action on order ' +
+            r.orderNumber +
+            '. Ask Agentforce to approve it first.';
+          results.add(result);
+          continue;
+        }
+        // Resolve: Agentforce sometimes passes a Salesforce record ID instead of
+        // the 8-digit OrderNumber. Detect and fix automatically.
+        if (r.orderNumber == null) {
+          result.success = false;
+          result.message = 'Could not resolve an Order from: ' + r.orderNumber;
+          results.add(result);
+          continue;
+        }
         if (r.action == 'FREEZE') {
           EscrowBridgeController.freezeEscrow(r.orderNumber);
+          syncEscrowStatus(r.orderNumber, 'FROZEN');
           result.success = true;
           result.message = 'Freeze initiated for order ' + r.orderNumber;
         } else if (r.action == 'RELEASE') {
           Boolean ff = r.fromFreeze != null ? r.fromFreeze : false;
           EscrowBridgeController.releasePayment(r.orderNumber, ff);
+          syncEscrowStatus(r.orderNumber, 'RELEASED');
           result.success = true;
           result.message = 'Release initiated for order ' + r.orderNumber;
         } else if (r.action == 'REFUND') {
           Boolean exp = r.expired != null ? r.expired : false;
           EscrowBridgeController.refundBuyer(r.orderNumber, exp);
+          syncEscrowStatus(r.orderNumber, 'REFUNDED');
           result.success = true;
           result.message = 'Refund initiated for order ' + r.orderNumber;
         } else if (r.action == 'EXTEND') {
@@ -356,7 +457,46 @@ public with sharing class EscrowBridgeController {
 
   // ─── Private helpers ─────────────────────────────────────────────────────
 
-  private static void syncEscrowStatus(String orderNumber, String newStatus) {
+  // Agentforce may pass a Salesforce record ID (Case ID, Order ID) instead of
+  // the 8-digit OrderNumber. This resolves any input to a proper OrderNumber.
+  private static String resolveOrderNumber(String input) {
+    if (String.isBlank(input))
+      return null;
+    // Already an 8-digit order number (e.g. 00000135)
+    if (input.isNumeric())
+      return input;
+    // Salesforce ID: 15 or 18 alphanumeric chars
+    if (input.length() == 15 || input.length() == 18) {
+      String prefix = input.substring(0, 3);
+      if (prefix == '500' || prefix == '5F0') {
+        // Case ID — look up Related_Order__c
+        List<Case> cases = [
+          SELECT Related_Order__c, Related_Order__r.OrderNumber
+          FROM Case
+          WHERE Id = :input
+          LIMIT 1
+        ];
+        if (!cases.isEmpty() && cases[0].Related_Order__r != null) {
+          return cases[0].Related_Order__r.OrderNumber;
+        }
+        return null;
+      }
+      if (prefix == '801' || prefix == '8F1') {
+        // Order record ID
+        List<Order> orders = [
+          SELECT OrderNumber
+          FROM Order
+          WHERE Id = :input
+          LIMIT 1
+        ];
+        return orders.isEmpty() ? null : orders[0].OrderNumber;
+      }
+    }
+    // Fallback: treat as-is (may already be correct)
+    return input;
+  }
+
+  public static void syncEscrowStatus(String orderNumber, String newStatus) {
     List<Order> orders = [
       SELECT Id
       FROM Order

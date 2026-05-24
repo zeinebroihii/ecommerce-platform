@@ -221,28 +221,7 @@ export default class NexusQuotationSystem extends LightningElement {
   get filteredQuotes() {
     const allQuotes = this.activeQuotes;
 
-    // Deduplicate by opportunity: keep primary, or highest versionNumber
-    const seenOpps = new Map();
-    allQuotes.forEach((q) => {
-      // Mock data has no opportunityId; use opportunityName as fallback, else quoteId
-      const oppKey = q.opportunityId || q.opportunityName || q.quoteId;
-      if (!seenOpps.has(oppKey)) {
-        seenOpps.set(oppKey, q);
-      } else {
-        const existing = seenOpps.get(oppKey);
-        const qVer = q.versionNumber || 1;
-        const exVer = existing.versionNumber || 1;
-        // Prefer the primary flag; on tie prefer higher version
-        if (
-          (q.isPrimary && !existing.isPrimary) ||
-          (!existing.isPrimary && qVer > exVer)
-        ) {
-          seenOpps.set(oppKey, q);
-        }
-      }
-    });
-
-    return [...seenOpps.values()]
+    return allQuotes
       .filter((q) => this.filter === "All" || q.status === this.filter)
       .map((q) => {
         const agentforceProb =

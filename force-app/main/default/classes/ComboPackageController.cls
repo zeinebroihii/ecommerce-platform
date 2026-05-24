@@ -1,4 +1,4 @@
-public with sharing class ComboPackageController {
+public without sharing class ComboPackageController {
   @AuraEnabled(cacheable=true)
   public static List<PackageWrapper> getActivePackages() {
     List<ComboPackage__c> packages = [

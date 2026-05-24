@@ -4,6 +4,7 @@ import getStockSummary from "@salesforce/apex/StockIntelligenceController.getSto
 import getRelatedQuotes from "@salesforce/apex/StockIntelligenceController.getRelatedQuotes";
 import generateReorderBrief from "@salesforce/apex/StockIntelligenceController.generateReorderBrief";
 import generateDemandForecast from "@salesforce/apex/StockIntelligenceController.generateDemandForecast";
+import markReorderReceived from "@salesforce/apex/StockIntelligenceController.markReorderReceived";
 import runEngine from "@salesforce/apex/StockVelocityEngine.run";
 
 const FILTERS = ["All", "Critical", "At Risk", "Healthy", "Overstock"];
@@ -34,6 +35,7 @@ export default class NexusStockWarRoom extends LightningElement {
   @track searchTerm = "";
   @track _expandedIds = {};
   @track reorderModal = null;
+  @track receiveModal = null;
   @track quotesPanel = null;
   @track briefModal = null;
   @track forecastModal = null;
@@ -132,29 +134,29 @@ export default class NexusStockWarRoom extends LightningElement {
 
   // ── Stat card active-state CSS classes ────────────────────────────────────
   get criticalCardCls() {
-    return this.activeFilter === 'Critical'
-      ? 'nswr-stat-card nswr-stat-active'
-      : 'nswr-stat-card';
+    return this.activeFilter === "Critical"
+      ? "nswr-stat-card nswr-stat-card-critical nswr-stat-active"
+      : "nswr-stat-card nswr-stat-card-critical";
   }
   get atRiskCardCls() {
-    return this.activeFilter === 'At Risk'
-      ? 'nswr-stat-card nswr-stat-active'
-      : 'nswr-stat-card';
+    return this.activeFilter === "At Risk"
+      ? "nswr-stat-card nswr-stat-card-atrisk nswr-stat-active"
+      : "nswr-stat-card nswr-stat-card-atrisk";
   }
   get healthyCardCls() {
-    return this.activeFilter === 'Healthy'
-      ? 'nswr-stat-card nswr-stat-active'
-      : 'nswr-stat-card';
+    return this.activeFilter === "Healthy"
+      ? "nswr-stat-card nswr-stat-card-healthy nswr-stat-active"
+      : "nswr-stat-card nswr-stat-card-healthy";
   }
   get overstockCardCls() {
-    return this.activeFilter === 'Overstock'
-      ? 'nswr-stat-card nswr-stat-active'
-      : 'nswr-stat-card';
+    return this.activeFilter === "Overstock"
+      ? "nswr-stat-card nswr-stat-card-overstock nswr-stat-active"
+      : "nswr-stat-card nswr-stat-card-overstock";
   }
   get allBtnCls() {
-    return this.activeFilter === 'All'
-      ? 'nswr-all-btn nswr-all-active'
-      : 'nswr-all-btn';
+    return this.activeFilter === "All"
+      ? "nswr-all-btn nswr-all-active"
+      : "nswr-all-btn";
   }
 
   // ── Item enrichment ────────────────────────────────────────────────────────
@@ -237,7 +239,12 @@ export default class NexusStockWarRoom extends LightningElement {
       coverDays,
       needsReorder: risk === "Critical" || risk === "At Risk",
       isOverstock: risk === "Overstock",
-      isHealthy: risk === "Healthy",
+      isHealthy:
+        risk === "Healthy" && (i.committedQty || 0) <= (i.stockLevel || 0),
+      suggestReorder:
+        risk === "Healthy" && (i.committedQty || 0) > (i.stockLevel || 0),
+      hasOpenReorder: !!i.hasOpenReorder,
+      reorderTaskId: i.reorderTaskId || null,
       hasQuotes: i.relatedQuoteCount > 0,
       quoteValueLabel: formatCurrency(i.relatedQuoteValue),
       aiSummaryShort,
@@ -348,6 +355,73 @@ export default class NexusStockWarRoom extends LightningElement {
     this.reorderModal = null;
   }
 
+  handleMarkReceived(event) {
+    const { taskid, stockid, name, stock } = event.currentTarget.dataset;
+    this.receiveModal = {
+      taskId: taskid,
+      stockId: stockid,
+      productName: name,
+      currentStock: parseInt(stock, 10) || 0,
+      qtyReceived: 30
+    };
+  }
+
+  handleReceiveQtyChange(event) {
+    this.receiveModal = {
+      ...this.receiveModal,
+      qtyReceived: parseInt(event.target.value, 10) || 1
+    };
+  }
+
+  handleConfirmReceive() {
+    const { taskId, stockId, qtyReceived, productName } = this.receiveModal;
+    markReorderReceived({ taskId, stockId, qtyReceived })
+      .then((newStock) => {
+        this._showToast(
+          "success",
+          "utility:check",
+          `✅ ${productName} — ${qtyReceived} units received. New stock: ${newStock}`
+        );
+        this.receiveModal = null;
+        this.handleRefresh();
+      })
+      .catch((err) => {
+        this._showToast(
+          "error",
+          "utility:error",
+          err.body?.message || "Failed to mark as received"
+        );
+      });
+  }
+
+  handleCloseReceive() {
+    this.receiveModal = null;
+  }
+
+  handleSuggestReorder(event) {
+    const name = event.currentTarget.dataset.name;
+    const msg = `How much should we reorder for ${name}?`;
+    try {
+      if (
+        window.embeddedservice_bootstrap &&
+        window.embeddedservice_bootstrap.utilAPI
+      ) {
+        window.embeddedservice_bootstrap.utilAPI.launchChat();
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
+          if (
+            typeof window.embeddedservice_bootstrap.utilAPI.sendTextMessage ===
+            "function"
+          ) {
+            window.embeddedservice_bootstrap.utilAPI.sendTextMessage(msg);
+          }
+        }, 800);
+      }
+    } catch {
+      /* chat not available */
+    }
+  }
+
   handlePromo(event) {
     const id = event.currentTarget.dataset.id;
     this._showToast(
@@ -393,6 +467,16 @@ export default class NexusStockWarRoom extends LightningElement {
           text: "⚠️ Could not generate brief. Check Prompt Builder setup or org limits."
         };
       });
+  }
+
+  get briefParsed() {
+    const raw = this.briefModal?.text;
+    if (!raw) return null;
+    // Strip leading **Title** line — product name already in header
+    const bodyOnly = raw.replace(/^\s*\*\*[^*]+\*\*\s*\n?/, "").trim();
+    // Strip any remaining ** markers
+    const clean = bodyOnly.replace(/\*\*/g, "");
+    return { body: clean };
   }
 
   handleCloseBrief() {
@@ -467,6 +551,50 @@ export default class NexusStockWarRoom extends LightningElement {
           hasQuotes: false
         };
       });
+  }
+
+  get forecastAiSections() {
+    const text = this.forecastModal?.aiText;
+    if (!text) return [];
+    const regex = /\*\*([^*\n]+)\*\*\n?([\s\S]*?)(?=\n\s*\*\*|$)/g;
+    const sections = [];
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      const title = m[1].trim();
+      const body = m[2].trim();
+      if (!title || !body) continue; // skip title-only lines (e.g. product header)
+      const up = title.toUpperCase();
+      let cls = "nswr-fm-section";
+      let icon = "utility:einstein";
+      if (up.includes("SITUATION") || up.includes("ASSESSMENT")) {
+        cls += " nswr-fm-sec-blue";
+        icon = "utility:list";
+      } else if (up.includes("DEMAND") || up.includes("PROJECTION")) {
+        cls += " nswr-fm-sec-purple";
+        icon = "utility:trending";
+      } else if (up.includes("QUOTE") || up.includes("PIPELINE")) {
+        cls += " nswr-fm-sec-amber";
+        icon = "utility:money";
+      } else if (up.includes("RECOMMEND") || up.includes("ACTION")) {
+        cls += " nswr-fm-sec-green";
+        icon = "utility:check";
+      } else {
+        cls += " nswr-fm-sec-blue";
+      }
+      sections.push({ key: String(sections.length), title, body, cls, icon });
+    }
+    if (sections.length === 0) {
+      return [
+        {
+          key: "0",
+          title: "Analysis",
+          body: text,
+          cls: "nswr-fm-section nswr-fm-sec-blue",
+          icon: "utility:einstein"
+        }
+      ];
+    }
+    return sections;
   }
 
   handleCloseForecast() {

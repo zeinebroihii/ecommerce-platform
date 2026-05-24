@@ -16,12 +16,27 @@
         ></lightning-icon>
         &nbsp;Quote Builder
       </button>
-      <button class={tabPackagesClass} data-tab="packages" onclick={handleTabClick}>
+      <button
+        class={tabPackagesClass}
+        data-tab="packages"
+        onclick={handleTabClick}
+      >
         <lightning-icon
           icon-name="utility:layers"
           size="x-small"
         ></lightning-icon>
         &nbsp;Combo Packages
+      </button>
+      <button
+        class={tabAnalyticsClass}
+        data-tab="analytics"
+        onclick={handleTabClick}
+      >
+        <lightning-icon
+          icon-name="utility:chart"
+          size="x-small"
+        ></lightning-icon>
+        &nbsp;Analytics
       </button>
     </div>
 
@@ -289,5 +304,25 @@
         </template>
       </div> </template
     ><!-- end isCrm -->
+
+    <!-- ── Analytics Tab ── -->
+    <template if:true={isAnalytics}>
+      <div class="nad-analytics-wrap">
+        <div class="nad-analytics-header">
+          <h2 class="nad-title">Nexus Intelligence Dashboard</h2>
+          <p class="nad-subtitle">
+            Stock · Clients · Contrats · Pipeline — données en direct depuis
+            Salesforce.
+          </p>
+        </div>
+        <iframe
+          class="nad-powerbi-frame"
+          src={powerBiEmbedUrl}
+          frameborder="0"
+          allowfullscreen="true"
+          title="Nexus Intelligence Dashboard"
+        ></iframe>
+      </div>
+    </template>
   </div>
 </template>

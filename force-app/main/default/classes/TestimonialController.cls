@@ -184,8 +184,7 @@ public without sharing class TestimonialController {
           Product__r.Name,
           CreatedDate
         FROM ProductReview__c
-        WHERE Rating__c >= 4
-          AND VerifiedPurchase__c = true
+        WHERE Rating__c >= 4 AND VerifiedPurchase__c = TRUE
         ORDER BY CreatedDate DESC
         LIMIT 9
       ];
@@ -196,33 +195,48 @@ public without sharing class TestimonialController {
       for (Testimonial__c t : tRecords) {
         TestimonialWrapper w = new TestimonialWrapper();
         w.testimonialId = t.Id;
-        w.customerName  = t.Customer_Name__c != null ? t.Customer_Name__c : '';
-        w.companyName   = t.Company_Name__c  != null ? t.Company_Name__c  : '';
-        w.role          = t.Role_Title__c    != null ? t.Role_Title__c    : '';
-        w.message       = t.Message__c       != null ? t.Message__c       : '';
-        w.rating        = t.Rating__c        != null ? Integer.valueOf(t.Rating__c) : 5;
-        w.status        = 'Approved';
-        w.avatarColor   = t.Avatar_Color__c  != null ? t.Avatar_Color__c  : 'emerald';
-        w.initials      = buildInitials(w.customerName);
-        w.createdDate   = t.CreatedDate      != null ? t.CreatedDate.format('dd MMM yyyy') : '';
+        w.customerName = t.Customer_Name__c != null ? t.Customer_Name__c : '';
+        w.companyName = t.Company_Name__c != null ? t.Company_Name__c : '';
+        String roleStr = t.Role_Title__c != null ? t.Role_Title__c : '';
+        if (String.isNotBlank(t.Company_Name__c))
+          roleStr += ', ' + t.Company_Name__c;
+        w.role = roleStr;
+        w.message = t.Message__c != null ? t.Message__c : '';
+        w.rating = t.Rating__c != null ? Integer.valueOf(t.Rating__c) : 5;
+        w.status = 'Approved';
+        w.avatarColor = t.Avatar_Color__c != null
+          ? t.Avatar_Color__c
+          : 'emerald';
+        w.initials = buildInitials(w.customerName);
+        w.createdDate = t.CreatedDate != null
+          ? t.CreatedDate.format('dd MMM yyyy')
+          : '';
         combined.add(new WrapperWithTs(t.CreatedDate, w));
       }
 
       for (ProductReview__c r : pRecords) {
         TestimonialWrapper w = new TestimonialWrapper();
         w.testimonialId = r.Id;
-        w.customerName  = r.Customer_Name__c != null ? r.Customer_Name__c : 'Customer';
-        w.companyName   = '';
+        w.customerName = r.Customer_Name__c != null
+          ? r.Customer_Name__c
+          : 'Customer';
+        w.companyName = '';
         // Role shows product name + verified badge label
-        String productName = (r.Product__r != null && r.Product__r.Name != null)
-            ? r.Product__r.Name : 'Nexus Product';
-        w.role          = 'Verified Purchase — ' + productName;
-        w.message       = r.Body__c          != null ? r.Body__c          : '';
-        w.rating        = r.Rating__c        != null ? Integer.valueOf(r.Rating__c) : 5;
-        w.status        = 'Approved';
-        w.avatarColor   = r.Avatar_Color__c  != null ? r.Avatar_Color__c  : 'indigo';
-        w.initials      = buildInitials(w.customerName);
-        w.createdDate   = r.CreatedDate      != null ? r.CreatedDate.format('dd MMM yyyy') : '';
+        String productName = (r.Product__r != null &&
+          r.Product__r.Name != null)
+          ? r.Product__r.Name
+          : 'Nexus Product';
+        w.role = 'Verified Purchase — ' + productName;
+        w.message = r.Body__c != null ? r.Body__c : '';
+        w.rating = r.Rating__c != null ? Integer.valueOf(r.Rating__c) : 5;
+        w.status = 'Approved';
+        w.avatarColor = r.Avatar_Color__c != null
+          ? r.Avatar_Color__c
+          : 'indigo';
+        w.initials = buildInitials(w.customerName);
+        w.createdDate = r.CreatedDate != null
+          ? r.CreatedDate.format('dd MMM yyyy')
+          : '';
         combined.add(new WrapperWithTs(r.CreatedDate, w));
       }
 
@@ -233,7 +247,6 @@ public without sharing class TestimonialController {
         result.add(combined[i].wrapper);
       }
       return result;
-
     } catch (Exception ex) {
       throw new AuraHandledException(
         'Erreur chargement témoignages combinés : ' + ex.getMessage()
@@ -246,22 +259,27 @@ public without sharing class TestimonialController {
     public Datetime ts;
     public TestimonialWrapper wrapper;
     public WrapperWithTs(Datetime dt, TestimonialWrapper w) {
-      this.ts      = dt != null ? dt : Datetime.now();
+      this.ts = dt != null ? dt : Datetime.now();
       this.wrapper = w;
     }
     public Integer compareTo(Object other) {
       WrapperWithTs o = (WrapperWithTs) other;
-      if (this.ts > o.ts) return -1;
-      if (this.ts < o.ts) return  1;
+      if (this.ts > o.ts)
+        return -1;
+      if (this.ts < o.ts)
+        return 1;
       return 0;
     }
   }
 
   private static String buildInitials(String name) {
-    if (String.isBlank(name)) return '?';
+    if (String.isBlank(name))
+      return '?';
     String[] parts = name.trim().split(' +');
     if (parts.size() >= 2) {
-      return (parts[0].substring(0, 1) + parts[parts.size() - 1].substring(0, 1)).toUpperCase();
+      return (parts[0].substring(0, 1) +
+        parts[parts.size() - 1].substring(0, 1))
+        .toUpperCase();
     }
     return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
   }

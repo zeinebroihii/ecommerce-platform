@@ -1259,9 +1259,21 @@ public without sharing class LeadManagementController {
     }
     try {
       sendPortalWelcomeEmail(email, firstName, lastName, setpwdUrl);
-      System.debug('Portal welcome email sent OK to ' + email);
+      System.debug(
+        '[Nexus] Portal welcome email sent OK to ' +
+          email +
+          ' setpwdUrl=' +
+          setpwdUrl
+      );
     } catch (Exception e) {
-      System.debug('sendPortalWelcomeEmail FAILED: ' + e.getMessage());
+      System.debug(
+        '[Nexus] sendPortalWelcomeEmail FAILED type=' +
+          e.getTypeName() +
+          ' msg=' +
+          e.getMessage() +
+          ' stack=' +
+          e.getStackTraceString()
+      );
     }
 
     // Assign required B2B permission sets to the portal user

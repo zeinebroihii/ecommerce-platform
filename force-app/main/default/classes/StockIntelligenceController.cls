@@ -30,6 +30,12 @@ public without sharing class StockIntelligenceController {
     public Integer relatedQuoteCount;
     @AuraEnabled
     public Decimal relatedQuoteValue;
+    @AuraEnabled
+    public Integer committedQty;
+    @AuraEnabled
+    public Boolean hasOpenReorder;
+    @AuraEnabled
+    public String reorderTaskId;
   }
 
   public class QuoteSummary {
@@ -78,13 +84,19 @@ public without sharing class StockIntelligenceController {
     // Quote line items referencing these products
     Map<Id, Integer> quoteCountByProduct = new Map<Id, Integer>();
     Map<Id, Decimal> quoteValueByProduct = new Map<Id, Decimal>();
+    Map<Id, Integer> committedQtyByProduct = new Map<Id, Integer>();
     if (!productIds.isEmpty()) {
       for (NexusQuoteLineItem__c li : [
-        SELECT Product__c, Quote__r.GrandTotal__c
+        SELECT Product__c, Quantity__c, Quote__r.GrandTotal__c
         FROM NexusQuoteLineItem__c
         WHERE
           Product__c IN :productIds
-          AND Quote__r.Status__c IN ('Draft', 'Sent', 'Negotiating')
+          AND Quote__r.Status__c NOT IN (
+            'Accepted',
+            'Rejected',
+            'Signed',
+            'Expired'
+          )
         LIMIT 200
       ]) {
         Id pid = li.Product__c;
@@ -93,6 +105,34 @@ public without sharing class StockIntelligenceController {
           pid,
           (quoteValueByProduct.get(pid) ?? 0) + (li.Quote__r.GrandTotal__c ?? 0)
         );
+        committedQtyByProduct.put(
+          pid,
+          (committedQtyByProduct.get(pid) ?? 0) +
+          Integer.valueOf(li.Quantity__c ?? 0)
+        );
+      }
+    }
+
+    // Open reorder tasks by product name
+    Map<String, String> nameToProductId = new Map<String, String>();
+    for (Stock__c s : stocks)
+      nameToProductId.put(
+        'Reorder Request — ' + s.Product__r.Name,
+        (String) s.Product__c
+      );
+    Set<String> productsWithReorder = new Set<String>();
+    Map<String, String> productToTaskId = new Map<String, String>();
+    for (Task t : [
+      SELECT Id, Subject
+      FROM Task
+      WHERE Subject IN :nameToProductId.keySet() AND Status = 'Open'
+      ORDER BY CreatedDate DESC
+    ]) {
+      String pid = nameToProductId.get(t.Subject);
+      if (pid != null) {
+        productsWithReorder.add(pid);
+        if (!productToTaskId.containsKey(pid))
+          productToTaskId.put(pid, t.Id);
       }
     }
 
@@ -114,6 +154,9 @@ public without sharing class StockIntelligenceController {
       item.reorderThreshold = s.Reorder_Threshold__c ?? 10;
       item.relatedQuoteCount = quoteCountByProduct.get(s.Product__c) ?? 0;
       item.relatedQuoteValue = quoteValueByProduct.get(s.Product__c) ?? 0;
+      item.committedQty = committedQtyByProduct.get(s.Product__c) ?? 0;
+      item.hasOpenReorder = productsWithReorder.contains((String) s.Product__c);
+      item.reorderTaskId = productToTaskId.get((String) s.Product__c);
       result.add(item);
     }
     return result;
@@ -134,7 +177,12 @@ public without sharing class StockIntelligenceController {
       FROM NexusQuoteLineItem__c
       WHERE
         Product__c = :productId
-        AND Quote__r.Status__c IN ('Draft', 'Sent', 'Negotiating')
+        AND Quote__r.Status__c NOT IN (
+          'Accepted',
+          'Rejected',
+          'Signed',
+          'Expired'
+        )
       LIMIT 20
     ]) {
       QuoteSummary qs = new QuoteSummary();
@@ -149,6 +197,31 @@ public without sharing class StockIntelligenceController {
   }
 
   // ── Acknowledge / dismiss an alert (clears AI summary) ───────────────────
+
+  @AuraEnabled
+  public static Integer markReorderReceived(
+    String taskId,
+    String stockId,
+    Integer qtyReceived
+  ) {
+    if (qtyReceived == null || qtyReceived <= 0)
+      throw new AuraHandledException('Quantity must be greater than 0.');
+
+    Task t = [SELECT Id FROM Task WHERE Id = :taskId LIMIT 1];
+    t.Status = 'Completed';
+    update t;
+
+    Stock__c s = [
+      SELECT Id, Quantity_Available__c
+      FROM Stock__c
+      WHERE Id = :stockId
+      LIMIT 1
+    ];
+    s.Quantity_Available__c = (s.Quantity_Available__c ?? 0) + qtyReceived;
+    update s;
+
+    return Integer.valueOf(s.Quantity_Available__c);
+  }
 
   @AuraEnabled
   public static void acknowledgeAlert(String stockId) {
@@ -477,7 +550,12 @@ public without sharing class StockIntelligenceController {
       FROM NexusQuoteLineItem__c
       WHERE
         Product__c = :s.Product__c
-        AND Quote__r.Status__c IN ('Draft', 'Sent', 'Negotiating')
+        AND Quote__r.Status__c NOT IN (
+          'Accepted',
+          'Rejected',
+          'Signed',
+          'Expired'
+        )
       LIMIT 50
     ]) {
       openQuotes++;

@@ -21,70 +21,115 @@ public class LeadConversionEmailAction {
     description='Sends an admin conversion alert when a Lead is converted. Customer welcome email is sent separately after portal user creation.'
   )
   public static void sendConversionEmail(List<Request> requests) {
-    // NOTE: The customer welcome email (with set-password link) is intentionally
-    // NOT sent here. It is sent by LeadManagementController.createPortalUserForContact
-    // AFTER the portal user has been created — so the ForgotPassword link works.
-    List<Messaging.SingleEmailMessage> adminMails = new List<Messaging.SingleEmailMessage>();
+    try {
+      List<Messaging.SingleEmailMessage> adminMails = new List<Messaging.SingleEmailMessage>();
 
-    String adminEmail = UserInfo.getUserEmail();
-
-    for (Request r : requests) {
-      if (String.isBlank(r.email))
-        continue;
-
-      String fullName = (r.firstName + ' ' + r.lastName).trim();
-
-      // ── Admin conversion alert ────────────────────────────────────────
-      if (String.isNotBlank(adminEmail)) {
-        String contactLink = '';
-        String oppLink = '';
-        Id convertedContactId = null;
-        try {
-          Lead l = [
-            SELECT ConvertedContactId, ConvertedOpportunityId
-            FROM Lead
-            WHERE Id = :r.leadId
-            LIMIT 1
-          ];
-          convertedContactId = l.ConvertedContactId;
-          if (l.ConvertedContactId != null)
-            contactLink =
-              '/lightning/r/Contact/' +
-              l.ConvertedContactId +
-              '/view';
-          if (l.ConvertedOpportunityId != null)
-            oppLink =
-              '/lightning/r/Opportunity/' +
-              l.ConvertedOpportunityId +
-              '/view';
-        } catch (Exception ignored) {
-        }
-
-        Messaging.SingleEmailMessage adminMail = new Messaging.SingleEmailMessage();
-        adminMail.setToAddresses(new List<String>{ adminEmail });
-        adminMail.setSubject('Nexus CRM - Lead Converted: ' + fullName);
-        adminMail.setHtmlBody(
-          buildAdminHtml(
-            r.firstName,
-            r.lastName,
-            r.company,
-            r.email,
-            oppLink,
-            contactLink,
-            convertedContactId
-          )
-        );
-        adminMail.setSaveAsActivity(false);
-        adminMails.add(adminMail);
-      }
-    }
-
-    if (!adminMails.isEmpty()) {
+      String adminEmail = UserInfo.getUserEmail();
       try {
-        Messaging.sendEmail(adminMails);
-      } catch (Exception e) {
-        System.debug('LeadConversionEmailAction.adminMail: ' + e.getMessage());
+        List<User> admins = [
+          SELECT Email
+          FROM User
+          WHERE UserType = 'Standard' AND IsActive = TRUE
+          LIMIT 1
+        ];
+        if (!admins.isEmpty())
+          adminEmail = admins[0].Email;
+      } catch (Exception ignored) {
+        System.debug(
+          '[Nexus] LeadConversionEmailAction: admin lookup fallback to UserInfo.getUserEmail()'
+        );
       }
+
+      for (Request r : requests) {
+        if (String.isBlank(r.email))
+          continue;
+
+        String fullName = (r.firstName + ' ' + r.lastName).trim();
+
+        // ── Admin conversion alert ────────────────────────────────────────
+        if (String.isNotBlank(adminEmail)) {
+          String contactLink = '';
+          String oppLink = '';
+          Id convertedContactId = null;
+          try {
+            Lead l = [
+              SELECT ConvertedContactId, ConvertedOpportunityId
+              FROM Lead
+              WHERE Id = :r.leadId
+              LIMIT 1
+            ];
+            convertedContactId = l.ConvertedContactId;
+            if (l.ConvertedContactId != null)
+              contactLink =
+                '/lightning/r/Contact/' +
+                l.ConvertedContactId +
+                '/view';
+            if (l.ConvertedOpportunityId != null)
+              oppLink =
+                '/lightning/r/Opportunity/' +
+                l.ConvertedOpportunityId +
+                '/view';
+          } catch (Exception ignored) {
+          }
+
+          Messaging.SingleEmailMessage adminMail = new Messaging.SingleEmailMessage();
+          adminMail.setToAddresses(new List<String>{ adminEmail });
+          adminMail.setSubject('Nexus CRM - Lead Converted: ' + fullName);
+          adminMail.setHtmlBody(
+            buildAdminHtml(
+              r.firstName,
+              r.lastName,
+              r.company,
+              r.email,
+              oppLink,
+              contactLink,
+              convertedContactId
+            )
+          );
+          adminMail.setSaveAsActivity(false);
+          adminMails.add(adminMail);
+        }
+      }
+
+      if (!adminMails.isEmpty()) {
+        try {
+          Messaging.SendEmailResult[] res = Messaging.sendEmail(
+            adminMails,
+            false
+          );
+          for (Messaging.SendEmailResult r : res) {
+            if (!r.isSuccess()) {
+              for (Messaging.SendEmailError err : r.getErrors()) {
+                System.debug(
+                  '[Nexus] LeadConversionEmailAction sendEmail error: ' +
+                    err.getStatusCode() +
+                    ' — ' +
+                    err.getMessage()
+                );
+              }
+            } else {
+              System.debug(
+                '[Nexus] LeadConversionEmailAction admin email sent OK to ' +
+                adminEmail
+              );
+            }
+          }
+        } catch (Exception e) {
+          System.debug(
+            '[Nexus] LeadConversionEmailAction EXCEPTION: ' +
+              e.getTypeName() +
+              ': ' +
+              e.getMessage()
+          );
+        }
+      }
+    } catch (Exception outerEx) {
+      System.debug(
+        '[Nexus] LeadConversionEmailAction outer EXCEPTION: ' +
+          outerEx.getTypeName() +
+          ': ' +
+          outerEx.getMessage()
+      );
     }
   }
 

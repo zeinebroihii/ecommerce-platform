@@ -1,198 +1,565 @@
 <template>
-    <div class="ndp-wrap">
-
-        <!-- ── Header ── -->
-        <div class="ndp-header">
-            <div>
-                <h2 class="ndp-title">Digital Asset Passport</h2>
-                <p class="ndp-subtitle">Blockchain-Verified Ownership &amp; Authenticity Ledger</p>
-            </div>
-            <div class="ndp-secure-badge">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 11V7a5 5 0 0110 0v4"/>
-                </svg>
-                Secure Ledger Active
-            </div>
+  <div class="ndp-wrap">
+    <!-- ── Header ── -->
+    <div class="ndp-header">
+      <div>
+        <h2 class="ndp-title">Digital Passport</h2>
+        <p class="ndp-subtitle">
+          Platform-Certified Product Identity &amp; Ownership Record
+        </p>
+      </div>
+      <div class="ndp-header-actions">
+        <button
+          class="ndp-refresh-btn"
+          onclick={handleRefresh}
+          title="Refresh passports"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M23 4v6h-6" />
+            <path d="M1 20v-6h6" />
+            <path
+              d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+            />
+          </svg>
+        </button>
+        <div class="ndp-secure-badge">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <polyline points="9 12 11 14 15 10" />
+          </svg>
+          Nexus Certified
         </div>
-
-        <!-- ── Main Grid ── -->
-        <div class="ndp-grid">
-
-            <!-- Asset List -->
-            <div class="ndp-list">
-                <h3 class="ndp-list-title">Your Verified Collection</h3>
-                <template for:each={assetItems} for:item="a">
-                    <div key={a.id} class={a.cls} onclick={handleSelectAsset} data-id={a.id}>
-                        <div class="ndp-asset-row">
-                            <div class="ndp-asset-img">
-                                <img src={a.image} alt={a.name} class="ndp-asset-img-el"/>
-                            </div>
-                            <div class="ndp-asset-info">
-                                <h4 class={a.nameCls}>{a.name}</h4>
-                                <div class="ndp-asset-serial-row">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                    </svg>
-                                    <span class={a.serialCls}>{a.serialNumber}</span>
-                                </div>
-                            </div>
-                            <svg class={a.chevronCls} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>
-                            </svg>
-                        </div>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Passport View -->
-            <div class="ndp-passport-wrap">
-
-                <!-- Empty state -->
-                <template if:false={hasSelected}>
-                    <div class="ndp-empty">
-                        <div class="ndp-empty-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-                            </svg>
-                        </div>
-                        <h3 class="ndp-empty-title">Select an Asset</h3>
-                        <p class="ndp-empty-text">Choose a product from your collection to view its blockchain-verified digital passport.</p>
-                    </div>
-                </template>
-
-                <!-- Passport Card -->
-                <template if:true={hasSelected}>
-                    <div class="ndp-passport-card">
-
-                        <!-- Dark header -->
-                        <div class="ndp-passport-hd">
-                            <div class="ndp-passport-hd-left">
-                                <div class="ndp-passport-badge-row">
-                                    <div class="ndp-shield-box">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h3 class="ndp-passport-cert-title">Nexus Digital Passport</h3>
-                                        <p class="ndp-passport-cert-sub">Official Certificate of Authenticity</p>
-                                    </div>
-                                </div>
-                                <h4 class="ndp-passport-asset-name">{selectedName}</h4>
-                            </div>
-                            <div class="ndp-qr-wrap">
-                                <div class="ndp-qr-box">
-                                    <svg viewBox="0 0 100 100" class="ndp-qr-svg">
-                                        <rect x="5"  y="5"  width="35" height="35" fill="none" stroke="#0f172a" stroke-width="6"/>
-                                        <rect x="60" y="5"  width="35" height="35" fill="none" stroke="#0f172a" stroke-width="6"/>
-                                        <rect x="5"  y="60" width="35" height="35" fill="none" stroke="#0f172a" stroke-width="6"/>
-                                        <rect x="15" y="15" width="15" height="15" fill="#0f172a"/>
-                                        <rect x="70" y="15" width="15" height="15" fill="#0f172a"/>
-                                        <rect x="15" y="70" width="15" height="15" fill="#0f172a"/>
-                                        <rect x="48" y="48" width="8" height="8" fill="#0f172a"/>
-                                        <rect x="60" y="55" width="6" height="6" fill="#0f172a"/>
-                                        <rect x="70" y="65" width="8" height="8" fill="#0f172a"/>
-                                        <rect x="48" y="65" width="6" height="6" fill="#0f172a"/>
-                                        <rect x="60" y="78" width="8" height="8" fill="#0f172a"/>
-                                        <rect x="80" y="48" width="8" height="8" fill="#0f172a"/>
-                                    </svg>
-                                </div>
-                                <span class="ndp-qr-label">Scan to Verify</span>
-                            </div>
-                            <div class="ndp-passport-hd-glow"></div>
-                        </div>
-
-                        <!-- Body -->
-                        <div class="ndp-passport-body">
-
-                            <!-- Left col: Identification + Specs -->
-                            <div class="ndp-passport-col">
-                                <h5 class="ndp-section-title">Core Identification</h5>
-                                <div class="ndp-id-list">
-                                    <div class="ndp-id-row">
-                                        <span class="ndp-id-key">Serial Number</span>
-                                        <span class="ndp-id-val">{selectedSerial}</span>
-                                    </div>
-                                    <div class="ndp-id-row">
-                                        <span class="ndp-id-key">Blockchain ID</span>
-                                        <span class="ndp-id-val ndp-id-val--mono">{selectedBlockchain}</span>
-                                    </div>
-                                    <div class="ndp-id-row">
-                                        <span class="ndp-id-key">Mint Date</span>
-                                        <span class="ndp-id-val">{selectedMintDate}</span>
-                                    </div>
-                                </div>
-
-                                <h5 class="ndp-section-title">Technical Specifications</h5>
-                                <div class="ndp-specs-list">
-                                    <template for:each={selectedSpecs} for:item="spec">
-                                        <div key={spec.label} class="ndp-spec-item">
-                                            <span class="ndp-spec-key">{spec.label}</span>
-                                            <span class="ndp-spec-val">{spec.value}</span>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <!-- Right col: History + Action -->
-                            <div class="ndp-passport-col">
-                                <h5 class="ndp-section-title">Immutable Ledger History</h5>
-                                <div class="ndp-history">
-                                    <div class="ndp-history-line"></div>
-                                    <template for:each={selectedHistory} for:item="evt">
-                                        <div key={evt.hash} class="ndp-history-item">
-                                            <div class="ndp-history-dot"></div>
-                                            <div class="ndp-history-body">
-                                                <div class="ndp-history-date">{evt.date}</div>
-                                                <div class="ndp-history-event">{evt.event}</div>
-                                                <div class="ndp-history-hash">{evt.hash}</div>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-
-                                <button class="ndp-explorer-btn">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                                        <polyline stroke-linecap="round" stroke-linejoin="round" points="15 3 21 3 21 9"/>
-                                        <line stroke-linecap="round" x1="10" y1="14" x2="21" y2="3"/>
-                                    </svg>
-                                    View on Nexus Explorer
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Verification banners -->
-                    <div class="ndp-verify-row">
-                        <div class="ndp-verify-card ndp-verify-card--emerald">
-                            <div class="ndp-verify-icon ndp-verify-icon--emerald">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h5 class="ndp-verify-title ndp-verify-title--emerald">Authenticity Verified</h5>
-                                <p class="ndp-verify-sub ndp-verify-sub--emerald">Hardware Signature Matches Ledger</p>
-                            </div>
-                        </div>
-                        <div class="ndp-verify-card ndp-verify-card--dark">
-                            <div class="ndp-verify-icon ndp-verify-icon--dark">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h5 class="ndp-verify-title ndp-verify-title--dark">Smart Contract Active</h5>
-                                <p class="ndp-verify-sub ndp-verify-sub--dark">Warranty &amp; Support Validated</p>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-            </div>
-        </div>
+      </div>
     </div>
+
+    <!-- ── Main Grid ── -->
+    <div class="ndp-grid">
+      <!-- ── Asset List ── -->
+      <div class="ndp-list">
+        <h3 class="ndp-list-title">Your Products</h3>
+
+        <template if:true={isLoading}>
+          <div class="ndp-loading-state">Loading passports…</div>
+        </template>
+
+        <template if:true={isEmpty}>
+          <div class="ndp-empty-list">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <p>No passports yet.</p>
+            <p class="ndp-empty-sub">
+              Passports are created automatically when you place an order. Each
+              purchased product gets its own certified Nexus Passport.
+            </p>
+          </div>
+        </template>
+
+        <template for:each={assetItems} for:item="a">
+          <div
+            key={a.id}
+            class={a.cls}
+            onclick={handleSelectAsset}
+            data-id={a.id}
+          >
+            <div class="ndp-asset-row">
+              <div class="ndp-asset-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <polyline points="9 12 11 14 15 10" />
+                </svg>
+              </div>
+              <div class="ndp-asset-info">
+                <h4 class="ndp-asset-name">{a.name}</h4>
+                <div class="ndp-asset-serial-row">
+                  <span class="ndp-asset-serial">{a.serial}</span>
+                  <span class="ndp-asset-condition">{a.condition}</span>
+                </div>
+              </div>
+              <svg
+                class={a.chevronCls}
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- ── Passport View ── -->
+      <div class="ndp-passport-wrap">
+        <template if:false={hasSelected}>
+          <div class="ndp-empty">
+            <div class="ndp-empty-icon">
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <h3 class="ndp-empty-title">Select a Product</h3>
+            <p class="ndp-empty-text">
+              Choose a product from your collection to view its Digital Passport
+              and ownership history.
+            </p>
+          </div>
+        </template>
+
+        <template if:true={hasSelected}>
+          <div class="ndp-passport-card">
+            <!-- Dark header -->
+            <div class="ndp-passport-hd">
+              <div class="ndp-passport-hd-left">
+                <div class="ndp-passport-badge-row">
+                  <div class="ndp-shield-box">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      <polyline points="9 12 11 14 15 10" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="ndp-passport-cert-title">
+                      Nexus Digital Passport
+                    </h3>
+                    <p class="ndp-passport-cert-sub">
+                      Platform-Certified Product Record
+                    </p>
+                  </div>
+                </div>
+                <h4 class="ndp-passport-asset-name">{selectedName}</h4>
+              </div>
+              <div class="ndp-qr-wrap">
+                <div
+                  class="ndp-qr-box ndp-qr-box--scan"
+                  onclick={handleScanQr}
+                  title="Tap to scan passport"
+                >
+                  <svg viewBox="0 0 100 100" class="ndp-qr-svg">
+                    <rect
+                      x="5"
+                      y="5"
+                      width="35"
+                      height="35"
+                      fill="none"
+                      stroke="#0f172a"
+                      stroke-width="6"
+                    />
+                    <rect
+                      x="60"
+                      y="5"
+                      width="35"
+                      height="35"
+                      fill="none"
+                      stroke="#0f172a"
+                      stroke-width="6"
+                    />
+                    <rect
+                      x="5"
+                      y="60"
+                      width="35"
+                      height="35"
+                      fill="none"
+                      stroke="#0f172a"
+                      stroke-width="6"
+                    />
+                    <rect x="15" y="15" width="15" height="15" fill="#0f172a" />
+                    <rect x="70" y="15" width="15" height="15" fill="#0f172a" />
+                    <rect x="15" y="70" width="15" height="15" fill="#0f172a" />
+                    <rect x="48" y="48" width="8" height="8" fill="#0f172a" />
+                    <rect x="60" y="55" width="6" height="6" fill="#0f172a" />
+                    <rect x="70" y="65" width="8" height="8" fill="#0f172a" />
+                    <rect x="48" y="65" width="6" height="6" fill="#0f172a" />
+                    <rect x="60" y="78" width="8" height="8" fill="#0f172a" />
+                    <rect x="80" y="48" width="8" height="8" fill="#0f172a" />
+                  </svg>
+                </div>
+                <span class="ndp-qr-label">Tap to Scan</span>
+              </div>
+              <div class="ndp-passport-hd-glow"></div>
+            </div>
+
+            <!-- Body -->
+            <div class="ndp-passport-body">
+              <!-- Left col: Identity -->
+              <div class="ndp-passport-col">
+                <h5 class="ndp-section-title">Product Identity</h5>
+                <div class="ndp-id-list">
+                  <div class="ndp-id-row">
+                    <span class="ndp-id-key">Passport Number</span>
+                    <span class="ndp-id-val ndp-id-val--mono"
+                      >{selectedSerial}</span
+                    >
+                  </div>
+                  <div class="ndp-id-row">
+                    <span class="ndp-id-key">Condition</span>
+                    <span class="ndp-id-val">{selectedCondition}</span>
+                  </div>
+                  <div class="ndp-id-row">
+                    <span class="ndp-id-key">Purchased</span>
+                    <span class="ndp-id-val">{selectedPurchase}</span>
+                  </div>
+                </div>
+
+                <h5 class="ndp-section-title">Ownership</h5>
+                <div class="ndp-id-list">
+                  <div class="ndp-id-row">
+                    <span class="ndp-id-key">Current Owner</span>
+                    <span class="ndp-id-val">{selectedOwner}</span>
+                  </div>
+                  <div class="ndp-id-row">
+                    <span class="ndp-id-key">Original Owner</span>
+                    <span class="ndp-id-val">{selectedOrigOwner}</span>
+                  </div>
+                  <div class="ndp-id-row">
+                    <span class="ndp-id-key">Status</span>
+                    <span class="ndp-id-val">{selectedStatus}</span>
+                  </div>
+                </div>
+
+                <button class="ndp-explorer-btn" onclick={handleListForSwap}>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M23 4v6h-6" />
+                    <path d="M1 20v-6h6" />
+                    <path
+                      d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                    />
+                  </svg>
+                  List for Swap
+                </button>
+              </div>
+
+              <!-- Right col: Ownership History -->
+              <div class="ndp-passport-col">
+                <h5 class="ndp-section-title">Ownership History</h5>
+
+                <template if:true={isHistoryLoading}>
+                  <div class="ndp-loading-state">Loading history…</div>
+                </template>
+
+                <template if:true={hasHistory}>
+                  <div class="ndp-history">
+                    <div class="ndp-history-line"></div>
+                    <template for:each={historyItems} for:item="evt">
+                      <div key={evt.key} class="ndp-history-item">
+                        <div class="ndp-history-dot"></div>
+                        <div class="ndp-history-body">
+                          <div class="ndp-history-date">{evt.date}</div>
+                          <div class="ndp-history-event">
+                            {evt.type}: {evt.from} → {evt.to}
+                          </div>
+                          <div class="ndp-history-hash">
+                            Condition: {evt.condition}
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <template if:false={hasHistory}>
+                  <template if:false={isHistoryLoading}>
+                    <p
+                      class="ndp-empty-text"
+                      style="font-size: 0.8rem; color: #64748b"
+                    >
+                      No history events recorded yet.
+                    </p>
+                  </template>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Verification banners -->
+          <div class="ndp-verify-row">
+            <div class="ndp-verify-card ndp-verify-card--emerald">
+              <div class="ndp-verify-icon ndp-verify-icon--emerald">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h5 class="ndp-verify-title ndp-verify-title--emerald">
+                  Platform Certified
+                </h5>
+                <p class="ndp-verify-sub ndp-verify-sub--emerald">
+                  Registered on Nexus Platform
+                </p>
+              </div>
+            </div>
+            <div class="ndp-verify-card ndp-verify-card--dark">
+              <div class="ndp-verify-icon ndp-verify-icon--dark">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <polyline points="9 12 11 14 15 10" />
+                </svg>
+              </div>
+              <div>
+                <h5 class="ndp-verify-title ndp-verify-title--dark">
+                  Nexus Seal Active
+                </h5>
+                <p class="ndp-verify-sub ndp-verify-sub--dark">
+                  Swap Protection Enabled
+                </p>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── List for Swap Modal ── -->
+  <template if:true={showListForm}>
+    <div class="ndp-overlay" onclick={handleListFormClose}>
+      <div class="ndp-modal" onclick={handleModalInnerClick}>
+        <div class="ndp-modal-header">
+          <h3>List for Swap</h3>
+          <button class="ndp-modal-close" onclick={handleListFormClose}>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="ndp-modal-body">
+          <div class="ndp-form-field">
+            <label>Product</label>
+            <input
+              type="text"
+              value={selectedName}
+              readonly
+              class="ndp-input-readonly"
+            />
+          </div>
+          <div class="ndp-form-row">
+            <div class="ndp-form-field">
+              <label>Condition</label>
+              <select onchange={handleListConditionChange}>
+                <template for:each={conditionOptions} for:item="opt">
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                </template>
+              </select>
+            </div>
+            <div class="ndp-form-field">
+              <label>Category</label>
+              <select onchange={handleListCategoryChange}>
+                <template for:each={categoryOptions} for:item="opt">
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                </template>
+              </select>
+            </div>
+          </div>
+          <div class="ndp-form-field">
+            <label>Description (optional)</label>
+            <textarea
+              class="ndp-form-textarea"
+              rows="3"
+              placeholder="Describe the item's current state, what's included, any defects…"
+              onchange={handleListDescriptionChange}
+            ></textarea>
+          </div>
+        </div>
+        <div class="ndp-modal-actions">
+          <button
+            class="ndp-save-btn"
+            onclick={handleListSubmit}
+            disabled={isListSubmitting}
+          >
+            {listSubmitLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ── Passport Scan Modal ── -->
+  <template if:true={showScanModal}>
+    <div class="ndp-overlay" onclick={handleScanModalClose}>
+      <div class="ndp-modal ndp-scan-modal" onclick={handleModalInnerClick}>
+        <div class="ndp-scan-hd">
+          <div class="ndp-scan-hd-left">
+            <div class="ndp-scan-badge">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+              Nexus Passport Scan
+            </div>
+            <h3 class="ndp-scan-title">{selectedName}</h3>
+          </div>
+          <button
+            class="ndp-modal-close ndp-modal-close--light"
+            onclick={handleScanModalClose}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <template if:true={isScanLoading}>
+          <div class="ndp-scan-loading">Loading product details…</div>
+        </template>
+
+        <template if:false={isScanLoading}>
+          <div class="ndp-scan-body">
+            <div class="ndp-scan-section">
+              <span class="ndp-scan-section-label">Passport</span>
+              <div class="ndp-scan-rows">
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Passport ID</span>
+                  <span class="ndp-scan-val ndp-scan-val--mono"
+                    >{selectedSerial}</span
+                  >
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Status</span>
+                  <span class="ndp-scan-val">{selectedStatus}</span>
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Condition</span>
+                  <span class="ndp-scan-val">{selectedCondition}</span>
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Purchased</span>
+                  <span class="ndp-scan-val">{selectedPurchase}</span>
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Current Owner</span>
+                  <span class="ndp-scan-val">{selectedOwner}</span>
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Original Owner</span>
+                  <span class="ndp-scan-val">{selectedOrigOwner}</span>
+                </div>
+              </div>
+            </div>
+            <div class="ndp-scan-section">
+              <span class="ndp-scan-section-label">Product Details</span>
+              <div class="ndp-scan-rows">
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Price</span>
+                  <span class="ndp-scan-val ndp-scan-val--price"
+                    >{scanProductPrice}</span
+                  >
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Brand</span>
+                  <span class="ndp-scan-val">{scanProductBrand}</span>
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Category</span>
+                  <span class="ndp-scan-val">{scanProductCategory}</span>
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Family</span>
+                  <span class="ndp-scan-val">{scanProductFamily}</span>
+                </div>
+                <div class="ndp-scan-row">
+                  <span class="ndp-scan-key">Product Code</span>
+                  <span class="ndp-scan-val ndp-scan-val--mono"
+                    >{scanProductCode}</span
+                  >
+                </div>
+              </div>
+              <div class="ndp-scan-desc-label">Technical Specifications</div>
+              <p class="ndp-scan-desc">{scanProductSpecs}</p>
+              <div class="ndp-scan-desc-label" style="margin-top: 0.75rem">
+                Description
+              </div>
+              <p class="ndp-scan-desc">{scanProductDescription}</p>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
 </template>

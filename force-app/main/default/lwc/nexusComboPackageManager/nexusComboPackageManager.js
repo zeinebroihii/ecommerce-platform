@@ -82,19 +82,30 @@ export default class NexusComboPackageManager extends LightningElement {
   }
 
   get suggestionsEnriched() {
-    return this._suggestions.map((s) => ({
-      ...s,
-      scoreLabel: s.score != null ? s.score.toFixed(1) : "—",
-      isPromoting: this._promotingIds.includes(s.id),
-      isAI: s.source === "AI-Agent",
-      aiReason: s.aiReason || "",
-      hasAiReason: !!s.aiReason,
-      sourceBadge: s.source === "AI-Agent" ? "Agentforce" : "Auto",
-      badgeClass:
-        s.source === "AI-Agent"
-          ? "ncpm-sugg-badge ncpm-sugg-badge--agent"
-          : "ncpm-sugg-badge"
-    }));
+    return this._suggestions.map((s) => {
+      const p1 = s.overstockedProductName || "";
+      const p2 = s.pairedProductName || "";
+      const short = (name) => {
+        return name.length > 28 ? name.substring(0, 26) + "…" : name;
+      };
+      const bundleName =
+        p1 && p2 ? short(p1) + " + " + short(p2) : s.name || "Bundle";
+      return {
+        ...s,
+        bundleName,
+        scoreLabel: s.score != null ? s.score.toFixed(1) : "—",
+        discountLabel: (s.discount != null ? s.discount : 10) + "% off",
+        isPromoting: this._promotingIds.includes(s.id),
+        isAI: s.source === "AI-Agent",
+        aiReason: s.aiReason || "",
+        hasAiReason: !!s.aiReason,
+        sourceBadge: s.source === "AI-Agent" ? "Agentforce" : "Auto",
+        badgeClass:
+          s.source === "AI-Agent"
+            ? "ncpm-sugg-badge ncpm-sugg-badge--agent"
+            : "ncpm-sugg-badge"
+      };
+    });
   }
 
   handleShowSuggestions() {
@@ -177,20 +188,25 @@ export default class NexusComboPackageManager extends LightningElement {
   }
 
   get packagesEnriched() {
-    return this._packages.map((pkg) => ({
-      ...pkg,
-      cardClass:
-        "ncpm-pkg-card" + (pkg.isActive ? "" : " ncpm-pkg-card--inactive"),
-      statusLabel: pkg.isActive ? "Active" : "Inactive",
-      statusBadgeClass: pkg.isActive
-        ? "ncpm-status ncpm-status--active"
-        : "ncpm-status ncpm-status--inactive",
-      toggleTitle: pkg.isActive ? "Deactivate" : "Activate",
-      noItems: !pkg.items || pkg.items.length === 0,
-      totalPriceFormatted: fmt(pkg.totalPrice),
-      originalPriceFormatted: fmt(pkg.originalPrice),
-      discountLabel: "-" + (pkg.discountPercent || 10) + "%"
-    }));
+    return this._packages.map((pkg) => {
+      const rawName = pkg.name || "";
+      const displayName = rawName.replace(/^Bundle:\s*/i, "");
+      return {
+        ...pkg,
+        name: displayName,
+        cardClass:
+          "ncpm-pkg-card" + (pkg.isActive ? "" : " ncpm-pkg-card--inactive"),
+        statusLabel: pkg.isActive ? "Active" : "Inactive",
+        statusBadgeClass: pkg.isActive
+          ? "ncpm-status ncpm-status--active"
+          : "ncpm-status ncpm-status--inactive",
+        toggleTitle: pkg.isActive ? "Deactivate" : "Activate",
+        noItems: !pkg.items || pkg.items.length === 0,
+        totalPriceFormatted: fmt(pkg.totalPrice),
+        originalPriceFormatted: fmt(pkg.originalPrice),
+        discountLabel: "-" + (pkg.discountPercent || 10) + "%"
+      };
+    });
   }
 
   // ── Computed: editor ──────────────────────────────────────────────────────

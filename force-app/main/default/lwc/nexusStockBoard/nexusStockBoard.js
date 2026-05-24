@@ -1,6 +1,7 @@
-import { LightningElement, wire, track } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
-import getStockProducts from '@salesforce/apex/ProductController.getStockProducts';
+import { LightningElement, wire, track } from "lwc";
+import { NavigationMixin } from "lightning/navigation";
+import { refreshApex } from "@salesforce/apex";
+import getStockProducts from "@salesforce/apex/ProductController.getStockProducts";
 
 /**
  * nexusStockBoard — Stock Optimization board.
@@ -9,25 +10,37 @@ import getStockProducts from '@salesforce/apex/ProductController.getStockProduct
  * Right: AI insights panel (c-nexus-stock-guard)
  */
 export default class NexusStockBoard extends NavigationMixin(LightningElement) {
-    @track _products = [];
+  @track _products = [];
+  _wiredProducts;
 
-    @wire(getStockProducts)
-    wiredProducts({ data }) {
-        if (data) this._products = data;
-    }
+  @wire(getStockProducts)
+  wiredProducts(result) {
+    this._wiredProducts = result;
+    if (result.data) this._products = result.data;
+  }
 
-    get isEmpty()    { return this._products.length === 0; }
-    get hasProducts(){ return this._products.length > 0; }
-    get totalLabel() { return `${this._products.length} Products`; }
+  connectedCallback() {
+    refreshApex(this._wiredProducts);
+  }
 
-    handleAudit() {
-        // Placeholder — could trigger a Flow or Einstein audit
-    }
+  get isEmpty() {
+    return this._products.length === 0;
+  }
+  get hasProducts() {
+    return this._products.length > 0;
+  }
+  get totalLabel() {
+    return `${this._products.length} Products`;
+  }
 
-    handleAddProduct() {
-        this[NavigationMixin.Navigate]({
-            type: 'standard__objectPage',
-            attributes: { objectApiName: 'Product2', actionName: 'new' }
-        });
-    }
+  handleAudit() {
+    // Placeholder — could trigger a Flow or Einstein audit
+  }
+
+  handleAddProduct() {
+    this[NavigationMixin.Navigate]({
+      type: "standard__objectPage",
+      attributes: { objectApiName: "Product2", actionName: "new" }
+    });
+  }
 }

@@ -1,0 +1,228 @@
+<template>
+  <div class="nda-wrap">
+    <!-- ── Loading ── -->
+    <template if:true={isLoading}>
+      <div class="nda-center">
+        <lightning-spinner
+          size="medium"
+          alternative-text="Loading..."
+        ></lightning-spinner>
+      </div>
+    </template>
+
+    <!-- ── Error ── -->
+    <template if:true={hasError}>
+      <div class="nda-center nda-error-state">
+        <lightning-icon
+          icon-name="utility:error"
+          size="medium"
+          variant="error"
+        ></lightning-icon>
+        <p class="nda-error-msg">{errorMsg}</p>
+        <button class="nda-btn nda-btn-secondary" onclick={handleClose}>
+          Close
+        </button>
+      </div>
+    </template>
+
+    <!-- ── Ready ── -->
+    <template if:true={isReady}>
+      <!-- Order header -->
+      <div class="nda-order-header">
+        <div class="nda-order-icon">
+          <lightning-icon
+            icon-name="utility:truck"
+            size="small"
+            variant="inverse"
+          ></lightning-icon>
+        </div>
+        <div class="nda-order-meta">
+          <div class="nda-order-label">Dispatch Order</div>
+          <div class="nda-order-num">{orderNumber}</div>
+        </div>
+        <span class={statusBadgeCls}>{orderStatus}</span>
+      </div>
+
+      <!-- ── Shipped: Fix Tracker ── -->
+      <template if:true={isShipped}>
+        <div class="nda-info-box">
+          <lightning-icon
+            icon-name="utility:location"
+            size="x-small"
+          ></lightning-icon>
+          <span
+            >Order is already dispatched. If the live tracker isn't updating,
+            sync the Traccar device ID below.</span
+          >
+        </div>
+
+        <div class="nda-form">
+          <div class="nda-field">
+            <label class="nda-label">Current Traccar Device ID</label>
+            <div class="nda-device-current">{currentDeviceId}</div>
+            <span class="nda-hint"
+              >Stored on this order and the rider record</span
+            >
+          </div>
+
+          <div class="nda-field">
+            <label class="nda-label">Correct Traccar Device ID</label>
+            <input
+              type="text"
+              class="nda-input"
+              value={newDeviceId}
+              onchange={handleNewDeviceIdChange}
+              placeholder="e.g. driver1 or 74"
+            />
+            <span class="nda-hint"
+              >Find it in Traccar → Devices → click your device (the id field,
+              or the ?device= value in your working Postman call)</span
+            >
+          </div>
+        </div>
+
+        <template if:true={syncSuccess}>
+          <div class="nda-sync-success">
+            <lightning-icon
+              icon-name="utility:check"
+              size="x-small"
+              variant="success"
+            ></lightning-icon>
+            Tracker synced — next Traccar ping will update the map. Rider record
+            also updated for future dispatches.
+          </div>
+        </template>
+
+        <div class="nda-actions">
+          <button class="nda-btn nda-btn-secondary" onclick={handleClose}>
+            Close
+          </button>
+          <button
+            class="nda-btn nda-btn-emerald"
+            onclick={handleSyncTracker}
+            disabled={syncDisabled}
+          >
+            <template if:true={syncing}>
+              <lightning-spinner
+                size="x-small"
+                alternative-text="Syncing..."
+              ></lightning-spinner>
+              &nbsp;Syncing...
+            </template>
+            <template if:false={syncing}> Fix Tracker </template>
+          </button>
+        </div>
+      </template>
+
+      <!-- ── Activated: Dispatch form ── -->
+      <template if:true={isActivated}>
+        <div class="nda-form">
+          <!-- Rider -->
+          <div class="nda-field">
+            <label class="nda-label">Rider</label>
+            <template if:true={hasRiders}>
+              <select class="nda-select" onchange={handleRiderChange}>
+                <option value="">— Select a rider —</option>
+                <template for:each={riders} for:item="r">
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                </template>
+              </select>
+            </template>
+            <template if:false={hasRiders}>
+              <div class="nda-no-riders">
+                No active riders found. Add one in Setup → Riders.
+              </div>
+            </template>
+          </div>
+
+          <!-- Buyer WhatsApp -->
+          <div class="nda-field">
+            <label class="nda-label">Buyer WhatsApp</label>
+            <input
+              type="tel"
+              class="nda-input"
+              value={buyerPhone}
+              onchange={handlePhoneChange}
+              placeholder="+216xxxxxxxx"
+            />
+            <span class="nda-hint"
+              >Pre-filled from Account. Edit if needed.</span
+            >
+          </div>
+        </div>
+
+        <div class="nda-actions">
+          <button class="nda-btn nda-btn-secondary" onclick={handleClose}>
+            Cancel
+          </button>
+          <button
+            class="nda-btn nda-btn-primary"
+            onclick={handleDispatch}
+            disabled={dispatchDisabled}
+          >
+            <template if:true={dispatching}>
+              <lightning-spinner
+                size="x-small"
+                alternative-text="Dispatching..."
+              ></lightning-spinner>
+              &nbsp;Dispatching...
+            </template>
+            <template if:false={dispatching}> Dispatch Now </template>
+          </button>
+        </div>
+      </template>
+
+      <!-- ── Other status: warning ── -->
+      <template if:true={cannotDispatch}>
+        <div class="nda-warn">
+          <lightning-icon
+            icon-name="utility:warning"
+            size="x-small"
+          ></lightning-icon>
+          <span
+            >This order is <strong>{orderStatus}</strong> — only
+            <strong>Activated</strong> orders can be dispatched.</span
+          >
+        </div>
+        <div class="nda-actions">
+          <button class="nda-btn nda-btn-secondary" onclick={handleClose}>
+            Close
+          </button>
+        </div>
+      </template>
+    </template>
+
+    <!-- ── Dispatch Success ── -->
+    <template if:true={isSuccess}>
+      <div class="nda-success">
+        <div class="nda-success-icon">
+          <lightning-icon
+            icon-name="utility:check"
+            size="large"
+            variant="inverse"
+          ></lightning-icon>
+        </div>
+        <h3 class="nda-success-title">Order Dispatched!</h3>
+        <p class="nda-success-sub">
+          WhatsApp sent to buyer · Live tracking active
+        </p>
+        <div class="nda-token-box">
+          <span class="nda-token-url">{trackingUrl}</span>
+          <button
+            class="nda-copy-btn"
+            onclick={handleCopyUrl}
+            title="Copy link"
+          >
+            <lightning-icon
+              icon-name="utility:copy"
+              size="x-small"
+            ></lightning-icon>
+          </button>
+        </div>
+        <button class="nda-btn nda-btn-primary" onclick={handleClose}>
+          Done
+        </button>
+      </div>
+    </template>
+  </div>
+</template>

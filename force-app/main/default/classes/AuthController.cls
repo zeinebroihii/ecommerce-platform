@@ -428,91 +428,239 @@ public without sharing class AuthController {
 
       // Enrich with User fields
       try {
-        Id userId = UserInfo.getUserId();
         User u = [
           SELECT FirstName, LastName, Phone, Title, ContactId
           FROM User
-          WHERE Id = :userId
+          WHERE Id = :UserInfo.getUserId()
           LIMIT 1
         ];
-        profile.put('firstName', u.FirstName != null ? u.FirstName : '');
-        profile.put('lastName', u.LastName != null ? u.LastName : '');
-        profile.put('phone', u.Phone != null ? u.Phone : '');
-        profile.put('title', u.Title != null ? u.Title : '');
+        String uFirst = u.FirstName != null ? u.FirstName : '';
+        String uLast = u.LastName != null ? u.LastName : '';
+        profile.put('firstName', uFirst);
+        profile.put('lastName', uLast);
+        if (u.Phone != null)
+          profile.put('phone', u.Phone);
+        if (u.Title != null)
+          profile.put('title', u.Title);
 
-        // Enrich with Contact + Account fields
+        // Fallback: build name from User record if UserInfo.getName() was empty
+        if (String.isBlank(profile.get('name'))) {
+          profile.put('name', (uFirst + ' ' + uLast).trim());
+        }
+
         if (u.ContactId != null) {
-          Contact c = [
-            SELECT
-              Phone,
-              AccountId,
-              MailingStreet,
-              MailingCity,
-              MailingPostalCode,
-              MailingCountry,
-              Account.Name,
-              Account.CustomerTier__c
-            FROM Contact
-            WHERE Id = :u.ContactId
-            LIMIT 1
-          ];
+          // ── Contact + Account enrichment ──────────────────────────────
+          try {
+            Contact c = [
+              SELECT
+                Phone,
+                AccountId,
+                MailingStreet,
+                MailingCity,
+                MailingPostalCode,
+                MailingCountry,
+                Account.Name,
+                Account.CustomerTier__c
+              FROM Contact
+              WHERE Id = :u.ContactId
+              LIMIT 1
+            ];
 
-          if (String.isBlank(profile.get('phone')) && c.Phone != null) {
-            profile.put('phone', c.Phone);
-          }
-          profile.put('street', c.MailingStreet != null ? c.MailingStreet : '');
-          profile.put('city', c.MailingCity != null ? c.MailingCity : '');
-          profile.put(
-            'postalCode',
-            c.MailingPostalCode != null ? c.MailingPostalCode : ''
-          );
-          profile.put(
-            'country',
-            c.MailingCountry != null ? c.MailingCountry : ''
-          );
-          if (c.AccountId != null) {
-            profile.put('accountId', String.valueOf(c.AccountId));
-          }
-          if (c.AccountId != null && c.Account != null) {
-            if (c.Account.Name != null) {
-              profile.put('accountName', c.Account.Name);
-            }
-            if (c.Account.CustomerTier__c != null) {
-              profile.put('customerTier', c.Account.CustomerTier__c);
-            }
+            if (String.isBlank(profile.get('phone')) && c.Phone != null)
+              profile.put('phone', c.Phone);
+            if (c.MailingStreet != null)
+              profile.put('street', c.MailingStreet);
+            if (c.MailingCity != null)
+              profile.put('city', c.MailingCity);
+            if (c.MailingPostalCode != null)
+              profile.put('postalCode', c.MailingPostalCode);
+            if (c.MailingCountry != null)
+              profile.put('country', c.MailingCountry);
 
-            // Detect B2C:
-            // Path 1 (standard Account): selfRegisterB2C appends ' (B2C)' to name
-            // Path 2 (Person Account):   selfRegisterB2C creates a PersonAccount
-            String acctName = c.Account.Name != null ? c.Account.Name : '';
-            Boolean isB2CUser = acctName.endsWith('(B2C)');
+            if (c.AccountId != null) {
+              profile.put('accountId', String.valueOf(c.AccountId));
 
-            if (!isB2CUser) {
-              try {
-                // Dynamic SOQL so the class compiles even when Person Accounts
-                // are disabled in the org (IsPersonAccount doesn't exist then)
-                SObject acct = Database.query(
-                  'SELECT IsPersonAccount FROM Account WHERE Id = \'' +
-                    String.escapeSingleQuotes(String.valueOf(c.AccountId)) +
-                    '\' LIMIT 1'
-                );
-                isB2CUser = (Boolean) acct.get('IsPersonAccount');
-              } catch (Exception pae) {
-                /* Person Accounts not enabled — keep isB2CUser = false */
+              if (c.Account != null) {
+                if (c.Account.Name != null)
+                  profile.put('accountName', c.Account.Name);
+                if (c.Account.CustomerTier__c != null)
+                  profile.put('customerTier', c.Account.CustomerTier__c);
               }
-            }
 
-            profile.put('customerType', isB2CUser ? 'B2C' : 'B2B');
+              String acctName = (c.Account != null &&
+                c.Account.Name != null)
+                ? c.Account.Name
+                : '';
+              Boolean isB2CUser = acctName.endsWith('(B2C)');
+
+              if (!isB2CUser) {
+                try {
+                  SObject acct = Database.query(
+                    'SELECT IsPersonAccount, PersonEmail, PersonMobilePhone, CustomerTier__c, ' +
+                      'PersonMailingStreet, PersonMailingCity, PersonMailingPostalCode, ' +
+                      'PersonMailingCountry FROM Account WHERE Id = \'' +
+                      String.escapeSingleQuotes(String.valueOf(c.AccountId)) +
+                      '\' LIMIT 1'
+                  );
+                  isB2CUser = (Boolean) acct.get('IsPersonAccount');
+                  if (
+                    acct.get('CustomerTier__c') != null &&
+                    String.isBlank(profile.get('customerTier'))
+                  )
+                    profile.put(
+                      'customerTier',
+                      (String) acct.get('CustomerTier__c')
+                    );
+
+                  // For Person Account, supplement address from Account's Person fields
+                  if (isB2CUser) {
+                    if (
+                      String.isBlank(profile.get('street')) &&
+                      acct.get('PersonMailingStreet') != null
+                    )
+                      profile.put(
+                        'street',
+                        (String) acct.get('PersonMailingStreet')
+                      );
+                    if (
+                      String.isBlank(profile.get('city')) &&
+                      acct.get('PersonMailingCity') != null
+                    )
+                      profile.put(
+                        'city',
+                        (String) acct.get('PersonMailingCity')
+                      );
+                    if (
+                      String.isBlank(profile.get('postalCode')) &&
+                      acct.get('PersonMailingPostalCode') != null
+                    )
+                      profile.put(
+                        'postalCode',
+                        (String) acct.get('PersonMailingPostalCode')
+                      );
+                    if (
+                      String.isBlank(profile.get('country')) &&
+                      acct.get('PersonMailingCountry') != null
+                    )
+                      profile.put(
+                        'country',
+                        (String) acct.get('PersonMailingCountry')
+                      );
+                    if (
+                      String.isBlank(profile.get('phone')) &&
+                      acct.get('PersonMobilePhone') != null
+                    )
+                      profile.put(
+                        'phone',
+                        (String) acct.get('PersonMobilePhone')
+                      );
+                  }
+                } catch (Exception pae) {
+                  /* Person Accounts not enabled in this org */
+                }
+              }
+
+              profile.put('customerType', isB2CUser ? 'B2C' : 'B2B');
+            }
+          } catch (Exception cex) {
+            /* Contact query failed — try Person Account directly by email */
+            try {
+              String em = UserInfo.getUserEmail();
+              SObject pa = Database.query(
+                'SELECT Id, Name, PersonEmail, PersonMobilePhone, CustomerTier__c, ' +
+                  'PersonMailingStreet, PersonMailingCity, PersonMailingPostalCode, ' +
+                  'PersonMailingCountry, IsPersonAccount FROM Account ' +
+                  'WHERE PersonEmail = \'' +
+                  String.escapeSingleQuotes(em) +
+                  '\' LIMIT 1'
+              );
+              if ((Boolean) pa.get('IsPersonAccount') == true) {
+                profile.put('accountId', String.valueOf(pa.get('Id')));
+                if (pa.get('Name') != null)
+                  profile.put('accountName', (String) pa.get('Name'));
+                if (pa.get('CustomerTier__c') != null)
+                  profile.put(
+                    'customerTier',
+                    (String) pa.get('CustomerTier__c')
+                  );
+                if (pa.get('PersonMailingCity') != null)
+                  profile.put('city', (String) pa.get('PersonMailingCity'));
+                if (pa.get('PersonMailingPostalCode') != null)
+                  profile.put(
+                    'postalCode',
+                    (String) pa.get('PersonMailingPostalCode')
+                  );
+                if (pa.get('PersonMailingCountry') != null)
+                  profile.put(
+                    'country',
+                    (String) pa.get('PersonMailingCountry')
+                  );
+                if (
+                  pa.get('PersonMobilePhone') != null &&
+                  String.isBlank(profile.get('phone'))
+                )
+                  profile.put('phone', (String) pa.get('PersonMobilePhone'));
+                profile.put('customerType', 'B2C');
+              }
+            } catch (Exception paEx) {
+              /* ignore */
+            }
+          }
+        } else {
+          // No ContactId — try Person Account lookup by email (self-registered B2C)
+          try {
+            String em = UserInfo.getUserEmail();
+            SObject pa = Database.query(
+              'SELECT Id, Name, PersonMobilePhone, ' +
+                'PersonMailingStreet, PersonMailingCity, PersonMailingPostalCode, ' +
+                'PersonMailingCountry, IsPersonAccount FROM Account ' +
+                'WHERE PersonEmail = \'' +
+                String.escapeSingleQuotes(em) +
+                '\' LIMIT 1'
+            );
+            if ((Boolean) pa.get('IsPersonAccount') == true) {
+              profile.put('accountId', String.valueOf(pa.get('Id')));
+              if (pa.get('Name') != null)
+                profile.put('accountName', (String) pa.get('Name'));
+              if (pa.get('PersonMailingCity') != null)
+                profile.put('city', (String) pa.get('PersonMailingCity'));
+              if (pa.get('PersonMailingPostalCode') != null)
+                profile.put(
+                  'postalCode',
+                  (String) pa.get('PersonMailingPostalCode')
+                );
+              if (pa.get('PersonMailingCountry') != null)
+                profile.put('country', (String) pa.get('PersonMailingCountry'));
+              if (pa.get('PersonMobilePhone') != null)
+                profile.put('phone', (String) pa.get('PersonMobilePhone'));
+              profile.put('customerType', 'B2C');
+            }
+          } catch (Exception paEx) {
+            /* ignore */
           }
         }
       } catch (Exception ex) {
-        /* User/Contact query failed — core fields already set */
+        /* User query failed — UserInfo fields already set above */
       }
 
-      // Ensure customerType always has a value (default B2B if account query failed)
-      if (!profile.containsKey('customerType')) {
+      // ── Final safeguards — these must always be populated ─────────────────
+      // UserInfo static methods are the most reliable source for any portal user
+      if (String.isBlank(profile.get('name')))
+        profile.put(
+          'name',
+          UserInfo.getName() != null ? UserInfo.getName() : ''
+        );
+      if (String.isBlank(profile.get('email')))
+        profile.put(
+          'email',
+          UserInfo.getUserEmail() != null ? UserInfo.getUserEmail() : ''
+        );
+      // accountName falls back to name so the profile header always shows something
+      if (String.isBlank(profile.get('accountName')))
+        profile.put('accountName', profile.get('name'));
+
+      if (!profile.containsKey('customerType'))
         profile.put('customerType', 'B2B');
-      }
 
       return profile;
     } catch (Exception e) {

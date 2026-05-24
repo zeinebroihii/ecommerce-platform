@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Swap_Request__c</fullName>
+    <label>Swap Request</label>
+    <referenceTo>Swap_Request__c</referenceTo>
+    <relationshipLabel>Ownership Events</relationshipLabel>
+    <relationshipName>Ownership_Events</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

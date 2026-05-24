@@ -108,6 +108,10 @@ public with sharing class CustomerTierSeeder {
         growthRate = ((revCurrent - revPrevious) / revPrevious) * 100;
       else if (revCurrent > 0)
         growthRate = 100;
+      if (growthRate > 999.99)
+        growthRate = 999.99;
+      if (growthRate < -999.99)
+        growthRate = -999.99;
 
       Decimal loyaltyYears = (acc.CreatedDate != null)
         ? (Date.today().daysBetween(acc.CreatedDate.date()) * -1) / 365.0

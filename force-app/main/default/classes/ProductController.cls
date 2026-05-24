@@ -37,6 +37,8 @@ public without sharing class ProductController {
     public Decimal visibilityScore;
     @AuraEnabled
     public String stockStatus;
+    @AuraEnabled
+    public String riskLevel; // Critical / At Risk / Healthy / Overstock from Stock__c
   }
 
   // ── Wrapper: stock board ──────────────────────────────────────────────────
@@ -59,6 +61,10 @@ public without sharing class ProductController {
     public String status;
     @AuraEnabled
     public String imageUrl;
+    @AuraEnabled
+    public Integer committedQty; // units committed by open quotes
+    @AuraEnabled
+    public Boolean hasOpenReorder; // true when an open reorder Task exists
   }
 
   // ── Wrapper: admin product management ────────────────────────────────────
@@ -141,8 +147,60 @@ public without sharing class ProductController {
       d.status = ratio < 0.15
         ? 'Critical'
         : ratio > 0.80 ? 'Overstock' : 'Optimal';
+      d.committedQty = 0;
+      d.hasOpenReorder = false;
       result.add(d);
     }
+
+    if (!result.isEmpty()) {
+      Set<String> productIds = new Set<String>();
+      Map<String, String> subjectToId = new Map<String, String>();
+      for (StockProductDetail d : result) {
+        productIds.add(d.productId);
+        subjectToId.put('Reorder Request — ' + d.name, d.productId);
+      }
+
+      // Populate committedQty from open quotes
+      Map<String, Integer> committedMap = new Map<String, Integer>();
+      for (AggregateResult ar : [
+        SELECT Product__c pid, SUM(Quantity__c) qty
+        FROM NexusQuoteLineItem__c
+        WHERE
+          Product__c IN :productIds
+          AND Quote__r.Status__c NOT IN (
+            'Accepted',
+            'Rejected',
+            'Signed',
+            'Expired'
+          )
+        GROUP BY Product__c
+      ]) {
+        committedMap.put(
+          (String) ar.get('pid'),
+          Integer.valueOf(((Decimal) ar.get('qty')) ?? 0)
+        );
+      }
+
+      // Populate hasOpenReorder from open Tasks
+      Set<String> reorderSubjects = subjectToId.keySet();
+      Set<String> productsWithReorder = new Set<String>();
+      for (Task t : [
+        SELECT Subject
+        FROM Task
+        WHERE Subject IN :reorderSubjects AND Status = 'Open'
+      ]) {
+        String pid = subjectToId.get(t.Subject);
+        if (pid != null)
+          productsWithReorder.add(pid);
+      }
+
+      for (StockProductDetail d : result) {
+        if (committedMap.containsKey(d.productId))
+          d.committedQty = committedMap.get(d.productId);
+        d.hasOpenReorder = productsWithReorder.contains(d.productId);
+      }
+    }
+
     return result;
   }
 
@@ -156,7 +214,7 @@ public without sharing class ProductController {
       'SELECT Id, Name, ProductCode, Description, Family, Subcategory__c, ' +
       'Brand__c, Image_URL__c, AvailabilityStatus__c, Rating__c, Reviews__c, IsNew__c, Specs__c, ' +
       'Visibility_Score__c, Stock_Status__c, ' +
-      '(SELECT Quantity_Available__c FROM Stocks__r LIMIT 1), ' +
+      '(SELECT Quantity_Available__c, Risk_Level__c FROM Stocks__r LIMIT 1), ' +
       '(SELECT UnitPrice FROM PricebookEntries WHERE IsActive = true LIMIT 1) ' +
       'FROM Product2 WHERE IsActive = true';
 
@@ -201,6 +259,7 @@ public without sharing class ProductController {
       w.quantityAvailable = 0;
       if (!p.Stocks__r.isEmpty()) {
         w.quantityAvailable = p.Stocks__r[0].Quantity_Available__c;
+        w.riskLevel = p.Stocks__r[0].Risk_Level__c;
       }
 
       w.isOutOfStock = (w.quantityAvailable == 0);

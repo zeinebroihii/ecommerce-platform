@@ -52,11 +52,17 @@ export default class NexusCheckout extends LightningElement {
   get proceedDisabled() {
     return this.isLoading || !this.addressIsValid || !this.cartItems.length;
   }
+  get showAddressHint() {
+    return !this.isLoading && !this.addressIsValid && this.cartItems.length > 0;
+  }
+  get streetInputClass() {
+    return !this.street.trim() ? "nco-input nco-input-missing" : "nco-input";
+  }
 
   get cartSummary() {
     return this.cartItems.map((i) => ({
       key: i.itemId || i.productId || i.id,
-      name: i.name || "Produit",
+      name: i.name || "Product",
       unitPrice: (parseFloat(i.unitPrice) || 0).toFixed(2),
       quantity: i.quantity || 1,
       lineTotal: ((parseFloat(i.unitPrice) || 0) * (i.quantity || 1)).toFixed(
@@ -77,7 +83,7 @@ export default class NexusCheckout extends LightningElement {
 
   get itemCountLabel() {
     const n = this.cartItems.reduce((s, i) => s + (i.quantity || 1), 0);
-    return n === 1 ? "1 article" : `${n} articles`;
+    return n === 1 ? "1 item" : `${n} items`;
   }
 
   get isFreeShipping() {
@@ -85,7 +91,7 @@ export default class NexusCheckout extends LightningElement {
   }
   get shippingLabel() {
     return this.isFreeShipping
-      ? "Gratuit"
+      ? "Free"
       : this._shippingAmount.toFixed(2) + " €";
   }
   get sparksDiscountVal() {
@@ -134,11 +140,11 @@ export default class NexusCheckout extends LightningElement {
   async handleProceedToPayment() {
     this.errorMsg = "";
     if (!this.addressIsValid) {
-      this.errorMsg = "Veuillez remplir la rue, la ville et le pays.";
+      this.errorMsg = "Please fill in your street address, city and country.";
       return;
     }
     if (!this.cartItems || this.cartItems.length === 0) {
-      this.errorMsg = "Votre panier est vide.";
+      this.errorMsg = "Your cart is empty.";
       return;
     }
 
@@ -148,7 +154,7 @@ export default class NexusCheckout extends LightningElement {
       const cartJson = JSON.stringify(
         this.cartItems.map((i) => ({
           productId: i.productId || i.id,
-          name: i.name || "Produit",
+          name: i.name || "Product",
           unitPrice: parseFloat(i.unitPrice) || 0,
           quantity: i.quantity || 1,
           imageUrl: i.imageUrl || i.image || ""
@@ -168,10 +174,9 @@ export default class NexusCheckout extends LightningElement {
         shippingAmount: shippingAmount,
         sparksDiscount: this.sparksDiscountVal
       });
-      // eslint-disable-next-line no-unused-vars
       try {
         sessionStorage.setItem(PENDING_OID_KEY, orderId);
-      } catch (e) {
+      } catch {
         /* quota */
       }
 
@@ -195,7 +200,7 @@ export default class NexusCheckout extends LightningElement {
     } catch (err) {
       this.errorMsg =
         (err && err.body && err.body.message) ||
-        "Erreur lors de l'initialisation du paiement. Réessayez.";
+        "Payment initialization failed. Please try again.";
       this.isLoading = false;
     }
   }

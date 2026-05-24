@@ -1,4 +1,4 @@
-import { LightningElement, wire, track } from "lwc";
+import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import userId from "@salesforce/user/Id";
 import EMAIL_FIELD from "@salesforce/schema/User.Email";
@@ -87,7 +87,7 @@ function stockBadge(p) {
       isOutOfStock: false
     };
   }
-  if (status === "Out of Stock" || qty === 0) {
+  if (status === "Out of Stock" || (qty === 0 && status !== "In Stock")) {
     return {
       stockBadgeLabel: "Out of Stock",
       stockBadgeCls: "nc2-stock-badge nc2-stock-out",
@@ -103,7 +103,7 @@ function stockBadge(p) {
       isOutOfStock: false
     };
   }
-  if (qty <= 3) {
+  if (qty > 0 && qty <= 3) {
     return {
       stockBadgeLabel: "Last " + qty + " left",
       stockBadgeCls: "nc2-stock-badge nc2-stock-last",
@@ -199,6 +199,10 @@ function saveBrowseEvent(product) {
 }
 
 export default class NexusCatalog extends LightningElement {
+  // When used inside nexusCustomerPortal, parent passes tier-filtered products here.
+  // When used standalone, falls back to its own wire.
+  @api allProducts;
+
   @track _products = [];
   @track selectedCategory = null;
   @track selectedSubcategory = null;
@@ -429,9 +433,17 @@ export default class NexusCatalog extends LightningElement {
 
   // ── Main panel: derived ──────────────────────────────────────────────────
 
+  get _sourceProducts() {
+    // Use parent-supplied tier-filtered list when available, else own wire data
+    return this.allProducts && this.allProducts.length > 0
+      ? this.allProducts
+      : this._products;
+  }
+
   get filteredProducts() {
     const q = this.searchQuery.toLowerCase();
-    return this._products
+    const STOCK_ORDER = { Boosted: 0, Normal: 1, Buried: 2 };
+    return this._sourceProducts
       .filter((p) => {
         if (this.selectedCategory && p.category !== this.selectedCategory)
           return false;
@@ -443,8 +455,8 @@ export default class NexusCatalog extends LightningElement {
         if (
           q &&
           !p.name.toLowerCase().includes(q) &&
-          !p.description.toLowerCase().includes(q) &&
-          !p.productCode.toLowerCase().includes(q)
+          !(p.description || "").toLowerCase().includes(q) &&
+          !(p.productCode || "").toLowerCase().includes(q)
         )
           return false;
         if (p.price > this.priceMax) return false;
@@ -458,6 +470,10 @@ export default class NexusCatalog extends LightningElement {
         return true;
       })
       .sort((a, b) => {
+        // Boosted first, Buried last — overrides all other sort criteria
+        const aStock = STOCK_ORDER[a.stockStatus] ?? 1;
+        const bStock = STOCK_ORDER[b.stockStatus] ?? 1;
+        if (aStock !== bStock) return aStock - bStock;
         if (this.sortBy === "price-asc") return a.price - b.price;
         if (this.sortBy === "price-desc") return b.price - a.price;
         return (b.rating || 0) - (a.rating || 0);
@@ -581,7 +597,11 @@ export default class NexusCatalog extends LightningElement {
 
     // Fire & forget — send email + create Task in background
     requestNotification({ productId, productName, customerEmail: email }).catch(
-      () => {}
+      (err) =>
+        console.error(
+          "[NexusCatalog] requestNotification error:",
+          JSON.stringify(err)
+        )
     );
   }
 

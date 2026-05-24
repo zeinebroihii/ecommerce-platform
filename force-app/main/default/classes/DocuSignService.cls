@@ -46,8 +46,6 @@ public class DocuSignService {
         PaymentTerms__c,
         ExpirationDate__c,
         Description__c,
-        GeneralTerms__c,
-        SignatureDeadlineDays__c,
         CreatedById,
         Opportunity__r.AccountId,
         Opportunity__r.Account.Name,
@@ -123,9 +121,7 @@ public class DocuSignService {
       if (String.isNotBlank(envelopeId)) {
         update new TALEXO_Quote__c(
           Id = quoteId,
-          DvelopEnvelopeId__c = envelopeId,
-          DocuSign_Status__c = 'Sent',
-          DocuSign_Sent_At__c = DateTime.now()
+          DvelopEnvelopeId__c = envelopeId
         );
         System.debug(
           '[DocuSign] Envelope sent — id=' + envelopeId + ' | quote=' + q.Name
@@ -312,7 +308,7 @@ public class DocuSignService {
 
   // ── Build contract as HTML document (renders as PDF in DocuSign) ─────────────
   @TestVisible
-  private static String buildContractDocument(
+  public static String buildContractDocument(
     TALEXO_Quote__c q,
     String customerName,
     String customerEmail
@@ -330,15 +326,12 @@ public class DocuSignService {
     String payTerms = String.isNotBlank(q.PaymentTerms__c)
       ? q.PaymentTerms__c
       : 'Net 30';
-    String generalTerms = String.isNotBlank(q.GeneralTerms__c)
-      ? q.GeneralTerms__c
-      : 'This contract is governed by applicable commercial law. '
-        + 'The service provider undertakes to deliver the products and services described within agreed timelines. '
-        + 'The client undertakes to settle all amounts per the payment terms above. '
-        + 'This electronic signature via DocuSign constitutes a legally binding commitment per eIDAS regulations.';
-    String sigDeadline = q.SignatureDeadlineDays__c != null
-      ? String.valueOf(q.SignatureDeadlineDays__c.intValue()) + ' days after sending'
-      : '14 days after sending';
+    String generalTerms =
+      'This contract is governed by applicable commercial law. ' +
+      'The service provider undertakes to deliver the products and services described within agreed timelines. ' +
+      'The client undertakes to settle all amounts per the payment terms above. ' +
+      'This electronic signature via DocuSign constitutes a legally binding commitment per eIDAS regulations.';
+    String sigDeadline = '14 days after sending';
     String accountName = q.Opportunity__r?.Account?.Name != null
       ? q.Opportunity__r.Account.Name
       : customerName;

@@ -34,6 +34,7 @@ public with sharing class EscrowMonitorScheduler implements Schedulable {
   public void runChecks() {
     processDeliveredEscrows();
     processExpiredDeadlines();
+    EscrowCaseInvestigator.sendDeadlineWarnings();
   }
 
   // ── Check 1: release after safety delay ──────────────────────────────────

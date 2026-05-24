@@ -119,11 +119,10 @@ public without sharing class BundleSuggestionEngine {
       ? 0
       : paired.PricebookEntries[0].UnitPrice;
 
-    String pkgName =
-      'Bundle: ' +
-      abbreviate(overstocked.Name) +
-      ' + ' +
-      abbreviate(paired.Name);
+    String pkgName = overstocked.Name + ' + ' + paired.Name;
+    if (pkgName.length() > 80) {
+      pkgName = pkgName.substring(0, 77) + '…';
+    }
 
     ComboPackage__c pkg = new ComboPackage__c(
       Name = pkgName,

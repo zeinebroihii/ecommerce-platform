@@ -57,14 +57,19 @@ public with sharing class AccountDataGenerator {
       String suffix = suffixes[Math.mod(i + 7, suffixes.size())];
 
       Account acc = new Account();
-      acc.Name = industry + ' Partenaires ' + (i + 1) + ' ' + suffix;
+      acc.Name =
+        'SYNTHETIC ' +
+        industry +
+        ' Partenaires ' +
+        (i + 1) +
+        ' ' +
+        suffix;
       acc.Industry = industry;
       acc.BillingCountry = country;
       acc.NumberOfEmployees = 10 + Math.mod(r, 490);
       acc.AnnualRevenue = 50000 + Math.mod(r * 317, 950000);
       acc.Type = 'Customer';
       acc.Rating = (r < 200) ? 'Hot' : (r < 600) ? 'Warm' : 'Cold';
-      acc.Description = 'SYNTHETIC'; // marker for easy deletion
       toInsert.add(acc);
     }
 
@@ -128,7 +133,7 @@ public with sharing class AccountDataGenerator {
     List<Account> synth = [
       SELECT Id
       FROM Account
-      WHERE Description = 'SYNTHETIC'
+      WHERE Name LIKE 'SYNTHETIC%'
     ];
     if (!synth.isEmpty()) {
       delete synth;

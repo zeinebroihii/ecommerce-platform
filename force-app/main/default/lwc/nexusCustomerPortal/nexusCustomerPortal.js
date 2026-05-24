@@ -1,4 +1,10 @@
 import { LightningElement, wire, track } from "lwc";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import Id from "@salesforce/user/Id";
+import FIRST_NAME_FIELD from "@salesforce/schema/User.FirstName";
+import LAST_NAME_FIELD from "@salesforce/schema/User.LastName";
+import EMAIL_FIELD from "@salesforce/schema/User.Email";
+import PHONE_FIELD from "@salesforce/schema/User.Phone";
 import getProductsWithStock from "@salesforce/apex/ProductController.getProductsWithStock";
 import getCurrentUserProfile from "@salesforce/apex/AuthController.getCurrentUserProfile";
 import changeUserPassword from "@salesforce/apex/AuthController.changeUserPassword";
@@ -7,6 +13,9 @@ import getRecommendations from "@salesforce/apex/RecommendationController.getRec
 import getRecentActivity from "@salesforce/apex/OrderManagementController.getRecentActivity";
 import getMyOrders from "@salesforce/apex/OrderManagementController.getMyOrders";
 import getAccountQuotes from "@salesforce/apex/QuoteController.getAccountQuotes";
+import createCase from "@salesforce/apex/CaseController.createCase";
+import uploadCaseFiles from "@salesforce/apex/CaseController.uploadCaseFiles";
+import requestQuoteFromCart from "@salesforce/apex/QuoteController.requestQuoteFromCart";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 const BROWSE_KEY = "nexus_browse_history";
@@ -58,6 +67,32 @@ const PORTAL_NAV_ITEMS = [
   { id: "settings", label: "Settings", icon: "utility:settings", scrollId: "" }
 ];
 
+const FAMILY_TO_CAT = {
+  Computing: "computing",
+  Graphics: "computing",
+  Storage: "computing",
+  "Power Protection": "computing",
+  Connectivity: "connectivity",
+  Networking: "connectivity",
+  "Sensors & Monitoring": "sensors",
+  Sustainability: "sustainability"
+};
+
+function normalizeStatus(raw) {
+  const s = (raw || "").toLowerCase();
+  if (
+    s.includes("épuisé") ||
+    s.includes("epuisé") ||
+    s.includes("out of stock")
+  )
+    return "Out of Stock";
+  if (s.includes("arrivage") || s.includes("arriving")) return "Arriving Soon";
+  if (s.includes("commande") || s.includes("on order")) return "On Order (48h)";
+  if (s.includes("stock") || s.includes("en stock") || s.includes("in stock"))
+    return "In Stock";
+  return raw || "In Stock";
+}
+
 function apexToPortalProduct(p) {
   let features = [];
   try {
@@ -72,6 +107,9 @@ function apexToPortalProduct(p) {
     name: p.name || "",
     productCode: p.productCode || "",
     family: p.family || "",
+    category: FAMILY_TO_CAT[p.family] || (p.family || "").toLowerCase(),
+    subcategory: p.subcategory || "",
+    brand: p.brand || "",
     price: p.unitPrice || 0,
     rating: p.rating || 0,
     reviews: p.reviews || 0,
@@ -81,10 +119,13 @@ function apexToPortalProduct(p) {
     isNew: p.isNew || false,
     isPopular: false,
     colors: [],
-    status: p.availabilityStatus || (p.isOutOfStock ? "Épuisé" : "En stock"),
+    status: normalizeStatus(
+      p.availabilityStatus || (p.isOutOfStock ? "Out of Stock" : "In Stock")
+    ),
     stockLevel: p.quantityAvailable || 0,
     visibilityScore: p.visibilityScore != null ? p.visibilityScore : null,
-    stockStatus: p.stockStatus || null
+    stockStatus: p.stockStatus || null,
+    riskLevel: p.riskLevel || null
   };
 }
 
@@ -104,10 +145,24 @@ export default class NexusCustomerPortal extends LightningElement {
   @track catalogSearch = "";
   @track caseStep = 1;
   @track casePriority = "Medium";
+  @track caseSubject = "";
+  @track caseDescription = "";
+  @track caseOrderRef = "";
+  @track caseType = "Support";
+  @track caseFiles = [];
+  @track caseKey = 0;
+  caseFilesRaw = [];
+  @track caseSubmitting = false;
   @track cart = [];
   @track sparksBalance = 1250;
   @track _sparksDiscount = 0; // $ value deducted by Sparks (e.g. 10.00)
   @track _quotationsRefreshKey = 0; // incremented to force nexusQuotationSystem cache bypass
+  @track _sliderQuoteModal = false;
+  @track _sliderQuoteGenerating = false;
+  @track _sliderQuoteResult = false;
+  @track _sliderQuoteError = null;
+  @track _sliderQuoteName = "";
+  @track _sliderQuoteId = null;
   @track _sparksModalOpen = false;
   @track _kpiOrderCount = null;
   @track _kpiQuoteCount = null;
@@ -163,6 +218,32 @@ export default class NexusCustomerPortal extends LightningElement {
         JSON.stringify(error)
       );
     }
+  }
+
+  // ── Direct User record wire — always succeeds for authenticated users ──────
+  // Fills profile name/email from the User object itself as a guaranteed fallback
+  // in case the Apex getCurrentUserProfile() call throws (e.g. FLS / sharing).
+  @wire(getRecord, {
+    recordId: Id,
+    fields: [FIRST_NAME_FIELD, LAST_NAME_FIELD, EMAIL_FIELD, PHONE_FIELD]
+  })
+  wiredUser({ data }) {
+    if (!data) return;
+    const fn = getFieldValue(data, FIRST_NAME_FIELD) || "";
+    const ln = getFieldValue(data, LAST_NAME_FIELD) || "";
+    const email = getFieldValue(data, EMAIL_FIELD) || "";
+    const phone = getFieldValue(data, PHONE_FIELD) || "";
+    const fullName = (fn + " " + ln).trim();
+    // Merge only missing fields — don't overwrite richer Apex data
+    this._userProfile = {
+      ...this._userProfile,
+      name: this._userProfile.name || fullName,
+      firstName: this._userProfile.firstName || fn,
+      lastName: this._userProfile.lastName || ln,
+      email: this._userProfile.email || email,
+      phone: this._userProfile.phone || phone,
+      accountName: this._userProfile.accountName || fullName
+    };
   }
 
   // ── Current user profile getters ──────────────────────────────────────────
@@ -249,12 +330,27 @@ export default class NexusCustomerPortal extends LightningElement {
   // Standard: show only VisibilityScore > 50 (or unscored)
   get tierFilteredProducts() {
     const tier = (this._userProfile.customerTier || "").toLowerCase();
-    if (tier === "platinum") return this._products;
-    return this._products.filter((p) => {
-      const score = p.visibilityScore;
-      if (score == null) return true; // unscored → always visible
-      if (tier === "gold") return score > 20;
-      return score > 50; // Standard (default)
+    // Risk priority: Critical=3 (absolute bottom), At Risk=2, then stockStatus order
+    const RISK_ORDER = { Critical: 3, "At Risk": 2, Healthy: 0, Overstock: 0 };
+    const STATUS_ORDER = { Boosted: 0, Normal: 1, Buried: 2 };
+    const filtered =
+      tier === "platinum"
+        ? this._products
+        : this._products.filter((p) => {
+            const score = p.visibilityScore;
+            if (score == null) return true; // unscored → always visible
+            if (tier === "gold") return score > 20;
+            return score > 50; // Standard (default)
+          });
+    return [...filtered].sort((a, b) => {
+      // Critical always absolute last, At Risk second-to-last
+      const aRisk = RISK_ORDER[a.riskLevel] ?? 0;
+      const bRisk = RISK_ORDER[b.riskLevel] ?? 0;
+      if (aRisk !== bRisk) return aRisk - bRisk;
+      // Within same risk tier, Boosted first → Normal → Buried
+      const aStatus = STATUS_ORDER[a.stockStatus] ?? 1;
+      const bStatus = STATUS_ORDER[b.stockStatus] ?? 1;
+      return aStatus - bStatus;
     });
   }
 
@@ -381,8 +477,8 @@ export default class NexusCustomerPortal extends LightningElement {
               // Show success toast
               this.dispatchEvent(
                 new ShowToastEvent({
-                  title: "Paiement confirmé !",
-                  message: "Votre commande a bien été enregistrée.",
+                  title: "Payment confirmed!",
+                  message: "Your order has been successfully placed.",
                   variant: "success"
                 })
               );
@@ -397,10 +493,10 @@ export default class NexusCustomerPortal extends LightningElement {
               );
               this.dispatchEvent(
                 new ShowToastEvent({
-                  title: "Erreur de paiement",
+                  title: "Payment error",
                   message:
                     (err && err.body && err.body.message) ||
-                    "Impossible de vérifier le paiement.",
+                    "Unable to verify payment.",
                   variant: "error"
                 })
               );
@@ -412,8 +508,8 @@ export default class NexusCustomerPortal extends LightningElement {
         this.activeTab = "cart";
         this.dispatchEvent(
           new ShowToastEvent({
-            title: "Paiement annulé",
-            message: "Votre panier est toujours disponible.",
+            title: "Payment cancelled",
+            message: "Your cart is still available.",
             variant: "warning"
           })
         );
@@ -1279,7 +1375,63 @@ export default class NexusCustomerPortal extends LightningElement {
   }
 
   handleCartSliderQuote() {
+    this._sliderQuoteModal = true;
+    this._sliderQuoteGenerating = true;
+    this._sliderQuoteResult = false;
+    this._sliderQuoteError = null;
+
+    let cartItems = [];
+    try {
+      const raw = sessionStorage.getItem(CART_KEY);
+      cartItems = raw ? JSON.parse(raw) : [];
+    } catch {
+      cartItems = [];
+    }
+
+    const cartPayload = cartItems.map((item) => ({
+      productId: item.productId || null,
+      name: item.name,
+      family: item.family || null,
+      quantity: parseInt(item.quantity, 10) || 1,
+      unitPrice: parseFloat(String(item.unitPrice).replace(/[^0-9.]/g, "")) || 0
+    }));
+
+    requestQuoteFromCart({
+      cartJSON: JSON.stringify(cartPayload),
+      customerNote: ""
+    })
+      .then((result) => {
+        this._sliderQuoteGenerating = false;
+        this._sliderQuoteResult = true;
+        this._sliderQuoteId = result.quoteId;
+        this._sliderQuoteName = result.quoteName || "";
+        sessionStorage.removeItem(CART_KEY);
+        this.cart = [];
+      })
+      .catch((err) => {
+        this._sliderQuoteGenerating = false;
+        this._sliderQuoteResult = true;
+        this._sliderQuoteError = err.body
+          ? err.body.message
+          : "An error occurred.";
+      });
+  }
+
+  handleSliderQuoteClose() {
+    this._sliderQuoteModal = false;
+    this._sliderQuoteGenerating = false;
+    this._sliderQuoteResult = false;
+    this._sliderQuoteError = null;
+  }
+
+  handleSliderQuoteGoToQuotes() {
+    this.handleSliderQuoteClose();
     this.activeTab = "quotations";
+    this._pushNavUpdate();
+  }
+
+  get _sliderQuoteHasError() {
+    return !!this._sliderQuoteError;
   }
 
   handleCartSliderViewFull() {
@@ -1457,6 +1609,156 @@ export default class NexusCustomerPortal extends LightningElement {
   handlePriority(e) {
     this.casePriority = e.currentTarget.dataset.priority;
   }
+  handleCaseSubjectChange(e) {
+    this.caseSubject = e.target.value;
+  }
+  handleCaseDescriptionChange(e) {
+    this.caseDescription = e.target.value;
+  }
+  handleCaseOrderRefChange(e) {
+    this.caseOrderRef = e.target.value;
+  }
+  handleCaseFilesChange(e) {
+    const files = Array.from(e.target.files || []);
+    this.caseFilesRaw = files;
+    this.caseFiles = files.map((file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type
+    }));
+  }
+  get hasCaseFiles() {
+    return this.caseFiles && this.caseFiles.length > 0;
+  }
+  get caseFilesLabel() {
+    if (!this.hasCaseFiles) return "";
+    if (this.caseFiles.length === 1) return this.caseFiles[0].name;
+    return `${this.caseFiles.length} files selected`;
+  }
+  async handleSubmitCase() {
+    const subject = (this.caseSubject || "").trim();
+    const description = (this.caseDescription || "").trim();
+    const orderRef = (this.caseOrderRef || "").trim();
+
+    if (!subject || !description) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Missing information",
+          message:
+            "Please provide both a subject and a description for your case.",
+          variant: "error"
+        })
+      );
+      return;
+    }
+
+    this.caseSubmitting = true;
+    try {
+      const result = await createCase({
+        caseType: this.caseType,
+        subject,
+        priority: this.casePriority,
+        description,
+        orderRef
+      });
+
+      let successMessage = `Support case ${result.caseNumber} has been created successfully.`;
+      if (this.caseFilesRaw && this.caseFilesRaw.length) {
+        try {
+          await this.uploadCaseEvidence(result.caseId);
+          successMessage += " Evidence has been attached to the case.";
+        } catch (uploadError) {
+          console.error("[NexusPortal] uploadCaseFiles error:", uploadError);
+          this.dispatchEvent(
+            new ShowToastEvent({
+              title: "Case created",
+              message: `${successMessage} However, evidence upload failed. Please try again.`,
+              variant: "warning"
+            })
+          );
+          return;
+        }
+      }
+
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Case submitted",
+          message: successMessage,
+          variant: "success"
+        })
+      );
+      this.caseSubject = "";
+      this.caseDescription = "";
+      this.caseOrderRef = "";
+      this.casePriority = "Medium";
+      this.caseStep = 1;
+      this.caseFiles = [];
+      this.caseFilesRaw = [];
+      this.caseKey++;
+    } catch (error) {
+      const message =
+        (error && error.body && error.body.message) ||
+        (error && error.message) ||
+        "Unable to create the support case. Please try again.";
+      console.error("[NexusPortal] createCase error:", error);
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Submission failed",
+          message,
+          variant: "error"
+        })
+      );
+    } finally {
+      this.caseSubmitting = false;
+    }
+  }
+
+  async uploadCaseEvidence(caseId) {
+    const files = this.caseFilesRaw || [];
+    if (!files.length) {
+      return;
+    }
+
+    const fileNames = [];
+    const fileTypes = [];
+    const base64Data = [];
+    const maxBytes = 10 * 1024 * 1024;
+
+    for (const file of files) {
+      if (file.size > maxBytes) {
+        throw new Error(`File ${file.name} exceeds the 10MB upload limit.`);
+      }
+      fileNames.push(file.name);
+      fileTypes.push(file.type || "application/octet-stream");
+      // eslint-disable-next-line no-await-in-loop
+      base64Data.push(await this.readFileAsBase64(file));
+    }
+
+    await uploadCaseFiles({
+      caseId,
+      fileNames,
+      fileTypes,
+      fileData: base64Data
+    });
+  }
+
+  readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result === "string") {
+          const base64String = result.split(",")[1] || result;
+          resolve(base64String);
+        } else {
+          reject(new Error("Unable to read file."));
+        }
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
   handleNextCaseStep() {
     this.caseStep = 2;
   }
@@ -1608,6 +1910,11 @@ export default class NexusCustomerPortal extends LightningElement {
   }
   handleKpiSpent() {
     this.activeTab = "orders";
+    this._pushNavUpdate();
+  }
+
+  handleNavigateToSwap() {
+    this.activeTab = "swap";
     this._pushNavUpdate();
   }
 

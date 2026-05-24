@@ -1,0 +1,192 @@
+<template>
+  <div class="nlt-wrap">
+    <!-- ══ Header ══════════════════════════════════════════════════════════════ -->
+    <div class="nlt-header">
+      <div class="nlt-brand">
+        <span class="nlt-brand-n">N</span>
+        <span class="nlt-brand-text">NEXUS</span>
+        <span class="nlt-brand-sep">·</span>
+        <span class="nlt-brand-sub">Live Track</span>
+      </div>
+      <template if:true={isLive}>
+        <div class="nlt-live-pill">
+          <span class="nlt-live-dot"></span>
+          <span>LIVE</span>
+        </div>
+      </template>
+      <template if:true={isDelivered}>
+        <div class="nlt-delivered-pill">
+          <lightning-icon
+            icon-name="utility:check"
+            size="x-small"
+            variant="inverse"
+          ></lightning-icon>
+          <span>Delivered</span>
+        </div>
+      </template>
+    </div>
+
+    <!-- ══ Loading ═══════════════════════════════════════════════════════════════ -->
+    <template if:true={isLoading}>
+      <div class="nlt-loading">
+        <lightning-spinner
+          size="medium"
+          alternative-text="Chargement..."
+          variant="brand"
+        ></lightning-spinner>
+        <p class="nlt-loading-text">Loading tracking info...</p>
+      </div>
+    </template>
+
+    <!-- ══ Invalid / not found ════════════════════════════════════════════════════ -->
+    <template if:true={isInvalid}>
+      <div class="nlt-invalid">
+        <div class="nlt-invalid-icon">
+          <lightning-icon
+            icon-name="utility:error"
+            size="large"
+            variant="inverse"
+          ></lightning-icon>
+        </div>
+        <h2 class="nlt-invalid-title">Invalid link</h2>
+        <p class="nlt-invalid-sub">
+          This tracking link is invalid or has expired.
+        </p>
+      </div>
+    </template>
+
+    <!-- ══ Main content ══════════════════════════════════════════════════════════ -->
+    <template if:true={hasData}>
+      <!-- Map -->
+      <template if:true={hasPosition}>
+        <div class="nlt-map-wrap">
+          <lightning-map
+            map-markers={mapMarkers}
+            zoom-level="15"
+            markers-title="Rider en route"
+            class="nlt-map"
+          ></lightning-map>
+        </div>
+      </template>
+      <template if:false={hasPosition}>
+        <div class="nlt-map-placeholder">
+          <lightning-icon
+            icon-name="utility:location"
+            size="large"
+          ></lightning-icon>
+          <p>Waiting for first GPS signal...</p>
+        </div>
+      </template>
+
+      <!-- ── Other active deliveries strip ────────────────────────────────── -->
+      <template if:true={hasOthers}>
+        <div class="nlt-others-wrap">
+          <span class="nlt-others-label">Other active deliveries</span>
+          <div class="nlt-others-strip">
+            <template for:each={otherDeliveries} for:item="pin">
+              <button
+                key={pin.trackingToken}
+                class={pin.cardClass}
+                data-token={pin.trackingToken}
+                onclick={selectOther}
+              >
+                <lightning-icon
+                  icon-name="utility:location"
+                  size="x-small"
+                  class="nlt-pin-icon"
+                ></lightning-icon>
+                <span class="nlt-pin-num">{pin.shortNum}</span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- Info card -->
+      <div class="nlt-info-card">
+        <!-- "Viewing other order" banner + back button -->
+        <template if:true={isViewingOther}>
+          <div class="nlt-other-banner">
+            <lightning-icon
+              icon-name="utility:location"
+              size="x-small"
+              class="nlt-other-banner-icon"
+            ></lightning-icon>
+            <span>Other delivery · {orderNumber}</span>
+            <button class="nlt-back-btn" onclick={backToMyOrder}>
+              ← My order
+            </button>
+          </div>
+        </template>
+
+        <!-- Own order row (always shown) -->
+        <template if:false={isViewingOther}>
+          <div class="nlt-order-row">
+            <div class="nlt-order-icon">
+              <lightning-icon
+                icon-name="utility:package"
+                size="small"
+                variant="inverse"
+              ></lightning-icon>
+            </div>
+            <div>
+              <div class="nlt-order-label">Order</div>
+              <div class="nlt-order-num">{orderNumber}</div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Delivered state (own order) -->
+        <template if:true={isDelivered}>
+          <div class="nlt-status-delivered">
+            <lightning-icon
+              icon-name="utility:check"
+              size="small"
+              variant="inverse"
+            ></lightning-icon>
+            <div>
+              <div class="nlt-status-title">Delivery completed!</div>
+              <div class="nlt-status-sub">
+                Thank you for choosing Nexus Commerce.
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- In-transit details (own order only) -->
+        <template if:true={showEtaRow}>
+          <div class="nlt-eta-row">
+            <div class="nlt-eta-block">
+              <div class="nlt-eta-label">Estimated arrival</div>
+              <div class="nlt-eta-val">{etaLabel}</div>
+            </div>
+            <div class="nlt-refresh-info">
+              <lightning-icon
+                icon-name="utility:refresh"
+                size="x-small"
+                class="nlt-refresh-icon"
+              ></lightning-icon>
+              <span>Auto-refresh · 10s</span>
+            </div>
+          </div>
+          <template if:true={riderAddress}>
+            <div class="nlt-location-row">
+              <lightning-icon
+                icon-name="utility:location"
+                size="x-small"
+                class="nlt-loc-icon"
+              ></lightning-icon>
+              <span class="nlt-location-text">{riderAddress}</span>
+            </div>
+          </template>
+        </template>
+      </div>
+
+      <!-- Powered by footer -->
+      <div class="nlt-footer">
+        <span>Tracking powered by </span>
+        <strong>Traccar · OSRM · Nexus</strong>
+      </div>
+    </template>
+  </div>
+</template>

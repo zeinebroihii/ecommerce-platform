@@ -1,0 +1,157 @@
+<template>
+  <div class="nmd-wrap">
+    <!-- ── Loading ── -->
+    <template if:true={isLoading}>
+      <div class="nmd-center">
+        <lightning-spinner
+          size="medium"
+          alternative-text="Loading..."
+        ></lightning-spinner>
+      </div>
+    </template>
+
+    <!-- ── Error ── -->
+    <template if:true={hasError}>
+      <div class="nmd-center nmd-error-state">
+        <lightning-icon
+          icon-name="utility:error"
+          size="medium"
+          variant="error"
+        ></lightning-icon>
+        <p class="nmd-error-msg">{errorMsg}</p>
+        <button class="nmd-btn nmd-btn-secondary" onclick={handleClose}>
+          Close
+        </button>
+      </div>
+    </template>
+
+    <!-- ── Already Delivered ── -->
+    <template if:true={isAlready}>
+      <div class="nmd-order-header">
+        <div class="nmd-order-icon nmd-icon-green">
+          <lightning-icon
+            icon-name="utility:check"
+            size="small"
+            variant="inverse"
+          ></lightning-icon>
+        </div>
+        <div class="nmd-order-meta">
+          <div class="nmd-order-label">Order</div>
+          <div class="nmd-order-num">{orderNumber}</div>
+        </div>
+        <span class={statusBadgeCls}>{orderStatus}</span>
+      </div>
+      <div class="nmd-info-box">
+        <lightning-icon
+          icon-name="utility:info"
+          size="x-small"
+        ></lightning-icon>
+        <span
+          >This order is already marked as <strong>Delivered</strong>. The buyer
+          has been notified.</span
+        >
+      </div>
+      <div class="nmd-actions">
+        <button class="nmd-btn nmd-btn-secondary" onclick={handleClose}>
+          Close
+        </button>
+      </div>
+    </template>
+
+    <!-- ── Ready: Confirmation form ── -->
+    <template if:true={isReady}>
+      <div class="nmd-order-header">
+        <div class="nmd-order-icon">
+          <lightning-icon
+            icon-name="utility:package"
+            size="small"
+            variant="inverse"
+          ></lightning-icon>
+        </div>
+        <div class="nmd-order-meta">
+          <div class="nmd-order-label">Mark as Delivered</div>
+          <div class="nmd-order-num">{orderNumber}</div>
+        </div>
+        <span class={statusBadgeCls}>{orderStatus}</span>
+      </div>
+
+      <div class="nmd-confirm-body">
+        <p class="nmd-confirm-text">
+          Confirm that order <strong>{orderNumber}</strong> has been
+          successfully delivered to the buyer.
+        </p>
+        <template if:true={hasBuyerPhone}>
+          <div class="nmd-phone-row">
+            <lightning-icon
+              icon-name="utility:chat"
+              size="x-small"
+              class="nmd-phone-icon"
+            ></lightning-icon>
+            <div class="nmd-phone-details">
+              <span class="nmd-phone-label"
+                >WhatsApp confirmation will be sent to:</span
+              >
+              <span class="nmd-phone-val">{buyerPhone}</span>
+            </div>
+          </div>
+        </template>
+        <template if:false={hasBuyerPhone}>
+          <div class="nmd-warn">
+            <lightning-icon
+              icon-name="utility:warning"
+              size="x-small"
+            ></lightning-icon>
+            <span
+              >No buyer WhatsApp on file — notification will not be sent.</span
+            >
+          </div>
+        </template>
+      </div>
+
+      <div class="nmd-actions">
+        <button class="nmd-btn nmd-btn-secondary" onclick={handleClose}>
+          Cancel
+        </button>
+        <button
+          class="nmd-btn nmd-btn-primary"
+          onclick={handleConfirm}
+          disabled={confirmDisabled}
+        >
+          <template if:true={confirming}>
+            <lightning-spinner
+              size="x-small"
+              alternative-text="Saving..."
+            ></lightning-spinner>
+            &nbsp;Saving...
+          </template>
+          <template if:false={confirming}> Mark as Delivered </template>
+        </button>
+      </div>
+    </template>
+
+    <!-- ── Success ── -->
+    <template if:true={isSuccess}>
+      <div class="nmd-success">
+        <div class="nmd-success-icon">
+          <lightning-icon
+            icon-name="utility:check"
+            size="large"
+            variant="inverse"
+          ></lightning-icon>
+        </div>
+        <h3 class="nmd-success-title">Order Delivered!</h3>
+        <template if:true={hasBuyerPhone}>
+          <p class="nmd-success-sub">
+            WhatsApp confirmation sent · Awaiting buyer receipt
+          </p>
+        </template>
+        <template if:false={hasBuyerPhone}>
+          <p class="nmd-success-sub">Order marked as Delivered successfully.</p>
+        </template>
+        <button class="nmd-btn nmd-btn-primary" onclick={handleClose}>
+          Done
+        </button>
+      </div>
+    </template>
+  </div>
+</template>

@@ -1,6 +1,8 @@
 public without sharing class NewsletterController {
   private static final String SITE_URL = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/';
+  private static final String PORTAL_URL = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/customportal';
   private static final String CATALOG_URL = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/?section=catalog';
+  private static final String LOGIN_URL = 'https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/';
 
   // ── Subscribe ───────────────────────────────────────────────────────────
   @AuraEnabled
@@ -199,7 +201,11 @@ public without sharing class NewsletterController {
       descText = p.Description.length() > 220
         ? p.Description.substring(0, 220) + '…'
         : p.Description;
-    String productUrl = SITE_URL + '?productId=' + p.Id;
+    String startUrl = EncodingUtil.urlEncode(
+      '/ss/s/customportal?productId=' + p.Id,
+      'UTF-8'
+    );
+    String productUrl = LOGIN_URL + '?startURL=' + startUrl;
 
     String html = htmlOpen();
     html += vortexHero(
@@ -319,19 +325,6 @@ public without sharing class NewsletterController {
       'text-decoration:none;padding:14px 34px;border-radius:50px;font-size:14px;font-weight:700;' +
       'letter-spacing:0.03em;">Buy Now</a>' +
       '</td></tr></table>';
-
-    if (
-      String.isNotBlank(p.Image_URL__c) && p.Image_URL__c.startsWith('http')
-    ) {
-      html +=
-        '<div style="margin-top:36px;overflow:hidden;background:#f5f5f5;">' +
-        '<img src="' +
-        escHtml(p.Image_URL__c) +
-        '" width="504" ' +
-        'style="display:block;width:100%;height:auto;" alt="' +
-        escHtml(p.Name) +
-        '" /></div>';
-    }
 
     html += '</td></tr>';
     return html;
@@ -495,7 +488,7 @@ public without sharing class NewsletterController {
       '</td>' +
       '<td align="right" valign="middle" style="padding-left:16px;">' +
       '<a href="' +
-      CATALOG_URL +
+      LOGIN_URL +
       '" style="display:inline-block;background:#0a0a0a;color:#ffffff;' +
       'text-decoration:none;padding:10px 22px;border-radius:50px;font-size:12px;font-weight:700;' +
       'white-space:nowrap;">View All</a>' +

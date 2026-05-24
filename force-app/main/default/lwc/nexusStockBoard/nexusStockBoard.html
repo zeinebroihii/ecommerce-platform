@@ -1,57 +1,64 @@
 <template>
-    <div class="nsb-wrap">
-
-        <!-- ── Header ── -->
-        <div class="nsb-header">
-            <div class="nsb-header-left">
-                <h3 class="nsb-title">Stock Optimization</h3>
-                <span class="nsb-badge">{totalLabel}</span>
-            </div>
-            <div class="nsb-header-right">
-                <button class="nsb-btn-outline" onclick={handleAudit}>
-                    <lightning-icon icon-name="utility:refresh" size="x-small" class="nsb-btn-icon"></lightning-icon>
-                    Run AI Audit
-                </button>
-                <button class="nsb-btn-dark" onclick={handleAddProduct}>
-                    <lightning-icon icon-name="utility:add" size="x-small" class="nsb-btn-icon"></lightning-icon>
-                    Add Product
-                </button>
-            </div>
-        </div>
-
-        <!-- ── Main grid ── -->
-        <div class="nsb-grid">
-
-            <!-- Product cards (left) -->
-            <div class="nsb-products-col">
-                <template if:true={isEmpty}>
-                    <div class="nsb-empty">No active products yet.</div>
-                </template>
-                <template if:true={hasProducts}>
-                    <div class="nsb-cards-grid">
-                        <template for:each={_products} for:item="p">
-                            <c-nexus-product-card
-                                key={p.productId}
-                                product-id={p.productId}
-                                product-name={p.name}
-                                family={p.family}
-                                price={p.price}
-                                formatted-price={p.formattedPrice}
-                                stock={p.stock}
-                                capacity={p.capacity}
-                                status={p.status}
-                                image-url={p.imageUrl}
-                            ></c-nexus-product-card>
-                        </template>
-                    </div>
-                </template>
-            </div>
-
-            <!-- AI Guard + Trends panel (right) -->
-            <div class="nsb-guard-col">
-                <c-nexus-stock-guard></c-nexus-stock-guard>
-            </div>
-
-        </div>
+  <div class="nsb-wrap">
+    <!-- ── Header ── -->
+    <div class="nsb-header">
+      <div class="nsb-header-left">
+        <h3 class="nsb-title">Stock Optimization</h3>
+        <span class="nsb-badge">{totalLabel}</span>
+      </div>
+      <div class="nsb-header-right">
+        <button class="nsb-btn-outline" onclick={handleAudit}>
+          <lightning-icon
+            icon-name="utility:refresh"
+            size="x-small"
+            class="nsb-btn-icon"
+          ></lightning-icon>
+          Run AI Audit
+        </button>
+        <button class="nsb-btn-dark" onclick={handleAddProduct}>
+          <lightning-icon
+            icon-name="utility:add"
+            size="x-small"
+            class="nsb-btn-icon"
+          ></lightning-icon>
+          Add Product
+        </button>
+      </div>
     </div>
+
+    <!-- ── Main grid ── -->
+    <div class="nsb-grid">
+      <!-- Product cards (left) -->
+      <div class="nsb-products-col">
+        <template if:true={isEmpty}>
+          <div class="nsb-empty">No active products yet.</div>
+        </template>
+        <template if:true={hasProducts}>
+          <div class="nsb-cards-grid">
+            <template for:each={_products} for:item="p">
+              <c-nexus-product-card
+                key={p.productId}
+                product-id={p.productId}
+                product-name={p.name}
+                family={p.family}
+                price={p.price}
+                formatted-price={p.formattedPrice}
+                stock={p.stock}
+                capacity={p.capacity}
+                status={p.status}
+                image-url={p.imageUrl}
+                committed-qty={p.committedQty}
+                has-open-reorder={p.hasOpenReorder}
+              ></c-nexus-product-card>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- AI Guard + Trends panel (right) -->
+      <div class="nsb-guard-col">
+        <c-nexus-stock-guard></c-nexus-stock-guard>
+      </div>
+    </div>
+  </div>
 </template>

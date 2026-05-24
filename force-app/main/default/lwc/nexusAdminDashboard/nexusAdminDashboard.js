@@ -24,6 +24,9 @@ export default class NexusAdminDashboard extends NavigationMixin(
   get isPackages() {
     return this.activeTab === "packages";
   }
+  get isAnalytics() {
+    return this.activeTab === "analytics";
+  }
 
   get tabCrmClass() {
     return this.activeTab === "crm" ? "nad-tab nad-tab-active" : "nad-tab";
@@ -33,6 +36,14 @@ export default class NexusAdminDashboard extends NavigationMixin(
   }
   get tabPackagesClass() {
     return this.activeTab === "packages" ? "nad-tab nad-tab-active" : "nad-tab";
+  }
+  get tabAnalyticsClass() {
+    return this.activeTab === "analytics"
+      ? "nad-tab nad-tab-active"
+      : "nad-tab";
+  }
+  get powerBiEmbedUrl() {
+    return "https://app.powerbi.com/reportEmbed?reportId=81994956-e352-4ef0-9120-923269cf59ef&autoAuth=true";
   }
 
   handleTabClick(event) {

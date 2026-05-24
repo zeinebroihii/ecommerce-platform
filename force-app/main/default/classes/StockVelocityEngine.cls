@@ -52,6 +52,33 @@ public without sharing class StockVelocityEngine implements Schedulable {
       soldByProduct.put((Id) ar.get('pid'), (Decimal) ar.get('qty'));
     }
 
+    // ── 2b. Get units + quote count + pipeline value per product ────────────
+    Map<Id, Decimal> quotedByProduct = new Map<Id, Decimal>();
+    Map<Id, Integer> quoteCountByProduct = new Map<Id, Integer>();
+    Map<Id, Decimal> quoteValueByProduct = new Map<Id, Decimal>();
+    for (AggregateResult ar : [
+      SELECT
+        Product__c pid,
+        SUM(Quantity__c) qty,
+        COUNT_DISTINCT(Quote__c) cnt,
+        SUM(Quote__r.GrandTotal__c) val
+      FROM NexusQuoteLineItem__c
+      WHERE
+        Product__c IN :productIds
+        AND Quote__r.Status__c NOT IN (
+          'Accepted',
+          'Rejected',
+          'Signed',
+          'Expired'
+        )
+      GROUP BY Product__c
+    ]) {
+      Id pid = (Id) ar.get('pid');
+      quotedByProduct.put(pid, (Decimal) ar.get('qty'));
+      quoteCountByProduct.put(pid, Integer.valueOf((Decimal) ar.get('cnt')));
+      quoteValueByProduct.put(pid, (Decimal) ar.get('val'));
+    }
+
     // ── 3. Calculate velocity + risk for each stock record ────────────────
     List<Stock__c> toUpdate = new List<Stock__c>();
 
@@ -59,11 +86,15 @@ public without sharing class StockVelocityEngine implements Schedulable {
       Decimal sold = soldByProduct.get(s.Product__c) ?? 0;
       Decimal velocity = sold / 30.0;
       Decimal stock = s.Quantity_Available__c ?? 0;
+      Decimal quoted = quotedByProduct.get(s.Product__c) ?? 0;
+      Integer quoteCount = quoteCountByProduct.get(s.Product__c) ?? 0;
+      Decimal quoteValue = quoteValueByProduct.get(s.Product__c) ?? 0;
+      Decimal effectiveStock = Math.max(0, stock - quoted);
       Decimal threshold = s.Reorder_Threshold__c ?? 10;
 
       Integer daysLeft;
       if (velocity > 0) {
-        daysLeft = Integer.valueOf(Math.floor(stock / velocity));
+        daysLeft = Integer.valueOf(Math.floor(effectiveStock / velocity));
       } else {
         daysLeft = 999; // no sales → no immediate risk
       }
@@ -78,7 +109,16 @@ public without sharing class StockVelocityEngine implements Schedulable {
       else
         riskLevel = 'Healthy';
 
-      String aiSummary = buildAISummary(s, velocity, daysLeft, riskLevel, sold);
+      String aiSummary = buildAISummary(
+        s,
+        velocity,
+        daysLeft,
+        riskLevel,
+        sold,
+        quoted,
+        quoteCount,
+        quoteValue
+      );
 
       Stock__c upd = new Stock__c(
         Id = s.Id,
@@ -107,6 +147,10 @@ public without sharing class StockVelocityEngine implements Schedulable {
     }
     if (!events.isEmpty())
       EventBus.publish(events);
+
+    // ── 5. Cascade into BoostBuryEngine so Product2.Stock_Status__c ──────────
+    // is always in sync — catalog boost/bury sorting depends on this field
+    BoostBuryEngine.run();
   }
 
   // ── AI summary builder (rule-based, no API call needed) ──────────────────
@@ -115,48 +159,105 @@ public without sharing class StockVelocityEngine implements Schedulable {
     Decimal velocity,
     Integer daysLeft,
     String riskLevel,
-    Decimal sold30
+    Decimal sold30,
+    Decimal quoted,
+    Integer quoteCount,
+    Decimal quoteValue
   ) {
-    if (riskLevel == 'Healthy')
-      return null;
-
-    String productName = 'this product';
     Decimal stock = s.Quantity_Available__c ?? 0;
     Decimal threshold = s.Reorder_Threshold__c ?? 10;
     Decimal suggested = Math.max(sold30 * 1.5, threshold * 3).setScale(0);
+    Decimal effStock = Math.max(0, stock - quoted);
+
+    // Pipeline pressure note
+    String pipelineNote = '';
+    if (quoteCount > 0) {
+      String valStr = '$' + quoteValue.setScale(0).toPlainString();
+      pipelineNote =
+        ' Pipeline: ' +
+        quoteCount +
+        ' open quote' +
+        (quoteCount > 1 ? 's' : '') +
+        ' (' +
+        valStr +
+        ') — ' +
+        Integer.valueOf(quoted) +
+        ' units committed, effective stock: ' +
+        Integer.valueOf(effStock) +
+        '.';
+    }
+
+    // Healthy — only generate insight when there is meaningful pipeline pressure
+    if (riskLevel == 'Healthy') {
+      if (quoteCount > 0 && effStock <= threshold * 2) {
+        return 'HEALTHY (pipeline pressure): ' +
+          Integer.valueOf(stock) +
+          ' units on hand.' +
+          pipelineNote +
+          ' Stock appears adequate today, but open quotes could accelerate depletion.' +
+          ' Monitor closely and consider a pre-emptive reorder of ' +
+          Integer.valueOf(suggested) +
+          ' units.';
+      }
+      return null;
+    }
 
     if (riskLevel == 'Critical') {
+      String urgency = quoteCount > 0
+        ? ' Open quotes are competing for the remaining stock — fulfilment is at risk.'
+        : '';
       return 'CRITICAL: Only ' +
         Integer.valueOf(stock) +
-        ' units remaining. ' +
-        'At current velocity (' +
+        ' units in stock.' +
+        pipelineNote +
+        ' At current velocity (' +
         velocity.setScale(2) +
-        ' units/day), ' +
-        'stock will be exhausted in ' +
+        ' units/day), stock exhausted in ' +
         daysLeft +
-        ' day(s). ' +
-        'Recommended reorder quantity: ' +
+        ' day(s).' +
+        urgency +
+        ' Reorder ' +
         Integer.valueOf(suggested) +
         ' units immediately.';
     }
+
     if (riskLevel == 'At Risk') {
+      String quoteRisk = quoteCount > 0
+        ? ' With ' +
+          quoteCount +
+          ' open quote' +
+          (quoteCount > 1 ? 's' : '') +
+          ' in the pipeline, actual runway is shorter than history alone suggests.'
+        : '';
       return 'AT RISK: ' +
         Integer.valueOf(stock) +
-        ' units remaining (~' +
+        ' units in stock (~' +
         daysLeft +
-        ' days). ' +
-        'Velocity: ' +
+        ' days).' +
+        pipelineNote +
+        quoteRisk +
+        ' Velocity: ' +
         velocity.setScale(2) +
         ' units/day. ' +
-        'Reorder threshold is ' +
+        'Reorder threshold: ' +
         Integer.valueOf(threshold) +
         ' units. ' +
-        'Recommend scheduling a reorder of ' +
+        'Schedule a reorder of ' +
         Integer.valueOf(suggested) +
         ' units within 3 days.';
     }
+
     if (riskLevel == 'Overstock') {
       Decimal excessDays = velocity > 0 ? (stock / velocity).setScale(0) : 999;
+      String quoteAbsorb = quoteCount > 0
+        ? ' However, ' +
+          quoteCount +
+          ' open quote' +
+          (quoteCount > 1 ? 's' : '') +
+          ' (' +
+          Integer.valueOf(quoted) +
+          ' units) could absorb part of the surplus if closed.'
+        : '';
       return 'OVERSTOCK: ' +
         Integer.valueOf(stock) +
         ' units on hand (~' +
@@ -164,8 +265,9 @@ public without sharing class StockVelocityEngine implements Schedulable {
         ' days of supply). ' +
         'Only ' +
         velocity.setScale(2) +
-        ' units/day sold. ' +
-        'Consider running a promotion or bundling with fast-moving products to reduce inventory.';
+        ' units/day sold.' +
+        quoteAbsorb +
+        ' Consider a promotion or bundling with fast-moving products to reduce inventory.';
     }
     return null;
   }

@@ -164,9 +164,9 @@ public without sharing class QuoteController {
           FROM NexusQuoteLineItems__r
         )
       FROM TALEXO_Quote__c
-      WHERE Opportunity__r.AccountId = :accountId AND IsPrimary__c = TRUE
+      WHERE Opportunity__r.AccountId = :accountId
       ORDER BY CreatedDate DESC
-      LIMIT 20
+      LIMIT 100
     ]) {
       QuoteWrapper w = new QuoteWrapper();
       w.quoteId = q.Id;
@@ -365,6 +365,7 @@ public without sharing class QuoteController {
       lineItems.add(
         new NexusQuoteLineItem__c(
           Quote__c = q.Id,
+          Product__c = String.isNotBlank(ci.productId) ? ci.productId : null,
           ProductName__c = ci.name,
           ProductFamily__c = ci.family,
           Quantity__c = qty,
@@ -1447,6 +1448,7 @@ public without sharing class QuoteController {
         BulkDiscount__c,
         PaymentTerms__c,
         VersionNumber__c,
+        MessageThread__c,
         Opportunity__c,
         Opportunity__r.AccountId,
         Opportunity__r.Account.Name,
@@ -1471,34 +1473,81 @@ public without sharing class QuoteController {
       );
     }
 
-    // Fall back to 85% of grand total if admin never set a floor price
-    Decimal floor = (q.FloorPrice__c != null &&
-      q.FloorPrice__c > 0)
-      ? q.FloorPrice__c
-      : (q.GrandTotal__c != null ? q.GrandTotal__c * 0.85 : 0);
+    // Post counter offer as a customer message in the thread
+    // Sales rep sees it and responds — no auto-logic, pure conversation
+    String priceFormatted = counterPrice.setScale(2).toPlainString();
+    String customerMsg = '💬 Counter Offer: ' + priceFormatted + ' €';
+    if (String.isNotBlank(message))
+      customerMsg += '\n' + message;
 
-    if (counterPrice >= floor) {
-      // AUTO-ACCEPT
-      processQuoteDecision(
-        quoteId,
-        'Accepted',
-        'Price automatically accepted — counter-offer within allowed limits.'
-      );
-      return 'ACCEPTED';
-    } else if (counterPrice >= floor * 0.85) {
-      // AUTO-COUNTER: split the difference between counter and original price
-      Decimal midpoint = ((counterPrice + q.GrandTotal__c) / 2).setScale(2);
-      createAutoCounterVersion(q, midpoint, message);
-      return 'COUNTERED';
-    } else {
-      // AUTO-REJECT
-      processQuoteDecision(
-        quoteId,
-        'Rejected',
-        'Price automatically rejected — counter-offer too far below the floor price.'
-      );
-      return 'REJECTED';
-    }
+    String existing = String.isNotBlank(q.MessageThread__c)
+      ? q.MessageThread__c
+      : '[]';
+    String msgId = 'co' + String.valueOf(DateTime.now().getTime());
+    String msgTime = DateTime.now().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
+    String entry =
+      '{"id":"' +
+      msgId +
+      '","sender":"customer","text":' +
+      JSON.serialize(customerMsg) +
+      ',"time":"' +
+      msgTime +
+      '"}';
+    String updatedThread = existing == '[]'
+      ? '[' + entry + ']'
+      : existing.removeEnd(']') + ',' + entry + ']';
+
+    update new TALEXO_Quote__c(
+      Id = q.Id,
+      CustomerCounterPrice__c = counterPrice,
+      CounterMessage__c = message,
+      NegotiationStatus__c = 'Counter Received',
+      MessageThread__c = updatedThread
+    );
+
+    // Notify admin by email so they see the counter in Salesforce
+    notifyAdminCounterOffer(q.Id, counterPrice, message);
+
+    return 'COUNTERED';
+  }
+
+  @future
+  private static void notifyAdminCounterOffer(
+    Id quoteId,
+    Decimal counterPrice,
+    String message
+  ) {
+    TALEXO_Quote__c q = [
+      SELECT Id, Name, Opportunity__r.Account.Name
+      FROM TALEXO_Quote__c
+      WHERE Id = :quoteId
+      LIMIT 1
+    ];
+    List<User> admins = [
+      SELECT Email
+      FROM User
+      WHERE Profile.Name = 'System Administrator' AND IsActive = TRUE
+      LIMIT 1
+    ];
+    if (admins.isEmpty())
+      return;
+    Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+    mail.setToAddresses(new List<String>{ admins[0].Email });
+    mail.setSubject('💬 Counter Offer Received — ' + q.Name);
+    mail.setPlainTextBody(
+      'Counter offer from ' +
+        q.Opportunity__r.Account.Name +
+        '\n' +
+        'Quote: ' +
+        q.Name +
+        '\n' +
+        'Counter price: €' +
+        counterPrice.setScale(2).toPlainString() +
+        '\n' +
+        (String.isNotBlank(message) ? 'Note: ' + message + '\n' : '') +
+        '\nReply in the portal Messages tab.'
+    );
+    Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
   }
 
   // Creates a new "Auto Counter" quote version at the midpoint price and emails the customer.

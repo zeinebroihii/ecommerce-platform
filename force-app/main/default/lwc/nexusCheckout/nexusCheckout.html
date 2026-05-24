@@ -13,7 +13,7 @@
         >
           <polyline points="15 18 9 12 15 6" />
         </svg>
-        Retour au panier
+        Back to cart
       </button>
       <div class="nco-topbar-secure">
         <lightning-icon
@@ -39,17 +39,17 @@
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <span>Panier</span>
+        <span>Cart</span>
       </div>
       <div class="nco-progress-line nco-line-done"></div>
       <div class="nco-progress-step">
         <div class="nco-step-circle nco-step-active">2</div>
-        <span class="nco-step-label-active">Livraison</span>
+        <span class="nco-step-label-active">Shipping</span>
       </div>
       <div class="nco-progress-line nco-line-active"></div>
       <div class="nco-progress-step">
         <div class="nco-step-circle">3</div>
-        <span>Paiement</span>
+        <span>Payment</span>
       </div>
     </div>
 
@@ -72,7 +72,7 @@
                 d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
               />
             </svg>
-            <span>Récapitulatif</span>
+            <span>Order Summary</span>
             <span class="nco-badge">{itemCountLabel}</span>
           </div>
 
@@ -98,7 +98,7 @@
                 </div>
                 <div class="nco-item-info">
                   <span class="nco-item-name">{item.name}</span>
-                  <span class="nco-item-qty">Qté: {item.quantity}</span>
+                  <span class="nco-item-qty">Qty: {item.quantity}</span>
                 </div>
                 <div class="nco-item-price">{item.lineTotal} €</div>
               </div>
@@ -107,11 +107,11 @@
 
           <div class="nco-totals">
             <div class="nco-total-row">
-              <span>Sous-total</span>
+              <span>Subtotal</span>
               <span>{subtotal} €</span>
             </div>
             <div class="nco-total-row">
-              <span>Livraison</span>
+              <span>Shipping</span>
               <span class="nco-shipping">{shippingLabel}</span>
             </div>
             <template if:true={hasSparksDiscount}>
@@ -132,7 +132,7 @@
               icon-name="utility:shield"
               size="x-small"
             ></lightning-icon>
-            <span>Paiement 100% sécurisé par Stripe</span>
+            <span>100% secure checkout powered by Stripe</span>
           </div>
         </div>
 
@@ -149,7 +149,7 @@
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span>Adresse de livraison</span>
+            <span>Shipping Address</span>
           </div>
 
           <template if:true={errorMsg}>
@@ -164,55 +164,55 @@
 
           <div class="nco-form">
             <div class="nco-field">
-              <label class="nco-label">Rue *</label>
+              <label class="nco-label">Street *</label>
               <input
-                class="nco-input"
+                class={streetInputClass}
                 type="text"
                 value={street}
-                placeholder="123 Rue de la Paix"
+                placeholder="123 Main Street"
                 oninput={handleStreet}
               />
             </div>
             <div class="nco-row">
               <div class="nco-field">
-                <label class="nco-label">Ville *</label>
+                <label class="nco-label">City *</label>
                 <input
                   class="nco-input"
                   type="text"
                   value={city}
-                  placeholder="Paris"
+                  placeholder="City"
                   oninput={handleCity}
                 />
               </div>
               <div class="nco-field">
-                <label class="nco-label">Région</label>
+                <label class="nco-label">State / Region</label>
                 <input
                   class="nco-input"
                   type="text"
                   value={state}
-                  placeholder="Île-de-France"
+                  placeholder="Region"
                   oninput={handleState}
                 />
               </div>
             </div>
             <div class="nco-row">
               <div class="nco-field">
-                <label class="nco-label">Code postal</label>
+                <label class="nco-label">Postal code</label>
                 <input
                   class="nco-input"
                   type="text"
                   value={zipCode}
-                  placeholder="75001"
+                  placeholder="00000"
                   oninput={handleZip}
                 />
               </div>
               <div class="nco-field">
-                <label class="nco-label">Pays *</label>
+                <label class="nco-label">Country *</label>
                 <input
                   class="nco-input"
                   type="text"
                   value={country}
-                  placeholder="France"
+                  placeholder="Country"
                   oninput={handleCountry}
                 />
               </div>
@@ -220,12 +220,10 @@
           </div>
 
           <div class="nco-next-step-note">
-            <div class="nco-next-step-title">
-              Étape suivante — Paiement Stripe
-            </div>
+            <div class="nco-next-step-title">Next step — Stripe Payment</div>
             <p class="nco-next-step-sub">
-              Carte bancaire, Apple Pay, Google Pay et plus — page sécurisée
-              Stripe.
+              Credit card, Apple Pay, Google Pay and more — secure Stripe
+              checkout.
             </p>
             <div class="nco-payment-icons">
               <span class="nco-card-chip">VISA</span>
@@ -253,7 +251,7 @@
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                 <line x1="1" y1="10" x2="23" y2="10" />
               </svg>
-              Continuer vers le paiement
+              Continue to payment
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -269,11 +267,23 @@
               <lightning-spinner
                 size="x-small"
                 variant="base"
-                alternative-text="Chargement"
+                alternative-text="Loading"
               ></lightning-spinner>
-              Redirection vers Stripe...
+              Redirecting to Stripe...
             </template>
           </button>
+
+          <!-- Hint shown when button is disabled due to missing fields -->
+          <template if:true={showAddressHint}>
+            <div class="nco-address-hint">
+              <lightning-icon
+                icon-name="utility:info"
+                size="x-small"
+                class="nco-hint-icon"
+              ></lightning-icon>
+              <span>Please fill in Street, City and Country to continue.</span>
+            </div>
+          </template>
         </div>
       </div>
     </div>

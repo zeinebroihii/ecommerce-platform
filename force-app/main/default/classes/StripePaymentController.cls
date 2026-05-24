@@ -395,13 +395,39 @@ public without sharing class StripePaymentController {
       Order o = new Order(Id = orderId, Status = 'Activated');
       if (String.isNotBlank(paymentIntentId)) {
         try {
-          // Store payment intent ID if the field exists on Order
           o.put('Stripe_Payment_Intent_Id__c', paymentIntentId);
         } catch (Exception ex) {
           /* field not deployed yet — skip silently */
         }
       }
       update o;
+
+      // Create Digital Passports — resolve ContactId directly from the portal
+      // user so we never depend on the order's AccountId being correct.
+      try {
+        Id portalContactId = null;
+        List<User> ru = [
+          SELECT ContactId
+          FROM User
+          WHERE Id = :UserInfo.getUserId()
+          LIMIT 1
+        ];
+        if (!ru.isEmpty() && ru[0].ContactId != null) {
+          portalContactId = ru[0].ContactId;
+        }
+        if (portalContactId != null) {
+          PassportAutoCreator.createPassportsForContact(
+            orderId,
+            portalContactId
+          );
+        } else {
+          PassportAutoCreator.createPassportsFromOrder(new List<Id>{ orderId });
+        }
+      } catch (Exception ex) {
+        System.debug(
+          '[StripePayment] Passport creation skipped: ' + ex.getMessage()
+        );
+      }
     } catch (AuraHandledException e) {
       throw e;
     } catch (Exception e) {

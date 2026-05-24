@@ -98,10 +98,11 @@
           <div class="ncpm-sugg-grid">
             <template for:each={suggestionsEnriched} for:item="s">
               <div key={s.id} class="ncpm-sugg-card">
+                <div class="ncpm-sugg-name">{s.bundleName}</div>
                 <div class="ncpm-sugg-top">
                   <span class={s.badgeClass}>{s.sourceBadge} · {s.status}</span>
                   <span class="ncpm-sugg-score">Score {s.scoreLabel}</span>
-                  <span class="ncpm-sugg-disc">-{s.discount}%</span>
+                  <span class="ncpm-sugg-disc">{s.discountLabel}</span>
                 </div>
                 <div class="ncpm-sugg-products">
                   <div class="ncpm-sugg-product ncpm-sugg-overstocked">

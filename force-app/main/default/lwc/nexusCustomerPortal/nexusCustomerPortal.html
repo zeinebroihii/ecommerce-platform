@@ -572,7 +572,9 @@
         <!-- ─ Passeport Digital ───────────────────────────────────────── -->
         <template if:true={isPassport}>
           <div class="ncp-section ncp-fullbleed">
-            <c-nexus-digital-passport></c-nexus-digital-passport>
+            <c-nexus-digital-passport
+              onnavigatetoswap={handleNavigateToSwap}
+            ></c-nexus-digital-passport>
           </div>
         </template>
 
@@ -1142,11 +1144,27 @@
                     <div class="ncp-field">
                       <label class="ncp-label">Claim Subject</label>
                       <input
+                        key={caseKey}
                         class="ncp-input"
                         type="text"
                         placeholder="e.g. Defective product"
+                        value={caseSubject}
+                        onchange={handleCaseSubjectChange}
                       />
                     </div>
+                    <div class="ncp-field">
+                      <label class="ncp-label">Order Number</label>
+                      <input
+                        key={caseKey}
+                        class="ncp-input"
+                        type="text"
+                        placeholder="Optional order number"
+                        value={caseOrderRef}
+                        onchange={handleCaseOrderRefChange}
+                      />
+                    </div>
+                  </div>
+                  <div class="ncp-form-row-2">
                     <div class="ncp-field">
                       <label class="ncp-label">Priority</label>
                       <div class="ncp-prio-group">
@@ -1184,9 +1202,12 @@
                   <div class="ncp-field">
                     <label class="ncp-label">Detailed Description</label>
                     <textarea
+                      key={caseKey}
                       class="ncp-textarea"
                       rows="5"
                       placeholder="Describe your issue in detail..."
+                      value={caseDescription}
+                      onchange={handleCaseDescriptionChange}
                     ></textarea>
                   </div>
                   <div class="ncp-upload-area">
@@ -1198,9 +1219,28 @@
                     </div>
                     <p class="ncp-upload-title">Attach Evidence</p>
                     <p class="ncp-upload-sub">PDF, JPG, PNG (Max 10MB)</p>
+                    <input
+                      type="file"
+                      class="ncp-case-file-input"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      multiple
+                      onchange={handleCaseFilesChange}
+                    />
+                    <template if:true={hasCaseFiles}>
+                      <div class="ncp-upload-selected">{caseFilesLabel}</div>
+                    </template>
                   </div>
                   <div class="ncp-expert-btns">
-                    <button class="ncp-submit-btn">Submit</button>
+                    <button
+                      class="ncp-submit-btn"
+                      onclick={handleSubmitCase}
+                      disabled={caseSubmitting}
+                    >
+                      <template if:true={caseSubmitting}
+                        >Submitting...</template
+                      >
+                      <template if:false={caseSubmitting}>Submit</template>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1545,6 +1585,83 @@
 
     <!-- ── AI Support Chat — replaced by Agentforce Embedded Service component in Experience Builder ── -->
     <!-- <c-nexus-support-chat account-id={profileAccountId}></c-nexus-support-chat> -->
+
+    <!-- ── Slider Quote Modal ── -->
+    <template if:true={_sliderQuoteModal}>
+      <div class="ncp-sq-overlay">
+        <div class="ncp-sq-modal">
+          <template if:true={_sliderQuoteGenerating}>
+            <div class="ncp-sq-loading">
+              <div class="ncp-sq-spinner">
+                <div class="ncp-sq-spinner-ring"></div>
+              </div>
+              <h3 class="ncp-sq-h">Preparing your quote...</h3>
+              <p class="ncp-sq-sub">This will only take a moment</p>
+            </div>
+          </template>
+          <template if:true={_sliderQuoteResult}>
+            <template if:true={_sliderQuoteHasError}>
+              <div class="ncp-sq-result">
+                <div class="ncp-sq-top">
+                  <button class="ncp-sq-close" onclick={handleSliderQuoteClose}>
+                    &#x2715;
+                  </button>
+                </div>
+                <h3 class="ncp-sq-h">Request Failed</h3>
+                <p class="ncp-sq-sub ncp-sq-error">{_sliderQuoteError}</p>
+                <button
+                  class="ncp-sq-btn-primary"
+                  onclick={handleSliderQuoteClose}
+                >
+                  Close
+                </button>
+              </div>
+            </template>
+            <template if:false={_sliderQuoteHasError}>
+              <div class="ncp-sq-result">
+                <div class="ncp-sq-top">
+                  <button class="ncp-sq-close" onclick={handleSliderQuoteClose}>
+                    &#x2715;
+                  </button>
+                </div>
+                <h3 class="ncp-sq-h">Your quote is ready</h3>
+                <p class="ncp-sq-sub ncp-sq-sub--name">{_sliderQuoteName}</p>
+                <p class="ncp-sq-sub">
+                  Your quote has been created and is ready to review. Our team
+                  is available to discuss pricing and terms with you.
+                </p>
+                <div class="ncp-sq-stats">
+                  <div class="ncp-sq-stat">
+                    <div class="ncp-sq-stat-label">Status</div>
+                    <div class="ncp-sq-stat-value ncp-sq-stat--green">
+                      Ready
+                    </div>
+                  </div>
+                  <div class="ncp-sq-stat">
+                    <div class="ncp-sq-stat-label">Response time</div>
+                    <div class="ncp-sq-stat-value ncp-sq-stat--green">
+                      Instant
+                    </div>
+                  </div>
+                </div>
+                <button
+                  class="ncp-sq-btn-primary"
+                  onclick={handleSliderQuoteGoToQuotes}
+                >
+                  View my quotes
+                </button>
+                <button
+                  class="ncp-sq-btn-ghost"
+                  onclick={handleSliderQuoteClose}
+                >
+                  Later
+                </button>
+              </div>
+            </template>
+          </template>
+        </div>
+      </div>
+    </template>
 
     <!-- ── Cart Slider (always present, slides in on add-to-cart) ── -->
     <c-nexus-cart-slider

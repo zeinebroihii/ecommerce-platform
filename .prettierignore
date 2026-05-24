@@ -9,3 +9,7 @@
 .vscode
 
 coverage/
+
+# Auto-generated files — not necessary to format
+**/package-lock.json
+orglist.json

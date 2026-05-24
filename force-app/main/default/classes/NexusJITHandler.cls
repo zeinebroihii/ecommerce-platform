@@ -76,12 +76,10 @@ global class NexusJITHandler implements Auth.SamlJitHandler {
       alias =
         'jit' + String.valueOf(Math.abs(Crypto.getRandomInteger())).left(4);
     String nick =
-      (fn + ln).left(34) +
-      String.valueOf(Math.abs(Crypto.getRandomInteger())).left(6);
+      (fn + ln).left(30) + String.valueOf(Math.abs(email.hashCode())).left(10);
     nick = nick.replaceAll('[^a-zA-Z0-9]', '').left(40);
     if (String.isBlank(nick))
-      nick =
-        'user' + String.valueOf(Math.abs(Crypto.getRandomInteger())).left(6);
+      nick = 'jit' + String.valueOf(Math.abs(email.hashCode())).left(7);
 
     // 7. Create the portal User
     User u = new User(

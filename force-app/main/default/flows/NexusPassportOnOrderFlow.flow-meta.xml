@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <description
+  >Auto-creates a Digital Passport for each product line in an Order when Status is set to Activated.</description>
+    <label>Nexus Passport on Order Activated</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value><stringValue>LightningFlowBuilder</stringValue></value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value><stringValue>AUTO_LAYOUT_CANVAS</stringValue></value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value><stringValue>LightningFlowBuilder</stringValue></value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+
+    <!-- After-Save, fires on Create or Update, Decision guards the Status check -->
+    <start>
+        <locationX>176</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_Status_Activated</targetReference>
+        </connector>
+        <object>Order</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+
+    <status>Active</status>
+
+    <!-- Decision: proceed when Status = Activated OR Processing -->
+    <decisions>
+        <name>Check_Status_Activated</name>
+        <label>Status is Activated or Processing?</label>
+        <locationX>176</locationX>
+        <locationY>120</locationY>
+        <defaultConnectorLabel>Other status (skip)</defaultConnectorLabel>
+        <rules>
+            <name>Is_Activated</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Activated</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Create_Passports</targetReference>
+            </connector>
+            <label>Activated</label>
+        </rules>
+        <rules>
+            <name>Is_Completed</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Completed</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Create_Passports</targetReference>
+            </connector>
+            <label>Completed</label>
+        </rules>
+    </decisions>
+
+    <!-- Apex action: creates Digital_Passport__c per OrderItem -->
+    <actionCalls>
+        <name>Create_Passports</name>
+        <label>Create Passports from Order</label>
+        <locationX>56</locationX>
+        <locationY>240</locationY>
+        <actionName>PassportAutoCreator</actionName>
+        <actionType>apex</actionType>
+        <inputParameters>
+            <name>orderIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+</Flow>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>QuoteAcceptanceRate__c</fullName>
+    <label>Quote Acceptance Rate (%)</label>
+    <type>Number</type>
+    <precision>5</precision>
+    <scale>1</scale>
+    <defaultValue>0</defaultValue>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+    <unique>false</unique>
+</CustomField>

@@ -516,9 +516,9 @@
   justify-content: center;
   gap: 8px;
   background: #fff;
-  border: 1.5px solid #a7f3d0;
+  border: 1.5px solid #0f172a;
   border-radius: 12px;
-  color: #059669;
+  color: #0f172a;
   font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
@@ -527,7 +527,8 @@
   transition: all 0.15s;
 }
 .ncs-quote-btn:hover {
-  background: #ecfdf5;
+  background: #0f172a;
+  color: #fff;
 }
 
 .ncs-checkout-btn {

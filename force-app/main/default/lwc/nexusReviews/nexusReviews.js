@@ -4,33 +4,63 @@ import getCombinedTestimonials from "@salesforce/apex/TestimonialController.getC
 const FALLBACK = [
   {
     testimonialId: "f1",
-    initials: "SJ",
-    customerName: "Sarah Jenkins",
-    role: "CTO, Global Logistics",
+    initials: "AM",
+    customerName: "Ahmed Mansouri",
+    role: "CEO, Atlas Tech Solutions",
     message:
-      "Nexus transformed our inventory management. The interface is intuitive and the predictive analytics are incredibly accurate.",
+      "Nexus has completely transformed our B2B procurement process. The client portal is seamless, quotes are signed within minutes, and the visibility over our orders is exceptional.",
     rating: 5,
     avatarColor: "emerald"
   },
   {
     testimonialId: "f2",
-    initials: "MD",
-    customerName: "Marc Dupont",
-    role: "Purchasing Director, EuroSystems",
+    initials: "SD",
+    customerName: "Sophie Durand",
+    role: "Head of Procurement, Groupe Meridian",
     message:
-      "The B2B portal is a game-changer. Our clients love the autonomy and transparency the platform provides.",
+      "The integrated e-signature and contract management reduced our sales cycle from 3 weeks to 48 hours. A remarkable productivity gain for our entire team.",
+    rating: 5,
+    avatarColor: "rose"
+  },
+  {
+    testimonialId: "f3",
+    initials: "CV",
+    customerName: "Carlos Vega",
+    role: "Head of Operations, TechVision Europe",
+    message:
+      "The real-time order tracking and inventory intelligence features are outstanding. Our supply chain visibility has never been this good — Nexus is now our operational backbone.",
     rating: 5,
     avatarColor: "indigo"
   },
   {
-    testimonialId: "f3",
-    initials: "ER",
-    customerName: "Elena Rodriguez",
-    role: "Founder, TechFlow",
+    testimonialId: "f4",
+    initials: "NB",
+    customerName: "Nadia Benali",
+    role: "Chief Information Officer, Pharma Maghreb",
     message:
-      "Exceptional customer support and seamless integration. Nexus has become the pillar of our digital growth.",
+      "AI lead scoring and the CRM dashboard let us prioritize prospects with impressive accuracy. Our conversion rate has increased by 40% since adopting Nexus.",
     rating: 5,
-    avatarColor: "rose"
+    avatarColor: "amber"
+  },
+  {
+    testimonialId: "f5",
+    initials: "TM",
+    customerName: "Thomas Müller",
+    role: "CFO, NordEurope Supply GmbH",
+    message:
+      "Transparency and control over our procurement budget have improved dramatically. The escrow payment system and automated invoicing give us full confidence in every transaction.",
+    rating: 5,
+    avatarColor: "emerald"
+  },
+  {
+    testimonialId: "f6",
+    initials: "LH",
+    customerName: "Leila Hamdani",
+    role: "Head of Partnerships, Méditerrée Industries",
+    message:
+      "Onboarding is fast, support is responsive, and the platform keeps evolving. Nexus is far more than a tool — it is a true digital growth partner.",
+    rating: 5,
+    avatarColor: "indigo"
   }
 ];
 

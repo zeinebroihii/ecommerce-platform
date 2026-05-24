@@ -1,24 +1,48 @@
 <template>
   <div class="nswr-wrap">
-
     <!-- ── Page Header ──────────────────────────────────────────────────────── -->
     <div class="nswr-page-header">
       <div class="nswr-page-header-left">
         <div class="nswr-page-header-icon">
-          <lightning-icon icon-name="utility:chart" size="small" variant="inverse"></lightning-icon>
+          <lightning-icon
+            icon-name="utility:chart"
+            size="small"
+            variant="inverse"
+          ></lightning-icon>
         </div>
         <div>
           <h1 class="nswr-page-title">Stock Intelligence</h1>
-          <p class="nswr-page-subtitle">Real-time velocity analysis &amp; AI reorder insights</p>
+          <p class="nswr-page-subtitle">
+            Real-time velocity analysis &amp; AI reorder insights
+          </p>
+        </div>
+        <div class="nswr-live-pill">
+          <span class="nswr-live-dot"></span>
+          Live
         </div>
       </div>
       <div class="nswr-page-header-right">
-        <button class="nswr-btn-outline-sm" onclick={handleRefresh} disabled={isLoading}>
-          <lightning-icon icon-name="utility:refresh" size="x-small"></lightning-icon>
+        <button
+          class="nswr-btn-outline-sm"
+          onclick={handleRefresh}
+          disabled={isLoading}
+        >
+          <lightning-icon
+            icon-name="utility:refresh"
+            size="x-small"
+          ></lightning-icon>
           Refresh
         </button>
-        <button class="nswr-btn-dark-sm" onclick={handleRunEngine} disabled={isRunning}>
-          <lightning-icon icon-name="utility:apex" size="x-small" class="nswr-run-icon"></lightning-icon>
+        <button
+          class="nswr-btn-dark-sm"
+          onclick={handleRunEngine}
+          disabled={isRunning}
+        >
+          <lightning-icon
+            icon-name="utility:apex"
+            size="x-small"
+            class="nswr-run-icon"
+          ></lightning-icon>
           {runBtnLabel}
         </button>
       </div>
@@ -26,11 +50,13 @@
 
     <!-- ── Stat Cards ─────────────────────────────────────────────────────── -->
     <div class="nswr-stats-grid">
-
       <button class={criticalCardCls} onclick={handleFilterCritical}>
         <div class="nswr-stat-top">
           <div class="nswr-stat-icon-wrap nswr-icon-critical">
-            <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+            <lightning-icon
+              icon-name="utility:warning"
+              size="small"
+            ></lightning-icon>
           </div>
           <span class="nswr-stat-sub">≤ 3 Days Left</span>
         </div>
@@ -41,7 +67,10 @@
       <button class={atRiskCardCls} onclick={handleFilterAtRisk}>
         <div class="nswr-stat-top">
           <div class="nswr-stat-icon-wrap nswr-icon-atrisk">
-            <lightning-icon icon-name="utility:clock" size="small"></lightning-icon>
+            <lightning-icon
+              icon-name="utility:clock"
+              size="small"
+            ></lightning-icon>
           </div>
           <span class="nswr-stat-sub">≤ 14 Days Left</span>
         </div>
@@ -52,7 +81,10 @@
       <button class={healthyCardCls} onclick={handleFilterHealthy}>
         <div class="nswr-stat-top">
           <div class="nswr-stat-icon-wrap nswr-icon-healthy">
-            <lightning-icon icon-name="utility:check" size="small"></lightning-icon>
+            <lightning-icon
+              icon-name="utility:check"
+              size="small"
+            ></lightning-icon>
           </div>
           <span class="nswr-stat-sub">Optimal Supply</span>
         </div>
@@ -63,23 +95,31 @@
       <button class={overstockCardCls} onclick={handleFilterOverstock}>
         <div class="nswr-stat-top">
           <div class="nswr-stat-icon-wrap nswr-icon-overstock">
-            <lightning-icon icon-name="utility:package" size="small"></lightning-icon>
+            <lightning-icon
+              icon-name="utility:package"
+              size="small"
+            ></lightning-icon>
           </div>
           <span class="nswr-stat-sub">Run Promotions</span>
         </div>
         <div class="nswr-stat-num">{summary.overstock}</div>
         <div class="nswr-stat-label nswr-slabel-overstock">Overstock</div>
       </button>
-
     </div>
 
     <!-- ── Controls Bar ───────────────────────────────────────────────────── -->
     <div class="nswr-controls">
       <div class="nswr-controls-left">
-        <button class={allBtnCls} data-value="All" onclick={handleFilterClick}>All Products</button>
+        <button class={allBtnCls} data-value="All" onclick={handleFilterClick}>
+          All Products
+        </button>
         <span class="nswr-ctrl-divider"></span>
         <div class="nswr-select-box">
-          <lightning-icon icon-name="utility:filterList" size="x-small" class="nswr-select-prefix-icon"></lightning-icon>
+          <lightning-icon
+            icon-name="utility:filterList"
+            size="x-small"
+            class="nswr-select-prefix-icon"
+          ></lightning-icon>
           <select class="nswr-ctrl-select" onchange={handleCategoryFilter}>
             <template for:each={categoryOptions} for:item="opt">
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -95,7 +135,11 @@
         </div>
       </div>
       <div class="nswr-search-box">
-        <lightning-icon icon-name="utility:search" size="x-small" class="nswr-search-prefix-icon"></lightning-icon>
+        <lightning-icon
+          icon-name="utility:search"
+          size="x-small"
+          class="nswr-search-prefix-icon"
+        ></lightning-icon>
         <input
           type="text"
           class="nswr-search-input"
@@ -109,7 +153,10 @@
     <!-- ── Loading ────────────────────────────────────────────────────────── -->
     <template if:true={isLoading}>
       <div class="nswr-loading">
-        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        <lightning-spinner
+          alternative-text="Loading"
+          size="medium"
+        ></lightning-spinner>
         <p>Analysing stock data...</p>
       </div>
     </template>
@@ -117,16 +164,20 @@
     <!-- ── Empty State ────────────────────────────────────────────────────── -->
     <template if:true={isEmpty}>
       <div class="nswr-empty">
-        <lightning-icon icon-name="utility:inventory" size="large"></lightning-icon>
+        <lightning-icon
+          icon-name="utility:inventory"
+          size="large"
+        ></lightning-icon>
         <p>No stock records found. Run the engine to analyse your inventory.</p>
-        <button class="nswr-btn-dark-sm" onclick={handleRunEngine}>Run Engine Now</button>
+        <button class="nswr-btn-dark-sm" onclick={handleRunEngine}>
+          Run Engine Now
+        </button>
       </div>
     </template>
 
     <!-- ── Inventory Table ────────────────────────────────────────────────── -->
     <template if:true={hasItems}>
       <div class="nswr-table-wrap">
-
         <!-- Table header -->
         <div class="nswr-table-head">
           <div class="nswr-th nswr-col-product">Product</div>
@@ -142,7 +193,6 @@
         <div class="nswr-rows">
           <template for:each={filteredItems} for:item="item">
             <div key={item.stockId} class={item.rowCls}>
-
               <!-- Product -->
               <div class="nswr-col-product nswr-product-cell">
                 <div class={item.thumbCls}>
@@ -163,7 +213,9 @@
 
               <!-- Velocity -->
               <div class="nswr-col-velocity nswr-metric-cell">
-                <div class="nswr-metric-num nswr-metric-sm">{item.velocityLabel}</div>
+                <div class="nswr-metric-num nswr-metric-sm">
+                  {item.velocityLabel}
+                </div>
                 <div class="nswr-metric-sub">/ Day</div>
               </div>
 
@@ -193,13 +245,25 @@
               <div class="nswr-col-ai">
                 <template if:true={item.aiSummary}>
                   <div class="nswr-ai-cell">
-                    <lightning-icon icon-name="utility:einstein" size="x-small" class="nswr-ai-icon"></lightning-icon>
+                    <lightning-icon
+                      icon-name="utility:einstein"
+                      size="x-small"
+                      class="nswr-ai-icon"
+                    ></lightning-icon>
                     <div class="nswr-ai-content">
                       <span class="nswr-ai-text">
-                        <template if:false={item.aiExpanded}>{item.aiSummaryShort}</template>
-                        <template if:true={item.aiExpanded}>{item.aiSummary}</template>
+                        <template if:false={item.aiExpanded}
+                          >{item.aiSummaryShort}</template
+                        >
+                        <template if:true={item.aiExpanded}
+                          >{item.aiSummary}</template
+                        >
                       </span>
-                      <button class="nswr-ai-expand" data-id={item.stockId} onclick={handleToggleAI}>
+                      <button
+                        class="nswr-ai-expand"
+                        data-id={item.stockId}
+                        onclick={handleToggleAI}
+                      >
                         {item.aiExpandLabel}
                       </button>
                     </div>
@@ -207,7 +271,11 @@
                 </template>
                 <template if:false={item.aiSummary}>
                   <div class="nswr-ai-healthy">
-                    <lightning-icon icon-name="utility:check" size="x-small" class="nswr-ai-healthy-icon"></lightning-icon>
+                    <lightning-icon
+                      icon-name="utility:check"
+                      size="x-small"
+                      class="nswr-ai-healthy-icon"
+                    ></lightning-icon>
                     <span>Healthy</span>
                   </div>
                 </template>
@@ -215,30 +283,85 @@
 
               <!-- Actions -->
               <div class="nswr-col-actions nswr-action-cell">
-                <template if:true={item.needsReorder}>
+                <!-- Mark Received — shown for any product with an open reorder task -->
+                <template if:true={item.hasOpenReorder}>
                   <button
-                    class="nswr-reorder-btn"
-                    data-id={item.stockId}
+                    class="nswr-mark-received-btn"
+                    data-taskid={item.reorderTaskId}
+                    data-stockid={item.stockId}
                     data-name={item.productName}
-                    data-qty={item.suggestedReorder}
-                    data-cover={item.coverDays}
-                    onclick={handleReorder}
+                    data-stock={item.stockLevel}
+                    onclick={handleMarkReceived}
                   >
-                    <lightning-icon icon-name="utility:cart" size="x-small" variant="inverse"></lightning-icon>
-                    Reorder
+                    <lightning-icon
+                      icon-name="utility:package"
+                      size="x-small"
+                      variant="inverse"
+                    ></lightning-icon>
+                    Mark Received
                   </button>
-                </template>
-                <template if:true={item.isOverstock}>
-                  <button class="nswr-promo-btn" data-id={item.productId} onclick={handlePromo}>
-                    <lightning-icon icon-name="utility:trending_up" size="x-small"></lightning-icon>
-                    Run Promo
-                  </button>
-                </template>
-                <template if:true={item.isHealthy}>
-                  <span class="nswr-ok-label">
-                    <lightning-icon icon-name="utility:check" size="x-small" class="nswr-ok-icon"></lightning-icon>
-                    OK
+                  <span class="nswr-reorder-pending-badge">
+                    <lightning-icon
+                      icon-name="utility:clock"
+                      size="x-small"
+                    ></lightning-icon>
+                    Reorder Pending
                   </span>
+                </template>
+                <template if:false={item.hasOpenReorder}>
+                  <template if:true={item.needsReorder}>
+                    <button
+                      class="nswr-reorder-btn"
+                      data-id={item.stockId}
+                      data-name={item.productName}
+                      data-qty={item.suggestedReorder}
+                      data-cover={item.coverDays}
+                      onclick={handleReorder}
+                    >
+                      <lightning-icon
+                        icon-name="utility:cart"
+                        size="x-small"
+                        variant="inverse"
+                      ></lightning-icon>
+                      Reorder
+                    </button>
+                  </template>
+                  <template if:true={item.suggestReorder}>
+                    <button
+                      class="nswr-suggest-reorder-btn"
+                      data-name={item.productName}
+                      onclick={handleSuggestReorder}
+                    >
+                      <lightning-icon
+                        icon-name="utility:einstein"
+                        size="x-small"
+                      ></lightning-icon>
+                      Suggest Reorder
+                    </button>
+                  </template>
+                  <template if:true={item.isOverstock}>
+                    <button
+                      class="nswr-promo-btn"
+                      data-id={item.productId}
+                      onclick={handlePromo}
+                    >
+                      <lightning-icon
+                        icon-name="utility:trending_up"
+                        size="x-small"
+                      ></lightning-icon>
+                      Run Promo
+                    </button>
+                  </template>
+                  <template if:true={item.isHealthy}>
+                    <span class="nswr-ok-label">
+                      <lightning-icon
+                        icon-name="utility:check"
+                        size="x-small"
+                        class="nswr-ok-icon"
+                      ></lightning-icon>
+                      OK
+                    </span>
+                  </template>
                 </template>
                 <div class="nswr-action-row2">
                   <button
@@ -247,7 +370,10 @@
                     data-name={item.productName}
                     onclick={handleGenerateBrief}
                   >
-                    <lightning-icon icon-name="utility:einstein" size="x-small"></lightning-icon>
+                    <lightning-icon
+                      icon-name="utility:einstein"
+                      size="x-small"
+                    ></lightning-icon>
                     Brief
                   </button>
                   <button
@@ -256,12 +382,14 @@
                     data-name={item.productName}
                     onclick={handleGenerateForecast}
                   >
-                    <lightning-icon icon-name="utility:chart" size="x-small"></lightning-icon>
+                    <lightning-icon
+                      icon-name="utility:chart"
+                      size="x-small"
+                    ></lightning-icon>
                     Forecast
                   </button>
                 </div>
               </div>
-
             </div>
           </template>
         </div>
@@ -275,7 +403,10 @@
           <div class="nswr-modal-header">
             <h3 class="nswr-modal-title">Confirm Reorder</h3>
             <button class="nswr-modal-close-btn" onclick={handleCloseModal}>
-              <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+              <lightning-icon
+                icon-name="utility:close"
+                size="x-small"
+              ></lightning-icon>
             </button>
           </div>
           <div class="nswr-modal-body">
@@ -292,14 +423,27 @@
               />
             </div>
             <div class="nswr-modal-ai">
-              <lightning-icon icon-name="utility:einstein" size="x-small" class="nswr-modal-ai-icon"></lightning-icon>
-              <span>AI suggests {reorderModal.qty} units to cover {reorderModal.coverDays} days of demand</span>
+              <lightning-icon
+                icon-name="utility:einstein"
+                size="x-small"
+                class="nswr-modal-ai-icon"
+              ></lightning-icon>
+              <span
+                >AI suggests {reorderModal.qty} units to cover
+                {reorderModal.coverDays} days of demand</span
+              >
             </div>
           </div>
           <div class="nswr-modal-footer">
-            <button class="nswr-modal-cancel" onclick={handleCloseModal}>Cancel</button>
+            <button class="nswr-modal-cancel" onclick={handleCloseModal}>
+              Cancel
+            </button>
             <button class="nswr-modal-confirm" onclick={handleConfirmReorder}>
-              <lightning-icon icon-name="utility:check" size="x-small" variant="inverse"></lightning-icon>
+              <lightning-icon
+                icon-name="utility:check"
+                size="x-small"
+                variant="inverse"
+              ></lightning-icon>
               Confirm Reorder
             </button>
           </div>
@@ -314,7 +458,11 @@
           <div class="nswr-side-header">
             <div class="nswr-side-header-left">
               <div class="nswr-side-header-icon">
-                <lightning-icon icon-name="utility:opportunity" size="small" variant="inverse"></lightning-icon>
+                <lightning-icon
+                  icon-name="utility:opportunity"
+                  size="small"
+                  variant="inverse"
+                ></lightning-icon>
               </div>
               <div>
                 <h3 class="nswr-side-title">Open Quotes</h3>
@@ -322,13 +470,19 @@
               </div>
             </div>
             <button class="nswr-side-close" onclick={handleCloseQuotes}>
-              <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+              <lightning-icon
+                icon-name="utility:close"
+                size="x-small"
+              ></lightning-icon>
             </button>
           </div>
           <div class="nswr-side-body">
             <template if:true={quotesPanel.isLoading}>
               <div class="nswr-side-loading">
-                <lightning-spinner size="small" alternative-text="Loading quotes"></lightning-spinner>
+                <lightning-spinner
+                  size="small"
+                  alternative-text="Loading quotes"
+                ></lightning-spinner>
               </div>
             </template>
             <template for:each={quotesPanel.quotes} for:item="q">
@@ -345,7 +499,13 @@
             </template>
           </div>
           <div class="nswr-side-footer">
-            <button class="nswr-modal-cancel" style="width:100%" onclick={handleCloseQuotes}>Close Panel</button>
+            <button
+              class="nswr-modal-cancel"
+              style="width: 100%"
+              onclick={handleCloseQuotes}
+            >
+              Close Panel
+            </button>
           </div>
         </div>
       </div>
@@ -358,30 +518,45 @@
           <div class="nswr-brief-header">
             <div class="nswr-brief-header-left">
               <div class="nswr-brief-icon">
-                <lightning-icon icon-name="utility:einstein" size="small" class="nswr-brief-einstein"></lightning-icon>
+                <lightning-icon
+                  icon-name="utility:einstein"
+                  size="small"
+                  class="nswr-brief-einstein"
+                ></lightning-icon>
               </div>
               <div>
                 <h3 class="nswr-brief-title">AI Reorder Brief</h3>
                 <p class="nswr-brief-product">{briefModal.productName}</p>
               </div>
             </div>
-            <button class="nswr-modal-close-btn nswr-brief-close-btn" onclick={handleCloseBrief}>
-              <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+            <button
+              class="nswr-modal-close-btn nswr-brief-close-btn"
+              onclick={handleCloseBrief}
+            >
+              <lightning-icon
+                icon-name="utility:close"
+                size="x-small"
+              ></lightning-icon>
             </button>
           </div>
           <div class="nswr-brief-body">
             <template if:true={briefModal.isLoading}>
               <div class="nswr-brief-loading">
-                <lightning-spinner size="small" alternative-text="Generating..."></lightning-spinner>
+                <lightning-spinner
+                  size="small"
+                  alternative-text="Generating..."
+                ></lightning-spinner>
                 <p>Generating AI brief...</p>
               </div>
             </template>
             <template if:false={briefModal.isLoading}>
-              <pre class="nswr-brief-text">{briefModal.text}</pre>
+              <p class="nswr-brief-text">{briefParsed.body}</p>
             </template>
           </div>
           <div class="nswr-brief-footer">
-            <button class="nswr-modal-cancel" onclick={handleCloseBrief}>Close</button>
+            <button class="nswr-modal-cancel" onclick={handleCloseBrief}>
+              Close
+            </button>
           </div>
         </div>
       </div>
@@ -394,7 +569,10 @@
           <div class="nswr-fm-header">
             <div class="nswr-fm-header-left">
               <div class="nswr-fm-header-icon">
-                <lightning-icon icon-name="utility:chart" size="small"></lightning-icon>
+                <lightning-icon
+                  icon-name="utility:chart"
+                  size="small"
+                ></lightning-icon>
               </div>
               <div>
                 <div class="nswr-fm-title">Demand Forecast</div>
@@ -405,15 +583,24 @@
               <template if:false={forecastModal.isLoading}>
                 <span class={forecastModal.riskCls}>{forecastModal.risk}</span>
               </template>
-              <button class="nswr-modal-close-btn" onclick={handleCloseForecast}>
-                <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+              <button
+                class="nswr-modal-close-btn"
+                onclick={handleCloseForecast}
+              >
+                <lightning-icon
+                  icon-name="utility:close"
+                  size="x-small"
+                ></lightning-icon>
               </button>
             </div>
           </div>
 
           <template if:true={forecastModal.isLoading}>
             <div class="nswr-fm-loading">
-              <lightning-spinner size="medium" alternative-text="Generating..."></lightning-spinner>
+              <lightning-spinner
+                size="medium"
+                alternative-text="Generating..."
+              ></lightning-spinner>
               <p>Generating AI forecast...</p>
             </div>
           </template>
@@ -439,52 +626,101 @@
                 <div class="nswr-fm-card nswr-fm-card-days">
                   <div class="nswr-fm-card-val">{forecastModal.daysLabel}</div>
                   <div class="nswr-fm-card-label">Runway</div>
-                  <div class="nswr-fm-card-sub">{forecastModal.velocityLabel}</div>
+                  <div class="nswr-fm-card-sub">
+                    {forecastModal.velocityLabel}
+                  </div>
                 </div>
               </div>
 
               <div class="nswr-fm-chart">
-                <div class="nswr-fm-chart-title">Supply vs Projected Demand</div>
+                <div class="nswr-fm-chart-title">
+                  Supply vs Projected Demand
+                </div>
                 <div class="nswr-fm-bar-row">
                   <div class="nswr-fm-bar-label">Current Stock</div>
-                  <div class="nswr-fm-bar-track"><div class="nswr-fm-bar nswr-fm-bar-stock" style={forecastModal.stockBarStyle}></div></div>
+                  <div class="nswr-fm-bar-track">
+                    <div
+                      class="nswr-fm-bar nswr-fm-bar-stock"
+                      style={forecastModal.stockBarStyle}
+                    ></div>
+                  </div>
                   <div class="nswr-fm-bar-num">{forecastModal.stockLevel}</div>
                 </div>
                 <div class="nswr-fm-bar-row">
                   <div class="nswr-fm-bar-label">30-Day Need</div>
-                  <div class="nswr-fm-bar-track"><div class="nswr-fm-bar nswr-fm-bar-30" style={forecastModal.demand30BarStyle}></div></div>
+                  <div class="nswr-fm-bar-track">
+                    <div
+                      class="nswr-fm-bar nswr-fm-bar-30"
+                      style={forecastModal.demand30BarStyle}
+                    ></div>
+                  </div>
                   <div class="nswr-fm-bar-num">{forecastModal.demand30}</div>
                 </div>
                 <div class="nswr-fm-bar-row">
                   <div class="nswr-fm-bar-label">90-Day Need</div>
-                  <div class="nswr-fm-bar-track"><div class="nswr-fm-bar nswr-fm-bar-90" style={forecastModal.demand90BarStyle}></div></div>
+                  <div class="nswr-fm-bar-track">
+                    <div
+                      class="nswr-fm-bar nswr-fm-bar-90"
+                      style={forecastModal.demand90BarStyle}
+                    ></div>
+                  </div>
                   <div class="nswr-fm-bar-num">{forecastModal.demand90}</div>
                 </div>
                 <template if:true={forecastModal.hasQuotes}>
                   <div class="nswr-fm-bar-row">
                     <div class="nswr-fm-bar-label">Committed</div>
-                    <div class="nswr-fm-bar-track"><div class="nswr-fm-bar nswr-fm-bar-quote" style={forecastModal.quotedBarStyle}></div></div>
-                    <div class="nswr-fm-bar-num">{forecastModal.quotedUnits}</div>
+                    <div class="nswr-fm-bar-track">
+                      <div
+                        class="nswr-fm-bar nswr-fm-bar-quote"
+                        style={forecastModal.quotedBarStyle}
+                      ></div>
+                    </div>
+                    <div class="nswr-fm-bar-num">
+                      {forecastModal.quotedUnits}
+                    </div>
                   </div>
                 </template>
               </div>
 
               <template if:true={forecastModal.hasQuotes}>
                 <div class="nswr-fm-quote-section">
-                  <lightning-icon icon-name="utility:opportunity" size="x-small" class="nswr-fm-section-icon"></lightning-icon>
+                  <lightning-icon
+                    icon-name="utility:opportunity"
+                    size="x-small"
+                    class="nswr-fm-section-icon"
+                  ></lightning-icon>
                   <span>
-                    <strong>{forecastModal.openQuotes} open quotes</strong> committing {forecastModal.quotedUnits} units —
-                    adjusted runway: <strong>{forecastModal.adjustedDaysLabel}</strong>
+                    <strong>{forecastModal.openQuotes} open quotes</strong>
+                    committing {forecastModal.quotedUnits} units — adjusted
+                    runway: <strong>{forecastModal.adjustedDaysLabel}</strong>
                   </span>
                 </div>
               </template>
 
               <div class="nswr-fm-ai">
                 <div class="nswr-fm-ai-header">
-                  <lightning-icon icon-name="utility:einstein" size="x-small" class="nswr-fm-einstein"></lightning-icon>
+                  <lightning-icon
+                    icon-name="utility:einstein"
+                    size="x-small"
+                    class="nswr-fm-einstein"
+                  ></lightning-icon>
                   <span>AI Analysis</span>
                 </div>
-                <p class="nswr-fm-ai-text">{forecastModal.aiText}</p>
+                <div class="nswr-fm-sections">
+                  <template for:each={forecastAiSections} for:item="sec">
+                    <div key={sec.key} class={sec.cls}>
+                      <div class="nswr-fm-sec-title">
+                        <lightning-icon
+                          icon-name={sec.icon}
+                          size="xx-small"
+                          class="nswr-fm-sec-icon"
+                        ></lightning-icon>
+                        <span>{sec.title}</span>
+                      </div>
+                      <p class="nswr-fm-sec-body">{sec.body}</p>
+                    </div>
+                  </template>
+                </div>
               </div>
             </div>
           </template>
@@ -495,7 +731,66 @@
                 Stockout estimate: <strong>{forecastModal.stockoutDate}</strong>
               </template>
             </div>
-            <button class="nswr-modal-cancel" onclick={handleCloseForecast}>Close</button>
+            <button class="nswr-modal-cancel" onclick={handleCloseForecast}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── Mark Received Modal ───────────────────────────────────────────── -->
+    <template if:true={receiveModal}>
+      <div class="nswr-modal-overlay" onclick={handleCloseReceive}>
+        <div class="nswr-modal" onclick={stopProp}>
+          <div class="nswr-modal-header">
+            <h3 class="nswr-modal-title">Mark Stock Received</h3>
+            <button class="nswr-modal-close-btn" onclick={handleCloseReceive}>
+              <lightning-icon
+                icon-name="utility:close"
+                size="x-small"
+              ></lightning-icon>
+            </button>
+          </div>
+          <div class="nswr-modal-body">
+            <p class="nswr-modal-product">{receiveModal.productName}</p>
+            <p class="nswr-modal-meta">
+              Current stock: {receiveModal.currentStock} units
+            </p>
+            <div class="nswr-modal-qty-row">
+              <label class="nswr-modal-label">Units Received</label>
+              <input
+                type="number"
+                class="nswr-modal-input"
+                value={receiveModal.qtyReceived}
+                onchange={handleReceiveQtyChange}
+                min="1"
+              />
+            </div>
+            <div class="nswr-modal-ai">
+              <lightning-icon
+                icon-name="utility:check"
+                size="x-small"
+                class="nswr-modal-ai-icon"
+              ></lightning-icon>
+              <span
+                >This will close the reorder task and update the stock
+                level.</span
+              >
+            </div>
+          </div>
+          <div class="nswr-modal-footer">
+            <button class="nswr-modal-cancel" onclick={handleCloseReceive}>
+              Cancel
+            </button>
+            <button class="nswr-modal-confirm" onclick={handleConfirmReceive}>
+              <lightning-icon
+                icon-name="utility:package"
+                size="x-small"
+                variant="inverse"
+              ></lightning-icon>
+              Confirm Receipt
+            </button>
           </div>
         </div>
       </div>
@@ -504,10 +799,13 @@
     <!-- ── Toast ──────────────────────────────────────────────────────────── -->
     <template if:true={toast}>
       <div class={toast.cls}>
-        <lightning-icon icon-name={toast.icon} size="x-small" variant="inverse"></lightning-icon>
+        <lightning-icon
+          icon-name={toast.icon}
+          size="x-small"
+          variant="inverse"
+        ></lightning-icon>
         <span>{toast.message}</span>
       </div>
     </template>
-
   </div>
 </template>
