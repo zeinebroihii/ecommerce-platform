@@ -46,3 +46,14 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+# Claude Code local settings (machine-specific, not shared)
+.claude/
+
+# Salesforce CLI org auth cache (contains live access tokens - never commit)
+orglist.json
+*.orglist.json
+
+# Backup / scratch files
+*.bak
+tmp_*.apex
