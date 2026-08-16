@@ -1,6 +1,6 @@
 # Sequence Diagrams for E-Commerce Platform
 
-This directory contains PlantUML sequence diagrams for your key platform features.
+This directory contains PlantUML sequence diagrams for the platform's key features.
 
 ## 📋 Available Diagrams
 
@@ -11,14 +11,14 @@ This directory contains PlantUML sequence diagrams for your key platform feature
 - Session management & JWT tokens
 - Permission-based feature access
 
-### 2. **Agentforce_Chatbot_Sequence.puml** ⭐ **NEW**
+### 2. **Agentforce_Chatbot_Sequence.puml**
 **Feature:** Agentforce Chatbot Integration
 - Customer chatbot interactions
 - Integration with existing Apex controllers
 - Subagent delegation for complex tasks
 - Seamless handover to human agents
 
-### 3. **Subagent_Architecture_Sequence.puml** ⭐ **NEW**
+### 3. **Subagent_Architecture_Sequence.puml**
 **Feature:** Subagent Workflow Architecture
 - Intent classification and routing
 - Specialized subagent capabilities
@@ -104,14 +104,14 @@ Customer → Portal → AuthService → Database/ExternalAuth
    Session   JWT Token    User Validation
 ```
 
-### **Agentforce Chatbot (NEW):**
+### **Agentforce Chatbot:**
 ```
 Customer → Agentforce → Subagent → Apex Controller → Database
           ←            ←          ←                ←
    Response   Delegation   Result    Data Access    Records
 ```
 
-### **Subagent Architecture (NEW):**
+### **Subagent Architecture:**
 ```
 Intent → Router → Subagent → Processing → Main Agent → Customer
               ↓
@@ -178,13 +178,9 @@ These diagrams help:
 - Secure authentication and authorization
 - Comprehensive logging and analytics
 
-## 📝 Customization Notes
+## 📝 Notes
 
-- All diagrams use your actual class/object names
-- Security enforced queries are highlighted
+- All diagrams use the platform's actual class/object names
+- Security-enforced queries are highlighted
 - AI integration points are clearly marked
 - Error handling paths included where relevant
-
----
-
-**Need more diagrams?** Let me know which specific flow you'd like documented next!
