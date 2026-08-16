@@ -1,4 +1,4 @@
-# Nexus — B2B/B2C Commerce Platform on Salesforce
+# Nexus: B2B/B2C Commerce Platform on Salesforce
 
 Nexus is a full-lifecycle commerce platform built natively on Salesforce, extending the standard B2B/B2C Commerce and Experience Cloud stack with AI-driven sales intelligence, blockchain-secured escrow payments, live logistics tracking, and an integrated customer/partner portal.
 
@@ -78,12 +78,12 @@ flowchart LR
         TRACCAR["Traccar Server\n(deployed on Render)\nstores live positions,\nexposes REST polling API"]
     end
 
-    subgraph SFCore["3. Salesforce Core — Tracking Engine"]
+    subgraph SFCore["3. Salesforce Core: Tracking Engine"]
         ENGINE["Apex + Queueables\nStaggered scheduled jobs\n~1-min effective polling\nDelivery state automation\nEscrow status sync"]
     end
 
     subgraph ClientLayer["4. Client Layer"]
-        DELIVERY["Nexus Delivery View\nMagic link — no login, no app\nLive ETA & route on map"]
+        DELIVERY["Nexus Delivery View\nMagic link, no login, no app\nLive ETA & route on map"]
     end
 
     PHONE -- "GPS coords (lat/lon/speed)" --> TRACCAR
@@ -106,7 +106,7 @@ flowchart TB
         SELLER["Seller Portal"]
     end
 
-    subgraph SFCloud["1. Salesforce Cloud — Business Logic"]
+    subgraph SFCloud["1. Salesforce Cloud: Business Logic"]
         AF["Agentforce AI Assistant"]
         APEXFLOW["Apex & Flows"]
         CRM["CRM & Objects"]
@@ -114,7 +114,7 @@ flowchart TB
         STATE["Escrow State Tracking"]
     end
 
-    subgraph Bridge["2. Vercel Bridge — Serverless Integration Layer"]
+    subgraph Bridge["2. Vercel Bridge: Serverless Integration Layer"]
         EP["7 REST Endpoints:\n/fund /confirm /freeze /release\n/refund /extend /status\nNode.js + Ethers.js"]
     end
 
@@ -138,22 +138,22 @@ Detailed sequence diagrams for individual flows (authentication, quote generatio
 
 The platform uses two distinct AI layers, matched to two different problems:
 
-- **Einstein** — classic predictive AI embedded directly in Apex (e.g. `LeadAIAnalysisUpdater`) for deterministic scoring tasks: lead scoring, quote acceptance likelihood, stock/demand prediction. Fast, explainable, no conversation involved.
-- **Agentforce** — Salesforce's agentic AI layer, used where the system needs to reason over a conversation and take multi-step action (the customer support chatbot and quote negotiation subagents).
+- **Einstein**: classic predictive AI embedded directly in Apex (e.g. `LeadAIAnalysisUpdater`) for deterministic scoring tasks: lead scoring, quote acceptance likelihood, stock/demand prediction. Fast, explainable, no conversation involved.
+- **Agentforce**: Salesforce's agentic AI layer, used where the system needs to reason over a conversation and take multi-step action (the customer support chatbot and quote negotiation subagents).
 
-Agentforce itself runs a three-layer, autonomous architecture — it doesn't just answer from a static prompt, it retrieves live data and decides its own next action:
+Agentforce itself runs a three-layer, autonomous architecture. It doesn't just answer from a static prompt, it retrieves live data and decides its own next action:
 
 ```mermaid
 flowchart LR
-    subgraph Retrieval["1. Retrieval Layer — Data Cloud"]
+    subgraph Retrieval["1. Retrieval Layer: Data Cloud"]
         RAG["Pulls real, live Salesforce records\nbefore any reasoning happens\n(Retrieval-Augmented Generation)"]
     end
 
-    subgraph Reasoning["2. Reasoning Layer — LLM + Instructions"]
+    subgraph Reasoning["2. Reasoning Layer: LLM + Instructions"]
         LLM["Reasons over retrieved data\nand written Instructions,\ndecides what to do next"]
     end
 
-    subgraph Orchestration["3. Orchestration Layer — Atlas (ReAct)"]
+    subgraph Orchestration["3. Orchestration Layer: Atlas (ReAct)"]
         PLAN["Plan"] --> ACT["Act"] --> OBSERVE["Observe"] --> PLAN
     end
 
@@ -163,7 +163,7 @@ flowchart LR
     RESULT --> Orchestration
 ```
 
-An **Agent** in this system is defined by three things: **Topics** (standard or custom, what the agent is allowed to reason about), **Actions** (standard or custom, what it's allowed to actually do), and **Instructions** (how it should behave). Agent quality is validated using Salesforce's built-in Testing Center — automated test suites run real utterances against each subagent (e.g. the `Quote Negotiation` subagent) and score topic classification, action accuracy, and response correctness before anything ships.
+An **Agent** in this system is defined by three things: **Topics** (standard or custom, what the agent is allowed to reason about), **Actions** (standard or custom, what it's allowed to actually do), and **Instructions** (how it should behave). Agent quality is validated using Salesforce's built-in Testing Center: automated test suites run real utterances against each subagent (e.g. the `Quote Negotiation` subagent) and score topic classification, action accuracy, and response correctness before anything ships.
 
 ---
 
@@ -174,10 +174,10 @@ An **Agent** in this system is defined by three things: **Topics** (standard or 
 | **Sales & CRM** | Lead capture, Einstein-assisted lead scoring, opportunity → quote → contract lifecycle, account/team management for B2B buyers |
 | **AI & Automation** | Agentforce chatbot with subagent delegation and human handoff (Atlas ReAct reasoning over live Data Cloud retrieval), Einstein-based lead scoring and quote acceptance scoring, AI-driven stock/demand intelligence |
 | **Commerce** | Product catalog with stock levels, combo package builder, discount/"Sparks" engine, cart & checkout, Stripe hosted checkout |
-| **Payments** | Stripe (card) and a hybrid Web3 escrow flow — USDC held in a Solidity smart contract, released on delivery confirmation |
+| **Payments** | Stripe (card) and a hybrid Web3 escrow flow: USDC held in a Solidity smart contract, released on delivery confirmation |
 | **Logistics** | Live GPS shipment tracking, digital ownership passport per item, swap/resale marketplace between customers |
 | **Contracts & Docs** | DocuSign-based quote/contract signing with auto PDF attachment, renewal & amendment workflows |
-| **Customer Portal** | Experience Cloud site for B2B and B2C customers — order history, quotes, escrow status, support case tracking |
+| **Customer Portal** | Experience Cloud site for B2B and B2C customers, covering order history, quotes, escrow status, support case tracking |
 | **Notifications** | Twilio SMS, transactional email templates, in-app bell notifications and activity feed |
 | **Analytics** | Power BI-backed reporting on sales, stock, and platform activity |
 
@@ -194,7 +194,7 @@ An **Agent** in this system is defined by three things: **Topics** (standard or 
 | Payments | Stripe API, Solidity smart contract (NexusEscrow), Hardhat |
 | Bridge service | Node.js / Express, deployed as Vercel serverless functions |
 | Integrations | DocuSign, Twilio, Power BI |
-| CI/CD | GitHub Actions, Salesforce CLI |
+| CI/CD | Salesforce DevOps Center (release pipeline), GitHub Actions, Salesforce CLI |
 | Tooling | ESLint, Prettier, Jest (`sfdx-lwc-jest`), Husky pre-commit hooks |
 
 ---
@@ -250,13 +250,13 @@ npm run lint
 npm run test:unit
 ```
 
-Every `.env.example` file in this repo documents the exact variables its component needs — copy it to `.env` and fill in real values locally; `.env` itself is git-ignored.
+Every `.env.example` file in this repo documents the exact variables its component needs. Copy it to `.env` and fill in real values locally; `.env` itself is git-ignored.
 
 ---
 
 ## Release Process & Environments
 
-Salesforce releases are managed with **Salesforce DevOps Center** — Salesforce's native, in-platform release management tool (built on Salesforce DX and the Metadata API). Rather than relying purely on an external CI tool, DevOps Center provides a visual pipeline that connects this GitHub repository to a sequence of Salesforce orgs and tracks each change as a **Work Item**.
+Salesforce releases are managed with **Salesforce DevOps Center**, Salesforce's native, in-platform release management tool (built on Salesforce DX and the Metadata API). Rather than relying purely on an external CI tool, DevOps Center provides a visual pipeline that connects this GitHub repository to a sequence of Salesforce orgs and tracks each change as a **Work Item**.
 
 | Stage | Org type | Branch | Purpose |
 |---|---|---|---|
@@ -288,8 +288,8 @@ GitHub Actions handle the automated validation and deployment steps that DevOps 
 
 ## Documentation
 
-- [`docs/README_Sequence_Diagrams.md`](docs/README_Sequence_Diagrams.md) — index of all sequence diagrams
-- [`docs/PART1_Diagramme_Classes.md`](docs/PART1_Diagramme_Classes.md) — class-level design documentation
+- [`docs/README_Sequence_Diagrams.md`](docs/README_Sequence_Diagrams.md): index of all sequence diagrams
+- [`docs/PART1_Diagramme_Classes.md`](docs/PART1_Diagramme_Classes.md): class-level design documentation
 
 ---
 
@@ -299,4 +299,4 @@ A customer-facing Experience Cloud instance is available for evaluation:
 
 **[Nexus Customer Portal](https://orgfarm-56b3b63a30-dev-ed.develop.my.site.com/ss/s/)**
 
-This runs on a Salesforce Developer org, so availability isn't guaranteed long-term — please reach out if the link is stale, and see [Getting Started](#getting-started) to deploy your own instance.
+This runs on a Salesforce Developer org, so availability isn't guaranteed long-term; please reach out if the link is stale, and see [Getting Started](#getting-started) to deploy your own instance.
